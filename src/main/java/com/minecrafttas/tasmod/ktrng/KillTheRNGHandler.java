@@ -40,7 +40,6 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 	 * @param isLoaded If the KillTheRNG mod is loaded
 	 */
 	public KillTheRNGHandler(boolean isLoaded) {
-
 		this.isLoaded = isLoaded;
 
 		if (isLoaded) {
