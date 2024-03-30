@@ -18,15 +18,15 @@ public class PacketHandlerRegistry {
 	private static final List<PacketHandlerBase> REGISTRY = new ArrayList<>();
 
 	public static void register(PacketHandlerBase handler) {
-		if(handler==null) {
+		if (handler == null) {
 			throw new NullPointerException("Tried to register a handler with value null");
 		}
-		
-		if(containsClass(handler)) {
+
+		if (containsClass(handler)) {
 			MCTCommon.LOGGER.warn("Trying to register packet handler {}, but another instance of this class is already registered!", handler.getClass().getName());
 			return;
 		}
-		
+
 		if (!REGISTRY.contains(handler)) {
 			REGISTRY.add(handler);
 		} else {
@@ -35,7 +35,7 @@ public class PacketHandlerRegistry {
 	}
 
 	public static void unregister(PacketHandlerBase handler) {
-		if(handler==null) {
+		if (handler == null) {
 			throw new NullPointerException("Tried to unregister a handler with value null");
 		}
 		if (REGISTRY.contains(handler)) {
@@ -65,14 +65,14 @@ public class PacketHandlerRegistry {
 				}
 			}
 		}
-		if(!isImplemented) {
+		if (!isImplemented) {
 			throw new PacketNotImplementedException(packet, side);
 		}
 	}
-	
+
 	private static boolean containsClass(PacketHandlerBase handler) {
-		for(PacketHandlerBase packethandler : REGISTRY) {
-			if(packethandler.getClass().equals(handler.getClass())) {
+		for (PacketHandlerBase packethandler : REGISTRY) {
+			if (packethandler.getClass().equals(handler.getClass())) {
 				return true;
 			}
 		}
