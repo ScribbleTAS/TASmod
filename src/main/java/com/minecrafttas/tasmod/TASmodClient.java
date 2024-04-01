@@ -196,14 +196,15 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		})));
 		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Open InfoGui Editor", "TASmod", Keyboard.KEY_F6, () -> Minecraft.getMinecraft().displayGuiScreen(TASmodClient.hud))));
 		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
-			TASmodClient.client.disconnect();
+			controller.setTASState(TASstate.RECORDING);
 		}, VirtualKeybindings::isKeyDown)));
 		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
-			try {
-				TASmodClient.client = new Client("localhost", TASmod.networkingport-1, TASmodPackets.values(), mc.getSession().getProfile().getName(), true);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+//			try {
+//				TASmodClient.client = new Client("localhost", TASmod.networkingport-1, TASmodPackets.values(), mc.getSession().getProfile().getName(), true);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+			controller.setTASState(TASstate.PLAYBACK);
 		}, VirtualKeybindings::isKeyDown)));
 		blockedKeybindings.forEach(VirtualKeybindings::registerBlockedKeyBinding);
 		

@@ -345,18 +345,33 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	// running
 
 	@Override
-	public VirtualCameraAngle onVirtualCameraTick(VirtualCameraAngle vcamera) {
-		return null;
-	}
-
-	@Override
 	public VirtualMouse onVirtualMouseTick(VirtualMouse vmouse) {
-		return null;
+		if (state == TASstate.RECORDING) {
+			this.mouse.deepCopyFrom(vmouse);
+		} else if (state == TASstate.PLAYBACK) {
+			vmouse.deepCopyFrom(this.mouse);
+		}
+		return vmouse;
 	}
 
 	@Override
 	public VirtualKeyboard onVirtualKeyboardTick(VirtualKeyboard vkeyboard) {
-		return null;
+		if (state == TASstate.RECORDING) {
+			this.keyboard.deepCopyFrom(vkeyboard);
+		} else if (state == TASstate.PLAYBACK) {
+			vkeyboard.deepCopyFrom(this.keyboard);
+		}
+		return vkeyboard;
+	}
+	
+	@Override
+	public VirtualCameraAngle onVirtualCameraTick(VirtualCameraAngle vcamera) {
+		if (state == TASstate.RECORDING) {
+			this.subticks.deepCopyFrom(vcamera);
+		} else if (state == TASstate.PLAYBACK) {
+			vcamera.deepCopyFrom(vcamera);
+		}
+		return vcamera;
 	}
 	
 	/**

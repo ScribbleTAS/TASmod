@@ -406,7 +406,7 @@ public class VirtualInput {
 		 * @see MixinMinecraft#playback_injectRunTickMouse(org.spongepowered.asm.mixin.injection.callback.CallbackInfo)
 		 */
 		public void nextMouseTick() {
-			nextMouse.moveFrom((VirtualMouse) EventListenerRegistry.fireEvent(EventVirtualMouseTick.class, nextMouse));
+			EventListenerRegistry.fireEvent(EventVirtualMouseTick.class, nextMouse);
 			currentMouse.getVirtualEvents(nextMouse, mouseEventQueue);
 			currentMouse.moveFrom(nextMouse);
 		}
@@ -592,9 +592,9 @@ public class VirtualInput {
 		 * @see MixinEntityRenderer#runUpdate(float)
 		 */
 		public void nextCameraTick() {
-			nextCameraAngle.copyFrom((VirtualCameraAngle) EventListenerRegistry.fireEvent(EventVirtualCameraAngleTick.class, nextCameraAngle));
+			nextCameraAngle.moveFrom((VirtualCameraAngle) EventListenerRegistry.fireEvent(EventVirtualCameraAngleTick.class, nextCameraAngle));
 			nextCameraAngle.getStates(cameraAngleInterpolationStates);
-			currentCameraAngle.copyFrom(nextCameraAngle);
+			currentCameraAngle.moveFrom(nextCameraAngle);
 		}
 
 		/**
