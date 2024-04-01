@@ -308,6 +308,15 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
     }
     
     @Override
+    public void deepCopyFrom(VirtualKeyboard keyboard) {
+    	if(keyboard == null)
+    		return;
+    	super.deepCopyFrom(keyboard);
+    	charList.clear();
+    	charList.addAll(keyboard.charList);
+    }
+    
+    @Override
     public boolean equals(Object obj) {
     	if(obj instanceof VirtualKeyboard) {
     		VirtualKeyboard keyboard = (VirtualKeyboard) obj;

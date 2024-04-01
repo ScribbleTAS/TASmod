@@ -73,7 +73,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	 * @param scrollWheel		The {@link #scrollWheel}
 	 * @param cursorX			The {@link #cursorX}
 	 * @param cursorY			The {@link #cursorY}
-	 * @param subtickList			The {@link VirtualPeripheral#subtickList}
+	 * @param subtickList		The {@link VirtualPeripheral#subtickList}
 	 * @param ignoreFirstUpdate	Whether the first call to {@link #update(int, boolean, int, Integer, Integer)} should create a new subtick
 	 */
 	public VirtualMouse(Set<Integer> pressedKeys, int scrollWheel, Integer cursorX, Integer cursorY, List<VirtualMouse> subtickList, boolean ignoreFirstUpdate) {
@@ -241,6 +241,16 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 		if(mouse==null)
 			return;
 		super.copyFrom(mouse);
+		this.scrollWheel = mouse.scrollWheel;
+		this.cursorX = mouse.cursorX;
+		this.cursorY = mouse.cursorY;
+	}
+	
+	@Override
+	public void deepCopyFrom(VirtualMouse mouse) {
+		if(mouse==null)
+			return;
+		super.deepCopyFrom(mouse);
 		this.scrollWheel = mouse.scrollWheel;
 		this.cursorX = mouse.cursorX;
 		this.cursorY = mouse.cursorY;

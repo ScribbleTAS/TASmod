@@ -152,7 +152,7 @@ public class VirtualCameraAngleTest {
 		
 		VirtualCameraAngle actual = new VirtualCameraAngle(0f, 0f, true);
 		
-		actual.copyFrom(expected);
+		actual.moveFrom(expected);
 		
 		// Test pitch and yaw
 		assertEquals(expected.getPitch(), actual.getPitch());
