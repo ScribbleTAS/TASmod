@@ -153,6 +153,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			}
 			return gui;
 		}));
+		EventListenerRegistry.register(controller);
 		
 		// Register packet handlers
 		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers on client");

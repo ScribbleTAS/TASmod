@@ -30,6 +30,7 @@ import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.server.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
@@ -70,7 +71,7 @@ import net.minecraft.util.text.TextFormatting;
  * @author Scribble
  *
  */
-public class PlaybackControllerClient implements ClientPacketHandler, EventVirtualKeyboardTick, EventVirtualMouseTick, EventVirtualCameraAngleTick{
+public class PlaybackControllerClient implements ClientPacketHandler, EventVirtualKeyboardTick, EventVirtualMouseTick, EventVirtualCameraAngleTick, EventClientTickPost{
 
 	/**
 	 * The current state of the controller.
@@ -373,9 +374,10 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	 * {@linkplain #mouse} and {@linkplain #subticks} are retrieved and emulated as
 	 * the next inputs
 	 */
-	public void nextTick() {
+	@Override
+	public void onClientTickPost(Minecraft mc) {
 		/* Stop the playback while player is still loading */
-		EntityPlayerSP player = Minecraft.getMinecraft().player;
+		EntityPlayerSP player = mc.player;
 
 		if (player != null && player.addedToChunk) {
 			if (isPaused() && tempPause != TASstate.NONE) {
