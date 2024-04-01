@@ -447,7 +447,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		}
 
 		/* Stop condition */
-		if (index == inputs.size()) {
+		if (index == inputs.size() || inputs.isEmpty()) {
 			unpressContainer();
 			setTASState(TASstate.NONE);
 		}
