@@ -131,7 +131,7 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
      * @param camera The camera to copy from
      */
 	public void deepCopyFrom(VirtualCameraAngle camera) {
-		if(camera == null)
+		if(camera == null || !camera.isParent())
 			return;
 		this.pitch = camera.pitch;
 		this.yaw = camera.yaw;

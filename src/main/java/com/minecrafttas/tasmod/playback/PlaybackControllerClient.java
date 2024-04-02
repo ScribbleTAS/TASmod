@@ -191,31 +191,11 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		} else if (state == TASstate.NONE) { // If the container is currently doing nothing
 			switch (stateIn) {
 				case PLAYBACK:
-					LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
-					if (Minecraft.getMinecraft().player != null && !startLocation.isEmpty()) {
-						try {
-							tpPlayer(startLocation);
-						} catch (NumberFormatException e) {
-							state = TASstate.NONE;
-							e.printStackTrace();
-							return verbose ? TextFormatting.RED + "An error occured while reading the start location of the TAS. The file might be broken" : "";
-						}
-					}
-					Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
-					index = 0;
+					startPlayback();
 					state = TASstate.PLAYBACK;
-					creditsPrinted = false;
-					TASmod.ktrngHandler.setInitialSeed(startSeed);
 					return verbose ? TextFormatting.GREEN + "Starting playback" : "";
 				case RECORDING:
-					LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
-					if (Minecraft.getMinecraft().player != null && startLocation.isEmpty()) {
-						startLocation = getStartLocation(Minecraft.getMinecraft().player);
-					}
-					if (this.inputs.isEmpty()) {
-						inputs.add(new TickInputContainer(index));
-						desyncMonitor.recordNull(index);
-					}
+					startRecording();
 					state = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Starting a recording" : "";
 				case PAUSED:
@@ -235,8 +215,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 					tempPause = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Pausing a recording" : "";
 				case NONE:
-					LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
-					TASmodClient.virtual.clear();
+					stopRecording();
 					state = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Stopping the recording" : "";
 			}
@@ -253,9 +232,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 					TASmodClient.virtual.clear();
 					return verbose ? TextFormatting.GREEN + "Pausing a playback" : "";
 				case NONE:
-					LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
-					Minecraft.getMinecraft().gameSettings.chatLinks = true;
-					TASmodClient.virtual.clear();
+					stopPlayback();
 					state = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Stopping the playback" : "";
 			}
@@ -283,7 +260,46 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		}
 		return "Something went wrong ._.";
 	}
+	
+	private void startRecording() {
+		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
+		if (Minecraft.getMinecraft().player != null && startLocation.isEmpty()) {
+			startLocation = getStartLocation(Minecraft.getMinecraft().player);
+		}
+		if (this.inputs.isEmpty()) {
+			inputs.add(new TickInputContainer(index));
+			desyncMonitor.recordNull(index);
+		}
+	}
+	
+	private void stopRecording() {
+		LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
+		TASmodClient.virtual.clear();
+	}
+	
+	private void startPlayback() {
+		LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
+		if (Minecraft.getMinecraft().player != null && !startLocation.isEmpty()) {
+			try {
+				tpPlayer(startLocation);
+			} catch (NumberFormatException e) {
+				state = TASstate.NONE;
+				e.printStackTrace();
+//				return verbose ? TextFormatting.RED + "An error occured while reading the start location of the TAS. The file might be broken" : "";
+			}
+		}
+		Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
+		index = 0;
+		creditsPrinted = false;
+		TASmod.ktrngHandler.setInitialSeed(startSeed);
+	}
 
+	private void stopPlayback() {
+		LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
+		Minecraft.getMinecraft().gameSettings.chatLinks = true;
+		TASmodClient.virtual.clear();
+	}
+	
 	/**
 	 * Switches between the paused state and the state it was in before the pause
 	 * 
@@ -351,7 +367,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		} else if (state == TASstate.PLAYBACK) {
 			vmouse.deepCopyFrom(this.mouse);
 		}
-		return vmouse;
+		return vmouse.clone();
 	}
 
 	@Override
@@ -361,7 +377,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		} else if (state == TASstate.PLAYBACK) {
 			vkeyboard.deepCopyFrom(this.keyboard);
 		}
-		return vkeyboard;
+		return vkeyboard.clone();
 	}
 	
 	@Override
@@ -371,7 +387,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		} else if (state == TASstate.PLAYBACK) {
 			vcamera.deepCopyFrom(vcamera);
 		}
-		return vcamera;
+		return vcamera.clone();
 	}
 	
 	/**

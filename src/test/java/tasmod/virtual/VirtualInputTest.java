@@ -314,7 +314,7 @@ class VirtualInputTest {
 		Triple<Float, Float, Float> actual = virtual.CAMERA_ANGLE.getInterpolatedState(0f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(10f, 10f, 0f);
+		expected = Triple.of(0f, 0f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.1f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
@@ -322,23 +322,23 @@ class VirtualInputTest {
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.199f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(20f, 20f, 0f);
+		expected = Triple.of(10f, 10f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.2f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(30f, 30f, 0f);
+		expected = Triple.of(20f, 20f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.3f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(40f, 40f, 0f);
+		expected = Triple.of(30f, 30f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.4f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(50f, 50f, 0f);
+		expected = Triple.of(40f, 40f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.5f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(60f, 60f, 0f);
+		expected = Triple.of(50f, 50f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.6f, 0f, 0f, true);
 		assertEquals(expected, actual);
 	}
