@@ -177,19 +177,21 @@ class VirtualMouseTest {
 	}
 
 	/**
-	 * Test cloning the mouse
+	 * Test shallow cloning the mouse
 	 */
 	@Test
-	void testClone() {
+	void testShallowClone() {
 		Set<Integer> testKeycodeSet = new HashSet<>();
 		testKeycodeSet.add(VirtualKey.LC.getKeycode());
 		testKeycodeSet.add(VirtualKey.MC.getKeycode());
 
 		VirtualMouse actual = new VirtualMouse(testKeycodeSet, 10, 3, 2);
-		VirtualMouse test2 = actual.clone();
+		VirtualMouse test2 = actual.shallowClone();
 
 		assertEquals(actual, test2);
 	}
+	
+    //TODO DeepClone
 
 	/**
 	 * Test moveFrom method

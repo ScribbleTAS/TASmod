@@ -201,10 +201,10 @@ class VirtualKeyboardTest {
     }
 
     /**
-     * Test cloning the keyboard
+     * Test shallow cloning the keyboard
      */
     @Test
-    void testClone() {
+    void testShallowClone() {
         Set<Integer> testKeycodeSet = new HashSet<>();
         testKeycodeSet.add(VirtualKey.W.getKeycode());
         testKeycodeSet.add(VirtualKey.S.getKeycode());
@@ -214,10 +214,12 @@ class VirtualKeyboardTest {
         testCharList.add('s');
 
         VirtualKeyboard actual = new VirtualKeyboard(testKeycodeSet, testCharList);
-        VirtualKeyboard test2 = actual.clone();
+        VirtualKeyboard test2 = actual.shallowClone();
         
         assertEquals(actual, test2);
     }
+    
+    //TODO DeepClone
 
     /**
      * Test moveFrom method

@@ -214,20 +214,22 @@ public class VirtualCameraAngleTest {
 	}
 
 	/**
-	 * Test cloning the camera angle
+	 * Test shallow cloning the camera angle
 	 */
 	@Test
-	void testClone() {
+	void testShallowClone() {
 		float x = 1f;
 		float y = 2f;
 
 		VirtualCameraAngle test = new VirtualCameraAngle(x, y);
 
-		VirtualCameraAngle actual = test.clone();
+		VirtualCameraAngle actual = test.shallowClone();
 
 		assertEquals(1f, actual.getPitch());
 		assertEquals(2f, actual.getYaw());
 	}
+	
+	// DeepCloning
 
 	/**
 	 * Test equals

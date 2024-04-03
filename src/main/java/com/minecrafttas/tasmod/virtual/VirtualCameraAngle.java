@@ -84,7 +84,7 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 			return;
 		}
 		if(isParent() && !ignoreFirstUpdate()) {
-			addSubtick(clone());
+			addSubtick(shallowClone());
 		}
 		this.pitch = MathHelper.clamp(this.pitch + pitchDelta, -90.0F, 90.0F);
 		this.yaw += yawDelta;
@@ -152,9 +152,13 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	/**
 	 * Creates a clone of this object as a subtick
 	 */
+	public VirtualCameraAngle shallowClone() {
+		return new VirtualCameraAngle(pitch, yaw);
+	}
+	
 	@Override
 	public VirtualCameraAngle clone() {
-		return new VirtualCameraAngle(pitch, yaw);
+		return new VirtualCameraAngle(pitch, yaw, new ArrayList<>(subtickList), isIgnoreFirstUpdate());
 	}
 
 	@Override

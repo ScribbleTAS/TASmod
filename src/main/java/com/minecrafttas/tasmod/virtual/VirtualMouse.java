@@ -85,7 +85,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 
 	public void update(int keycode, boolean keystate, int scrollwheel, Integer cursorX, Integer cursorY) {
     	if(isParent() && !ignoreFirstUpdate()) {
-    		addSubtick(clone());
+    		addSubtick(shallowClone());
     	}
 		setPressed(keycode, keystate);
 		this.scrollWheel = scrollwheel;
@@ -220,9 +220,13 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	/**
 	 * Clones this VirtualMouse <strong>without</strong> subticks
 	 */
+	public VirtualMouse shallowClone() {
+		return new VirtualMouse(new HashSet<>(this.pressedKeys), scrollWheel, cursorX, cursorY, null, ignoreFirstUpdate());
+	}
+	
 	@Override
 	public VirtualMouse clone() {
-		return new VirtualMouse(new HashSet<>(this.pressedKeys), scrollWheel, cursorX, cursorY, null, ignoreFirstUpdate());
+		return new VirtualMouse(new HashSet<>(this.pressedKeys), scrollWheel, cursorX, cursorY, new ArrayList<>(subtickList), isIgnoreFirstUpdate());
 	}
 
 	@Override

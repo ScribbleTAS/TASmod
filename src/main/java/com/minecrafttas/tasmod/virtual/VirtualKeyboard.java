@@ -127,7 +127,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
      */
     public void update(int keycode, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
     	if(isParent() && !ignoreFirstUpdate()) {
-    		addSubtick(clone());
+    		addSubtick(shallowClone());
     	}
     	charList.clear();
 		if (keystate) {
@@ -138,6 +138,14 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
     
     public void update(int keycode, boolean keystate, char keycharacter) {
     	update(keycode, keystate, keycharacter, false);
+    }
+    
+    public void update(VirtualKey key, boolean keystate, char keycharacter) {
+    	update(key.getKeycode(), keystate, keycharacter);
+    }
+    
+    public void update(VirtualKey key, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
+    	update(key.getKeycode(), keystate, keycharacter, false);
     }
     
     @Override
@@ -281,12 +289,16 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 	}
 
 	/**
-	 * Clones this VirtualKeyboard <strong>without</strong> subticks
+	 * Clones this VirtualKeyboard <strong>without</strong> subticks.
 	 */
-    @Override
-	public VirtualKeyboard clone() {
+	public VirtualKeyboard shallowClone() {
         return new VirtualKeyboard(new HashSet<>(this.pressedKeys), new ArrayList<>(this.charList), isIgnoreFirstUpdate());
     }
+	
+	@Override
+	public VirtualKeyboard clone(){
+		return new VirtualKeyboard(new HashSet<>(this.pressedKeys), new ArrayList<>(this.charList), new ArrayList<>(subtickList), isIgnoreFirstUpdate());
+	}
     
     @Override
     public void moveFrom(VirtualKeyboard keyboard) {
