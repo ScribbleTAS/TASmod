@@ -1,11 +1,11 @@
 package com.minecrafttas.tasmod.virtual;
 
-import net.minecraft.util.math.MathHelper;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import net.minecraft.util.math.MathHelper;
 
 /**
  * Stores the values of the camera angle of the player in a given timeframe.<br>
@@ -80,10 +80,20 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	 * @param yawDelta The difference between absolute coordinates of the yaw, is added to {@link VirtualCameraAngle#yaw}
 	 */
 	public void update(float pitchDelta, float yawDelta) {
+		update(pitchDelta, yawDelta, true);
+	}
+	
+	/**
+	 * Updates the camera angle.
+	 * @param pitchDelta The difference between absolute coordinates of the pitch, is added to {@link VirtualCameraAngle#pitch}
+	 * @param yawDelta The difference between absolute coordinates of the yaw, is added to {@link VirtualCameraAngle#yaw}
+	 * @param updateSubtick If the previous camera should be added to {@link Subtickable#subtickList}
+	 */
+	public void update(float pitchDelta, float yawDelta, boolean updateSubtick) {
 		if(pitch==null || yaw == null) {
 			return;
 		}
-		if(isParent() && !ignoreFirstUpdate()) {
+		if(isParent() && !ignoreFirstUpdate() && updateSubtick) {
 			addSubtick(shallowClone());
 		}
 		this.pitch = MathHelper.clamp(this.pitch + pitchDelta, -90.0F, 90.0F);

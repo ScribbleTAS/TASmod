@@ -92,7 +92,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 
 	private VirtualMouse mouse = new VirtualMouse();
 
-	private VirtualCameraAngle subticks = new VirtualCameraAngle();
+	private VirtualCameraAngle camera = new VirtualCameraAngle();
 
 	public final File directory = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles");
 
@@ -383,9 +383,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	@Override
 	public VirtualCameraAngle onVirtualCameraTick(VirtualCameraAngle vcamera) {
 		if (state == TASstate.RECORDING) {
-			this.subticks.deepCopyFrom(vcamera);
+			this.camera.deepCopyFrom(vcamera);
 		} else if (state == TASstate.PLAYBACK) {
-			vcamera.deepCopyFrom(vcamera);
+			vcamera.deepCopyFrom(this.camera);
 		}
 		return vcamera.clone();
 	}
@@ -394,15 +394,15 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	 * Updates the input container.<br>
 	 * <br>
 	 * During a recording this adds the {@linkplain #keyboard}, {@linkplain #mouse}
-	 * and {@linkplain #subticks} to {@linkplain #inputs} and increases the
+	 * and {@linkplain #camera} to {@linkplain #inputs} and increases the
 	 * {@linkplain #index}.<br>
 	 * <br>
 	 * During playback the opposite is happening, getting the inputs from
 	 * {@linkplain #inputs} and temporarily storing them in {@linkplain #keyboard},
-	 * {@linkplain #mouse} and {@linkplain #subticks}.<br>
+	 * {@linkplain #mouse} and {@linkplain #camera}.<br>
 	 * <br>
 	 * Then in {@linkplain VirtualInput}, {@linkplain #keyboard},
-	 * {@linkplain #mouse} and {@linkplain #subticks} are retrieved and emulated as
+	 * {@linkplain #mouse} and {@linkplain #camera} are retrieved and emulated as
 	 * the next inputs
 	 */
 	@Override
@@ -432,9 +432,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 			if (inputs.size() < index) {
 				LOGGER.warn("Index is {} inputs bigger than the container!", index - inputs.size());
 			}
-			inputs.add(new TickInputContainer(index, keyboard.clone(), mouse.clone(), subticks.clone()));
+			inputs.add(new TickInputContainer(index, keyboard.clone(), mouse.clone(), camera.clone()));
 		} else {
-			inputs.set(index, new TickInputContainer(index, keyboard.clone(), mouse.clone(), subticks.clone()));
+			inputs.set(index, new TickInputContainer(index, keyboard.clone(), mouse.clone(), camera.clone()));
 		}
 		desyncMonitor.recordMonitor(index); // Capturing monitor values
 	}
@@ -472,7 +472,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 			TickInputContainer tickcontainer = inputs.get(index); // Loads the new inputs from the container
 			this.keyboard = tickcontainer.getKeyboard().clone();
 			this.mouse = tickcontainer.getMouse().clone();
-			this.subticks = tickcontainer.getSubticks().clone();
+			this.camera = tickcontainer.getSubticks().clone();
 			// check for control bytes
 			ControlByteHandler.readCotrolByte(controlBytes.get(index));
 		}
@@ -512,7 +512,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 				TickInputContainer tickcontainer = inputs.get(index);
 				this.keyboard = tickcontainer.getKeyboard();
 				this.mouse = tickcontainer.getMouse();
-				this.subticks = tickcontainer.getSubticks();
+				this.camera = tickcontainer.getSubticks();
 			}
 		} else {
 			throw new IndexOutOfBoundsException("Index is bigger than the container");

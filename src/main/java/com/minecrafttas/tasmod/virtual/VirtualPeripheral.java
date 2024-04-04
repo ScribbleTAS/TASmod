@@ -173,4 +173,5 @@ public abstract class VirtualPeripheral<T extends VirtualPeripheral<T>> extends 
 		this.subtickList.clear();
 		this.subtickList.addAll(peripheral.subtickList);
 	}
+	
 }

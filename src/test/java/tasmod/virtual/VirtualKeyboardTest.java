@@ -213,13 +213,26 @@ class VirtualKeyboardTest {
         testCharList.add('w');
         testCharList.add('s');
 
-        VirtualKeyboard actual = new VirtualKeyboard(testKeycodeSet, testCharList);
-        VirtualKeyboard test2 = actual.shallowClone();
+        VirtualKeyboard expected = new VirtualKeyboard(testKeycodeSet, testCharList);
+        VirtualKeyboard actual = expected.shallowClone();
         
-        assertEquals(actual, test2);
+        assertEquals(expected, actual);
     }
-    
-    //TODO DeepClone
+
+	/**
+	 * Test deep cloning the keyboard
+	 */
+	@Test
+	void testDeepClone() {
+		VirtualKeyboard expected = new VirtualKeyboard();
+		expected.update(VirtualKey.W, true, 'w');
+		expected.update(VirtualKey.S, true, 's');
+
+		VirtualKeyboard actual = expected.clone();
+
+		assertEquals(expected, actual);
+		assertIterableEquals(expected.getSubticks(), actual.getSubticks());
+	}
 
     /**
      * Test moveFrom method
