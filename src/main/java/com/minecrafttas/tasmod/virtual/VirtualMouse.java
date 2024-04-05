@@ -83,14 +83,35 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 		this.cursorY = cursorY;
 	}
 
+    /**
+     * Updates the mouse, adds a new subtick to this mouse
+     * @param keycode The keycode of this button
+     * @param keystate The keystate of this button, true for pressed
+     * @param scrollwheel The scroll wheel for this mouse
+     * @oaram cursorX The pointer location in the x axis
+     * @param cursorY The pointer location in the y axis
+     */
 	public void update(int keycode, boolean keystate, int scrollwheel, Integer cursorX, Integer cursorY) {
-    	if(isParent() && !ignoreFirstUpdate()) {
-    		addSubtick(shallowClone());
-    	}
+		if (isParent() && !ignoreFirstUpdate()) {
+			addSubtick(shallowClone());
+		}
 		setPressed(keycode, keystate);
 		this.scrollWheel = scrollwheel;
 		this.cursorX = cursorX;
 		this.cursorY = cursorY;
+	}
+
+	/**
+	 * Updates the mouse, adds a new subtick to this mouse
+	 * 
+	 * @param key         The key
+	 * @param keystate    The keystate of this button, true for pressed
+	 * @param scrollwheel The scroll wheel for this mouse
+	 * @oaram cursorX The pointer location in the x axis
+	 * @param cursorY The pointer location in the y axis
+	 */
+	public void update(VirtualKey key, boolean keystate, int scrollwheel, Integer cursorX, Integer cursorY) {
+		update(key.getKeycode(), keystate, scrollwheel, cursorX, cursorY);
 	}
 
 	@Override

@@ -37,6 +37,7 @@ import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
@@ -66,7 +67,7 @@ import net.minecraft.util.text.TextFormatting;
  * Information about the author etc. get stored in the playback controller too
  * and will be printed out in chat when the player loads into a world <br>
  * Inputs are saved and loaded to/from file via the
- * {@linkplain PlaybackSerialiser}
+ * {@linkplain PlaybackSerialiser} TODO Update with new {@link PlaybackMetadata}
  * 
  * @author Scribble
  *
@@ -750,7 +751,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 			this.tick = tick;
 			this.keyboard = new VirtualKeyboard();
 			this.mouse = new VirtualMouse();
-//			this.subticks = new VirtualCameraAngle(0, 0);
+			this.subticks = new VirtualCameraAngle();
 		}
 
 		@Override

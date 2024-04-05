@@ -9,7 +9,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
@@ -340,29 +339,6 @@ class VirtualInputTest {
 
 		expected = Triple.of(50f, 230f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.6f, 0f, 0f, true);
-		assertEquals(expected, actual);
-	}
-
-	/**
-	 * Test interpolation but with playback running, but there are only 2 values
-	 */
-	@Test
-	@Disabled
-	void testInterpolationEnabledLegacy(){
-		VirtualInput virtual = new VirtualInput(LOGGER);
-
-		virtual.CAMERA_ANGLE.setCamera(0f, 0f);
-
-		virtual.CAMERA_ANGLE.updateNextCameraAngle(10f, 10f);
-
-		virtual.CAMERA_ANGLE.nextCameraTick();
-
-		Triple<Float, Float, Float> expected = Triple.of(0f, 0f, 0f);
-		Triple<Float, Float, Float> actual = virtual.CAMERA_ANGLE.getInterpolatedState(0f, 0f, 0f, true);
-		assertEquals(expected, actual);
-
-		expected = Triple.of(10f, 10f, 0f);
-		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.3f, 0f, 0f, true);
 		assertEquals(expected, actual);
 	}
 }

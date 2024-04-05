@@ -1,13 +1,9 @@
 package com.minecrafttas.tasmod.playback.metadata;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,7 +47,7 @@ public class PlaybackMetadata {
 		}
 		return out;
 	}
-	
+
 	public List<String> toStringList() {
 		List<String> out = new ArrayList<>();
 		for (Object keyObj : metadata.keySet()) {
@@ -61,24 +57,24 @@ public class PlaybackMetadata {
 		}
 		return out;
 	}
-	
+
 	public String getExtensionName() {
 		return extensionName;
 	}
-	
+
 	public HashMap<String, String> getMetadata() {
 		return metadata;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
-		if(obj instanceof PlaybackMetadata) {
+		if (obj instanceof PlaybackMetadata) {
 			PlaybackMetadata other = (PlaybackMetadata) obj;
 			return other.metadata.equals(metadata) && other.extensionName.equals(extensionName);
 		}
 		return super.equals(obj);
 	}
-	
+
 	public static PlaybackMetadata fromStringList(String extensionName, List<String> list) {
 		return fromStringList(list);
 	}
