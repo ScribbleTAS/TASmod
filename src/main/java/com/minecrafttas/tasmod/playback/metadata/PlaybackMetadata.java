@@ -7,29 +7,30 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
+
 /**
  * Stores a section of<br>
  * <br>
  */
 public class PlaybackMetadata {
-	/**
-	 * Debug extension name
-	 */
 	private String extensionName;
 	private LinkedHashMap<String, String> metadata;
+	
+	private static String SEPERATOR = ":";
 
-	public PlaybackMetadata() {
+	public PlaybackMetadata(PlaybackMetadataExtension extension) {
+		this(extension.getExtensionName());
+	}
+
+	private PlaybackMetadata(String extensionName) {
+		this.extensionName = extensionName;
 		this.metadata = new LinkedHashMap<String, String>();
 	}
 
-	public PlaybackMetadata(String extensionName) {
-		this();
-		this.extensionName = extensionName;
-	}
-
 	public void setValue(String key, String value) {
-		if (key.contains("=")) {
-			throw new IllegalArgumentException(String.format("%sKeyname %s can't contain =", extensionName != null ? extensionName + ": " : "", key));
+		if (key.contains(SEPERATOR)) {
+			throw new IllegalArgumentException(String.format("%sKeyname %s can't contain %s", extensionName != null ? extensionName + ": " : "", key, SEPERATOR));
 		}
 		metadata.put(key, value);
 	}
@@ -43,7 +44,7 @@ public class PlaybackMetadata {
 		String out = "";
 		for (String key : metadata.keySet()) {
 			String value = getValue(key);
-			out += (String.format("%s=%s\n", key, value));
+			out += (String.format("%s%s%s\n", key, SEPERATOR, value));
 		}
 		return out;
 	}
@@ -53,7 +54,7 @@ public class PlaybackMetadata {
 		for (Object keyObj : metadata.keySet()) {
 			String key = (String) keyObj;
 			String value = getValue(key);
-			out.add(String.format("%s=%s\n", key, value));
+			out.add(String.format("%s%s%s\n", key, SEPERATOR, value));
 		}
 		return out;
 	}
@@ -76,13 +77,9 @@ public class PlaybackMetadata {
 	}
 
 	public static PlaybackMetadata fromStringList(String extensionName, List<String> list) {
-		return fromStringList(list);
-	}
+		PlaybackMetadata out = new PlaybackMetadata(extensionName);
 
-	public static PlaybackMetadata fromStringList(List<String> list) {
-		PlaybackMetadata out = new PlaybackMetadata();
-
-		final Pattern pattern = Pattern.compile("(\\w+)=(.+)");
+		final Pattern pattern = Pattern.compile("(\\w+)\\"+SEPERATOR+"(.+)");
 
 		for (String data : list) {
 			Matcher matcher = pattern.matcher(data);

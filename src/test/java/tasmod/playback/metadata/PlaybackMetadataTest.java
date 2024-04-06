@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,26 +11,45 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
 
 public class PlaybackMetadataTest {
 
-	@Test
-	void testConstructor() {
-		PlaybackMetadata metadata = new PlaybackMetadata();
-		assertNotNull(metadata.getMetadata());
-		assertNull(metadata.getExtensionName());
+	class MetadataTest implements PlaybackMetadataExtension{
+
+		@Override
+		public String getExtensionName() {
+			return "Test";
+		}
+
+		@Override
+		public void onCreate() {
+			
+		}
+
+		@Override
+		public PlaybackMetadata onStore() {
+			return null;
+		}
+
+		@Override
+		public void onLoad(PlaybackMetadata metadata) {
+		}
+		
 	}
 	
 	@Test
-	void testNameConstructor() {
-		PlaybackMetadata metadata = new PlaybackMetadata("Test");
+	void testConstructor() {
+		MetadataTest test = new MetadataTest();
+		PlaybackMetadata metadata = new PlaybackMetadata(test);
 		assertNotNull(metadata.getMetadata());
 		assertEquals("Test", metadata.getExtensionName());
 	}
 	
 	@Test
 	void testSettingAndReading() {
-		PlaybackMetadata metadata = new PlaybackMetadata("Test");
+		MetadataTest test = new MetadataTest();
+		PlaybackMetadata metadata = new PlaybackMetadata(test);
 		metadata.setValue("testProperty", "Test");
 		
 		String actual = metadata.getValue("testProperty");
@@ -41,7 +59,8 @@ public class PlaybackMetadataTest {
 	
 	@Test
 	void testToString() {
-		PlaybackMetadata metadata = new PlaybackMetadata("Test");
+		MetadataTest test = new MetadataTest();
+		PlaybackMetadata metadata = new PlaybackMetadata(test);
 		metadata.setValue("1", "One");
 		metadata.setValue("2", "Two");
 		metadata.setValue("3", "Three");
@@ -49,17 +68,18 @@ public class PlaybackMetadataTest {
 		
 		String actual = metadata.toString();
 		
-		String expected = "1=One\n"
-				+ "2=Two\n"
-				+ "3=Three\n"
-				+ "4=Four\n";
+		String expected = "1:One\n"
+				+ "2:Two\n"
+				+ "3:Three\n"
+				+ "4:Four\n";
 		
 		assertEquals(expected, actual);
 	}
 	
 	@Test
 	void testToStringList() {
-		PlaybackMetadata metadata = new PlaybackMetadata("Test");
+		MetadataTest test = new MetadataTest();
+		PlaybackMetadata metadata = new PlaybackMetadata(test);
 		metadata.setValue("1", "One");
 		metadata.setValue("2", "Two");
 		metadata.setValue("3", "Three");
@@ -68,23 +88,25 @@ public class PlaybackMetadataTest {
 		List<String> actual = metadata.toStringList();
 		
 		List<String> expected = new ArrayList<>();
-		expected.add("1=One\n");
-		expected.add("2=Two\n");
-		expected.add("3=Three\n");
-		expected.add("4=Four\n");
+		expected.add("1:One\n");
+		expected.add("2:Two\n");
+		expected.add("3:Three\n");
+		expected.add("4:Four\n");
 		
 		assertIterableEquals(expected, actual);
 	}
 	
 	@Test
 	void testEquals() {
-		PlaybackMetadata metadata = new PlaybackMetadata("Test");
+		MetadataTest test = new MetadataTest();
+		PlaybackMetadata metadata = new PlaybackMetadata(test);
 		metadata.setValue("1", "One");
 		metadata.setValue("2", "Two");
 		metadata.setValue("3", "Three");
 		metadata.setValue("4", "Four");
 		
-		PlaybackMetadata metadata2 = new PlaybackMetadata("Test");
+		MetadataTest test2 = new MetadataTest();
+		PlaybackMetadata metadata2 = new PlaybackMetadata(test2);
 		metadata2.setValue("1", "One");
 		metadata2.setValue("2", "Two");
 		metadata2.setValue("3", "Three");
@@ -96,13 +118,15 @@ public class PlaybackMetadataTest {
 	@Test
 	void testFailedEquals() {
 		//Key difference
-		PlaybackMetadata metadata = new PlaybackMetadata("Test");
+		MetadataTest test = new MetadataTest();
+		PlaybackMetadata metadata = new PlaybackMetadata(test);
 		metadata.setValue("2", "One");
 		metadata.setValue("2", "Two");
 		metadata.setValue("3", "Three");
 		metadata.setValue("4", "Four");
 		
-		PlaybackMetadata metadata2 = new PlaybackMetadata("Test");
+		MetadataTest test2 = new MetadataTest();
+		PlaybackMetadata metadata2 = new PlaybackMetadata(test2);
 		metadata2.setValue("1", "One");
 		metadata2.setValue("2", "Two");
 		metadata2.setValue("3", "Three");
@@ -111,13 +135,13 @@ public class PlaybackMetadataTest {
 		assertNotEquals(metadata, metadata2);
 		
 		// Value difference
-		metadata = new PlaybackMetadata("Test");
+		metadata = new PlaybackMetadata(test);
 		metadata.setValue("1", "On");
 		metadata.setValue("2", "Two");
 		metadata.setValue("3", "Three");
 		metadata.setValue("4", "Four");
 		
-		metadata2 = new PlaybackMetadata("Test");
+		metadata2 = new PlaybackMetadata(test);
 		metadata2.setValue("1", "One");
 		metadata2.setValue("2", "Two");
 		metadata2.setValue("3", "Three");
@@ -126,17 +150,20 @@ public class PlaybackMetadataTest {
 		assertNotEquals(metadata, metadata2);
 		
 		// Name difference
-		metadata = new PlaybackMetadata("Tes");
+		metadata2 = new PlaybackMetadata(test);
 		metadata.setValue("1", "One");
 		metadata.setValue("2", "Two");
 		metadata.setValue("3", "Three");
 		metadata.setValue("4", "Four");
 		
-		metadata2 = new PlaybackMetadata("Test");
-		metadata2.setValue("1", "One");
-		metadata2.setValue("2", "Two");
-		metadata2.setValue("3", "Three");
-		metadata2.setValue("4", "Four");
+		
+		List<String> list = new ArrayList<>();
+		list.add("1:One");
+		list.add("2:Two");
+		list.add("3:Three");
+		list.add("4:Four");
+		
+		metadata2 = PlaybackMetadata.fromStringList("Tes", list);
 		
 		assertNotEquals(metadata, metadata2);
 	}

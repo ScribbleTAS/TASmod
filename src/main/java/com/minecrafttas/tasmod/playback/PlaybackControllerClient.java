@@ -80,7 +80,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	private TASstate state = TASstate.NONE;
 
 	/**
-	 * The state of the controller when the state is paused
+	 * The state of the controller when the {@link #state} is paused
 	 */
 	private TASstate tempPause = TASstate.NONE;
 	

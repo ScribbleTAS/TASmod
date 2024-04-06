@@ -7,7 +7,6 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContai
 import com.minecrafttas.tasmod.util.FileThread;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
-import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 import com.mojang.realmsclient.util.Pair;
