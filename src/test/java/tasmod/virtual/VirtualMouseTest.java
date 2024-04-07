@@ -230,8 +230,8 @@ class VirtualMouseTest {
 
 		assertTrue(moveFrom.getSubticks().isEmpty());
 		assertEquals(0, moveFrom.getScrollWheel());
-		assertEquals(0, moveFrom.getCursorX());
-		assertEquals(0, moveFrom.getCursorY());
+		assertEquals(10, moveFrom.getCursorX());
+		assertEquals(20, moveFrom.getCursorY());
 	}
 
 	/**

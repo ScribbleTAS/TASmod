@@ -258,7 +258,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 		this.scrollWheel = mouse.scrollWheel;
 		this.cursorX = mouse.cursorX;
 		this.cursorY = mouse.cursorY;
-		mouse.clearMouseData();
+		mouse.scrollWheel=0;
 	}
 	
 	@Override
