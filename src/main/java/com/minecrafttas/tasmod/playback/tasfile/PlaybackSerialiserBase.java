@@ -1,7 +1,9 @@
-package com.minecrafttas.tasmod.playback;
+package com.minecrafttas.tasmod.playback.tasfile;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 
 public abstract class PlaybackSerialiserBase {
 	

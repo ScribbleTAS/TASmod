@@ -28,7 +28,9 @@ import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.playback.PlaybackSerialiser;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
+import com.minecrafttas.tasmod.playback.metadata.integrated.CreditsMetadataExtension;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerClient;
 import com.minecrafttas.tasmod.ticksync.TickSyncClient;
@@ -85,6 +87,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	public static SavestateHandlerClient savestateHandlerClient = new SavestateHandlerClient();
 	
 	public static Client client;
+	
+	public static CreditsMetadataExtension creditsMetadataExtension = new CreditsMetadataExtension();
 	/**
 	 * The container where all inputs get stored during recording or stored and
 	 * ready to be played back
@@ -154,6 +158,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			return gui;
 		}));
 		EventListenerRegistry.register(controller);
+		PlaybackMetadataRegistry.register(creditsMetadataExtension);
+		EventListenerRegistry.register(creditsMetadataExtension);
 		
 		// Register packet handlers
 		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers on client");

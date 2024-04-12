@@ -22,6 +22,7 @@ import org.lwjgl.opengl.Display;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.server.ByteBufferBuilder;
 import com.minecrafttas.mctcommon.server.Client.Side;
 import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
@@ -34,10 +35,13 @@ import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
+import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
+import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
 import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
@@ -176,6 +180,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	 * @return The message printed in the chat
 	 */
 	public String setTASStateClient(TASstate stateIn, boolean verbose) {
+		EventListenerRegistry.fireEvent(EventControllerStateChange.class, stateIn, state);
 		ControlByteHandler.reset();	// FIXME Controlbytes are resetting when loading a world, due to "Paused" state being active during loading... Fix Paused state shenanigans?
 		if (state == stateIn) {
 			switch (stateIn) {
@@ -415,7 +420,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 			if (isPaused() && tempPause != TASstate.NONE) {
 				setTASState(tempPause); // The recording is paused in LoadWorldEvents#startLaunchServer
 				pause(false);
-				printCredits();
+				EventListenerRegistry.fireEvent(EventPlaybackJoinedWorld.class, state);
 			}
 		}
 
@@ -694,27 +699,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 
 	// ==============================================================
 
-	public void printCredits() {
-		LOGGER.trace(LoggerMarkers.Playback, "Printing credits");
-		if (state == TASstate.PLAYBACK && !creditsPrinted) {
-			creditsPrinted = true;
-			printMessage(title, ChatFormatting.GOLD);
-			printMessage("", null);
-			printMessage("by " + authors, ChatFormatting.AQUA);
-			printMessage("", null);
-			printMessage("in " + playtime, null);
-			printMessage("", null);
-			printMessage("Rerecords: " + rerecords, null);
-		}
-	}
 
-	private void printMessage(String msg, ChatFormatting format) {
-		String formatString = "";
-		if (format != null)
-			formatString = format.toString();
-
-		Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(formatString + msg));
-	}
 
 	public void setPlayUntil(int until) {
 		this.playUntil = until;
