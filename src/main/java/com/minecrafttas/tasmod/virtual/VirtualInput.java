@@ -658,7 +658,7 @@ public class VirtualInput {
 		public Triple<Float, Float, Float> getInterpolatedState(float partialTick, float pitch, float yaw, boolean enable) {
 			
 			float interpolatedPitch = nextCameraAngle.getPitch() == null ? pitch : nextCameraAngle.getPitch();
-			float interpolatedYaw = nextCameraAngle.getYaw() == null ? pitch : nextCameraAngle.getYaw() + 180;
+			float interpolatedYaw = nextCameraAngle.getYaw() == null ? yaw : nextCameraAngle.getYaw() + 180;
 
 			if (enable && !cameraAngleInterpolationStates.isEmpty()) {
 				int index = (int) MathHelper.clampedLerp(0, cameraAngleInterpolationStates.size() - 1, partialTick); // Get interpolate index
