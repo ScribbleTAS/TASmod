@@ -209,7 +209,7 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 				break;
 
 			case KILLTHERNG_STARTSEED:
-				TASmodClient.controller.setStartSeed(seed);
+//				TASmodClient.controller.setStartSeed(seed);
 				break;
 
 			default:

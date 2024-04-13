@@ -288,7 +288,7 @@ public class PlaybackSerialiser {
 //		controller.setPlaytime(playtime);
 //		controller.setRerecords(rerecords);
 //		controller.setStartLocation(startLocation);
-		controller.setStartSeed(startSeed);
+//		controller.setStartSeed(startSeed);
 		if(!monitorLines.isEmpty()) {
 			controller.desyncMonitor = new DesyncMonitoring(controller, monitorLines);
 		}

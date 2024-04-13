@@ -22,18 +22,29 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayerMP;
 
+/**
+ * Adds a "start position" entry in the playback metadata.<br>
+ * <br>
+ * Records the position of the player when starting a recording,<br>
+ * and teleports the player, at the start of the playback.
+ * 
+ * @author Scribble
+ */
 public class StartpositionMetadataExtension implements PlaybackMetadataExtension, EventControllerStateChange, ServerPacketHandler {
 
+	/**
+	 * The startposition of the playback
+	 */
 	StartPosition startPosition = null;
 
-	public static class StartPosition{
-		
+	public static class StartPosition {
+
 		final double x;
 		final double y;
 		final double z;
 		final float pitch;
 		final float yaw;
-		
+
 		public StartPosition(double x, double y, double z, float pitch, float yaw) {
 			this.x = x;
 			this.y = y;
@@ -41,13 +52,13 @@ public class StartpositionMetadataExtension implements PlaybackMetadataExtension
 			this.pitch = pitch;
 			this.yaw = yaw;
 		}
-		
+
 		@Override
 		public String toString() {
 			return String.format("%e,%e,%e,%e,%e", x, y, z, pitch, yaw);
 		}
 	}
-	
+
 	@Override
 	public String getExtensionName() {
 		return "Start Position";
@@ -55,50 +66,60 @@ public class StartpositionMetadataExtension implements PlaybackMetadataExtension
 
 	@Override
 	public void onCreate() {
-		// TODO Auto-generated method stub
-
+		// Unused atm
 	}
 
 	@Override
 	public PlaybackMetadata onStore() {
-		// TODO Auto-generated method stub
-		return null;
+		PlaybackMetadata metadata = new PlaybackMetadata(this);
+		metadata.setValue("x", Double.toString(startPosition.x));
+		metadata.setValue("y", Double.toString(startPosition.y));
+		metadata.setValue("z", Double.toString(startPosition.z));
+		metadata.setValue("pitch", Double.toString(startPosition.pitch));
+		metadata.setValue("yaw", Double.toString(startPosition.yaw));
+		return metadata;
 	}
 
 	@Override
 	public void onLoad(PlaybackMetadata metadata) {
-		// TODO Auto-generated method stub
+		double x = Double.parseDouble(metadata.getValue("x"));
+		double y = Double.parseDouble(metadata.getValue("y"));
+		double z = Double.parseDouble(metadata.getValue("z"));
+		float pitch = Float.parseFloat(metadata.getValue("pitch"));
+		float yaw = Float.parseFloat(metadata.getValue("yaw"));
 
+		this.startPosition = new StartPosition(x, y, z, pitch, yaw);
 	}
 
 	@Override
 	public void onClear() {
 		startPosition = null;
 	}
-	
+
 	@Override
 	public void onControllerStateChange(TASstate newstate, TASstate oldstate) {
 		Minecraft mc = Minecraft.getMinecraft();
-		
-		if(mc.player!=null) {
+
+		if (mc.player != null) {
 			EntityPlayerSP player = mc.player;
-			
-			if(oldstate == TASstate.NONE && newstate == TASstate.RECORDING && startPosition == null) {	// If a recording is started, the player is in a world and startposition is uninitialized
+
+			if (oldstate == TASstate.NONE && newstate == TASstate.RECORDING && startPosition == null) { // If a recording is started, the player is in a world and startposition is
+																										// uninitialized
 				LOGGER.debug(LoggerMarkers.Playback, "Setting start location");
 				startPosition = new StartPosition(player.posX, player.posY, player.posZ, player.rotationPitch, player.rotationYaw);
 			}
-			
-			if(oldstate == TASstate.NONE && newstate == TASstate.PLAYBACK && startPosition != null) {
+
+			if (oldstate == TASstate.NONE && newstate == TASstate.PLAYBACK && startPosition != null) {
 				LOGGER.debug(LoggerMarkers.Playback, "Teleporting the player to the start location");
 				TASmodBufferBuilder packetBuilder = new TASmodBufferBuilder(TASmodPackets.PLAYBACK_TELEPORT);
-				
+
 				packetBuilder
 				.writeDouble(startPosition.x)
 				.writeDouble(startPosition.y)
 				.writeDouble(startPosition.z)
 				.writeFloat(startPosition.pitch)
 				.writeFloat(startPosition.yaw);
-				
+
 				try {
 					TASmodClient.client.send(packetBuilder);
 				} catch (Exception e) {
@@ -106,14 +127,12 @@ public class StartpositionMetadataExtension implements PlaybackMetadataExtension
 				}
 			}
 		}
-		
+
 	}
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new PacketID[] {
-				TASmodPackets.PLAYBACK_TELEPORT
-		};
+		return new PacketID[] { TASmodPackets.PLAYBACK_TELEPORT };
 	}
 
 	@Override

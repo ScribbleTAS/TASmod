@@ -9,11 +9,17 @@ import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
-import com.mojang.realmsclient.gui.ChatFormatting;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 
+/**
+ * Adds credits to the playback metadata<br>
+ * <br>
+ * Credits can be changed in the file and will be printed in chat, when the
+ * player joins a world after /fullplay
+ */
 public class CreditsMetadataExtension implements PlaybackMetadataExtension, EventPlaybackJoinedWorld, EventControllerStateChange {
 
 	/**
@@ -32,7 +38,7 @@ public class CreditsMetadataExtension implements PlaybackMetadataExtension, Even
 	 * How often a savestate was loaded as a measurement of effort (e.g. 200)
 	 */
 	private int rerecords = 0;
-	
+
 	/**
 	 * If the credits where already printed in this instance
 	 */
@@ -79,15 +85,15 @@ public class CreditsMetadataExtension implements PlaybackMetadataExtension, Even
 		rerecords = 0;
 		creditsPrinted = false;
 	}
-	
+
 	@Override
 	public void onPlaybackJoinedWorld(TASstate state) {
 		LOGGER.trace(LoggerMarkers.Playback, "Printing credits");
 		if (state == TASstate.PLAYBACK && !creditsPrinted) {
 			creditsPrinted = true;
-			printMessage(title, ChatFormatting.GOLD);
+			printMessage(title, TextFormatting.GOLD);
 			printMessage("", null);
-			printMessage("by " + authors, ChatFormatting.AQUA);
+			printMessage("by " + authors, TextFormatting.AQUA);
 			printMessage("", null);
 			printMessage("in " + playtime, null);
 			printMessage("", null);
@@ -95,7 +101,7 @@ public class CreditsMetadataExtension implements PlaybackMetadataExtension, Even
 		}
 	}
 
-	private void printMessage(String msg, ChatFormatting format) {
+	private void printMessage(String msg, TextFormatting format) {
 		String formatString = "";
 		if (format != null)
 			formatString = format.toString();
@@ -105,7 +111,7 @@ public class CreditsMetadataExtension implements PlaybackMetadataExtension, Even
 
 	@Override
 	public void onControllerStateChange(TASstate newstate, TASstate oldstate) {
-		if(newstate == TASstate.PLAYBACK) {		// Reset creditsPrinted when a new playback is started
+		if (newstate == TASstate.PLAYBACK) { // Reset creditsPrinted when a new playback is started
 			creditsPrinted = false;
 		}
 	}

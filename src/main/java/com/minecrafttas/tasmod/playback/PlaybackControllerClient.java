@@ -9,7 +9,6 @@ import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_PLAYUNTI
 import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
 import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_SAVE;
 import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_STATE;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_TELEPORT;
 
 import java.io.File;
 import java.io.Serializable;
@@ -49,7 +48,6 @@ import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
-import com.mojang.realmsclient.gui.ChatFormatting;
 import com.mojang.realmsclient.util.Pair;
 
 import net.minecraft.client.Minecraft;
@@ -77,7 +75,7 @@ import net.minecraft.util.text.TextFormatting;
  * @author Scribble
  *
  */
-public class PlaybackControllerClient implements ClientPacketHandler, EventVirtualKeyboardTick, EventVirtualMouseTick, EventVirtualCameraAngleTick, EventClientTickPost{
+public class PlaybackControllerClient implements ClientPacketHandler, EventVirtualKeyboardTick, EventVirtualMouseTick, EventVirtualCameraAngleTick, EventClientTickPost {
 
 	/**
 	 * The current state of the controller.
@@ -88,7 +86,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	 * The state of the controller when the {@link #state} is paused
 	 */
 	private TASstate tempPause = TASstate.NONE;
-	
+
 	/**
 	 * The current index of the inputs
 	 */
@@ -117,22 +115,20 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	 * <p>
 	 * <code>Map(int playbackLine, List(Pair(String controlCommand, String[] arguments))</code>"
 	 */
-	private Map<Integer, List<Pair<String, String[]>>> controlBytes = new HashMap<Integer, List<Pair<String, String[]>>>();
+	private Map<Integer, List<Pair<String, String[]>>> controlBytes = new HashMap<Integer, List<Pair<String, String[]>>>(); // TODO Replace with TASFile extension
 
 	/**
 	 * The comments in the file, used to store them again later
 	 */
-	private Map<Integer, List<String>> comments = new HashMap<>();
+	private Map<Integer, List<String>> comments = new HashMap<>(); // TODO Replace with TASFile extension
 
-	public DesyncMonitoring desyncMonitor = new DesyncMonitoring(this);
+	public DesyncMonitoring desyncMonitor = new DesyncMonitoring(this); // TODO Replace with TASFile extension
 
-	// =====================================================================================================
-
-	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient();
+	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 
 	// =====================================================================================================
 
-	private Integer playUntil = null;
+	private Integer playUntil = null; // TODO Replace with event
 
 	/**
 	 * Sets the current {@link TASstate}
@@ -150,7 +146,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Starts or stops a recording/playback
 	 * 
@@ -170,7 +166,8 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	 */
 	public String setTASStateClient(TASstate stateIn, boolean verbose) {
 		EventListenerRegistry.fireEvent(EventControllerStateChange.class, stateIn, state);
-		ControlByteHandler.reset();	// FIXME Controlbytes are resetting when loading a world, due to "Paused" state being active during loading... Fix Paused state shenanigans?
+		ControlByteHandler.reset(); // FIXME Controlbytes are resetting when loading a world, due to "Paused" state
+									// being active during loading... Fix Paused state shenanigans?
 		if (state == stateIn) {
 			switch (stateIn) {
 				case PLAYBACK:
@@ -255,7 +252,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		}
 		return "Something went wrong ._.";
 	}
-	
+
 	private void startRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
 		if (this.inputs.isEmpty()) {
@@ -263,12 +260,12 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 			desyncMonitor.recordNull(index);
 		}
 	}
-	
+
 	private void stopRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
 		TASmodClient.virtual.clear();
 	}
-	
+
 	private void startPlayback() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
 		Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
@@ -281,7 +278,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		Minecraft.getMinecraft().gameSettings.chatLinks = true;
 		TASmodClient.virtual.clear();
 	}
-	
+
 	/**
 	 * Switches between the paused state and the state it was in before the pause
 	 * 
@@ -361,7 +358,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		}
 		return vkeyboard.clone();
 	}
-	
+
 	@Override
 	public VirtualCameraAngle onVirtualCameraTick(VirtualCameraAngle vcamera) {
 		if (state == TASstate.RECORDING) {
@@ -371,7 +368,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		}
 		return vcamera.clone();
 	}
-	
+
 	/**
 	 * Updates the input container.<br>
 	 * <br>
@@ -454,7 +451,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 			TickInputContainer tickcontainer = inputs.get(index); // Loads the new inputs from the container
 			this.keyboard = tickcontainer.getKeyboard().clone();
 			this.mouse = tickcontainer.getMouse().clone();
-			this.camera = tickcontainer.getSubticks().clone();
+			this.camera = tickcontainer.getCameraAngle().clone();
 			// check for control bytes
 			ControlByteHandler.readCotrolByte(controlBytes.get(index));
 		}
@@ -479,11 +476,11 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		return inputs;
 	}
 
-	public Map<Integer, List<Pair<String, String[]>>> getControlBytes() {
+	public Map<Integer, List<Pair<String, String[]>>> getControlBytes() { // TODO Replace with TASFile extension
 		return controlBytes;
 	}
 
-	public Map<Integer, List<String>> getComments() {
+	public Map<Integer, List<String>> getComments() { // TODO Replace with TASFile extension
 		return comments;
 	}
 
@@ -494,7 +491,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 				TickInputContainer tickcontainer = inputs.get(index);
 				this.keyboard = tickcontainer.getKeyboard();
 				this.mouse = tickcontainer.getMouse();
-				this.camera = tickcontainer.getSubticks();
+				this.camera = tickcontainer.getCameraAngle();
 			}
 		} else {
 			throw new IndexOutOfBoundsException("Index is bigger than the container");
@@ -543,23 +540,11 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		return out;
 	}
 
-	// =====================================================================================================
-	// Methods to set and retrieve author, title etc
-
-	public void fixTicks() {
+	public void fixTicks() { // TODO Remove and use Serializer to list ticks
 		for (int i = 0; i < inputs.size(); i++) {
 			inputs.get(i).setTick(i + 1);
 		}
 	}
-
-	public long getStartSeed() {
-		return startSeed;
-	}
-
-	public void setStartSeed(long startSeed) {
-		this.startSeed = startSeed;
-	}
-
 
 	// ==============================================================
 
@@ -573,8 +558,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	}
 
 	// ==============================================================
-
-
 
 	public void setPlayUntil(int until) {
 		this.playUntil = until;
@@ -627,7 +610,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 			return mouse;
 		}
 
-		public VirtualCameraAngle getSubticks() {
+		public VirtualCameraAngle getCameraAngle() {
 			return subticks;
 		}
 
@@ -675,11 +658,11 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 
 	public void setStateWhenOpened(TASstate state) {
 		TASmodClient.openMainMenuScheduler.add(() -> {
-			PlaybackControllerClient container = TASmodClient.controller;
-			if (state == TASstate.RECORDING) {
-				long seed = TASmod.ktrngHandler.getGlobalSeedClient();
-				container.setStartSeed(seed);
-			}
+//			PlaybackControllerClient container = TASmodClient.controller;	// Replace with event
+//			if (state == TASstate.RECORDING) {
+//				long seed = TASmod.ktrngHandler.getGlobalSeedClient();
+//				container.setStartSeed(seed);
+//			}
 			setTASState(state);
 		});
 	}
@@ -695,8 +678,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 				PLAYBACK_FULLRECORD, 
 				PLAYBACK_RESTARTANDPLAY, 
 				PLAYBACK_PLAYUNTIL, 
-				PLAYBACK_CLEAR_INPUTS,
-				PLAYBACK_STATE
+				PLAYBACK_CLEAR_INPUTS, 
+				PLAYBACK_STATE 
+				
 		};
 	}
 
@@ -795,31 +779,30 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 
 			case PLAYBACK_TELEPORT:
 				throw new WrongSideException(packet, Side.CLIENT);
-				
+
 			case PLAYBACK_STATE:
 				TASstate networkState = TASmodBufferBuilder.readTASState(buf);
 				boolean verbose = TASmodBufferBuilder.readBoolean(buf);
-				Task task = ()->{
+				Task task = () -> {
 					PlaybackControllerClient container = TASmodClient.controller;
 					if (networkState != container.getState()) {
-						
+
 						String message = container.setTASStateClient(networkState, verbose);
-						
+
 						if (!message.isEmpty()) {
-							if(Minecraft.getMinecraft().world != null)
+							if (Minecraft.getMinecraft().world != null)
 								Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(message));
 							else
 								LOGGER.debug(LoggerMarkers.Playback, message);
-						} 
+						}
 					}
-					
+
 				};
-				
-				
-				if((networkState == TASstate.RECORDING || networkState == TASstate.PLAYBACK) && TASmodClient.tickratechanger.ticksPerSecond != 0) {
-					TASmodClient.tickSchedulerClient.add(task);	// Starts a recording in the next tick
+
+				if ((networkState == TASstate.RECORDING || networkState == TASstate.PLAYBACK) && TASmodClient.tickratechanger.ticksPerSecond != 0) {
+					TASmodClient.tickSchedulerClient.add(task); // Starts a recording in the next tick
 				} else {
-					TASmodClient.gameLoopSchedulerClient.add(task);	// Starts a recording in the next frame
+					TASmodClient.gameLoopSchedulerClient.add(task); // Starts a recording in the next frame
 				}
 				break;
 
