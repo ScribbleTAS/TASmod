@@ -9,7 +9,6 @@ import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_PLAYUNTI
 import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
 import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_SAVE;
 import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_STATE;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_TELEPORT;
 import static com.minecrafttas.tasmod.util.LoggerMarkers.Playback;
 
 import java.nio.ByteBuffer;
@@ -23,8 +22,6 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-
-import net.minecraft.entity.player.EntityPlayerMP;
 
 /**
  * The playback controller on the server side.<br>
@@ -42,7 +39,6 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 		return new TASmodPackets[] 
 				{ 
 				PLAYBACK_STATE,
-				PLAYBACK_TELEPORT,
 				PLAYBACK_CLEAR_INPUTS,
 				PLAYBACK_FULLPLAY,
 				PLAYBACK_FULLRECORD,
@@ -63,22 +59,6 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 				TASstate networkState = TASmodBufferBuilder.readTASState(buf);
 				/* TODO Permissions */
 				setState(networkState);
-				break;
-
-			case PLAYBACK_TELEPORT:
-				double x = TASmodBufferBuilder.readDouble(buf);
-				double y = TASmodBufferBuilder.readDouble(buf);
-				double z = TASmodBufferBuilder.readDouble(buf);
-				float angleYaw = TASmodBufferBuilder.readFloat(buf);
-				float anglePitch = TASmodBufferBuilder.readFloat(buf);
-
-				EntityPlayerMP player = TASmod.getServerInstance().getPlayerList().getPlayerByUsername(username);
-				player.getServerWorld().addScheduledTask(() -> {
-					player.rotationPitch = anglePitch;
-					player.rotationYaw = angleYaw;
-
-					player.setPositionAndUpdate(x, y, z);
-				});
 				break;
 
 			case PLAYBACK_CLEAR_INPUTS:

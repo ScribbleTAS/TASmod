@@ -35,6 +35,10 @@ public class PlaybackMetadataTest {
 		@Override
 		public void onLoad(PlaybackMetadata metadata) {
 		}
+
+		@Override
+		public void onClear() {
+		}
 		
 	}
 	

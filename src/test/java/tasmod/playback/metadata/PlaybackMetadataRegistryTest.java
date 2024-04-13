@@ -46,6 +46,10 @@ public class PlaybackMetadataRegistryTest {
 		public void onLoad(PlaybackMetadata metadata) {
 			actual = metadata.getValue("Test");
 		}
+
+		@Override
+		public void onClear() {
+		}
 		
 	}
 	

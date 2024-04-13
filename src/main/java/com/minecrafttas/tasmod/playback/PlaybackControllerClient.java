@@ -41,6 +41,7 @@ import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
@@ -127,21 +128,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 
 	// =====================================================================================================
 
-	private String title = "Insert TAS category here";
-
-	private String authors = "Insert author here";
-
-	private String playtime = "00:00.0";
-
-	private int rerecords = 0;
-
-	private String startLocation = "";
-
 	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient();
 
 	// =====================================================================================================
-
-	private boolean creditsPrinted = false;
 
 	private Integer playUntil = null;
 
@@ -269,9 +258,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	
 	private void startRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
-		if (Minecraft.getMinecraft().player != null && startLocation.isEmpty()) {
-			startLocation = getStartLocation(Minecraft.getMinecraft().player);
-		}
 		if (this.inputs.isEmpty()) {
 			inputs.add(new TickInputContainer(index));
 			desyncMonitor.recordNull(index);
@@ -285,18 +271,8 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	
 	private void startPlayback() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
-		if (Minecraft.getMinecraft().player != null && !startLocation.isEmpty()) {
-			try {
-				tpPlayer(startLocation);
-			} catch (NumberFormatException e) {
-				state = TASstate.NONE;
-				e.printStackTrace();
-//				return verbose ? TextFormatting.RED + "An error occured while reading the start location of the TAS. The file might be broken" : "";
-			}
-		}
 		Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
 		index = 0;
-		creditsPrinted = false;
 		TASmod.ktrngHandler.setInitialSeed(startSeed);
 	}
 
@@ -548,16 +524,8 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		controlBytes.clear();
 		comments.clear();
 		index = 0;
-		startLocation = "";
 		desyncMonitor.clear();
-		clearCredits();
-	}
-
-	private void clearCredits() {
-		title = "Insert Author here";
-		authors = "Insert author here";
-		playtime = "00:00.0";
-		rerecords = 0;
+		PlaybackMetadataRegistry.handleOnClear();
 	}
 
 	/**
@@ -578,42 +546,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	// =====================================================================================================
 	// Methods to set and retrieve author, title etc
 
-	public String getAuthors() {
-		return authors;
-	}
-
-	public void setAuthors(String authors) {
-		this.authors = authors;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
-	public int getRerecords() {
-		return rerecords;
-	}
-
-	public void setRerecords(int rerecords) {
-		this.rerecords = rerecords;
-	}
-
-	public String getPlaytime() {
-		return playtime;
-	}
-
-	public void setPlaytime(String playtime) {
-		this.playtime = playtime;
-	}
-
-	public void setSavestates(String playtime) {
-		this.playtime = playtime;
-	}
-
 	public void fixTicks() {
 		for (int i = 0; i < inputs.size(); i++) {
 			inputs.get(i).setTick(i + 1);
@@ -628,63 +560,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		this.startSeed = startSeed;
 	}
 
-	// =====================================================================================================
-	// Methods and classes related to the start location of a TAS
-
-	/**
-	 * @return The start location of the TAS
-	 */
-	public String getStartLocation() {
-		return startLocation;
-	}
-
-	/**
-	 * Updates the start location of the input container
-	 * 
-	 * @param startLocation The start location of the TAS
-	 */
-	public void setStartLocation(String startLocation) {
-		LOGGER.debug(LoggerMarkers.Playback, "Setting start location");
-		this.startLocation = startLocation;
-	}
-
-	/**
-	 * Generates a start location from the players position and angle
-	 * 
-	 * @param player The player of the TAS
-	 * @return The start location from the player
-	 */
-	private String getStartLocation(EntityPlayerSP player) {
-		LOGGER.debug(LoggerMarkers.Playback, "Retrieving player start location");
-		String pos = player.posX + "," + player.posY + "," + player.posZ;
-		String pitch = Float.toString(player.rotationPitch);
-		String yaw = Float.toString(player.rotationYaw);
-		return pos + "," + yaw + "," + pitch;
-	}
-
-	/**
-	 * Teleports the player to the start location
-	 * 
-	 * @param startLocation The start location where the player should be teleported
-	 *                      to
-	 * @throws NumberFormatException If the location can't be parsed
-	 */
-	private void tpPlayer(String startLocation) throws NumberFormatException {
-		LOGGER.debug(LoggerMarkers.Playback, "Teleporting the player to the start location");
-		String[] section = startLocation.split(",");
-		double x = Double.parseDouble(section[0]);
-		double y = Double.parseDouble(section[1]);
-		double z = Double.parseDouble(section[2]);
-
-		float angleYaw = Float.parseFloat(section[3]);
-		float anglePitch = Float.parseFloat(section[4]);
-
-		try {
-			TASmodClient.client.send(new TASmodBufferBuilder(PLAYBACK_TELEPORT).writeDouble(x).writeDouble(y).writeDouble(z).writeFloat(angleYaw).writeFloat(anglePitch));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	// ==============================================================
 
@@ -820,7 +695,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 				PLAYBACK_FULLRECORD, 
 				PLAYBACK_RESTARTANDPLAY, 
 				PLAYBACK_PLAYUNTIL, 
-				PLAYBACK_TELEPORT, 
 				PLAYBACK_CLEAR_INPUTS,
 				PLAYBACK_STATE
 		};

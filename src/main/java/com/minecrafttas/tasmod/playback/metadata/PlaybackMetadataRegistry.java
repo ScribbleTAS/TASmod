@@ -77,6 +77,12 @@ public class PlaybackMetadataRegistry {
 			}
 		}
 	}
+	
+	public static void handleOnClear() {
+		METADATA_EXTENSION.forEach((key, extension) ->{
+			extension.onClear();
+		});
+	}
 
 	private static boolean containsClass(PlaybackMetadataExtension newExtension) {
 		for (PlaybackMetadataExtension extension : METADATA_EXTENSION.values()) {
@@ -118,5 +124,10 @@ public class PlaybackMetadataRegistry {
 		 * @param metadata The metadata for this extension to read from
 		 */
 		public void onLoad(PlaybackMetadata metadata);
+		
+		/**
+		 * Runs when the PlaybackController is cleared
+		 */
+		public void onClear();
 	}
 }

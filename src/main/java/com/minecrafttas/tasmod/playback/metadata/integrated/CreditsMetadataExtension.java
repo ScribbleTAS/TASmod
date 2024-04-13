@@ -72,6 +72,15 @@ public class CreditsMetadataExtension implements PlaybackMetadataExtension, Even
 	}
 
 	@Override
+	public void onClear() {
+		title = "Insert TAS category here";
+		authors = "Insert author here";
+		playtime = "00:00.0";
+		rerecords = 0;
+		creditsPrinted = false;
+	}
+	
+	@Override
 	public void onPlaybackJoinedWorld(TASstate state) {
 		LOGGER.trace(LoggerMarkers.Playback, "Printing credits");
 		if (state == TASstate.PLAYBACK && !creditsPrinted) {

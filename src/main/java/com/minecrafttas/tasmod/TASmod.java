@@ -27,6 +27,7 @@ import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.ktrng.KillTheRNGHandler;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
+import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
 import com.minecrafttas.tasmod.savestates.files.SavestateTrackerFile;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
@@ -68,6 +69,8 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
 
 	public static final boolean isDevEnvironment = FabricLoaderImpl.INSTANCE.isDevelopmentEnvironment();
 	
+	public static final StartpositionMetadataExtension startPositionMetadataExtension = new StartpositionMetadataExtension();
+	
 	@Override
 	public void onInitialize() {
 		
@@ -96,6 +99,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
 		PacketHandlerRegistry.register(tickratechanger);
 		PacketHandlerRegistry.register(ktrngHandler);
 		PacketHandlerRegistry.register(playbackControllerServer);
+		PacketHandlerRegistry.register(startPositionMetadataExtension);
 	}
 	
 	@Override
