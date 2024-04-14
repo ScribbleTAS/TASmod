@@ -56,6 +56,7 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.event.ClickEvent;
 
 /**
  * A controller where the inputs are stored.<br>
@@ -703,8 +704,11 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 //						e.printStackTrace();
 //					return;
 //				}
-				if (mc.world != null)
-					mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.GREEN + "Saved inputs to " + name + ".mctas"));
+				if (mc.world != null) {
+					TextComponentString confirm = new TextComponentString(TextFormatting.GREEN + "Saved inputs to " + name + ".mctas" + TextFormatting.RESET + " [" + TextFormatting.YELLOW + "Open folder" + TextFormatting.RESET + "]");
+					confirm.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/folder tasfiles"));
+					mc.ingameGUI.getChatGUI().printChatMessage(confirm);
+				}
 				else
 					LOGGER.debug(LoggerMarkers.Playback, "Saved inputs to " + name + ".mctas");
 				break;

@@ -13,7 +13,7 @@ import com.minecrafttas.tasmod.TASmod;
  * The default metadata includes general information such as author name,
  * savestate/rerecord count and category.<br>
  * <br>
- * Any custom class has to extend PlaybackMetadataExtension
+ * Any custom class has to implement PlaybackMetadataExtension
  * 
  */
 public class PlaybackMetadataRegistry {
