@@ -26,8 +26,8 @@ public class InterpolationHandler implements EventCamera {
 			TickInputContainer input = TASmodClient.controller.get();
 			if (input == null)
 				return dataIn;
-			float nextPitch = input.getSubticks().getPitch();
-			float nextYaw = input.getSubticks().getYaw();
+			float nextPitch = input.getCameraAngle().getPitch();
+			float nextYaw = input.getCameraAngle().getYaw();
 			dataIn.pitch = (float) MathHelper.clampedLerp(rotationPitch, nextPitch, Minecraft.getMinecraft().timer.renderPartialTicks);
 			dataIn.yaw = (float) MathHelper.clampedLerp(rotationYaw, nextYaw + 180, Minecraft.getMinecraft().timer.renderPartialTicks);
 		} else {

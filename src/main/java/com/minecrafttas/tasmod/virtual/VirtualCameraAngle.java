@@ -1,11 +1,11 @@
 package com.minecrafttas.tasmod.virtual;
 
-import net.minecraft.util.math.MathHelper;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import net.minecraft.util.math.MathHelper;
 
 /**
  * Stores the values of the camera angle of the player in a given timeframe.<br>
@@ -80,11 +80,21 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	 * @param yawDelta The difference between absolute coordinates of the yaw, is added to {@link VirtualCameraAngle#yaw}
 	 */
 	public void update(float pitchDelta, float yawDelta) {
+		update(pitchDelta, yawDelta, true);
+	}
+	
+	/**
+	 * Updates the camera angle.
+	 * @param pitchDelta The difference between absolute coordinates of the pitch, is added to {@link VirtualCameraAngle#pitch}
+	 * @param yawDelta The difference between absolute coordinates of the yaw, is added to {@link VirtualCameraAngle#yaw}
+	 * @param updateSubtick If the previous camera should be added to {@link Subtickable#subtickList}
+	 */
+	public void update(float pitchDelta, float yawDelta, boolean updateSubtick) {
 		if(pitch==null || yaw == null) {
 			return;
 		}
-		if(isParent() && !ignoreFirstUpdate()) {
-			addSubtick(clone());
+		if(isParent() && !ignoreFirstUpdate() && updateSubtick) {
+			addSubtick(shallowClone());
 		}
 		this.pitch = MathHelper.clamp(this.pitch + pitchDelta, -90.0F, 90.0F);
 		this.yaw += yawDelta;
@@ -113,15 +123,30 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	}
 	
     /**
-     * Copies the data from another camera angle into this camera without creating a new object.
-     * @param camera The camera to move from
+     * Moves the data from another camera angle into this camera without creating a new object.
+     * @param camera The camera to copy from
      */
-	public void copyFrom(VirtualCameraAngle camera) {
+	public void moveFrom(VirtualCameraAngle camera) {
+		if(camera == null)
+			return;
 		this.pitch = camera.pitch;
 		this.yaw = camera.yaw;
 		this.subtickList.clear();
 		this.subtickList.addAll(camera.subtickList);
 		camera.subtickList.clear();
+	}
+	
+    /**
+     * Copies the data from another camera angle into this camera without creating a new object.
+     * @param camera The camera to copy from
+     */
+	public void deepCopyFrom(VirtualCameraAngle camera) {
+		if(camera == null || !camera.isParent())
+			return;
+		this.pitch = camera.pitch;
+		this.yaw = camera.yaw;
+		this.subtickList.clear();
+		this.subtickList.addAll(camera.subtickList);
 	}
 	
 	/**
@@ -137,9 +162,13 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	/**
 	 * Creates a clone of this object as a subtick
 	 */
+	public VirtualCameraAngle shallowClone() {
+		return new VirtualCameraAngle(pitch, yaw);
+	}
+	
 	@Override
 	public VirtualCameraAngle clone() {
-		return new VirtualCameraAngle(pitch, yaw);
+		return new VirtualCameraAngle(pitch, yaw, new ArrayList<>(subtickList), isIgnoreFirstUpdate());
 	}
 
 	@Override

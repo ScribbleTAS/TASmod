@@ -8,9 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
+import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
+import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
+import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKey;
@@ -20,6 +24,14 @@ import com.minecrafttas.tasmod.virtual.VirtualMouse;
 class VirtualInputTest {
 
 	private final Logger LOGGER = LogManager.getLogger("TASmod");
+	
+	@BeforeAll
+	static void beforeAll() {
+		EventVirtualKeyboardTick kb = (keyboard)->null;
+		EventVirtualMouseTick ms = (mouse)->null;
+		EventVirtualCameraAngleTick cmra = (cameraangle)->null;
+		EventListenerRegistry.register(kb, ms, cmra);
+	}
 	
 	/**
 	 * Test constructor initializing keyboard, mouse and camera_angle
@@ -297,59 +309,36 @@ class VirtualInputTest {
 
 		virtual.CAMERA_ANGLE.nextCameraTick();
 
-		Triple<Float, Float, Float> expected = Triple.of(0f, 0f, 0f);
+		Triple<Float, Float, Float> expected = Triple.of(0f, 180f, 0f);
 		Triple<Float, Float, Float> actual = virtual.CAMERA_ANGLE.getInterpolatedState(0f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(10f, 10f, 0f);
+		expected = Triple.of(0f, 180f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.1f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(10f, 10f, 0f);
+		expected = Triple.of(10f, 190f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.199f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(20f, 20f, 0f);
+		expected = Triple.of(10f, 190f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.2f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(30f, 30f, 0f);
+		expected = Triple.of(20f, 200f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.3f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(40f, 40f, 0f);
+		expected = Triple.of(30f, 210f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.4f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(50f, 50f, 0f);
+		expected = Triple.of(40f, 220f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.5f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(60f, 60f, 0f);
+		expected = Triple.of(50f, 230f, 0f);
 		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.6f, 0f, 0f, true);
-		assertEquals(expected, actual);
-	}
-
-	/**
-	 * Test interpolation but with playback running, but there are only 2 values
-	 */
-	@Test
-	@Disabled
-	void testInterpolationEnabledLegacy(){
-		VirtualInput virtual = new VirtualInput(LOGGER);
-
-		virtual.CAMERA_ANGLE.setCamera(0f, 0f);
-
-		virtual.CAMERA_ANGLE.updateNextCameraAngle(10f, 10f);
-
-		virtual.CAMERA_ANGLE.nextCameraTick();
-
-		Triple<Float, Float, Float> expected = Triple.of(0f, 0f, 0f);
-		Triple<Float, Float, Float> actual = virtual.CAMERA_ANGLE.getInterpolatedState(0f, 0f, 0f, true);
-		assertEquals(expected, actual);
-
-		expected = Triple.of(10f, 10f, 0f);
-		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.3f, 0f, 0f, true);
 		assertEquals(expected, actual);
 	}
 }

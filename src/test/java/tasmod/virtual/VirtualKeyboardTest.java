@@ -201,10 +201,10 @@ class VirtualKeyboardTest {
     }
 
     /**
-     * Test cloning the keyboard
+     * Test shallow cloning the keyboard
      */
     @Test
-    void testClone() {
+    void testShallowClone() {
         Set<Integer> testKeycodeSet = new HashSet<>();
         testKeycodeSet.add(VirtualKey.W.getKeycode());
         testKeycodeSet.add(VirtualKey.S.getKeycode());
@@ -213,17 +213,58 @@ class VirtualKeyboardTest {
         testCharList.add('w');
         testCharList.add('s');
 
-        VirtualKeyboard actual = new VirtualKeyboard(testKeycodeSet, testCharList);
-        VirtualKeyboard test2 = actual.clone();
+        VirtualKeyboard expected = new VirtualKeyboard(testKeycodeSet, testCharList);
+        VirtualKeyboard actual = expected.shallowClone();
         
-        assertEquals(actual, test2);
+        assertEquals(expected, actual);
+    }
+
+	/**
+	 * Test deep cloning the keyboard
+	 */
+	@Test
+	void testDeepClone() {
+		VirtualKeyboard expected = new VirtualKeyboard();
+		expected.update(VirtualKey.W, true, 'w');
+		expected.update(VirtualKey.S, true, 's');
+
+		VirtualKeyboard actual = expected.clone();
+
+		assertEquals(expected, actual);
+		assertIterableEquals(expected.getSubticks(), actual.getSubticks());
+	}
+
+    /**
+     * Test moveFrom method
+     */
+    @Test
+    void testMoveFrom(){
+    	VirtualKeyboard moveFrom = new VirtualKeyboard();
+    	VirtualKeyboard actual = new VirtualKeyboard();
+    	
+    	moveFrom.update(VirtualKey.W.getKeycode(), true, 'w');
+    	moveFrom.update(VirtualKey.A.getKeycode(), true, 'a');
+    	
+    	VirtualKeyboard expected = moveFrom.clone();
+    	
+    	actual.update(VirtualKey.S.getKeycode(), true, 's');
+    	actual.update(VirtualKey.D.getKeycode(), true, 'd');
+
+    	actual.moveFrom(null);
+        actual.moveFrom(moveFrom);
+
+        assertIterableEquals(expected.getPressedKeys(), actual.getPressedKeys());
+        assertIterableEquals(expected.getCharList(), actual.getCharList());
+
+        assertTrue(moveFrom.getSubticks().isEmpty());
+        assertTrue(moveFrom.getCharList().isEmpty());
     }
 
     /**
-     * Test copy from method
+     * Test copyFrom method
      */
     @Test
-    void testCopyFrom(){
+    void testCopyFrom() {
     	VirtualKeyboard copyFrom = new VirtualKeyboard();
     	VirtualKeyboard actual = new VirtualKeyboard();
     	
@@ -235,15 +276,16 @@ class VirtualKeyboardTest {
     	actual.update(VirtualKey.S.getKeycode(), true, 's');
     	actual.update(VirtualKey.D.getKeycode(), true, 'd');
 
+    	actual.copyFrom(null);
         actual.copyFrom(copyFrom);
 
         assertIterableEquals(expected.getPressedKeys(), actual.getPressedKeys());
         assertIterableEquals(expected.getCharList(), actual.getCharList());
 
-        assertTrue(copyFrom.getSubticks().isEmpty());
-        assertTrue(copyFrom.getCharList().isEmpty());
+        assertFalse(copyFrom.getSubticks().isEmpty());
+        assertFalse(copyFrom.getCharList().isEmpty());
     }
-
+    
     /**
      * Test subtick list being filled via update
      */

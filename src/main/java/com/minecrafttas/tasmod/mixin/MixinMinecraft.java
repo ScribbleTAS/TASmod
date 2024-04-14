@@ -91,9 +91,4 @@ public abstract class MixinMinecraft {
 	public long fixMouseWheel(long twohundredLong) {
 		return (long) Math.max(4000F / TASmodClient.tickratechanger.ticksPerSecond, 200L);
 	}
-
-	@Inject(method = "runTick", at = @At(value = "RETURN"))
-	public void injectRunTickReturn(CallbackInfo ci) {
-		TASmodClient.controller.nextTick(); // TODO Replace with event
-	}
 }

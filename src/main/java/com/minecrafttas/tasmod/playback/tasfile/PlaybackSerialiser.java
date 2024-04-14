@@ -1,13 +1,14 @@
-package com.minecrafttas.tasmod.playback;
+package com.minecrafttas.tasmod.playback.tasfile;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
+import com.minecrafttas.tasmod.playback.ControlByteHandler;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 import com.minecrafttas.tasmod.util.FileThread;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
-import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 import com.mojang.realmsclient.util.Pair;
@@ -107,27 +108,27 @@ public class PlaybackSerialiser {
 		fileThread.start();
 //		monitorThread.start();
 		
-		fileThread.addLine("################################################# TASFile ###################################################\n"
-				 + "#												Version:1													#\n"
-				 + "#							This file was generated using the Minecraft TASMod								#\n"
-				 + "#																											#\n"
-				 + "#			Any errors while reading this file will be printed out in the console and the chat				#\n"
-				 + "#																											#\n"
-				 + "#------------------------------------------------ Header ---------------------------------------------------#\n"
-				 + "#Author:" + container.getAuthors() + "\n"
-				 + "#																											#\n"
-				 + "#Title:" + container.getTitle() + "\n"
-				 + "#																											#\n"
-				 + "#Playing Time:" + container.getPlaytime() + "\n"
-				 + "#																											#\n"
-				 + "#Rerecords:"+container.getRerecords() + "\n"
-				 + "#																											#\n"
-				 + "#----------------------------------------------- Settings --------------------------------------------------#\n"
-				 + "#StartPosition:"+container.getStartLocation()+"\n"
-				 + "#																											#\n"
-				 + "#StartSeed:" + container.getStartSeed() + "\n"
-				 + "#############################################################################################################\n"
-				 + "#Comments start with \"//\" at the start of the line, comments with # will not be saved\n");
+//		fileThread.addLine("################################################# TASFile ###################################################\n"
+//				 + "#												Version:1													#\n"
+//				 + "#							This file was generated using the Minecraft TASMod								#\n"
+//				 + "#																											#\n"
+//				 + "#			Any errors while reading this file will be printed out in the console and the chat				#\n"
+//				 + "#																											#\n"
+//				 + "#------------------------------------------------ Header ---------------------------------------------------#\n"
+//				 + "#Author:" + container.getAuthors() + "\n"
+//				 + "#																											#\n"
+//				 + "#Title:" + container.getTitle() + "\n"
+//				 + "#																											#\n"
+//				 + "#Playing Time:" + container.getPlaytime() + "\n"
+//				 + "#																											#\n"
+//				 + "#Rerecords:"+container.getRerecords() + "\n"
+//				 + "#																											#\n"
+//				 + "#----------------------------------------------- Settings --------------------------------------------------#\n"
+//				 + "#StartPosition:"+container.getStartLocation()+"\n"
+//				 + "#																											#\n"
+//				 + "#StartSeed:" + container.getStartSeed() + "\n"
+//				 + "#############################################################################################################\n"
+//				 + "#Comments start with \"//\" at the start of the line, comments with # will not be saved\n");
 		
 		BigArrayList<TickInputContainer> ticks = container.getInputs();
 		Map<Integer, List<Pair<String, String[]>>> cbytes= container.getControlBytes();
@@ -282,12 +283,12 @@ public class PlaybackSerialiser {
 				}
 			}
 		}
-		controller.setAuthors(author);
-		controller.setTitle(title);
-		controller.setPlaytime(playtime);
-		controller.setRerecords(rerecords);
-		controller.setStartLocation(startLocation);
-		controller.setStartSeed(startSeed);
+//		controller.setAuthors(author);
+//		controller.setTitle(title);
+//		controller.setPlaytime(playtime);
+//		controller.setRerecords(rerecords);
+//		controller.setStartLocation(startLocation);
+//		controller.setStartSeed(startSeed);
 		if(!monitorLines.isEmpty()) {
 			controller.desyncMonitor = new DesyncMonitoring(controller, monitorLines);
 		}

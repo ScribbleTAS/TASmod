@@ -108,6 +108,18 @@ public class EventListenerRegistry {
 	}
 
 	/**
+	 * Registers multiple objects to be an event listener. The objects must
+	 * implement an event extending {@link EventBase}
+	 * 
+	 * @param eventListeners The event listeners to register
+	 */
+	public static void register(EventBase... eventListeners) {
+		for (EventBase eventListener : eventListeners) {
+			register(eventListener);
+		}
+	}
+
+	/**
 	 * Unregisters an object from being an event listener.
 	 * 
 	 * @param eventListener The event listener to unregister
@@ -127,6 +139,17 @@ public class EventListenerRegistry {
 					}
 				}
 			}
+		}
+	}
+
+	/**
+	 * Unregisters multiple objects from being an event listener.
+	 * 
+	 * @param eventListener The event listeners to unregister
+	 */
+	public static void unregister(EventBase... eventListeners) {
+		for (EventBase eventListener : eventListeners) {
+			unregister(eventListener);
 		}
 	}
 
@@ -151,6 +174,7 @@ public class EventListenerRegistry {
 	public static Object fireEvent(Class<? extends EventListenerRegistry.EventBase> eventClass, Object... eventParams) {
 		ArrayList<EventBase> listenerList = EVENTLISTENER_REGISTRY.get(eventClass);
 		if (listenerList == null) {
+//            throw new EventException("The event has not been registered yet", eventClass);
 			return null;
 		}
 
@@ -250,12 +274,7 @@ public class EventListenerRegistry {
 		for (int i = 0; i < methodParameterTypes.length; i++) {
 			Class<?> paramName = methodParameterTypes[i];
 			Class<?> eventName = eventParameterTypes[i];
-
-			if (paramName == null || eventName == null) {
-				continue;
-			}
-
-			if (!paramName.equals(eventName) && !paramName.isAssignableFrom(eventName)) {
+			if (!paramName.equals(eventName) && (paramName != null && eventName != null && !paramName.isAssignableFrom(eventName))) {
 				return false;
 			}
 		}
@@ -265,7 +284,11 @@ public class EventListenerRegistry {
 	private static Class<?>[] getParameterTypes(Object... parameters) {
 		Class<?>[] out = new Class[parameters.length];
 		for (int i = 0; i < parameters.length; i++) {
-			out[i] = parameters[i] == null ? null : parameters[i].getClass();
+			if (parameters[i] == null) {
+				out[i] = null;
+				continue;
+			}
+			out[i] = parameters[i].getClass();
 		}
 		return out;
 	}

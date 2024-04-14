@@ -28,7 +28,10 @@ import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.playback.PlaybackSerialiser;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
+import com.minecrafttas.tasmod.playback.metadata.integrated.CreditsMetadataExtension;
+import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerClient;
 import com.minecrafttas.tasmod.ticksync.TickSyncClient;
@@ -85,6 +88,10 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	public static SavestateHandlerClient savestateHandlerClient = new SavestateHandlerClient();
 	
 	public static Client client;
+	
+	public static CreditsMetadataExtension creditsMetadataExtension = new CreditsMetadataExtension();
+	
+	public static StartpositionMetadataExtension startpositionMetadataExtension = new StartpositionMetadataExtension();
 	/**
 	 * The container where all inputs get stored during recording or stored and
 	 * ready to be played back
@@ -153,6 +160,12 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			}
 			return gui;
 		}));
+		EventListenerRegistry.register(controller);
+		PlaybackMetadataRegistry.register(creditsMetadataExtension);
+		EventListenerRegistry.register(creditsMetadataExtension);
+		
+		PlaybackMetadataRegistry.register(startpositionMetadataExtension);
+		EventListenerRegistry.register(startpositionMetadataExtension);
 		
 		// Register packet handlers
 		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers on client");
@@ -195,14 +208,15 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		})));
 		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Open InfoGui Editor", "TASmod", Keyboard.KEY_F6, () -> Minecraft.getMinecraft().displayGuiScreen(TASmodClient.hud))));
 		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
-			TASmodClient.client.disconnect();
+			controller.setTASState(TASstate.RECORDING);
 		}, VirtualKeybindings::isKeyDown)));
 		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
-			try {
-				TASmodClient.client = new Client("localhost", TASmod.networkingport-1, TASmodPackets.values(), mc.getSession().getProfile().getName(), true);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+//			try {
+//				TASmodClient.client = new Client("localhost", TASmod.networkingport-1, TASmodPackets.values(), mc.getSession().getProfile().getName(), true);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+			controller.setTASState(TASstate.PLAYBACK);
 		}, VirtualKeybindings::isKeyDown)));
 		blockedKeybindings.forEach(VirtualKeybindings::registerBlockedKeyBinding);
 		

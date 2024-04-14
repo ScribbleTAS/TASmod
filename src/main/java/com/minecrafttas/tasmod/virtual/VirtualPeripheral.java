@@ -134,15 +134,44 @@ public abstract class VirtualPeripheral<T extends VirtualPeripheral<T>> extends 
 	}
 
 	/**
-	 * Copies the data from another virtual peripheral into this peripheral without
-	 * creating a new object.
+	 * Moves the data from another virtual peripheral into this peripheral without creating a new object.<br>
+	 * Deletes the data in the other peripheral.<br>
+	 * <strong>Ignores {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList}</strong>
 	 * 
 	 * @param peripheral The peripheral to move from
 	 */
-	protected void copyFrom(T peripheral) {
-		this.pressedKeys.clear();
-		this.pressedKeys.addAll(peripheral.pressedKeys);
+	protected void moveFrom(T peripheral) {
+		if(peripheral == null)
+			return;
+		copyFrom(peripheral);
 		peripheral.subtickList.clear();
 		peripheral.resetFirstUpdate();
 	}
+	
+	/**
+	 * Copies the data from another virtual peripheral into this peripheral without creating a new object.<br>
+	 * Does not delete the data from the other peripehral.<br>
+	 * <strong>Ignores {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList}</strong>
+	 * 
+	 * @param peripheral The peripheral to copy from
+	 */
+	protected void copyFrom(T peripheral) {
+		if(peripheral == null)
+			return;
+		this.pressedKeys.clear();
+		this.pressedKeys.addAll(peripheral.pressedKeys);
+	}
+	
+	/**
+	 * Copies the data from another virtual peripheral similar to {@link #copyFrom(VirtualPeripheral)}, but including the {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList}
+	 * @param peripheral
+	 */
+	protected void deepCopyFrom(T peripheral) {
+		if(peripheral == null || !peripheral.isParent())
+			return;
+		copyFrom(peripheral);
+		this.subtickList.clear();
+		this.subtickList.addAll(peripheral.subtickList);
+	}
+	
 }

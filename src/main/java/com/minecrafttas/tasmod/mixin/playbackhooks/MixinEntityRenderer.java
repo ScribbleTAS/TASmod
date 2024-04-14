@@ -81,7 +81,7 @@ public class MixinEntityRenderer implements SubtickDuck {
 			}
 
 			mc.getTutorial().handleMouse(mc.mouseHelper);
-			TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle((float) -((double)deltaPitch * 0.15D * invertMouse), (float) ((double)deltaYaw * 0.15D));
+			TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle((float) -((double)deltaPitch * 0.15D * invertMouse), (float) ((double)deltaYaw * 0.15D), TASmodClient.tickratechanger.ticksPerSecond != 0);
 		}
 	}
 
@@ -174,11 +174,13 @@ public class MixinEntityRenderer implements SubtickDuck {
 	 */
 	private float redirectCam(float pitch, float yaw) {
 		Triple<Float, Float, Float> interpolated = TASmodClient.virtual.CAMERA_ANGLE.getInterpolatedState(Minecraft.getMinecraft().timer.renderPartialTicks, pitch, yaw, TASmodClient.controller.isPlayingback());
+		float pitch2 = interpolated.getLeft();
+		float yaw2 = interpolated.getMiddle();
 		// Update pitch
-		GlStateManager.rotate(interpolated.getLeft(), 1.0f, 0.0f, 0.0f);
+		GlStateManager.rotate(pitch2, 1.0f, 0.0f, 0.0f);
 		// Update roll
 		GlStateManager.rotate(interpolated.getRight(), 0.0f, 0.0f, 1.0f);
 		// Update yaw
-		return interpolated.getMiddle();
+		return yaw2;
 	}
 }

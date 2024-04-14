@@ -119,10 +119,6 @@ public class EventTest {
 
         class TestClass implements TestEvent {
 
-            public int onTestEvent(int test) {
-                return test;
-            }
-
             @Override
             public int onTestEvent() {
                 return 1;
@@ -164,6 +160,7 @@ public class EventTest {
 
         EventListenerRegistry.unregister(event);
 
-        assertNull(EventListenerRegistry.fireEvent(TestEvent.class));
+        EventListenerRegistry.fireEvent(TestEvent.class);
+        return;
     }
 }

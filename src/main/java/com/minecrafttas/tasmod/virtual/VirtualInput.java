@@ -11,6 +11,10 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
+import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
+import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
+import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinMinecraft;
 import com.minecrafttas.tasmod.util.Ducks;
@@ -244,8 +248,9 @@ public class VirtualInput {
 		 * @see MixinMinecraft#playback_injectRunTickKeyboard(org.spongepowered.asm.mixin.injection.callback.CallbackInfo)
 		 */
 		public void nextKeyboardTick() {
+			nextKeyboard.deepCopyFrom((VirtualKeyboard) EventListenerRegistry.fireEvent(EventVirtualKeyboardTick.class, nextKeyboard));
 			currentKeyboard.getVirtualEvents(nextKeyboard, keyboardEventQueue);
-			currentKeyboard.copyFrom(nextKeyboard);
+			currentKeyboard.moveFrom(nextKeyboard);
 		}
 
 		/**
@@ -403,8 +408,9 @@ public class VirtualInput {
 		 * @see MixinMinecraft#playback_injectRunTickMouse(org.spongepowered.asm.mixin.injection.callback.CallbackInfo)
 		 */
 		public void nextMouseTick() {
+			nextMouse.deepCopyFrom((VirtualMouse) EventListenerRegistry.fireEvent(EventVirtualMouseTick.class, nextMouse));
 			currentMouse.getVirtualEvents(nextMouse, mouseEventQueue);
-			currentMouse.copyFrom(nextMouse);
+			currentMouse.moveFrom(nextMouse);
 		}
 
 		/**
@@ -577,8 +583,22 @@ public class VirtualInput {
 		 * @param yawDelta   Relative rotationYaw delta from LWJGLs mouse delta.
 		 */
 		public void updateNextCameraAngle(float pitchDelta, float yawDelta) {
+			updateNextCameraAngle(pitchDelta, yawDelta, true);
+		}
+		
+		/**
+		 * Update the camera angle.<br>
+		 * <br>
+		 * Runs every frame
+		 * 
+		 * @see com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer#runUpdate(float);
+		 * @param pitchDelta    Relative rotationPitch delta from LWJGLs mouse delta.
+		 * @param yawDelta      Relative rotationYaw delta from LWJGLs mouse delta.
+		 * @param updateSubtick Whether to add the previous camera angle to the {@link Subtickable#subtickList}
+		 */
+		public void updateNextCameraAngle(float pitchDelta, float yawDelta, boolean updateSubtick) {
 //			LOGGER.debug("Pitch: {}, Yaw: {}", pitch, yaw);
-			nextCameraAngle.update(pitchDelta, yawDelta);
+			nextCameraAngle.update(pitchDelta, yawDelta, updateSubtick);
 		}
 
 		/**
@@ -588,8 +608,10 @@ public class VirtualInput {
 		 * @see MixinEntityRenderer#runUpdate(float)
 		 */
 		public void nextCameraTick() {
+			nextCameraAngle.deepCopyFrom((VirtualCameraAngle) EventListenerRegistry.fireEvent(EventVirtualCameraAngleTick.class, nextCameraAngle));
+			cameraAngleInterpolationStates.clear();
 			nextCameraAngle.getStates(cameraAngleInterpolationStates);
-			currentCameraAngle.copyFrom(nextCameraAngle);
+			currentCameraAngle.moveFrom(nextCameraAngle);
 		}
 
 		/**
@@ -634,24 +656,17 @@ public class VirtualInput {
 		 * @return A triple of pitch, yaw and roll, as left, middle and right respectively 
 		 */
 		public Triple<Float, Float, Float> getInterpolatedState(float partialTick, float pitch, float yaw, boolean enable) {
-			if (!enable) { // If interpolation is not enabled, return the values of nextCameraAngle
-				return Triple.of(nextCameraAngle.getPitch() == null ? pitch : nextCameraAngle.getPitch(), nextCameraAngle.getYaw() == null ? pitch : nextCameraAngle.getYaw() + 180, 0f);
-			}
+			
+			float interpolatedPitch = nextCameraAngle.getPitch() == null ? pitch : nextCameraAngle.getPitch();
+			float interpolatedYaw = nextCameraAngle.getYaw() == null ? yaw : nextCameraAngle.getYaw() + 180;
 
-			float interpolatedPitch = 0f;
-			float interpolatedYaw = 0f;
-
-			if (cameraAngleInterpolationStates.size() == 1) { // If no interpolation data was specified, interpolate over 2 values
-				interpolatedPitch = (float) MathHelper.clampedLerp(cameraAngleInterpolationStates.get(0).getPitch(), currentCameraAngle.getPitch(), partialTick);
-				interpolatedYaw = (float) MathHelper.clampedLerp(currentCameraAngle.getYaw(), cameraAngleInterpolationStates.get(0).getYaw() + 180, partialTick);
-			} else {
-
-				int index = (int) MathHelper.clampedLerp(0, cameraAngleInterpolationStates.size(), partialTick); // Get interpolate index
+			if (enable && !cameraAngleInterpolationStates.isEmpty()) {
+				int index = (int) MathHelper.clampedLerp(0, cameraAngleInterpolationStates.size() - 1, partialTick); // Get interpolate index
 
 				interpolatedPitch = cameraAngleInterpolationStates.get(index).getPitch();
-				interpolatedYaw = cameraAngleInterpolationStates.get(index).getYaw();
-			}
+				interpolatedYaw = cameraAngleInterpolationStates.get(index).getYaw() + 180;
 
+			}
 			return Triple.of(interpolatedPitch, interpolatedYaw, 0f);
 		}
 	}

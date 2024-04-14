@@ -142,17 +142,17 @@ public class VirtualCameraAngleTest {
 	}
 
 	/**
-	 * Test copyfrom method
+	 * Test copyFrom method
 	 */
 	@Test
-	void copyFrom() {
+	void testCopyFrom() {
 		VirtualCameraAngle expected = new VirtualCameraAngle(0f, 0f, true);
 		expected.update(1f, 2f);
 		expected.update(3f, 4f);
 		
 		VirtualCameraAngle actual = new VirtualCameraAngle(0f, 0f, true);
 		
-		actual.copyFrom(expected);
+		actual.moveFrom(expected);
 		
 		// Test pitch and yaw
 		assertEquals(expected.getPitch(), actual.getPitch());
@@ -214,20 +214,22 @@ public class VirtualCameraAngleTest {
 	}
 
 	/**
-	 * Test cloning the camera angle
+	 * Test shallow cloning the camera angle
 	 */
 	@Test
-	void testClone() {
+	void testShallowClone() {
 		float x = 1f;
 		float y = 2f;
 
 		VirtualCameraAngle test = new VirtualCameraAngle(x, y);
 
-		VirtualCameraAngle actual = test.clone();
+		VirtualCameraAngle actual = test.shallowClone();
 
 		assertEquals(1f, actual.getPitch());
 		assertEquals(2f, actual.getYaw());
 	}
+	
+	// DeepCloning
 
 	/**
 	 * Test equals

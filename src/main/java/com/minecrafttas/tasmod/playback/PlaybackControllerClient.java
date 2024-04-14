@@ -9,10 +9,8 @@ import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_PLAYUNTI
 import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
 import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_SAVE;
 import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_STATE;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_TELEPORT;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -23,6 +21,7 @@ import org.lwjgl.opengl.Display;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.server.ByteBufferBuilder;
 import com.minecrafttas.mctcommon.server.Client.Side;
 import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
@@ -31,16 +30,24 @@ import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.server.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
+import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
+import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
+import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
+import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
+import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
 import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
+import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
-import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
-import com.mojang.realmsclient.gui.ChatFormatting;
 import com.mojang.realmsclient.util.Pair;
 
 import net.minecraft.client.Minecraft;
@@ -63,12 +70,12 @@ import net.minecraft.util.text.TextFormatting;
  * Information about the author etc. get stored in the playback controller too
  * and will be printed out in chat when the player loads into a world <br>
  * Inputs are saved and loaded to/from file via the
- * {@linkplain PlaybackSerialiser}
+ * {@linkplain PlaybackSerialiser} TODO Update with new {@link PlaybackMetadata}
  * 
  * @author Scribble
  *
  */
-public class PlaybackControllerClient implements ClientPacketHandler {
+public class PlaybackControllerClient implements ClientPacketHandler, EventVirtualKeyboardTick, EventVirtualMouseTick, EventVirtualCameraAngleTick, EventClientTickPost {
 
 	/**
 	 * The current state of the controller.
@@ -76,9 +83,10 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 	private TASstate state = TASstate.NONE;
 
 	/**
-	 * The state of the controller when the state is paused
+	 * The state of the controller when the {@link #state} is paused
 	 */
 	private TASstate tempPause = TASstate.NONE;
+
 	/**
 	 * The current index of the inputs
 	 */
@@ -88,7 +96,7 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 
 	private VirtualMouse mouse = new VirtualMouse();
 
-	private VirtualCameraAngle subticks = new VirtualCameraAngle();
+	private VirtualCameraAngle camera = new VirtualCameraAngle();
 
 	public final File directory = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles");
 
@@ -107,34 +115,20 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 	 * <p>
 	 * <code>Map(int playbackLine, List(Pair(String controlCommand, String[] arguments))</code>"
 	 */
-	private Map<Integer, List<Pair<String, String[]>>> controlBytes = new HashMap<Integer, List<Pair<String, String[]>>>();
+	private Map<Integer, List<Pair<String, String[]>>> controlBytes = new HashMap<Integer, List<Pair<String, String[]>>>(); // TODO Replace with TASFile extension
 
 	/**
 	 * The comments in the file, used to store them again later
 	 */
-	private Map<Integer, List<String>> comments = new HashMap<>();
+	private Map<Integer, List<String>> comments = new HashMap<>(); // TODO Replace with TASFile extension
 
-	public DesyncMonitoring desyncMonitor = new DesyncMonitoring(this);
+	public DesyncMonitoring desyncMonitor = new DesyncMonitoring(this); // TODO Replace with TASFile extension
 
-	// =====================================================================================================
-
-	private String title = "Insert TAS category here";
-
-	private String authors = "Insert author here";
-
-	private String playtime = "00:00.0";
-
-	private int rerecords = 0;
-
-	private String startLocation = "";
-
-	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient();
+	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 
 	// =====================================================================================================
 
-	private boolean creditsPrinted = false;
-
-	private Integer playUntil = null;
+	private Integer playUntil = null; // TODO Replace with event
 
 	/**
 	 * Sets the current {@link TASstate}
@@ -152,7 +146,7 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Starts or stops a recording/playback
 	 * 
@@ -171,7 +165,9 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 	 * @return The message printed in the chat
 	 */
 	public String setTASStateClient(TASstate stateIn, boolean verbose) {
-		ControlByteHandler.reset();	// FIXME Controlbytes are resetting when loading a world, due to "Paused" state being active during loading... Fix Paused state shenanigans?
+		EventListenerRegistry.fireEvent(EventControllerStateChange.class, stateIn, state);
+		ControlByteHandler.reset(); // FIXME Controlbytes are resetting when loading a world, due to "Paused" state
+									// being active during loading... Fix Paused state shenanigans?
 		if (state == stateIn) {
 			switch (stateIn) {
 				case PLAYBACK:
@@ -187,31 +183,11 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 		} else if (state == TASstate.NONE) { // If the container is currently doing nothing
 			switch (stateIn) {
 				case PLAYBACK:
-					LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
-					if (Minecraft.getMinecraft().player != null && !startLocation.isEmpty()) {
-						try {
-							tpPlayer(startLocation);
-						} catch (NumberFormatException e) {
-							state = TASstate.NONE;
-							e.printStackTrace();
-							return verbose ? TextFormatting.RED + "An error occured while reading the start location of the TAS. The file might be broken" : "";
-						}
-					}
-					Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
-					index = 0;
+					startPlayback();
 					state = TASstate.PLAYBACK;
-					creditsPrinted = false;
-					TASmod.ktrngHandler.setInitialSeed(startSeed);
 					return verbose ? TextFormatting.GREEN + "Starting playback" : "";
 				case RECORDING:
-					LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
-					if (Minecraft.getMinecraft().player != null && startLocation.isEmpty()) {
-						startLocation = getStartLocation(Minecraft.getMinecraft().player);
-					}
-					if (this.inputs.isEmpty()) {
-						inputs.add(new TickInputContainer(index));
-						desyncMonitor.recordNull(index);
-					}
+					startRecording();
 					state = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Starting a recording" : "";
 				case PAUSED:
@@ -231,8 +207,7 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 					tempPause = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Pausing a recording" : "";
 				case NONE:
-					LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
-					TASmodClient.virtual.clear();
+					stopRecording();
 					state = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Stopping the recording" : "";
 			}
@@ -249,9 +224,7 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 					TASmodClient.virtual.clear();
 					return verbose ? TextFormatting.GREEN + "Pausing a playback" : "";
 				case NONE:
-					LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
-					Minecraft.getMinecraft().gameSettings.chatLinks = true;
-					TASmodClient.virtual.clear();
+					stopPlayback();
 					state = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Stopping the playback" : "";
 			}
@@ -278,6 +251,32 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 			}
 		}
 		return "Something went wrong ._.";
+	}
+
+	private void startRecording() {
+		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
+		if (this.inputs.isEmpty()) {
+			inputs.add(new TickInputContainer(index));
+			desyncMonitor.recordNull(index);
+		}
+	}
+
+	private void stopRecording() {
+		LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
+		TASmodClient.virtual.clear();
+	}
+
+	private void startPlayback() {
+		LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
+		Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
+		index = 0;
+		TASmod.ktrngHandler.setInitialSeed(startSeed);
+	}
+
+	private void stopPlayback() {
+		LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
+		Minecraft.getMinecraft().gameSettings.chatLinks = true;
+		TASmodClient.virtual.clear();
 	}
 
 	/**
@@ -340,78 +339,61 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 	// These act as an input and output, depending if a recording or a playback is
 	// running
 
-	/**
-	 * Adds or retrives a keyboard to the input container, depends on whether a
-	 * recording or a playback is running
-	 * 
-	 * @param keyboard Keyboard to add
-	 * @return Keyboard to retrieve
-	 */
-	public VirtualKeyboard addKeyboardToContainer(VirtualKeyboard keyboard) {
+	@Override
+	public VirtualMouse onVirtualMouseTick(VirtualMouse vmouse) {
 		if (state == TASstate.RECORDING) {
-			this.keyboard = keyboard.clone();
+			this.mouse.deepCopyFrom(vmouse);
 		} else if (state == TASstate.PLAYBACK) {
-			keyboard = this.keyboard.clone();
+			vmouse.deepCopyFrom(this.mouse);
 		}
-		return keyboard;
+		return vmouse.clone();
 	}
 
-	/**
-	 * Adds or retrives a mouse to the input container, depends on whether a
-	 * recording or a playback is running
-	 * 
-	 * @param mouse Mouse to add
-	 * @return Mouse to retrieve
-	 */
-	public VirtualMouse addMouseToContainer(VirtualMouse mouse) {
+	@Override
+	public VirtualKeyboard onVirtualKeyboardTick(VirtualKeyboard vkeyboard) {
 		if (state == TASstate.RECORDING) {
-			this.mouse = mouse.clone();
+			this.keyboard.deepCopyFrom(vkeyboard);
 		} else if (state == TASstate.PLAYBACK) {
-			mouse = this.mouse.clone();
+			vkeyboard.deepCopyFrom(this.keyboard);
 		}
-		return mouse;
+		return vkeyboard.clone();
 	}
 
-	/**
-	 * Adds or retrives the angle of the camera to the input container, depends on
-	 * whether a recording or a playback is running
-	 * 
-	 * @param subticks Subticks to add
-	 * @return Subticks to retrieve
-	 */
-	public VirtualCameraAngle addSubticksToContainer(VirtualCameraAngle subticks) {
+	@Override
+	public VirtualCameraAngle onVirtualCameraTick(VirtualCameraAngle vcamera) {
 		if (state == TASstate.RECORDING) {
-			this.subticks = subticks.clone();
+			this.camera.deepCopyFrom(vcamera);
 		} else if (state == TASstate.PLAYBACK) {
-			subticks = this.subticks.clone();
+			vcamera.deepCopyFrom(this.camera);
 		}
-		return subticks;
+		return vcamera.clone();
 	}
 
 	/**
 	 * Updates the input container.<br>
 	 * <br>
 	 * During a recording this adds the {@linkplain #keyboard}, {@linkplain #mouse}
-	 * and {@linkplain #subticks} to {@linkplain #inputs} and increases the
+	 * and {@linkplain #camera} to {@linkplain #inputs} and increases the
 	 * {@linkplain #index}.<br>
 	 * <br>
 	 * During playback the opposite is happening, getting the inputs from
 	 * {@linkplain #inputs} and temporarily storing them in {@linkplain #keyboard},
-	 * {@linkplain #mouse} and {@linkplain #subticks}.<br>
+	 * {@linkplain #mouse} and {@linkplain #camera}.<br>
 	 * <br>
 	 * Then in {@linkplain VirtualInput}, {@linkplain #keyboard},
-	 * {@linkplain #mouse} and {@linkplain #subticks} are retrieved and emulated as
+	 * {@linkplain #mouse} and {@linkplain #camera} are retrieved and emulated as
 	 * the next inputs
 	 */
-	public void nextTick() {
+	@Override
+	public void onClientTickPost(Minecraft mc) {
 		/* Stop the playback while player is still loading */
-		EntityPlayerSP player = Minecraft.getMinecraft().player;
+		EntityPlayerSP player = mc.player;
 
 		if (player != null && player.addedToChunk) {
 			if (isPaused() && tempPause != TASstate.NONE) {
 				setTASState(tempPause); // The recording is paused in LoadWorldEvents#startLaunchServer
 				pause(false);
-				printCredits();
+				EventListenerRegistry.fireEvent(EventPlaybackJoinedWorld.class, state);
 			}
 		}
 
@@ -429,9 +411,9 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 			if (inputs.size() < index) {
 				LOGGER.warn("Index is {} inputs bigger than the container!", index - inputs.size());
 			}
-			inputs.add(new TickInputContainer(index, keyboard.clone(), mouse.clone(), subticks.clone()));
+			inputs.add(new TickInputContainer(index, keyboard.clone(), mouse.clone(), camera.clone()));
 		} else {
-			inputs.set(index, new TickInputContainer(index, keyboard.clone(), mouse.clone(), subticks.clone()));
+			inputs.set(index, new TickInputContainer(index, keyboard.clone(), mouse.clone(), camera.clone()));
 		}
 		desyncMonitor.recordMonitor(index); // Capturing monitor values
 	}
@@ -460,7 +442,7 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 		}
 
 		/* Stop condition */
-		if (index == inputs.size()) {
+		if (index == inputs.size() || inputs.isEmpty()) {
 			unpressContainer();
 			setTASState(TASstate.NONE);
 		}
@@ -469,7 +451,7 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 			TickInputContainer tickcontainer = inputs.get(index); // Loads the new inputs from the container
 			this.keyboard = tickcontainer.getKeyboard().clone();
 			this.mouse = tickcontainer.getMouse().clone();
-			this.subticks = tickcontainer.getSubticks().clone();
+			this.camera = tickcontainer.getCameraAngle().clone();
 			// check for control bytes
 			ControlByteHandler.readCotrolByte(controlBytes.get(index));
 		}
@@ -494,11 +476,11 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 		return inputs;
 	}
 
-	public Map<Integer, List<Pair<String, String[]>>> getControlBytes() {
+	public Map<Integer, List<Pair<String, String[]>>> getControlBytes() { // TODO Replace with TASFile extension
 		return controlBytes;
 	}
 
-	public Map<Integer, List<String>> getComments() {
+	public Map<Integer, List<String>> getComments() { // TODO Replace with TASFile extension
 		return comments;
 	}
 
@@ -509,7 +491,7 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 				TickInputContainer tickcontainer = inputs.get(index);
 				this.keyboard = tickcontainer.getKeyboard();
 				this.mouse = tickcontainer.getMouse();
-				this.subticks = tickcontainer.getSubticks();
+				this.camera = tickcontainer.getCameraAngle();
 			}
 		} else {
 			throw new IndexOutOfBoundsException("Index is bigger than the container");
@@ -539,16 +521,8 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 		controlBytes.clear();
 		comments.clear();
 		index = 0;
-		startLocation = "";
 		desyncMonitor.clear();
-		clearCredits();
-	}
-
-	private void clearCredits() {
-		title = "Insert Author here";
-		authors = "Insert author here";
-		playtime = "00:00.0";
-		rerecords = 0;
+		PlaybackMetadataRegistry.handleOnClear();
 	}
 
 	/**
@@ -566,114 +540,9 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 		return out;
 	}
 
-	// =====================================================================================================
-	// Methods to set and retrieve author, title etc
-
-	public String getAuthors() {
-		return authors;
-	}
-
-	public void setAuthors(String authors) {
-		this.authors = authors;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
-	public int getRerecords() {
-		return rerecords;
-	}
-
-	public void setRerecords(int rerecords) {
-		this.rerecords = rerecords;
-	}
-
-	public String getPlaytime() {
-		return playtime;
-	}
-
-	public void setPlaytime(String playtime) {
-		this.playtime = playtime;
-	}
-
-	public void setSavestates(String playtime) {
-		this.playtime = playtime;
-	}
-
-	public void fixTicks() {
+	public void fixTicks() { // TODO Remove and use Serializer to list ticks
 		for (int i = 0; i < inputs.size(); i++) {
 			inputs.get(i).setTick(i + 1);
-		}
-	}
-
-	public long getStartSeed() {
-		return startSeed;
-	}
-
-	public void setStartSeed(long startSeed) {
-		this.startSeed = startSeed;
-	}
-
-	// =====================================================================================================
-	// Methods and classes related to the start location of a TAS
-
-	/**
-	 * @return The start location of the TAS
-	 */
-	public String getStartLocation() {
-		return startLocation;
-	}
-
-	/**
-	 * Updates the start location of the input container
-	 * 
-	 * @param startLocation The start location of the TAS
-	 */
-	public void setStartLocation(String startLocation) {
-		LOGGER.debug(LoggerMarkers.Playback, "Setting start location");
-		this.startLocation = startLocation;
-	}
-
-	/**
-	 * Generates a start location from the players position and angle
-	 * 
-	 * @param player The player of the TAS
-	 * @return The start location from the player
-	 */
-	private String getStartLocation(EntityPlayerSP player) {
-		LOGGER.debug(LoggerMarkers.Playback, "Retrieving player start location");
-		String pos = player.posX + "," + player.posY + "," + player.posZ;
-		String pitch = Float.toString(player.rotationPitch);
-		String yaw = Float.toString(player.rotationYaw);
-		return pos + "," + yaw + "," + pitch;
-	}
-
-	/**
-	 * Teleports the player to the start location
-	 * 
-	 * @param startLocation The start location where the player should be teleported
-	 *                      to
-	 * @throws NumberFormatException If the location can't be parsed
-	 */
-	private void tpPlayer(String startLocation) throws NumberFormatException {
-		LOGGER.debug(LoggerMarkers.Playback, "Teleporting the player to the start location");
-		String[] section = startLocation.split(",");
-		double x = Double.parseDouble(section[0]);
-		double y = Double.parseDouble(section[1]);
-		double z = Double.parseDouble(section[2]);
-
-		float angleYaw = Float.parseFloat(section[3]);
-		float anglePitch = Float.parseFloat(section[4]);
-
-		try {
-			TASmodClient.client.send(new TASmodBufferBuilder(PLAYBACK_TELEPORT).writeDouble(x).writeDouble(y).writeDouble(z).writeFloat(angleYaw).writeFloat(anglePitch));
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -689,28 +558,6 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 	}
 
 	// ==============================================================
-
-	public void printCredits() {
-		LOGGER.trace(LoggerMarkers.Playback, "Printing credits");
-		if (state == TASstate.PLAYBACK && !creditsPrinted) {
-			creditsPrinted = true;
-			printMessage(title, ChatFormatting.GOLD);
-			printMessage("", null);
-			printMessage("by " + authors, ChatFormatting.AQUA);
-			printMessage("", null);
-			printMessage("in " + playtime, null);
-			printMessage("", null);
-			printMessage("Rerecords: " + rerecords, null);
-		}
-	}
-
-	private void printMessage(String msg, ChatFormatting format) {
-		String formatString = "";
-		if (format != null)
-			formatString = format.toString();
-
-		Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(formatString + msg));
-	}
 
 	public void setPlayUntil(int until) {
 		this.playUntil = until;
@@ -747,7 +594,7 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 			this.tick = tick;
 			this.keyboard = new VirtualKeyboard();
 			this.mouse = new VirtualMouse();
-//			this.subticks = new VirtualCameraAngle(0, 0);
+			this.subticks = new VirtualCameraAngle();
 		}
 
 		@Override
@@ -763,7 +610,7 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 			return mouse;
 		}
 
-		public VirtualCameraAngle getSubticks() {
+		public VirtualCameraAngle getCameraAngle() {
 			return subticks;
 		}
 
@@ -811,11 +658,11 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 
 	public void setStateWhenOpened(TASstate state) {
 		TASmodClient.openMainMenuScheduler.add(() -> {
-			PlaybackControllerClient container = TASmodClient.controller;
-			if (state == TASstate.RECORDING) {
-				long seed = TASmod.ktrngHandler.getGlobalSeedClient();
-				container.setStartSeed(seed);
-			}
+//			PlaybackControllerClient container = TASmodClient.controller;	// Replace with event
+//			if (state == TASstate.RECORDING) {
+//				long seed = TASmod.ktrngHandler.getGlobalSeedClient();
+//				container.setStartSeed(seed);
+//			}
 			setTASState(state);
 		});
 	}
@@ -831,9 +678,9 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 				PLAYBACK_FULLRECORD, 
 				PLAYBACK_RESTARTANDPLAY, 
 				PLAYBACK_PLAYUNTIL, 
-				PLAYBACK_TELEPORT, 
-				PLAYBACK_CLEAR_INPUTS,
-				PLAYBACK_STATE
+				PLAYBACK_CLEAR_INPUTS, 
+				PLAYBACK_STATE 
+				
 		};
 	}
 
@@ -932,31 +779,30 @@ public class PlaybackControllerClient implements ClientPacketHandler {
 
 			case PLAYBACK_TELEPORT:
 				throw new WrongSideException(packet, Side.CLIENT);
-				
+
 			case PLAYBACK_STATE:
 				TASstate networkState = TASmodBufferBuilder.readTASState(buf);
 				boolean verbose = TASmodBufferBuilder.readBoolean(buf);
-				Task task = ()->{
+				Task task = () -> {
 					PlaybackControllerClient container = TASmodClient.controller;
 					if (networkState != container.getState()) {
-						
+
 						String message = container.setTASStateClient(networkState, verbose);
-						
+
 						if (!message.isEmpty()) {
-							if(Minecraft.getMinecraft().world != null)
+							if (Minecraft.getMinecraft().world != null)
 								Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(message));
 							else
 								LOGGER.debug(LoggerMarkers.Playback, message);
-						} 
+						}
 					}
-					
+
 				};
-				
-				
-				if((networkState == TASstate.RECORDING || networkState == TASstate.PLAYBACK) && TASmodClient.tickratechanger.ticksPerSecond != 0) {
-					TASmodClient.tickSchedulerClient.add(task);	// Starts a recording in the next tick
+
+				if ((networkState == TASstate.RECORDING || networkState == TASstate.PLAYBACK) && TASmodClient.tickratechanger.ticksPerSecond != 0) {
+					TASmodClient.tickSchedulerClient.add(task); // Starts a recording in the next tick
 				} else {
-					TASmodClient.gameLoopSchedulerClient.add(task);	// Starts a recording in the next frame
+					TASmodClient.gameLoopSchedulerClient.add(task); // Starts a recording in the next frame
 				}
 				break;
 
