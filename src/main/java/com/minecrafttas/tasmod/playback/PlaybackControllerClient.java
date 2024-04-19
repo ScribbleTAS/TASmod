@@ -476,6 +476,10 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	public BigArrayList<TickInputContainer> getInputs() {
 		return inputs;
 	}
+	
+	public void setInputs(BigArrayList<TickInputContainer> inputs) {
+		this.inputs = inputs;
+	}
 
 	public Map<Integer, List<Pair<String, String[]>>> getControlBytes() { // TODO Replace with TASFile extension
 		return controlBytes;
