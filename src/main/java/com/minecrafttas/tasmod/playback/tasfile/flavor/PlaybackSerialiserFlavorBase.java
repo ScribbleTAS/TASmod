@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.playback.tasfile;
+package com.minecrafttas.tasmod.playback.tasfile.flavor;
 
 import java.io.Serializable;
 import java.util.ArrayList;

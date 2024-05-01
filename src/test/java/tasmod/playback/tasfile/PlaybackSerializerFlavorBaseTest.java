@@ -1,11 +1,12 @@
 package tasmod.playback.tasfile;
 
 import org.junit.jupiter.api.Test;
+
+import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackSerialiserFlavorBase;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiserFlavorBase;
-
-public class PlaybackSerializerBaseTest {
+public class PlaybackSerializerFlavorBaseTest {
 	
 	@Test
 	void testStringPaddingEven() {
