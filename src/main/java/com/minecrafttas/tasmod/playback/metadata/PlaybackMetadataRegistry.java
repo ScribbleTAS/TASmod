@@ -15,6 +15,7 @@ import com.minecrafttas.tasmod.TASmod;
  * <br>
  * Any custom class has to implement PlaybackMetadataExtension
  * 
+ * @author Scribble
  */
 public class PlaybackMetadataRegistry {
 
