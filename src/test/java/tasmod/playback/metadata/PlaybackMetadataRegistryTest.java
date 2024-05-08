@@ -1,19 +1,19 @@
 package tasmod.playback.metadata;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.Test;
-
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Test;
+
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
+import com.minecrafttas.tasmod.util.TASmodRegistry;
 
 
 public class PlaybackMetadataRegistryTest {
@@ -56,7 +56,7 @@ public class PlaybackMetadataRegistryTest {
 	File file = new File("src/test/resources/run/MetadataRegistry.txt");
 	
 	void store() {
-		List<PlaybackMetadata> list = PlaybackMetadataRegistry.handleOnStore();
+		List<PlaybackMetadata> list = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
 		List<String> out = new ArrayList<>();
 		
 		list.forEach(data -> {
@@ -83,7 +83,7 @@ public class PlaybackMetadataRegistryTest {
 		
 		meta.add(PlaybackMetadata.fromStringList("Test1", loaded));
 		
-		PlaybackMetadataRegistry.handleOnLoad(meta);
+		TASmodRegistry.PLAYBACK_METADATA.handleOnLoad(meta);
 	}
 	
 	/**
@@ -92,7 +92,7 @@ public class PlaybackMetadataRegistryTest {
 	@Test
 	void testRegistry() {
 		Test1 actual = new Test1();
-		PlaybackMetadataRegistry.register(actual);
+		TASmodRegistry.PLAYBACK_METADATA.register(actual);
 		
 		store();
 		load();

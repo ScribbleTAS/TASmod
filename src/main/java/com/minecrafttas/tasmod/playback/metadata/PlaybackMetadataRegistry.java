@@ -3,8 +3,8 @@ package com.minecrafttas.tasmod.playback.metadata;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
+import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
 
 /**
@@ -17,16 +17,14 @@ import com.minecrafttas.tasmod.TASmod;
  * 
  * @author Scribble
  */
-public class PlaybackMetadataRegistry {
+public class PlaybackMetadataRegistry extends AbstractRegistry<String, com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension>{
 
-	private static final Map<String, PlaybackMetadataExtension> METADATA_EXTENSION = new LinkedHashMap<>();
+	public PlaybackMetadataRegistry() {
+		super(new LinkedHashMap<>());
+	}
 
-	/**
-	 * Registers a new class as a metadata extension
-	 * 
-	 * @param extension
-	 */
-	public static void register(PlaybackMetadataExtension extension) {
+	@Override
+	public void register(PlaybackMetadataExtension extension) {
 		if (extension == null) {
 			throw new NullPointerException("Tried to register a playback extension with value null");
 		}
@@ -36,20 +34,21 @@ public class PlaybackMetadataRegistry {
 			return;
 		}
 
-		if(METADATA_EXTENSION.containsKey(extension.getExtensionName())) {
+		if(REGISTRY.containsKey(extension.getExtensionName())) {
 			TASmod.LOGGER.warn("Trying to register the playback extension {}, but an extension with the same name is already registered!", extension.getExtensionName());
 			return;
 		}
 		
-		METADATA_EXTENSION.put(extension.getExtensionName(), extension);
+		REGISTRY.put(extension.getExtensionName(), extension);
 	}
 
-	public static void unregister(PlaybackMetadataExtension extension) {
+	@Override
+	public void unregister(PlaybackMetadataExtension extension) {
 		if (extension == null) {
 			throw new NullPointerException("Tried to unregister an extension with value null");
 		}
-		if (METADATA_EXTENSION.containsKey(extension.getExtensionName())) {
-			METADATA_EXTENSION.remove(extension.getExtensionName());
+		if (REGISTRY.containsKey(extension.getExtensionName())) {
+			REGISTRY.remove(extension.getExtensionName());
 		} else {
 			TASmod.LOGGER.warn("Trying to unregister the playback extension {}, but it was not registered!", extension.getClass().getName());
 		}
@@ -59,18 +58,18 @@ public class PlaybackMetadataRegistry {
 
 	}
 
-	public static List<PlaybackMetadata> handleOnStore() {
+	public List<PlaybackMetadata> handleOnStore() {
 		List<PlaybackMetadata> metadataList = new ArrayList<>();
-		for(PlaybackMetadataExtension extension : METADATA_EXTENSION.values()) {
+		for(PlaybackMetadataExtension extension : REGISTRY.values()) {
 			metadataList.add(extension.onStore());
 		}
 		return metadataList;
 	}
 
-	public static void handleOnLoad(List<PlaybackMetadata> meta) {
+	public void handleOnLoad(List<PlaybackMetadata> meta) {
 		for(PlaybackMetadata metadata : meta) {
-			if(METADATA_EXTENSION.containsKey(metadata.getExtensionName())) {
-				PlaybackMetadataExtension extension = METADATA_EXTENSION.get(metadata.getExtensionName());
+			if(REGISTRY.containsKey(metadata.getExtensionName())) {
+				PlaybackMetadataExtension extension = REGISTRY.get(metadata.getExtensionName());
 				
 				extension.onLoad(metadata);
 			} else {
@@ -79,19 +78,10 @@ public class PlaybackMetadataRegistry {
 		}
 	}
 	
-	public static void handleOnClear() {
-		METADATA_EXTENSION.forEach((key, extension) ->{
+	public void handleOnClear() {
+		REGISTRY.forEach((key, extension) ->{
 			extension.onClear();
 		});
-	}
-
-	private static boolean containsClass(PlaybackMetadataExtension newExtension) {
-		for (PlaybackMetadataExtension extension : METADATA_EXTENSION.values()) {
-			if (extension.getClass().equals(newExtension.getClass())) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	public static interface PlaybackMetadataExtension {

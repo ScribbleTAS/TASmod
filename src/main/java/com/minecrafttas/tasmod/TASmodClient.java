@@ -4,16 +4,13 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import org.apache.logging.log4j.Level;
-import org.lwjgl.input.Keyboard;
 
 import com.minecrafttas.mctcommon.Configuration;
 import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
 import com.minecrafttas.mctcommon.KeybindManager;
-import com.minecrafttas.mctcommon.KeybindManager.Keybind;
 import com.minecrafttas.mctcommon.LanguageManager;
 import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
 import com.minecrafttas.mctcommon.events.EventClient.EventOpenGui;
@@ -24,11 +21,9 @@ import com.minecrafttas.mctcommon.server.PacketHandlerRegistry;
 import com.minecrafttas.mctcommon.server.Server;
 import com.minecrafttas.tasmod.gui.InfoHud;
 import com.minecrafttas.tasmod.handlers.LoadingScreenHandler;
-import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
 import com.minecrafttas.tasmod.playback.metadata.integrated.CreditsMetadataExtension;
 import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
@@ -38,6 +33,8 @@ import com.minecrafttas.tasmod.ticksync.TickSyncClient;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler;
 import com.minecrafttas.tasmod.util.ShieldDownloader;
+import com.minecrafttas.tasmod.util.TASmodKeybinds;
+import com.minecrafttas.tasmod.util.TASmodRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeybindings;
 
@@ -48,11 +45,7 @@ import net.minecraft.client.gui.GuiControls;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.ServerData;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.text.ChatType;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextFormatting;
 
 public class TASmodClient implements ClientModInitializer, EventClientInit, EventPlayerJoinedClientSide, EventOpenGui{
 
@@ -115,25 +108,11 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	@Override
 	public void onInitializeClient() {
 		
-		// Load config
-		Minecraft mc = Minecraft.getMinecraft();
-		
-		File configDir = new File(mc.mcDataDir, "config");
-		if(!configDir.exists()) {
-			configDir.mkdir();
-		}
-		config = new Configuration("TASmod configuration", new File(configDir, "tasmod.cfg"));
-		
 		LanguageManager.registerMod("tasmod");
 
-		// Execute /restartandplay. Load the file to start from the config. If it exists load the playback file on start.
-		String fileOnStart = config.get(ConfigOptions.FileToOpen);
-		if (fileOnStart.isEmpty()) {
-			fileOnStart = null;
-		} else {
-			config.reset(ConfigOptions.FileToOpen);
-		}
-		virtual=new VirtualInput(LOGGER); //TODO Move fileOnStart to PlaybackController
+		loadConfig(Minecraft.getMinecraft());
+		
+		virtual=new VirtualInput(LOGGER);
 		
 		// Initialize InfoHud
 		hud = new InfoHud();
@@ -146,7 +125,29 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		// Initialize keybind manager
 		keybindManager = new KeybindManager(VirtualKeybindings::isKeyDownExceptTextfield);
 		
-		// Register event listeners
+		registerEventListeners();
+		
+		registerNetworkPacketHandlers();
+		
+		// Starting local server instance
+		try {
+			TASmod.server = new Server(TASmod.networkingport-1, TASmodPackets.values());
+		} catch (Exception e) {
+			LOGGER.error("Unable to launch TASmod server: {}", e.getMessage());
+		}
+		
+	}
+	
+	private void registerNetworkPacketHandlers() {
+		// Register packet handlers
+		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers on client");
+		PacketHandlerRegistry.register(controller);
+		PacketHandlerRegistry.register(ticksyncClient);
+		PacketHandlerRegistry.register(tickratechanger);
+		PacketHandlerRegistry.register(savestateHandlerClient);		
+	}
+
+	private void registerEventListeners() {
 		EventListenerRegistry.register(this);
 //		EventListenerRegistry.register(virtual); TODO Remove if unnecessary
 		EventListenerRegistry.register(hud);
@@ -161,64 +162,14 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			return gui;
 		}));
 		EventListenerRegistry.register(controller);
-		PlaybackMetadataRegistry.register(creditsMetadataExtension);
 		EventListenerRegistry.register(creditsMetadataExtension);
-		
-		PlaybackMetadataRegistry.register(startpositionMetadataExtension);
 		EventListenerRegistry.register(startpositionMetadataExtension);
-		
-		// Register packet handlers
-		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers on client");
-		PacketHandlerRegistry.register(controller);
-		PacketHandlerRegistry.register(ticksyncClient);
-		PacketHandlerRegistry.register(tickratechanger);
-		PacketHandlerRegistry.register(savestateHandlerClient);
-		
-		// Starting local server instance
-		try {
-			TASmod.server = new Server(TASmod.networkingport-1, TASmodPackets.values());
-		} catch (Exception e) {
-			LOGGER.error("Unable to launch TASmod server: {}", e.getMessage());
-		}
-		
 	}
 
 	@Override
 	public void onClientInit(Minecraft mc) {
-		// initialize keybindings
-		List<KeyBinding> blockedKeybindings = new ArrayList<>();
-		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Tickrate 0 Key", "TASmod", Keyboard.KEY_F8, () -> TASmodClient.tickratechanger.togglePause(), VirtualKeybindings::isKeyDown)));
-		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Advance Tick", "TASmod", Keyboard.KEY_F9, () -> TASmodClient.tickratechanger.advanceTick(), VirtualKeybindings::isKeyDown)));
-		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Recording/Playback Stop", "TASmod", Keyboard.KEY_F10, () -> TASmodClient.controller.setTASState(TASstate.NONE), VirtualKeybindings::isKeyDown)));
-		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Create Savestate", "TASmod", Keyboard.KEY_J, () -> {
-			Minecraft.getMinecraft().ingameGUI.addChatMessage(ChatType.CHAT, new TextComponentString("Savestates might not work correctly at the moment... rewriting a lot of core features, which might break this..."));
-			try {
-				TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SAVE).writeInt(-1));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		})));
-		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Load Latest Savestate", "TASmod", Keyboard.KEY_K, () -> {
-			Minecraft.getMinecraft().ingameGUI.addChatMessage(ChatType.CHAT, new TextComponentString(TextFormatting.RED+"Savestates might not work correctly at the moment... rewriting a lot of core features, which might break this..."));
-			try {
-				TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOAD).writeInt(-1));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		})));
-		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Open InfoGui Editor", "TASmod", Keyboard.KEY_F6, () -> Minecraft.getMinecraft().displayGuiScreen(TASmodClient.hud))));
-		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
-			controller.setTASState(TASstate.RECORDING);
-		}, VirtualKeybindings::isKeyDown)));
-		blockedKeybindings.add(keybindManager.registerKeybind(new Keybind("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
-//			try {
-//				TASmodClient.client = new Client("localhost", TASmod.networkingport-1, TASmodPackets.values(), mc.getSession().getProfile().getName(), true);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-			controller.setTASState(TASstate.PLAYBACK);
-		}, VirtualKeybindings::isKeyDown)));
-		blockedKeybindings.forEach(VirtualKeybindings::registerBlockedKeyBinding);
+		registerKeybindings(mc);
+		registerPlaybackMetadata(mc);
 		
 		createTASDir();
 		createSavestatesDir();
@@ -255,7 +206,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		}
 		
 		
-		if(!(ip+":"+port).equals(connectedIP)) {
+		if(!(ip+":"+port).equals(connectedIP)) { // TODO Clean this up. Make TASmodNetworkHandler out of this... Maybe with Permission system?
 			try {
 				LOGGER.info("Closing client connection: {}", client.getRemote());
 				client.disconnect();
@@ -280,34 +231,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	@Override
 	public GuiScreen onOpenGui(GuiScreen gui) {
 		if (gui instanceof GuiMainMenu) {
-			if (client == null) {
-				Minecraft mc = Minecraft.getMinecraft();
-
-				String IP = "localhost";
-				int PORT = TASmod.networkingport - 1;
-				
-				// Get the connection on startup from config
-				String configAddress = config.get(ConfigOptions.ServerConnection);
-				if(configAddress != null && !configAddress.isEmpty()) {
-					String[] ipSplit = configAddress.split(":");
-					IP = ipSplit[0];
-					try {
-						PORT = Integer.parseInt(ipSplit[1]);
-					} catch (Exception e) {
-						LOGGER.catching(Level.ERROR, e);
-						IP = "localhost";
-						PORT = TASmod.networkingport - 1;
-					}
-				}
-				
-				try {
-					// connect to server and authenticate
-					client = new Client(IP, PORT, TASmodPackets.values(), mc.getSession().getUsername(), true);
-				} catch (Exception e) {
-					LOGGER.error("Unable to connect TASmod client: {}", e);
-				}
-				ticksyncClient.setEnabled(true);
-			}
+			initializeCustomPacketHandler();
 		} else if (gui instanceof GuiControls) {
 			TASmodClient.controller.setTASState(TASstate.NONE); // Set the TASState to nothing to avoid collisions
 			if (TASmodClient.tickratechanger.ticksPerSecond == 0) {
@@ -321,5 +245,54 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			}
 		}
 		return gui;
+	}
+	
+	private void initializeCustomPacketHandler() {
+		if (client == null) {
+			Minecraft mc = Minecraft.getMinecraft();
+
+			String IP = "localhost";
+			int PORT = TASmod.networkingport - 1;
+			
+			// Get the connection on startup from config
+			String configAddress = config.get(ConfigOptions.ServerConnection);
+			if(configAddress != null && !configAddress.isEmpty()) {
+				String[] ipSplit = configAddress.split(":");
+				IP = ipSplit[0];
+				try {
+					PORT = Integer.parseInt(ipSplit[1]);
+				} catch (Exception e) {
+					LOGGER.catching(Level.ERROR, e);
+					IP = "localhost";
+					PORT = TASmod.networkingport - 1;
+				}
+			}
+			
+			try {
+				// connect to server and authenticate
+				client = new Client(IP, PORT, TASmodPackets.values(), mc.getSession().getUsername(), true);
+			} catch (Exception e) {
+				LOGGER.error("Unable to connect TASmod client: {}", e);
+			}
+			ticksyncClient.setEnabled(true);
+		}		
+	}
+	
+	private void registerKeybindings(Minecraft mc) {
+		Arrays.stream(TASmodKeybinds.valuesKeybind()).forEach(keybindManager::registerKeybind);
+		Arrays.stream(TASmodKeybinds.valuesVanillaKeybind()).forEach(VirtualKeybindings::registerBlockedKeyBinding);
+	}
+	
+	private void registerPlaybackMetadata(Minecraft mc) {
+		TASmodRegistry.PLAYBACK_METADATA.register(creditsMetadataExtension);
+		TASmodRegistry.PLAYBACK_METADATA.register(startpositionMetadataExtension);
+	}
+	
+	private void loadConfig(Minecraft mc) {
+		File configDir = new File(mc.mcDataDir, "config");
+		if(!configDir.exists()) {
+			configDir.mkdir();
+		}
+		config = new Configuration("TASmod configuration", new File(configDir, "tasmod.cfg"));
 	}
 }

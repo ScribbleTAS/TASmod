@@ -22,6 +22,7 @@ import org.lwjgl.opengl.Display;
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
+import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
 import com.minecrafttas.mctcommon.server.ByteBufferBuilder;
 import com.minecrafttas.mctcommon.server.Client.Side;
 import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
@@ -40,10 +41,10 @@ import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
+import com.minecrafttas.tasmod.util.TASmodRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
@@ -76,7 +77,7 @@ import net.minecraft.util.text.event.ClickEvent;
  * @author Scribble
  *
  */
-public class PlaybackControllerClient implements ClientPacketHandler, EventVirtualKeyboardTick, EventVirtualMouseTick, EventVirtualCameraAngleTick, EventClientTickPost {
+public class PlaybackControllerClient implements ClientPacketHandler, EventClientInit, EventVirtualKeyboardTick, EventVirtualMouseTick, EventVirtualCameraAngleTick, EventClientTickPost {
 
 	/**
 	 * The current state of the controller.
@@ -527,7 +528,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		comments.clear();
 		index = 0;
 		desyncMonitor.clear();
-		PlaybackMetadataRegistry.handleOnClear();
+		TASmodRegistry.PLAYBACK_METADATA.handleOnClear();
 	}
 
 	/**
@@ -816,6 +817,20 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.CLIENT);
+		}
+	}
+
+	/**
+	 * Runs on client initialization, used for loading the TASfile after /restartandplay
+	 */
+	@Override
+	public void onClientInit(Minecraft mc) {
+		// Execute /restartandplay. Load the file to start from the config. If it exists load the playback file on start.
+		String fileOnStart = TASmodClient.config.get(ConfigOptions.FileToOpen);
+		if (fileOnStart.isEmpty()) {
+			fileOnStart = null;
+		} else {
+			TASmodClient.config.reset(ConfigOptions.FileToOpen);
 		}
 	}
 }
