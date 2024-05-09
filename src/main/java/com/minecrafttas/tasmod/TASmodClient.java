@@ -27,6 +27,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.metadata.integrated.CreditsMetadataExtension;
 import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.integrated.BetaFlavor;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerClient;
 import com.minecrafttas.tasmod.ticksync.TickSyncClient;
@@ -170,6 +171,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	public void onClientInit(Minecraft mc) {
 		registerKeybindings(mc);
 		registerPlaybackMetadata(mc);
+		registerSerialiserFlavors(mc);
 		
 		createTASDir();
 		createSavestatesDir();
@@ -286,6 +288,12 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	private void registerPlaybackMetadata(Minecraft mc) {
 		TASmodRegistry.PLAYBACK_METADATA.register(creditsMetadataExtension);
 		TASmodRegistry.PLAYBACK_METADATA.register(startpositionMetadataExtension);
+	}
+	
+	public static BetaFlavor betaFlavor = new BetaFlavor();
+	
+	private void registerSerialiserFlavors(Minecraft mc) {
+		TASmodRegistry.SERIALISER_FLAVOR.register(betaFlavor);
 	}
 	
 	private void loadConfig(Minecraft mc) {

@@ -1,5 +1,8 @@
 package tasmod.playback.tasfile;
 
-public class PlaybackSerialiserTest {
+import static org.junit.jupiter.api.Assertions.*;
 
+public class PlaybackSerialiserTest {
+	
+	
 }

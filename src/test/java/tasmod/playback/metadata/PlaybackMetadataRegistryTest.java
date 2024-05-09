@@ -53,7 +53,7 @@ public class PlaybackMetadataRegistryTest {
 		
 	}
 	
-	File file = new File("src/test/resources/run/MetadataRegistry.txt");
+	File file = new File("src/test/resources/metadata/MetadataRegistry.txt");
 	
 	void store() {
 		List<PlaybackMetadata> list = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();

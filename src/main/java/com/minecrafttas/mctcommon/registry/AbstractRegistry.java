@@ -3,7 +3,7 @@ package com.minecrafttas.mctcommon.registry;
 import java.util.Map;
 
 public abstract class AbstractRegistry<K, V> {
-	public final Map<K, V> REGISTRY;
+	protected final Map<K, V> REGISTRY;
 
 	public AbstractRegistry(Map<K, V> map) {
 		REGISTRY = map;

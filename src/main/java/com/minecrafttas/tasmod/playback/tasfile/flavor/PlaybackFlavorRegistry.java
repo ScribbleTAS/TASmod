@@ -1,9 +1,9 @@
 package com.minecrafttas.tasmod.playback.tasfile.flavor;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 
+import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
 
 /**
@@ -12,11 +12,13 @@ import com.minecrafttas.tasmod.TASmod;
  * 
  * @author Scribble
  */
-public class PlaybackSerialiserFlavorRegistry {
+public class PlaybackFlavorRegistry extends AbstractRegistry<String, PlaybackFlavorBase>{
+
+	public PlaybackFlavorRegistry() {
+		super(new LinkedHashMap<>());
+	}
 	
-	private static final Map<String, PlaybackSerialiserFlavorBase> SERIALISER_FLAVOR = new LinkedHashMap<>();
-	
-	public static void register(PlaybackSerialiserFlavorBase flavor) {
+	public void register(PlaybackFlavorBase flavor) {
 		if (flavor == null) {
 			throw new NullPointerException("Tried to register a serialiser flavor. But flavor is null.");
 		}
@@ -26,35 +28,30 @@ public class PlaybackSerialiserFlavorRegistry {
 			return;
 		}
 
-		if(SERIALISER_FLAVOR.containsKey(flavor.serialiseFlavorName())) {
+		if(REGISTRY.containsKey(flavor.serialiseFlavorName())) {
 			TASmod.LOGGER.warn("Trying to register the serialiser flavor {}, but a flavor with the same name is already registered!", flavor.serialiseFlavorName());
 			return;
 		}
 		
-		SERIALISER_FLAVOR.put(flavor.serialiseFlavorName(), flavor);
+		REGISTRY.put(flavor.serialiseFlavorName(), flavor);
 	}
 	
-	public static void unregister(PlaybackSerialiserFlavorBase flavor) {
+	public void unregister(PlaybackFlavorBase flavor) {
 		if (flavor == null) {
 			throw new NullPointerException("Tried to unregister a flavor with value null");
 		}
-		if (SERIALISER_FLAVOR.containsKey(flavor.serialiseFlavorName())) {
-			SERIALISER_FLAVOR.remove(flavor.serialiseFlavorName());
+		if (REGISTRY.containsKey(flavor.serialiseFlavorName())) {
+			REGISTRY.remove(flavor.serialiseFlavorName());
 		} else {
 			TASmod.LOGGER.warn("Trying to unregister the flavor {}, but it was not registered!", flavor.getClass().getName());
 		}
 	}
 	
-	private static boolean containsClass(PlaybackSerialiserFlavorBase newExtension) {
-		for (PlaybackSerialiserFlavorBase extension : SERIALISER_FLAVOR.values()) {
-			if (extension.getClass().equals(newExtension.getClass())) {
-				return true;
-			}
-		}	
-		return false;
+	public Set<String> getFlavorNames(){
+		return REGISTRY.keySet();
 	}
 	
-	public static Set<String> getFlavorNames(){
-		return SERIALISER_FLAVOR.keySet();
+	public PlaybackFlavorBase getFlavor(String name) {
+		return REGISTRY.get(name);
 	}
 }

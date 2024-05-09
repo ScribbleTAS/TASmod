@@ -3,6 +3,8 @@ package com.minecrafttas.tasmod.playback.tasfile.flavor;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
@@ -11,7 +13,7 @@ import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
-public abstract class PlaybackSerialiserFlavorBase {
+public abstract class PlaybackFlavorBase {
 
 	/**
 	 * The current tick that is being serialised or deserialised
@@ -62,7 +64,25 @@ public abstract class PlaybackSerialiserFlavorBase {
 	protected abstract List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle);
 
 	protected List<String> mergeInputs(List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle) {
-		return null;
+		List<String> out = new ArrayList<>();
+		
+		Queue<String> keyboardQueue = new LinkedBlockingQueue<>(serialisedKeyboard);
+		Queue<String> mouseQueue = new LinkedBlockingQueue<>(serialisedMouse);
+		Queue<String> cameraAngleQueue = new LinkedBlockingQueue<>(serialisedCameraAngle);
+		
+		while(!keyboardQueue.isEmpty() && !mouseQueue.isEmpty() && !cameraAngleQueue.isEmpty()) {
+			String kb = getOrEmpty(keyboardQueue.poll());
+			String ms = getOrEmpty(mouseQueue.poll());
+			String ca = getOrEmpty(cameraAngleQueue.poll());
+			
+			out.add(kb + ms + ca);
+		}
+		
+		return out;
+	}
+	
+	protected String getOrEmpty(String string) {
+		return string == null ? "" : string;
 	}
 
 	public BigArrayList<TickInputContainer> deserialise(BigArrayList<String> lines) {
