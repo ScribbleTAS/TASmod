@@ -26,6 +26,10 @@ public abstract class AbstractRegistry<K, V> {
 			this.unregister(registryObject);
 		}
 	}
+	
+	public void clear() {
+		REGISTRY.clear();
+	}
 
 	protected boolean containsClass(V newExtension) {
 		for (V extension : REGISTRY.values()) {

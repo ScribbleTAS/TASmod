@@ -18,7 +18,12 @@ public abstract class PlaybackFlavorBase {
 	/**
 	 * The current tick that is being serialised or deserialised
 	 */
-	protected int currentTick;
+	protected long currentTick=0;
+	
+	/**
+	 * Debug subtick field for error handling
+	 */
+	protected Integer currentSubtick=null;
 
 	public abstract String flavorName();
 
@@ -31,7 +36,7 @@ public abstract class PlaybackFlavorBase {
 	}
 
 	protected void serialiseFlavorName(List<String> out) {
-		out.add("# Flavor:" + flavorName());
+		out.add("# Flavor: " + flavorName());
 	}
 
 	protected void serialiseMetadata(List<String> out, List<PlaybackMetadata> metadataList) {
@@ -64,8 +69,9 @@ public abstract class PlaybackFlavorBase {
 
 	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
 		List<String> out = new ArrayList<>();
-		for (VirtualKeyboard subtick : keyboard.getAll()) {
-			out.add(subtick.toString());
+		List<VirtualKeyboard> list = keyboard.getAll();
+		for (VirtualKeyboard subtick : list) {
+			out.add(subtick.toString2());
 		}
 		return out;
 	}
@@ -73,7 +79,7 @@ public abstract class PlaybackFlavorBase {
 	protected List<String> serialiseMouse(VirtualMouse mouse) {
 		List<String> out = new ArrayList<>();
 		for (VirtualMouse subtick : mouse.getAll()) {
-			out.add(subtick.toString());
+			out.add(subtick.toString2());
 		}
 		return out;
 	}
@@ -81,7 +87,7 @@ public abstract class PlaybackFlavorBase {
 	protected List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle) {
 		List<String> out = new ArrayList<>();
 		for (VirtualCameraAngle subtick : cameraAngle.getAll()) {
-			out.add(subtick.toString());
+			out.add(subtick.toString2());
 		}
 		return out;
 	}
@@ -91,13 +97,22 @@ public abstract class PlaybackFlavorBase {
 		Queue<String> mouseQueue = new LinkedBlockingQueue<>(serialisedMouse);
 		Queue<String> cameraAngleQueue = new LinkedBlockingQueue<>(serialisedCameraAngle);
 
+		String kb = getOrEmpty(keyboardQueue.poll());
+		String ms = getOrEmpty(mouseQueue.poll());
+		String ca = getOrEmpty(cameraAngleQueue.poll());
+		
+		out.add(String.format("%s|%s|%s|%s", currentTick, kb, ms, ca));
+		
+		currentSubtick = 0;
 		while (!keyboardQueue.isEmpty() || !mouseQueue.isEmpty() || !cameraAngleQueue.isEmpty()) {
-			String kb = getOrEmpty(keyboardQueue.poll());
-			String ms = getOrEmpty(mouseQueue.poll());
-			String ca = getOrEmpty(cameraAngleQueue.poll());
+			currentSubtick++;
+			kb = getOrEmpty(keyboardQueue.poll());
+			ms = getOrEmpty(mouseQueue.poll());
+			ca = getOrEmpty(cameraAngleQueue.poll());
 
-			out.add(kb + ms + ca);
+			out.add(String.format("\t%s|%s|%s|%s", currentSubtick, kb, ms, ca));
 		}
+		currentSubtick = null;
 	}
 
 	protected String getOrEmpty(String string) {
@@ -116,8 +131,15 @@ public abstract class PlaybackFlavorBase {
 	/**
 	 * @return {@link #currentTick}
 	 */
-	public int getCurrentTick() {
+	public long getCurrentTick() {
 		return currentTick;
+	}
+	
+	/**
+	 * @return {@link #currentSubtick}
+	 */
+	public Integer getCurrentSubtick() {
+		return currentSubtick;
 	}
 
 	public static String createCenteredHeading(String text, char spacingChar, int headingWidth) {

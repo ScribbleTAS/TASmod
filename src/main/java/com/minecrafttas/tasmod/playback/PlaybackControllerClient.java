@@ -258,7 +258,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	private void startRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
 		if (this.inputs.isEmpty()) {
-			inputs.add(new TickInputContainer(index));
+			inputs.add(new TickInputContainer());
 			desyncMonitor.recordNull(index);
 		}
 	}
@@ -413,9 +413,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			if (inputs.size() < index) {
 				LOGGER.warn("Index is {} inputs bigger than the container!", index - inputs.size());
 			}
-			inputs.add(new TickInputContainer(index, keyboard.clone(), mouse.clone(), camera.clone()));
+			inputs.add(new TickInputContainer(keyboard.clone(), mouse.clone(), camera.clone()));
 		} else {
-			inputs.set(index, new TickInputContainer(index, keyboard.clone(), mouse.clone(), camera.clone()));
+			inputs.set(index, new TickInputContainer(keyboard.clone(), mouse.clone(), camera.clone()));
 		}
 		desyncMonitor.recordMonitor(index); // Capturing monitor values
 	}
@@ -546,12 +546,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		return out;
 	}
 
-	public void fixTicks() { // TODO Remove and use Serializer to list ticks
-		for (int i = 0; i < inputs.size(); i++) {
-			inputs.get(i).setTick(i + 1);
-		}
-	}
-
 	// ==============================================================
 
 	/**
@@ -581,23 +575,19 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 		private static final long serialVersionUID = -3420565284438152474L;
 
-		private int tick;
-
 		private VirtualKeyboard keyboard;
 
 		private VirtualMouse mouse;
 
 		private VirtualCameraAngle subticks;
 
-		public TickInputContainer(int tick, VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
-			this.tick = tick;
+		public TickInputContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
 			this.keyboard = keyboard;
 			this.mouse = mouse;
 			this.subticks = subticks;
 		}
 
-		public TickInputContainer(int tick) {
-			this.tick = tick;
+		public TickInputContainer() {
 			this.keyboard = new VirtualKeyboard();
 			this.mouse = new VirtualMouse();
 			this.subticks = new VirtualCameraAngle();
@@ -605,7 +595,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 		@Override
 		public String toString() {
-			return tick + "|" + keyboard.toString() + "|" + mouse.toString() + "|" + subticks.toString();
+			return keyboard.toString() + "|" + mouse.toString() + "|" + subticks.toString();
 		}
 
 		public VirtualKeyboard getKeyboard() {
@@ -620,17 +610,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			return subticks;
 		}
 
-		public int getTick() {
-			return tick;
-		}
-
-		public void setTick(int tick) {
-			this.tick = tick;
-		}
-
 		@Override
 		public TickInputContainer clone() {
-			return new TickInputContainer(tick, keyboard, mouse, subticks);
+			return new TickInputContainer(keyboard, mouse, subticks);
 		}
 	}
 

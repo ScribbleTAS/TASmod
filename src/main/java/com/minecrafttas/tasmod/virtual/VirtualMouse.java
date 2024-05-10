@@ -234,7 +234,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 		}
 	}
 	
-	private String toString2(){
+	public String toString2(){
 		return String.format("%s;%s,%s,%s", super.toString(), scrollWheel, cursorX, cursorY);
 	}
 

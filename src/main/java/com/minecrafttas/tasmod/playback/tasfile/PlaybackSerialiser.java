@@ -273,7 +273,7 @@ public class PlaybackSerialiser {
 					throw new IOException("Error in line " + linenumber + ". Cannot read the line correctly");
 				}
 				
-				controller.getInputs().add(new TickInputContainer(readTicks(sections[0], linenumber), readKeyboard(sections[1], linenumber), readMouse(sections[2], linenumber), readSubtick(sections[3], linenumber)));
+//				controller.getInputs().add(new TickInputContainer(readTicks(sections[0], linenumber), readKeyboard(sections[1], linenumber), readMouse(sections[2], linenumber), readSubtick(sections[3], linenumber)));
 			
 				if(!oldmonfileLoaded) {
 					String[] commentData = commentPart.split("Monitoring:");

@@ -274,7 +274,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 		}
 	}
 
-	private String toString2(){
+	public String toString2(){
 		return String.format("%s;%s", super.toString(), charListToString(charList));
 	}
 

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
@@ -101,5 +102,10 @@ public class PlaybackMetadataRegistryTest {
 		if(file.exists()) {
 			file.delete();
 		}
+	}
+	
+	@AfterAll
+	static void afterAll() {
+		TASmodRegistry.PLAYBACK_METADATA.clear();
 	}
 }

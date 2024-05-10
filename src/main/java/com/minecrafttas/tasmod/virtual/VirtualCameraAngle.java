@@ -189,7 +189,7 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 		}
 	}
 	
-	private String toString2() {
+	public String toString2() {
 		return String.format("%s;%s", pitch, yaw);
 	}
 	
