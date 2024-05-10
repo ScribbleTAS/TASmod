@@ -1,7 +1,7 @@
 package com.minecrafttas.tasmod.playback.tasfile;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 import com.dselent.bigarraylist.BigArrayList;
@@ -9,6 +9,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
+import com.minecrafttas.tasmod.util.FileThread;
 import com.minecrafttas.tasmod.util.TASmodRegistry;
 
 /**
@@ -28,15 +29,16 @@ public class PlaybackSerialiser2 {
 	 * @param file       The file to save the serialised inputs to.
 	 * @param controller
 	 * @param flavor
+	 * @throws FileNotFoundException 
 	 */
-	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorname) {
+	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorname) throws FileNotFoundException {
 		if (controller == null) {
 			throw new NullPointerException("Save to file failed. No controller specified");
 		}
 		saveToFile(file, controller.getInputs(), flavorname);
 	}
 	
-	public static void saveToFile(File file, BigArrayList<TickInputContainer> container, String flavorname) {
+	public static void saveToFile(File file, BigArrayList<TickInputContainer> container, String flavorname) throws FileNotFoundException {
 		if (file == null) {
 			throw new NullPointerException("Save to file failed. No file specified");
 		}
@@ -49,12 +51,22 @@ public class PlaybackSerialiser2 {
 			flavorname = defaultFlavor;
 		}
 		
+		FileThread writerThread = new FileThread(file, false);
+		
 		PlaybackFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorname);
 		
 		List<PlaybackMetadata> metadataList = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
 		
-		List<String> outLines = new ArrayList<>();
-		outLines.addAll(flavor.serialiseHeader(metadataList));
+		for (String line : flavor.serialiseHeader(metadataList)) {
+			writerThread.addLine(line);
+		}
+		
+		BigArrayList<String> tickLines = flavor.serialise(container);
+		for (long i = 0; i < tickLines.size(); i++) {
+			writerThread.addLine(tickLines.get(i));
+		}
+		
+		writerThread.close();
 	}
 	
 	/**

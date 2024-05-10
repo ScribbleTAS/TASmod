@@ -16,20 +16,17 @@ public class BetaFlavor extends PlaybackFlavorBase {
 
 	@Override
 	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected List<String> serialiseMouse(VirtualMouse mouse) {
-		// TODO Auto-generated method stub
 		return null;
+
 	}
 
 	@Override
 	protected List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle) {
-		// TODO Auto-generated method stub
 		return null;
 	}
-
 }

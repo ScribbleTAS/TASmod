@@ -18,24 +18,29 @@ public abstract class PlaybackFlavorBase {
 	/**
 	 * The current tick that is being serialised or deserialised
 	 */
-	private int currentTick;
+	protected int currentTick;
 
 	public abstract String flavorName();
 
 	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList) {
 		List<String> out = new ArrayList<>();
-		out.add(serialiseFlavorName());
+		serialiseFlavorName(out);
 //		out.add(serializeExtensionNames());
-		out.addAll(serialiseMetadata(metadataList));
+		serialiseMetadata(out, metadataList);
 		return out;
 	}
 
-	protected String serialiseFlavorName() {
-		return "Flavor:" + flavorName();
+	protected void serialiseFlavorName(List<String> out) {
+		out.add("# Flavor:" + flavorName());
 	}
 
-	public List<String> serialiseMetadata(List<PlaybackMetadata> metadataList) {
-		return null;
+	protected void serialiseMetadata(List<String> out, List<PlaybackMetadata> metadataList) {
+		for (PlaybackMetadata metadata : metadataList) {
+			out.add("### " + metadata.getExtensionName());
+			for (String value : metadata.toStringList()) {
+				out.add("# " + value);
+			}
+		}
 	}
 
 	public BigArrayList<String> serialise(BigArrayList<TickInputContainer> inputs) {
@@ -44,43 +49,57 @@ public abstract class PlaybackFlavorBase {
 		for (int i = 0; i < inputs.size(); i++) {
 			currentTick = i;
 			TickInputContainer container = inputs.get(i);
-			addAll(out, serialiseContainer(container));
+			serialiseContainer(out, container);
 		}
 		return out;
 	}
 
-	protected List<String> serialiseContainer(TickInputContainer container) {
+	protected void serialiseContainer(BigArrayList<String> out, TickInputContainer container) {
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
 
-		return mergeInputs(serialisedKeyboard, serialisedMouse, serialisedCameraAngle);
+		mergeInputs(out, serialisedKeyboard, serialisedMouse, serialisedCameraAngle);
 	}
 
-	protected abstract List<String> serialiseKeyboard(VirtualKeyboard keyboard);
-
-	protected abstract List<String> serialiseMouse(VirtualMouse mouse);
-
-	protected abstract List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle);
-
-	protected List<String> mergeInputs(List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle) {
+	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
 		List<String> out = new ArrayList<>();
-		
+		for (VirtualKeyboard subtick : keyboard.getAll()) {
+			out.add(subtick.toString());
+		}
+		return out;
+	}
+
+	protected List<String> serialiseMouse(VirtualMouse mouse) {
+		List<String> out = new ArrayList<>();
+		for (VirtualMouse subtick : mouse.getAll()) {
+			out.add(subtick.toString());
+		}
+		return out;
+	}
+
+	protected List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle) {
+		List<String> out = new ArrayList<>();
+		for (VirtualCameraAngle subtick : cameraAngle.getAll()) {
+			out.add(subtick.toString());
+		}
+		return out;
+	}
+
+	protected void mergeInputs(BigArrayList<String> out, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle) {
 		Queue<String> keyboardQueue = new LinkedBlockingQueue<>(serialisedKeyboard);
 		Queue<String> mouseQueue = new LinkedBlockingQueue<>(serialisedMouse);
 		Queue<String> cameraAngleQueue = new LinkedBlockingQueue<>(serialisedCameraAngle);
-		
-		while(!keyboardQueue.isEmpty() && !mouseQueue.isEmpty() && !cameraAngleQueue.isEmpty()) {
+
+		while (!keyboardQueue.isEmpty() || !mouseQueue.isEmpty() || !cameraAngleQueue.isEmpty()) {
 			String kb = getOrEmpty(keyboardQueue.poll());
 			String ms = getOrEmpty(mouseQueue.poll());
 			String ca = getOrEmpty(cameraAngleQueue.poll());
-			
+
 			out.add(kb + ms + ca);
 		}
-		
-		return out;
 	}
-	
+
 	protected String getOrEmpty(String string) {
 		return string == null ? "" : string;
 	}

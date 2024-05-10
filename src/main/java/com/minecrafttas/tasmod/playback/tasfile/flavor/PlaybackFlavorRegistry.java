@@ -28,20 +28,20 @@ public class PlaybackFlavorRegistry extends AbstractRegistry<String, PlaybackFla
 			return;
 		}
 
-		if(REGISTRY.containsKey(flavor.serialiseFlavorName())) {
-			TASmod.LOGGER.warn("Trying to register the serialiser flavor {}, but a flavor with the same name is already registered!", flavor.serialiseFlavorName());
+		if(REGISTRY.containsKey(flavor.flavorName())) {
+			TASmod.LOGGER.warn("Trying to register the serialiser flavor {}, but a flavor with the same name is already registered!", flavor.flavorName());
 			return;
 		}
 		
-		REGISTRY.put(flavor.serialiseFlavorName(), flavor);
+		REGISTRY.put(flavor.flavorName(), flavor);
 	}
 	
 	public void unregister(PlaybackFlavorBase flavor) {
 		if (flavor == null) {
 			throw new NullPointerException("Tried to unregister a flavor with value null");
 		}
-		if (REGISTRY.containsKey(flavor.serialiseFlavorName())) {
-			REGISTRY.remove(flavor.serialiseFlavorName());
+		if (REGISTRY.containsKey(flavor.flavorName())) {
+			REGISTRY.remove(flavor.flavorName());
 		} else {
 			TASmod.LOGGER.warn("Trying to unregister the flavor {}, but it was not registered!", flavor.getClass().getName());
 		}
