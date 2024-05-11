@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
@@ -27,6 +29,31 @@ public abstract class PlaybackFlavorBase {
 
 	public abstract String flavorName();
 
+	/*==============================================
+		   _____           _       _ _          
+		  / ____|         (_)     | (_)         
+		 | (___   ___ _ __ _  __ _| |_ ___  ___ 
+		  \___ \ / _ \ '__| |/ _` | | / __|/ _ \
+		  ____) |  __/ |  | | (_| | | \__ \  __/
+		 |_____/ \___|_|  |_|\__,_|_|_|___/\___|	
+		 
+	  ==============================================
+     
+     * The following section is dedicated to serialising.
+     * 
+     * The serialisation process is split into 2 parts:
+     * The header and the container.
+     * 
+     * ## Header
+     * The header is where the flavorname, the enabled extensions and the metadata is stored.
+     * 
+     * You change how each is displayed by overwriting the corresponding method.
+     * 
+     * ## Container
+     * 
+     * 
+	 */
+	
 	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList) {
 		List<String> out = new ArrayList<>();
 		serialiseFlavorName(out);
@@ -119,15 +146,75 @@ public abstract class PlaybackFlavorBase {
 		return string == null ? "" : string;
 	}
 
-	public BigArrayList<TickInputContainer> deserialise(BigArrayList<String> lines) {
-		BigArrayList<TickInputContainer> out = new BigArrayList<>();
+
+	/*========================================================
+	 	  _____                      _       _ _          
+		 |  __ \                    (_)     | (_)         
+		 | |  | | ___  ___  ___ _ __ _  __ _| |_ ___  ___ 
+		 | |  | |/ _ \/ __|/ _ \ '__| |/ _` | | / __|/ _ \
+		 | |__| |  __/\__ \  __/ |  | | (_| | | \__ \  __/
+		 |_____/ \___||___/\___|_|  |_|\__,_|_|_|___/\___|
+                                                  
+	  ========================================================                                             
+	 * 
+	 */
+	
+	public List<PlaybackMetadata> deserialiseHeader(List<String> lines) {
+		List<PlaybackMetadata> out = new ArrayList<>();
+		
+		for(String currentLine : lines) {
+			
+		}
 		return out;
 	}
 
-	public List<PlaybackMetadata> deserialiseMetadata(List<String> metadataString) {
-		return null;
+	public boolean deserialiseFlavorName(List<String> header) {
+		for (String line : header) {
+			Matcher matcher = extract("^# Flavor: " + flavorName(), line);
+			
+			if(matcher.find()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
+	protected void deserialiseMetadata(List<PlaybackMetadata> out, String line) {
+	}
+
+//	public BigArrayList<TickInputContainer> deserialise(BigArrayList<String> lines) {
+//	}
+//
+//	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, TickInputContainer container) {
+//	}
+//
+//	protected List<String> deserialiseKeyboard(VirtualKeyboard keyboard) {
+//	}
+//
+//	protected List<String> deserialiseMouse(VirtualMouse mouse) {
+//	}
+//
+//	protected List<String> deserialiseCameraAngle(VirtualCameraAngle cameraAngle) {
+//	}
+
+	protected void splitInputs(BigArrayList<String> out, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle) {
+	}
+
+	protected Matcher extract(String regex, String haystack) {
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(haystack);
+
+		return matcher;
+	}
+	
+	protected String extract(String regex, String haystack, int group) {
+		Matcher matcher = extract(regex, haystack);
+		if(matcher.find()) {
+			return extract(regex, haystack).group(group);
+		}
+		return null;
+	}
+	
 	/**
 	 * @return {@link #currentTick}
 	 */
