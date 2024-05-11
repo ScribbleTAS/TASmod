@@ -46,7 +46,7 @@ public class PlaybackMetadataTest {
 	void testConstructor() {
 		MetadataTest test = new MetadataTest();
 		PlaybackMetadata metadata = new PlaybackMetadata(test);
-		assertNotNull(metadata.getMetadata());
+		assertNotNull(metadata.getData());
 		assertEquals("Test", metadata.getExtensionName());
 	}
 	

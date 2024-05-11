@@ -15,7 +15,7 @@ import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.Playba
  */
 public class PlaybackMetadata {
 	private String extensionName;
-	private LinkedHashMap<String, String> metadata;
+	private LinkedHashMap<String, String> data;
 	
 	private static String SEPERATOR = ":";
 
@@ -25,24 +25,29 @@ public class PlaybackMetadata {
 
 	private PlaybackMetadata(String extensionName) {
 		this.extensionName = extensionName;
-		this.metadata = new LinkedHashMap<String, String>();
+		this.data = new LinkedHashMap<String, String>();
+	}
+
+	private PlaybackMetadata(String extensionName, LinkedHashMap<String, String> data) {
+		this.extensionName = extensionName;
+		this.data = data;
 	}
 
 	public void setValue(String key, String value) {
 		if (key.contains(SEPERATOR)) {
 			throw new IllegalArgumentException(String.format("%sKeyname %s can't contain %s", extensionName != null ? extensionName + ": " : "", key, SEPERATOR));
 		}
-		metadata.put(key, value);
+		data.put(key, value);
 	}
 
 	public String getValue(String key) {
-		return metadata.get(key);
+		return data.get(key);
 	}
 
 	@Override
 	public String toString() {
 		String out = "";
-		for (String key : metadata.keySet()) {
+		for (String key : data.keySet()) {
 			String value = getValue(key);
 			out += (String.format("%s%s%s\n", key, SEPERATOR, value));
 		}
@@ -51,7 +56,7 @@ public class PlaybackMetadata {
 
 	public List<String> toStringList() {
 		List<String> out = new ArrayList<>();
-		for (Object keyObj : metadata.keySet()) {
+		for (Object keyObj : data.keySet()) {
 			String key = (String) keyObj;
 			String value = getValue(key);
 			out.add(String.format("%s%s%s\n", key, SEPERATOR, value));
@@ -63,15 +68,15 @@ public class PlaybackMetadata {
 		return extensionName;
 	}
 
-	public HashMap<String, String> getMetadata() {
-		return metadata;
+	public HashMap<String, String> getData() {
+		return data;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof PlaybackMetadata) {
 			PlaybackMetadata other = (PlaybackMetadata) obj;
-			return other.metadata.equals(metadata) && other.extensionName.equals(extensionName);
+			return other.data.equals(data) && other.extensionName.equals(extensionName);
 		}
 		return super.equals(obj);
 	}
@@ -91,5 +96,9 @@ public class PlaybackMetadata {
 		}
 
 		return out;
+	}
+	
+	public static PlaybackMetadata fromHashMap(String extensionName, LinkedHashMap<String, String> data) {
+		return new PlaybackMetadata(extensionName, data);
 	}
 }

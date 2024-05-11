@@ -2,15 +2,19 @@ package com.minecrafttas.tasmod.playback.tasfile.flavor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
@@ -20,15 +24,23 @@ public abstract class PlaybackFlavorBase {
 	/**
 	 * The current tick that is being serialised or deserialised
 	 */
-	protected long currentTick=0;
-	
+	protected long currentTick = 0;
+
 	/**
 	 * Debug subtick field for error handling
 	 */
-	protected Integer currentSubtick=null;
+	protected Integer currentSubtick = null;
 
 	public abstract String flavorName();
 
+	public String headerStart() {
+		return createCenteredHeading("TASFile", '#', 50);
+	}
+
+	public String headerEnd() {
+		return createPaddedString('#', 50);
+	}
+	
 	/*==============================================
 		   _____           _       _ _          
 		  / ____|         (_)     | (_)         
@@ -68,11 +80,21 @@ public abstract class PlaybackFlavorBase {
 
 	protected void serialiseMetadata(List<String> out, List<PlaybackMetadata> metadataList) {
 		for (PlaybackMetadata metadata : metadataList) {
-			out.add("### " + metadata.getExtensionName());
+			serialiseMetadataName(out, metadata.getExtensionName());
 			for (String value : metadata.toStringList()) {
 				out.add("# " + value);
 			}
 		}
+	}
+
+	protected void serialiseMetadataName(List<String> out, String name) {
+		out.add("### " + name);
+	}
+
+	protected void serialiseMetadataValue(List<String> out, LinkedHashMap<String, String> data) {
+		data.forEach((key, value) -> {
+			out.add(String.format("%s:%s", key, value));
+		});
 	}
 
 	public BigArrayList<String> serialise(BigArrayList<TickInputContainer> inputs) {
@@ -127,9 +149,9 @@ public abstract class PlaybackFlavorBase {
 		String kb = getOrEmpty(keyboardQueue.poll());
 		String ms = getOrEmpty(mouseQueue.poll());
 		String ca = getOrEmpty(cameraAngleQueue.poll());
-		
+
 		out.add(String.format("%s|%s|%s|%s", currentTick, kb, ms, ca));
-		
+
 		currentSubtick = 0;
 		while (!keyboardQueue.isEmpty() || !mouseQueue.isEmpty() || !cameraAngleQueue.isEmpty()) {
 			currentSubtick++;
@@ -159,24 +181,95 @@ public abstract class PlaybackFlavorBase {
 	 * 
 	 */
 	
-	public List<PlaybackMetadata> deserialiseHeader(List<String> lines) {
-		List<PlaybackMetadata> out = new ArrayList<>();
-		
-		for(String currentLine : lines) {
-			
-		}
-		return out;
-	}
 
 	public boolean deserialiseFlavorName(List<String> header) {
 		for (String line : header) {
-			Matcher matcher = extract("^# Flavor: " + flavorName(), line);
-			
-			if(matcher.find()) {
+			Matcher matcher = extract("^Flavor: " + flavorName(), line);
+
+			if (matcher.find()) {
 				return true;
 			}
 		}
 		return false;
+	}
+	
+	public List<String> extractHeader(List<String> lines) {
+		List<String> extracted = new ArrayList<>();
+		for (String line : lines) {
+			if (line.equals(headerEnd()))
+				return extracted;
+
+			extracted.add(line);
+		}
+		throw new PlaybackLoadException("Cannot find the end of the header");
+	}
+
+	/**
+	 * Deserialises {@link PlaybackMetadata} in the header of the file.<br>
+	 * <br>
+	 * First extracts the metadata specific lines, then reads the section names and key value pairs.
+	 * 
+	 * @param headerLines All lines in the header. Can be easily extracted with {@link #extractHeader(List)}
+	 * @return A list of {@link PlaybackMetadata}
+	 */
+	public List<PlaybackMetadata> deserialiseMetadata(List<String> headerLines) {
+		List<String> metadataLines = extractHeader(headerLines);
+		List<PlaybackMetadata> out = new ArrayList<>();
+
+		String metadataName = null;
+		Pair<String, String> pair = null;
+		LinkedHashMap<String, String> values = new LinkedHashMap<>();
+		for (String metadataLine : metadataLines) {
+
+			String newMetadataName = deserialiseMetadataName(metadataLine);
+
+			if (newMetadataName != null) {	// Means a new metadata section is beginning... In this case, the metadataLine
+											// is "### Name" and the newMetadataName is "Name"
+
+				if (metadataName != null && !metadataName.equals(newMetadataName)) {	// If metadataName is null, then the first section begins
+																						// If metadataName is different than the newMetadataName, 
+																						// then a new section begins and we first need to store the old.
+					out.add(PlaybackMetadata.fromHashMap(metadataName, values));
+					values = new LinkedHashMap<>();
+				}
+				metadataName = newMetadataName;
+				continue;
+				
+			} else if ((pair = deseraialiseMetadataValue(metadataLine)) != null) {
+				values.put(pair.getLeft(), pair.getRight());
+			}
+		}
+		return out;
+	}
+
+	protected List<String> extractMetadata(List<String> lines) {
+		List<String> extracted = new ArrayList<>();
+
+		boolean start = false;
+
+		for (String line : lines) {
+			if (deserialiseMetadataName(line) != null)
+				start = true;
+
+			if (line.equals(headerEnd()))
+				break;
+
+			if (start)
+				extracted.add(line);
+		}
+
+		return extracted;
+	}
+
+	protected String deserialiseMetadataName(String line) {
+		return extract("^### (.+)", line, 1);
+	}
+
+	protected Pair<String, String> deseraialiseMetadataValue(String metadataLine) {
+		Matcher matcher = extract("^(.+):(.+)", metadataLine);
+		if(matcher.find())
+			return Pair.of(matcher.group(1), matcher.group(2));
+		return null;
 	}
 
 	protected void deserialiseMetadata(List<PlaybackMetadata> out, String line) {
@@ -206,22 +299,26 @@ public abstract class PlaybackFlavorBase {
 
 		return matcher;
 	}
-	
+
 	protected String extract(String regex, String haystack, int group) {
 		Matcher matcher = extract(regex, haystack);
-		if(matcher.find()) {
+		if (matcher.find()) {
 			return extract(regex, haystack).group(group);
 		}
 		return null;
 	}
-	
+
+	protected boolean contains(String regex, String haystack) {
+		return extract(regex, haystack).find();
+	}
+
 	/**
 	 * @return {@link #currentTick}
 	 */
 	public long getCurrentTick() {
 		return currentTick;
 	}
-	
+
 	/**
 	 * @return {@link #currentSubtick}
 	 */
