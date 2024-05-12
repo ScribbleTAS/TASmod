@@ -1,6 +1,7 @@
 package com.minecrafttas.tasmod.playback.tasfile.flavor;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
@@ -53,5 +54,9 @@ public class PlaybackFlavorRegistry extends AbstractRegistry<String, PlaybackFla
 	
 	public PlaybackFlavorBase getFlavor(String name) {
 		return REGISTRY.get(name);
+	}
+	
+	public List<PlaybackFlavorBase> getFlavors() {
+		return (List<PlaybackFlavorBase>) REGISTRY.values();
 	}
 }

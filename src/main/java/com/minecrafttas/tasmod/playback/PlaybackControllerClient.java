@@ -11,6 +11,7 @@ import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_SAVE;
 import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_STATE;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -42,6 +43,7 @@ import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.util.TASmodRegistry;
@@ -479,7 +481,13 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	}
 	
 	public void setInputs(BigArrayList<TickInputContainer> inputs) {
-		this.inputs = inputs;
+		try {
+			inputs.clearMemory();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		inputs = new BigArrayList<TickInputContainer>(directory + File.separator + "temp");
+		PlaybackFlavorBase.addAll(this.inputs, inputs);
 	}
 
 	public Map<Integer, List<Pair<String, String[]>>> getControlBytes() { // TODO Replace with TASFile extension
@@ -523,6 +531,11 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 	public void clear() {
 		LOGGER.debug(LoggerMarkers.Playback, "Clearing playback controller");
+		try {
+			inputs.clearMemory();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		inputs = new BigArrayList<TickInputContainer>(directory + File.separator + "temp");
 		controlBytes.clear();
 		comments.clear();

@@ -191,9 +191,10 @@ public abstract class PlaybackFlavorBase {
 		return false;
 	}
 	
-	public List<String> extractHeader(List<String> lines) {
+	public List<String> extractHeader(BigArrayList<String> lines) {
 		List<String> extracted = new ArrayList<>();
-		for (String line : lines) {
+		for (long i = 0; i < lines.size(); i++) {
+			String line = lines.get(i);
 			extracted.add(line);
 
 			if (line.equals(headerEnd()))
@@ -211,7 +212,7 @@ public abstract class PlaybackFlavorBase {
 	 * @return A list of {@link PlaybackMetadata}
 	 */
 	public List<PlaybackMetadata> deserialiseMetadata(List<String> headerLines) {
-		List<String> metadataLines = extractHeader(headerLines);
+		List<String> metadataLines = extractMetadata(headerLines);
 		List<PlaybackMetadata> out = new ArrayList<>();
 
 		String metadataName = null;
@@ -270,8 +271,32 @@ public abstract class PlaybackFlavorBase {
 		return null;
 	}
 
-//	public BigArrayList<TickInputContainer> deserialise(BigArrayList<String> lines) {
-//	}
+	/**
+	 * Deserialises the input part of the TASfile
+	 * @param lines The serialised lines of the TASfile
+	 * @param startPos The position when the header ends and the inputs start
+	 * @return A list of {@link TickInputContainer}
+	 */
+	public BigArrayList<TickInputContainer> deserialise(BigArrayList<String> lines, long startPos) {
+		BigArrayList<TickInputContainer> out = new BigArrayList<>();
+		
+		for (long i = startPos; i < lines.size(); i++) {
+			String line = lines.get(i);
+			
+		}
+		return out;
+	}
+	
+	/**
+	 * Reads the next lines, until a full tick is reached
+	 * @param extracted The extracted lines, passed in by reference
+	 * @param list The line list
+	 * @param startPos The start position of this tick
+	 * @return The updated index for the next tick
+	 */
+	protected long extractTick(List<String> extracted, BigArrayList<String> list, long startPos) {
+		return 0;
+	}
 //
 //	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, TickInputContainer container) {
 //	}
@@ -345,14 +370,14 @@ public abstract class PlaybackFlavorBase {
 		return new String(spacingLine);
 	}
 
-	protected static <T extends Serializable> void addAll(BigArrayList<T> list, BigArrayList<T> toAdd) {
+	public static <T extends Serializable> void addAll(BigArrayList<T> list, BigArrayList<T> toAdd) {
 		for (int i = 0; i < toAdd.size(); i++) {
 			T element = toAdd.get(i);
 			list.add(element);
 		}
 	}
 
-	protected static <T extends Serializable> void addAll(BigArrayList<T> list, List<T> toAdd) {
+	public static <T extends Serializable> void addAll(BigArrayList<T> list, List<T> toAdd) {
 		for (int i = 0; i < toAdd.size(); i++) {
 			T element = toAdd.get(i);
 			list.add(element);
