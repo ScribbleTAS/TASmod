@@ -2,6 +2,7 @@ package tasmod.playback.tasfile;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
 import com.minecrafttas.tasmod.util.TASmodRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
@@ -123,10 +125,10 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		
 		List<String> expected = new ArrayList<>();
 		expected.add("### Test1");
-		expected.add("# TestKey:This is a test\n");
+		expected.add("TestKey:This is a test");
 		
 		expected.add("### Test2");
-		expected.add("# TestKey:This is a second test\n");
+		expected.add("TestKey:This is a second test");
 		
 		assertIterableEquals(expected, actual);
 		assertEquals(0, currentTick);
@@ -169,6 +171,93 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		
 		// C o m p a r e
 		assertBigArrayList(expected, actual);
+	}
+	
+	@Test
+	void testExtractHeader() {
+		List<String> lines = new ArrayList<>();
+		lines.add("###### TASfile ######");
+		lines.add("Flavor: beta");
+		lines.add("Extensions: desync_monitor, control_bytes, vanilla_commands");
+		lines.add("### General");
+		lines.add("Author: Scribble");
+		lines.add("Title: 77 Buttons");
+		lines.add("##################################################");
+		lines.add("This should not be read anymore");
+		lines.add("1|W;w||");
+		
+		List<String> actual = extractHeader(lines);
+		
+		List<String> expected = new ArrayList<>();
+		expected.add("###### TASfile ######");
+		expected.add("Flavor: beta");
+		expected.add("Extensions: desync_monitor, control_bytes, vanilla_commands");
+		expected.add("### General");
+		expected.add("Author: Scribble");
+		expected.add("Title: 77 Buttons");
+		expected.add("##################################################");
+		
+		assertIterableEquals(expected, actual);
+	}
+	
+	@Test
+	void testExtractHeaderFail() {
+		List<String> lines = new ArrayList<>();
+		lines.add("###### TASfile ######");
+		lines.add("Flavor: beta");
+		lines.add("Extensions: desync_monitor, control_bytes, vanilla_commands");
+		lines.add("### General");
+		lines.add("Author: Scribble");
+		lines.add("Title: 77 Buttons");
+		lines.add("This should not be read anymore");
+		lines.add("1|W;w||");
+		
+		PlaybackLoadException exception = assertThrows(PlaybackLoadException.class, ()->{
+			extractHeader(lines);
+		});
+		
+		assertEquals("Cannot find the end of the header", exception.getMessage());
+	}
+	
+	/**
+	 * Test extracting only the metadata (### General and below)
+	 */
+	@Test
+	void extractMetadata() {
+		List<String> lines = new ArrayList<>();
+		lines.add("###### TASfile ######");
+		lines.add("Flavor: beta");
+		lines.add("Extensions: desync_monitor, control_bytes, vanilla_commands");
+		lines.add("### General");
+		lines.add("Author: Scribble");
+		lines.add("Title: 77 Buttons");
+		lines.add("##################################################");
+		
+		List<String> actual = extractMetadata(lines);
+		
+		List<String> expected = new ArrayList<>();
+		expected.add("### General");
+		expected.add("Author: Scribble");
+		expected.add("Title: 77 Buttons");
+	
+		assertIterableEquals(expected, actual);
+	}
+	
+	/**
+	 * Test extracting metadata, but no metadata was encoded
+	 */
+	@Test
+	void extractEmptyMetadata() {
+		List<String> lines = new ArrayList<>();
+		lines.add("###### TASfile ######");
+		lines.add("Flavor: beta");
+		lines.add("Extensions: desync_monitor, control_bytes, vanilla_commands");
+		lines.add("##################################################");
+		
+		List<String> actual = extractMetadata(lines);
+		
+		List<String> expected = new ArrayList<>();
+		assertIterableEquals(expected, actual);
 	}
 	
 	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {

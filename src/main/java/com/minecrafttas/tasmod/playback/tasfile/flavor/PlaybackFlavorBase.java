@@ -81,9 +81,7 @@ public abstract class PlaybackFlavorBase {
 	protected void serialiseMetadata(List<String> out, List<PlaybackMetadata> metadataList) {
 		for (PlaybackMetadata metadata : metadataList) {
 			serialiseMetadataName(out, metadata.getExtensionName());
-			for (String value : metadata.toStringList()) {
-				out.add("# " + value);
-			}
+			serialiseMetadataValue(out, metadata.getData());
 		}
 	}
 
@@ -196,10 +194,10 @@ public abstract class PlaybackFlavorBase {
 	public List<String> extractHeader(List<String> lines) {
 		List<String> extracted = new ArrayList<>();
 		for (String line : lines) {
+			extracted.add(line);
+
 			if (line.equals(headerEnd()))
 				return extracted;
-
-			extracted.add(line);
 		}
 		throw new PlaybackLoadException("Cannot find the end of the header");
 	}
@@ -272,9 +270,6 @@ public abstract class PlaybackFlavorBase {
 		return null;
 	}
 
-	protected void deserialiseMetadata(List<PlaybackMetadata> out, String line) {
-	}
-
 //	public BigArrayList<TickInputContainer> deserialise(BigArrayList<String> lines) {
 //	}
 //
@@ -303,7 +298,7 @@ public abstract class PlaybackFlavorBase {
 	protected String extract(String regex, String haystack, int group) {
 		Matcher matcher = extract(regex, haystack);
 		if (matcher.find()) {
-			return extract(regex, haystack).group(group);
+			return matcher.group(group);
 		}
 		return null;
 	}
