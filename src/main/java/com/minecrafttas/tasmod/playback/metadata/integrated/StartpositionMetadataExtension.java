@@ -16,6 +16,7 @@ import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.minecraft.client.Minecraft;
@@ -75,20 +76,46 @@ public class StartpositionMetadataExtension implements PlaybackMetadataExtension
 		metadata.setValue("x", Double.toString(startPosition.x));
 		metadata.setValue("y", Double.toString(startPosition.y));
 		metadata.setValue("z", Double.toString(startPosition.z));
-		metadata.setValue("pitch", Double.toString(startPosition.pitch));
-		metadata.setValue("yaw", Double.toString(startPosition.yaw));
+		metadata.setValue("pitch", Float.toString(startPosition.pitch));
+		metadata.setValue("yaw", Float.toString(startPosition.yaw));
 		return metadata;
 	}
 
 	@Override
 	public void onLoad(PlaybackMetadata metadata) {
-		double x = Double.parseDouble(metadata.getValue("x"));
-		double y = Double.parseDouble(metadata.getValue("y"));
-		double z = Double.parseDouble(metadata.getValue("z"));
-		float pitch = Float.parseFloat(metadata.getValue("pitch"));
-		float yaw = Float.parseFloat(metadata.getValue("yaw"));
+		double x = getDouble("x", metadata);
+		double y = getDouble("y", metadata);
+		double z = getDouble("z", metadata);
+		float pitch = getFloat("pitch", metadata);
+		float yaw = getFloat("yaw", metadata);
 
 		this.startPosition = new StartPosition(x, y, z, pitch, yaw);
+	}
+	
+	private double getDouble(String key, PlaybackMetadata metadata) {
+		String out = metadata.getValue(key);
+		if(out != null) {
+			try {
+				return Double.parseDouble(out);
+			} catch (NumberFormatException e) {
+				throw new PlaybackLoadException(e);
+			}
+		} else {
+			throw new PlaybackLoadException(String.format("Missing key %s in Start Position metadata", key));
+		}
+	}
+	
+	private float getFloat(String key, PlaybackMetadata metadata) {
+		String out = metadata.getValue(key);
+		if(out != null) {
+			try {
+				return Float.parseFloat(out);
+			} catch (NumberFormatException e) {
+				throw new PlaybackLoadException(e);
+			}
+		} else {
+			throw new PlaybackLoadException(String.format("Missing key %s in Start Position metadata", key));
+		}
 	}
 
 	@Override

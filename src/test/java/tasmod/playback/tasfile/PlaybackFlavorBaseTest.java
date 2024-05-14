@@ -6,8 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
@@ -223,7 +227,7 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 	 * Test extracting only the metadata (### General and below)
 	 */
 	@Test
-	void extractMetadata() {
+	void testExtractMetadata() {
 		List<String> lines = new ArrayList<>();
 		lines.add("###### TASfile ######");
 		lines.add("Flavor: beta");
@@ -247,7 +251,7 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 	 * Test extracting metadata, but no metadata was encoded
 	 */
 	@Test
-	void extractEmptyMetadata() {
+	void testExtractEmptyMetadata() {
 		List<String> lines = new ArrayList<>();
 		lines.add("###### TASfile ######");
 		lines.add("Flavor: beta");
@@ -258,6 +262,53 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		
 		List<String> expected = new ArrayList<>();
 		assertIterableEquals(expected, actual);
+	}
+	
+	/**
+	 * Test deserialising metadata
+	 */
+	@Test
+	@Disabled
+	void testdeserialiseMetadata() {
+		List<String> lines = new ArrayList<>();
+		lines.add("### General");
+		lines.add("Author: Scribble");
+		lines.add("Title: 77 Buttons");
+		lines.add("Playing Time:00:00.0");
+		lines.add("### StartPosition");
+		lines.add("x:1.0");
+		lines.add("y:2.0");
+		lines.add("z:3.0");
+		lines.add("pitch:4.0");
+		lines.add("yaw:5.0");
+		
+		List<PlaybackMetadata> actual = deserialiseMetadata(lines);
+		
+		List<PlaybackMetadata> expected = new ArrayList<>();
+		LinkedHashMap<String, String> first = new LinkedHashMap<>();
+		first.put("Author", "Scribble");
+		first.put("Title", "77 Buttons");
+		first.put("Playing Time", "00:00.0");
+		expected.add(PlaybackMetadata.fromHashMap("General", first));
+		
+		LinkedHashMap<String, String> second = new LinkedHashMap<>();
+		second.put("x", "1.0");
+		second.put("y", "2.0");
+		second.put("z", "3.0");
+		second.put("pitch", "4.0");
+		second.put("yaw", "5.0");
+		expected.add(PlaybackMetadata.fromHashMap("StartPosition", second));
+		
+		assertIterableEquals(expected, actual);
+	}
+	
+	@Test
+	void testExtractTick() {
+		List<String> lines = new ArrayList<>();
+		lines.add("###### TASfile ######");
+		lines.add("Flavor: beta");
+		lines.add("Extensions: desync_monitor, control_bytes, vanilla_commands");
+		lines.add("##################################################");
 	}
 	
 	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {

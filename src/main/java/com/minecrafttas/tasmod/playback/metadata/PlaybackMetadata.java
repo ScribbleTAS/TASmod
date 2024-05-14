@@ -98,6 +98,6 @@ public class PlaybackMetadata {
 	}
 	
 	public static PlaybackMetadata fromHashMap(String extensionName, LinkedHashMap<String, String> data) {
-		return new PlaybackMetadata(extensionName, data);
+		return new PlaybackMetadata(extensionName, new LinkedHashMap<>(data));
 	}
 }

@@ -238,6 +238,7 @@ public abstract class PlaybackFlavorBase {
 				values.put(pair.getLeft(), pair.getRight());
 			}
 		}
+		out.add(PlaybackMetadata.fromHashMap(metadataName, values));
 		return out;
 	}
 
@@ -267,7 +268,7 @@ public abstract class PlaybackFlavorBase {
 	protected Pair<String, String> deseraialiseMetadataValue(String metadataLine) {
 		Matcher matcher = extract("^(.+):(.+)", metadataLine);
 		if(matcher.find())
-			return Pair.of(matcher.group(1), matcher.group(2));
+			return Pair.of(matcher.group(1).trim(), matcher.group(2).trim());
 		return null;
 	}
 
@@ -290,12 +291,26 @@ public abstract class PlaybackFlavorBase {
 	/**
 	 * Reads the next lines, until a full tick is reached
 	 * @param extracted The extracted lines, passed in by reference
-	 * @param list The line list
+	 * @param lines The line list
 	 * @param startPos The start position of this tick
 	 * @return The updated index for the next tick
 	 */
-	protected long extractTick(List<String> extracted, BigArrayList<String> list, long startPos) {
-		return 0;
+	protected long extractTick(List<String> extracted, BigArrayList<String> lines, long startPos) {
+		boolean shouldStop = false;
+		
+		for (long i = startPos; i < lines.size(); i++) {
+			String line = lines.get(i);
+			if (contains("^\\d+\\|", line)) {
+				if(shouldStop) {
+					return startPos+extracted.size();
+				}
+				else {
+					shouldStop = true;
+				}
+			}
+			extracted.add(line);
+		}
+		return startPos+extracted.size();
 	}
 //
 //	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, TickInputContainer container) {
