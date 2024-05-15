@@ -266,7 +266,7 @@ public abstract class PlaybackFlavorBase {
 	}
 
 	protected Pair<String, String> deseraialiseMetadataValue(String metadataLine) {
-		Matcher matcher = extract("^(.+):(.+)", metadataLine);
+		Matcher matcher = extract("^(.+?):(.+)", metadataLine);
 		if(matcher.find())
 			return Pair.of(matcher.group(1).trim(), matcher.group(2).trim());
 		return null;
@@ -297,20 +297,23 @@ public abstract class PlaybackFlavorBase {
 	 */
 	protected long extractTick(List<String> extracted, BigArrayList<String> lines, long startPos) {
 		boolean shouldStop = false;
-		
+		long counter = 0L;
 		for (long i = startPos; i < lines.size(); i++) {
 			String line = lines.get(i);
 			if (contains("^\\d+\\|", line)) {
 				if(shouldStop) {
-					return startPos+extracted.size();
+					return startPos+counter-1;
 				}
 				else {
 					shouldStop = true;
 				}
 			}
-			extracted.add(line);
+			if(shouldStop) {
+				extracted.add(line);
+			}
+			counter++;
 		}
-		return startPos+extracted.size();
+		return startPos+counter-1;
 	}
 //
 //	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, TickInputContainer container) {

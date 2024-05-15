@@ -268,8 +268,7 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 	 * Test deserialising metadata
 	 */
 	@Test
-	@Disabled
-	void testdeserialiseMetadata() {
+	void testDeserialiseMetadata() {
 		List<String> lines = new ArrayList<>();
 		lines.add("### General");
 		lines.add("Author: Scribble");
@@ -304,11 +303,48 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 	
 	@Test
 	void testExtractTick() {
-		List<String> lines = new ArrayList<>();
+		BigArrayList<String> lines = new BigArrayList<>();
 		lines.add("###### TASfile ######");
 		lines.add("Flavor: beta");
 		lines.add("Extensions: desync_monitor, control_bytes, vanilla_commands");
 		lines.add("##################################################");
+		lines.add("55|Keyboard:W,LCONTROL;w|Mouse:;0,887,626|Camera:17.85;-202.74799");
+		lines.add("\t1|Keyboard:|Mouse:RC;0,1580,658|Camera:17.85;-202.74799");
+		lines.add("\t2|Keyboard:|Mouse:;0,1580,658|Camera:17.85;-202.74799");
+		lines.add("56|Keyboard:W,LCONTROL;w|Mouse:;0,887,626|Camera:17.85;-202.74799");
+		lines.add("\t1|Keyboard:|Mouse:RC;0,1580,658|Camera:17.85;-202.74799");
+		lines.add("\t2|Keyboard:|Mouse:;0,1580,658|Camera:17.85;-202.74799");
+		
+		List<List<String>> actual = new ArrayList<>();
+		List<Long> actualIndex = new ArrayList<>();
+		for (long i = 0; i < lines.size(); i++) {
+			List<String> tick = new ArrayList<>();
+			long index = extractTick(tick, lines, i);
+			i = index;
+			actual.add(tick);
+			actualIndex.add(index);
+		}
+
+		List<List<String>> expected = new ArrayList<>();
+		List<String> tick1 = new ArrayList<>();
+		tick1.add("55|Keyboard:W,LCONTROL;w|Mouse:;0,887,626|Camera:17.85;-202.74799");
+		tick1.add("\t1|Keyboard:|Mouse:RC;0,1580,658|Camera:17.85;-202.74799");
+		tick1.add("\t2|Keyboard:|Mouse:;0,1580,658|Camera:17.85;-202.74799");
+
+		List<String> tick2 = new ArrayList<>();
+		tick2.add("56|Keyboard:W,LCONTROL;w|Mouse:;0,887,626|Camera:17.85;-202.74799");
+		tick2.add("\t1|Keyboard:|Mouse:RC;0,1580,658|Camera:17.85;-202.74799");
+		tick2.add("\t2|Keyboard:|Mouse:;0,1580,658|Camera:17.85;-202.74799");
+		
+		expected.add(tick1);
+		expected.add(tick2);
+		
+		List<Long> expectedIndex = new ArrayList<>();
+		expectedIndex.add(6L);
+		expectedIndex.add(9L);
+		
+		assertIterableEquals(expected, actual);
+		assertIterableEquals(expectedIndex, actualIndex);
 	}
 	
 	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {
