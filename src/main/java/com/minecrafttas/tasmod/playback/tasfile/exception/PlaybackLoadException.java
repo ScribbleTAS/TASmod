@@ -6,6 +6,10 @@ public class PlaybackLoadException extends RuntimeException {
 		super(msg);
 	}
 	
+	public PlaybackLoadException(String msg, Object... args) {
+		super(String.format(msg, args));
+	}
+	
 	public PlaybackLoadException(Throwable cause) {
 		super(cause);
 	}

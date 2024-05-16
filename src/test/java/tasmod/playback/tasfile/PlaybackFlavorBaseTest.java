@@ -3,15 +3,13 @@ package tasmod.playback.tasfile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
@@ -301,8 +299,12 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		assertIterableEquals(expected, actual);
 	}
 	
+	/**
+	 * Test extracing ticks from some lines
+	 */
 	@Test
 	void testExtractTick() {
+		// Create lines to be extracted from
 		BigArrayList<String> lines = new BigArrayList<>();
 		lines.add("###### TASfile ######");
 		lines.add("Flavor: beta");
@@ -315,7 +317,9 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		lines.add("\t1|Keyboard:|Mouse:RC;0,1580,658|Camera:17.85;-202.74799");
 		lines.add("\t2|Keyboard:|Mouse:;0,1580,658|Camera:17.85;-202.74799");
 		
+		// Fill the actual with lists of the extracted ticks
 		List<List<String>> actual = new ArrayList<>();
+		// Also fill the actualIndex with the indices that are returned 
 		List<Long> actualIndex = new ArrayList<>();
 		for (long i = 0; i < lines.size(); i++) {
 			List<String> tick = new ArrayList<>();
@@ -325,6 +329,7 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 			actualIndex.add(index);
 		}
 
+		// Fill expected
 		List<List<String>> expected = new ArrayList<>();
 		List<String> tick1 = new ArrayList<>();
 		tick1.add("55|Keyboard:W,LCONTROL;w|Mouse:;0,887,626|Camera:17.85;-202.74799");
@@ -339,10 +344,12 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		expected.add(tick1);
 		expected.add(tick2);
 		
+		// Fill expectedIndex
 		List<Long> expectedIndex = new ArrayList<>();
 		expectedIndex.add(6L);
 		expectedIndex.add(9L);
 		
+		// C o m p a r e
 		assertIterableEquals(expected, actual);
 		assertIterableEquals(expectedIndex, actualIndex);
 	}
@@ -357,6 +364,24 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 			out.add(list.get(i));
 		}
 		return out;
+	}
+	
+	@Test
+	void testExtractStartingFromEnd() {
+		List<String> actual = new ArrayList<>();
+		extractComment(actual, "55|Keyboard:W,LCONTROL;|Mouse:;0,887,626|Camera:17.85;-202.74799	// Test", 65);
+		
+		List<String> expected = new ArrayList<>();
+		expected.add("// Test");
+		assertIterableEquals(expected, actual);
+	}
+	
+	@Test
+	void testExtractStartingFromEnd2() {
+		List<String> actual = new ArrayList<>();
+		extractComment(actual, "55|Keyboard:W,LCONTROL;//|Mouse:;0,887,626|Camera:17.85;-202.74799", 66);
+		
+		assertTrue(actual.isEmpty());
 	}
 	
 	@Test

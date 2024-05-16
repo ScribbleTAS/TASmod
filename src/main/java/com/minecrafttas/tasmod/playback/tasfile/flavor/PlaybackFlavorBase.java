@@ -36,6 +36,17 @@ public abstract class PlaybackFlavorBase {
 	public String headerStart() {
 		return createCenteredHeading("TASFile", '#', 50);
 	}
+	
+	/**
+	 * @return The regex used for detecting comment lines
+	 */
+	public String singleComment() {
+		return "^//";
+	}
+	
+	public String endlineComment() {
+		return "(//.+)";
+	}
 
 	public String headerEnd() {
 		return createPaddedString('#', 50);
@@ -315,9 +326,25 @@ public abstract class PlaybackFlavorBase {
 		}
 		return startPos+counter-1;
 	}
-//
-//	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, TickInputContainer container) {
-//	}
+
+	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, List<String> tickLines) {
+		
+		for(String line : tickLines) {
+			if(contains(singleComment(), line)) {
+				// TODO TASfileExtension
+				continue;
+			}
+			List<String> keyboard = new ArrayList<>();
+			List<String> mouse = new ArrayList<>();
+			List<String> cameraAngle = new ArrayList<>();
+			
+			List<String> commentsAtEnd = new ArrayList<>();
+			
+			splitInputs(tickLines, keyboard, mouse, cameraAngle, commentsAtEnd);
+			
+			
+		}
+	}
 //
 //	protected List<String> deserialiseKeyboard(VirtualKeyboard keyboard) {
 //	}
@@ -328,7 +355,29 @@ public abstract class PlaybackFlavorBase {
 //	protected List<String> deserialiseCameraAngle(VirtualCameraAngle cameraAngle) {
 //	}
 
-	protected void splitInputs(BigArrayList<String> out, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle) {
+	protected void extractComment(List<String> commentsAtEnd, String line, int startPos) {
+		Matcher commentMatcher = extract(endlineComment(), line);
+		if(commentMatcher.find(startPos)) {
+			String comment = commentMatcher.group(1);
+			commentsAtEnd.add(comment);
+		}
+	}
+	
+	
+	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd) {
+		
+		for(String line : lines) {
+			Matcher tickMatcher = extract("^\\t?\\d+\\|(.+?)\\|(.+?)\\|(\\S+)\\s?", line);
+			if (tickMatcher.find()) {
+				serialisedKeyboard.add(tickMatcher.group(1));
+				serialisedMouse.add(tickMatcher.group(2));
+				serialisedCameraAngle.add(tickMatcher.group(3));
+			} else {
+				throw new PlaybackLoadException("Cannot find inputs in line %s", line);
+			}
+			
+			extractComment(commentsAtEnd, line, tickMatcher.group(0).length());
+		}
 	}
 
 	protected Matcher extract(String regex, String haystack) {
@@ -337,7 +386,7 @@ public abstract class PlaybackFlavorBase {
 
 		return matcher;
 	}
-
+	
 	protected String extract(String regex, String haystack, int group) {
 		Matcher matcher = extract(regex, haystack);
 		if (matcher.find()) {
