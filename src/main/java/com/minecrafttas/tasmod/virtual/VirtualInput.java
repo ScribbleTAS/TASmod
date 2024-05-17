@@ -237,7 +237,7 @@ public class VirtualInput {
 		 */
 		public void updateNextKeyboard(int keycode, boolean keystate, char character, boolean repeatEventsEnabled) {
 			LOGGER.debug(LoggerMarkers.Keyboard, "Update: {}, {}, {}, {}", keycode, keystate, character); 	// Activate with -Dtasmod.marker.keyboard=ACCEPT in VM arguments (and -Dtasmod.log.level=debug)
-			nextKeyboard.update(keycode, keystate, character, repeatEventsEnabled);
+			nextKeyboard.updateFromEvent(keycode, keystate, character, repeatEventsEnabled);
 		}
 		
 		/**

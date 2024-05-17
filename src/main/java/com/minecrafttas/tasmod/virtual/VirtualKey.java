@@ -166,6 +166,14 @@ public enum VirtualKey {
             return key.getKeycode();
         return null;
     }
+    
+    public static int[] getKeycodes(String[] keynames) {
+    	int[] out = new int[keynames.length];
+		for (int i = 0; i < keynames.length; i++) {
+			out[i] = getKeycode(keynames[i]);
+		}
+        return out;
+    }
 
     public static String getName(int keycode) {
         VirtualKey key = get(keycode);

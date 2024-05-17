@@ -145,8 +145,8 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 	void testSerialiseContainer() {
 		// Prepare keyboard
 		VirtualKeyboard keyboard = new VirtualKeyboard();
-		keyboard.update(VirtualKey.W, true, 'w');
-		keyboard.update(VirtualKey.LCONTROL, true, Character.MIN_VALUE);
+		keyboard.updateFromEvent(VirtualKey.W, true, 'w');
+		keyboard.updateFromEvent(VirtualKey.LCONTROL, true, Character.MIN_VALUE);
 		
 		// Prepare mouse
 		VirtualMouse mouse = new VirtualMouse();

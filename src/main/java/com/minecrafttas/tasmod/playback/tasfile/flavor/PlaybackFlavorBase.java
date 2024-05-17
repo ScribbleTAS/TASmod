@@ -16,6 +16,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContai
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
+import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
@@ -329,25 +330,33 @@ public abstract class PlaybackFlavorBase {
 
 	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, List<String> tickLines) {
 		
+		List<String> keyboardStrings = new ArrayList<>();
+		List<String> mouseStrings = new ArrayList<>();
+		List<String> cameraAngleStrings = new ArrayList<>();
+		List<String> commentsAtEnd = new ArrayList<>();
+		
 		for(String line : tickLines) {
 			if(contains(singleComment(), line)) {
 				// TODO TASfileExtension
 				continue;
 			}
-			List<String> keyboard = new ArrayList<>();
-			List<String> mouse = new ArrayList<>();
-			List<String> cameraAngle = new ArrayList<>();
 			
-			List<String> commentsAtEnd = new ArrayList<>();
-			
-			splitInputs(tickLines, keyboard, mouse, cameraAngle, commentsAtEnd);
-			
-			
+			splitInputs(tickLines, keyboardStrings, mouseStrings, cameraAngleStrings, commentsAtEnd);
 		}
+		
+		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 	}
-//
-//	protected List<String> deserialiseKeyboard(VirtualKeyboard keyboard) {
-//	}
+
+	protected VirtualKeyboard deserialiseKeyboard(List<String> keyboardStrings) {
+		VirtualKeyboard out = new VirtualKeyboard();
+		for(String line : keyboardStrings) {
+			Matcher matcher = extract("\\d+\\|(.*?);(.*?)\\|", line);
+			if(matcher.find()) {
+				out.updateFromState(VirtualKey.getKeycodes(matcher.group(1).split(",")), matcher.group(2).toCharArray());
+			}
+		}
+		return out;
+	}
 //
 //	protected List<String> deserialiseMouse(VirtualMouse mouse) {
 //	}

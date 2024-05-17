@@ -2,6 +2,7 @@ package com.minecrafttas.tasmod.virtual;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -38,7 +39,7 @@ import com.google.common.collect.ImmutableList;
  * <h2>Updating the keyboard</h2>
  * This keyboard stores it's values in "states".<br>
  * That means that all the keys that are currently pressed are stored in {@link #pressedKeys}.<br>
- * And this list is updated via a keyboard event in {@link #update(int, boolean, char)}.<br>
+ * And this list is updated via a keyboard event in {@link #updateFromEvent(int, boolean, char)}.<br>
  * <h2>Difference</h2>
  * When comparing 2 keyboard states, we can generate a list of differences from them in form of {@link VirtualKeyboardEvent}s.<br>
  * <pre>
@@ -62,7 +63,7 @@ import com.google.common.collect.ImmutableList;
  * Now you had to hold the key until the next tick to get it recognised by the game.<br>
  * <br>
  * To fix this, now every subtick is stored as a keyboard state as well.<br>
- * When updating the keyboard in {@link #update(int, boolean, char)}, a clone of itself is created and stored in {@link #subtickList},<br>
+ * When updating the keyboard in {@link #updateFromEvent(int, boolean, char)}, a clone of itself is created and stored in {@link #subtickList},<br>
  * with the difference that the subtick state has no {@link #subtickList}.<br>
  * In a nutshell, the keyboard stores it's past changes in {@link #subtickList} with the first being the oldest change.
  *
@@ -120,32 +121,51 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
     }
     
     /**
-     * Updates the keyboard, adds a new subtick to this keyboard
+     * Updates the keyboard from an event, adds a new subtick to this keyboard.<br>
+     * <br>
+     * An event updates one key at a time.
      * @param keycode The keycode of this key
      * @param keystate The keystate of this key, true for pressed
      * @param keycharacter The character that is associated with that key. Can change between keyboards or whenever shift is held in combination.
      */
-    public void update(int keycode, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
-    	if(isParent() && !ignoreFirstUpdate()) {
-    		addSubtick(shallowClone());
-    	}
+    public void updateFromEvent(int keycode, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
+    	createSubtick();
     	charList.clear();
 		if (keystate) {
 			addChar(keycharacter, repeatEventsEnabled);
 		}
     	setPressed(keycode, keystate);
     }
+
+	public void createSubtick() {
+		if(isParent() && !ignoreFirstUpdate()) {
+    		addSubtick(shallowClone());
+    	}
+	}
     
-    public void update(int keycode, boolean keystate, char keycharacter) {
-    	update(keycode, keystate, keycharacter, false);
+    public void updateFromEvent(int keycode, boolean keystate, char keycharacter) {
+    	updateFromEvent(keycode, keystate, keycharacter, false);
     }
     
-    public void update(VirtualKey key, boolean keystate, char keycharacter) {
-    	update(key.getKeycode(), keystate, keycharacter);
+    public void updateFromEvent(VirtualKey key, boolean keystate, char keycharacter) {
+    	updateFromEvent(key.getKeycode(), keystate, keycharacter);
     }
     
-    public void update(VirtualKey key, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
-    	update(key.getKeycode(), keystate, keycharacter, false);
+    public void updateFromEvent(VirtualKey key, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
+    	updateFromEvent(key.getKeycode(), keystate, keycharacter, false);
+    }
+    
+    public void updateFromState(int[] keycode, char[] chars) {
+    	createSubtick();
+    	
+    	this.pressedKeys.clear();
+    	for(int i : keycode) {
+    		this.pressedKeys.add(i);
+    	}
+    	this.charList.clear();
+    	for(char c : chars) {
+    		this.charList.add(c);
+    	}
     }
     
     @Override
