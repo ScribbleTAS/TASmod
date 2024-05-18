@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.Serializable;
+import java.rmi.UnexpectedException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -354,20 +355,11 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		assertIterableEquals(expectedIndex, actualIndex);
 	}
 	
-	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {
-		assertIterableEquals(convertBigArrayListToArrayList(expected), convertBigArrayListToArrayList(actual));
-	}
-	
-	private <T extends Serializable> ArrayList<T> convertBigArrayListToArrayList(BigArrayList<T> list) {
-		ArrayList<T> out = new ArrayList<>();
-		for (long i = 0; i < list.size(); i++) {
-			out.add(list.get(i));
-		}
-		return out;
-	}
-	
+	/**
+	 * Testing extracting the comment from the end of the line
+	 */
 	@Test
-	void testExtractStartingFromEnd() {
+	void testExtractCommentEndline() {
 		List<String> actual = new ArrayList<>();
 		extractComment(actual, "55|Keyboard:W,LCONTROL;|Mouse:;0,887,626|Camera:17.85;-202.74799	// Test", 65);
 		
@@ -376,12 +368,72 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		assertIterableEquals(expected, actual);
 	}
 	
+	/**
+	 * Test extracting the comment from the end of the line, but there is no comment
+	 */
 	@Test
-	void testExtractStartingFromEnd2() {
+	void testExtractCommentEndlineEmpty() {
 		List<String> actual = new ArrayList<>();
 		extractComment(actual, "55|Keyboard:W,LCONTROL;//|Mouse:;0,887,626|Camera:17.85;-202.74799", 66);
 		
-		assertTrue(actual.isEmpty());
+		List<String> expected = new ArrayList<>();
+		expected.add(null);
+		assertIterableEquals(expected, actual);
+	}
+	
+	/**
+	 * Test splitting the stringd of inputs including subticks into it's elements
+	 */
+	@Test
+	void testSplitInputs() {
+		List<String> tick = new ArrayList<>();
+		tick.add("55|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
+		tick.add("\t1||RC;0,1580,658|17.85;-202.74799 //Test");
+		tick.add("\t2||;0,1580,658|17.85;-202.74799");
+		
+		List<String> actualKeyboard = new ArrayList<>();
+		List<String> actualMouse = new ArrayList<>();
+		List<String> actualCameraAngle = new ArrayList<>();
+		List<String> actualComment = new ArrayList<>();
+		
+		splitInputs(tick, actualKeyboard, actualMouse, actualCameraAngle, actualComment);
+		
+		List<String> expectedKeyboard = new ArrayList<>();
+		List<String> expectedMouse = new ArrayList<>();
+		List<String> expectedCameraAngle = new ArrayList<>();
+		List<String> expectedComment = new ArrayList<>();
+		
+		expectedKeyboard.add("W,LCONTROL;w");
+		
+		expectedMouse.add(";0,887,626");
+		expectedMouse.add("RC;0,1580,658");
+		expectedMouse.add(";0,1580,658");
+		
+		expectedCameraAngle.add("17.85;-202.74799");
+		expectedCameraAngle.add("17.85;-202.74799");
+		expectedCameraAngle.add("17.85;-202.74799");
+		
+		expectedComment.add(null);
+		expectedComment.add("//Test");
+		expectedComment.add(null);
+		
+		assertIterableEquals(actualKeyboard, expectedKeyboard);
+		assertIterableEquals(expectedMouse, actualMouse);
+		assertIterableEquals(expectedCameraAngle, actualCameraAngle);
+		assertIterableEquals(expectedComment, actualComment);
+	}
+	
+	/**
+	 * Test deserialising keyboard
+	 */
+	@Test
+	void testDeserialiseKeyboard() {
+		List<String> tick = new ArrayList<>();
+		tick.add("W,LCONTROL;w");
+		
+		VirtualKeyboard actual = deserialiseKeyboard(tick);
+		
+		VirtualKeyboard expected = new VirtualKeyboard();
 	}
 	
 	@Test
@@ -424,5 +476,17 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		String actual = PlaybackFlavorBase.createCenteredHeading("Keystrokes", '#', 51);
 		String expected = "#################### Keystrokes ###################";
 		assertEquals(expected, actual);
+	}
+	
+	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {
+		assertIterableEquals(convertBigArrayListToArrayList(expected), convertBigArrayListToArrayList(actual));
+	}
+	
+	private <T extends Serializable> ArrayList<T> convertBigArrayListToArrayList(BigArrayList<T> list) {
+		ArrayList<T> out = new ArrayList<>();
+		for (long i = 0; i < list.size(); i++) {
+			out.add(list.get(i));
+		}
+		return out;
 	}
 }

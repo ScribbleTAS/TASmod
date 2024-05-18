@@ -350,7 +350,7 @@ public abstract class PlaybackFlavorBase {
 	protected VirtualKeyboard deserialiseKeyboard(List<String> keyboardStrings) {
 		VirtualKeyboard out = new VirtualKeyboard();
 		for(String line : keyboardStrings) {
-			Matcher matcher = extract("\\d+\\|(.*?);(.*?)\\|", line);
+			Matcher matcher = extract("(.*?);(.*?)", line);
 			if(matcher.find()) {
 				out.updateFromState(VirtualKey.getKeycodes(matcher.group(1).split(",")), matcher.group(2).toCharArray());
 			}
@@ -368,7 +368,9 @@ public abstract class PlaybackFlavorBase {
 		Matcher commentMatcher = extract(endlineComment(), line);
 		if(commentMatcher.find(startPos)) {
 			String comment = commentMatcher.group(1);
-			commentsAtEnd.add(comment);
+			commentsAtEnd.add(comment);					 
+		} else {
+			commentsAtEnd.add(null);
 		}
 	}
 	
@@ -376,11 +378,17 @@ public abstract class PlaybackFlavorBase {
 	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd) {
 		
 		for(String line : lines) {
-			Matcher tickMatcher = extract("^\\t?\\d+\\|(.+?)\\|(.+?)\\|(\\S+)\\s?", line);
+			Matcher tickMatcher = extract("^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?", line);
 			if (tickMatcher.find()) {
-				serialisedKeyboard.add(tickMatcher.group(1));
-				serialisedMouse.add(tickMatcher.group(2));
-				serialisedCameraAngle.add(tickMatcher.group(3));
+				if(!tickMatcher.group(1).isEmpty()) {
+					serialisedKeyboard.add(tickMatcher.group(1));
+				}
+				if(!tickMatcher.group(2).isEmpty()) {
+					serialisedMouse.add(tickMatcher.group(2));
+				}
+				if(!tickMatcher.group(3).isEmpty()) {
+					serialisedCameraAngle.add(tickMatcher.group(3));
+				}
 			} else {
 				throw new PlaybackLoadException("Cannot find inputs in line %s", line);
 			}
