@@ -126,8 +126,8 @@ class VirtualMouseTest {
 	@Test
 	void testToStringSubtick() {
 		VirtualMouse actual = new VirtualMouse();
-		actual.update(VirtualKey.LC.getKeycode(), true, 10, 100, 120);
-		actual.update(VirtualKey.MC.getKeycode(), true, 0, 12, 3);
+		actual.updateFromEvent(VirtualKey.LC.getKeycode(), true, 10, 100, 120);
+		actual.updateFromEvent(VirtualKey.MC.getKeycode(), true, 0, 12, 3);
 
 		assertEquals("LC;10,100,120\nLC,MC;0,12,3", actual.toString());
 	}
@@ -194,8 +194,8 @@ class VirtualMouseTest {
 	@Test
 	void testDeepClone() {
 		VirtualMouse expected = new VirtualMouse();
-		expected.update(VirtualKey.LC, true, 15, 0, 0);
-		expected.update(VirtualKey.MOUSEMOVED, true, 0, 0, 0);
+		expected.updateFromEvent(VirtualKey.LC, true, 15, 0, 0);
+		expected.updateFromEvent(VirtualKey.MOUSEMOVED, true, 0, 0, 0);
 
 		VirtualMouse actual = expected.clone();
 
@@ -211,13 +211,13 @@ class VirtualMouseTest {
 		VirtualMouse moveFrom = new VirtualMouse();
 		VirtualMouse actual = new VirtualMouse();
 
-		moveFrom.update(VirtualKey.LC.getKeycode(), true, 0, 0, 0);
-		moveFrom.update(VirtualKey.MOUSEMOVED.getKeycode(), false, 120, 10, 20);
+		moveFrom.updateFromEvent(VirtualKey.LC.getKeycode(), true, 0, 0, 0);
+		moveFrom.updateFromEvent(VirtualKey.MOUSEMOVED.getKeycode(), false, 120, 10, 20);
 
 		VirtualMouse expected = moveFrom.clone();
 
-		actual.update(VirtualKey.MBUTTON12.getKeycode(), true, 0, 0, 0);
-		actual.update(VirtualKey.MOUSEMOVED.getKeycode(), true, -120, -10, -10);
+		actual.updateFromEvent(VirtualKey.MBUTTON12.getKeycode(), true, 0, 0, 0);
+		actual.updateFromEvent(VirtualKey.MOUSEMOVED.getKeycode(), true, -120, -10, -10);
 
 		actual.moveFrom(null);
 
@@ -242,13 +242,13 @@ class VirtualMouseTest {
 		VirtualMouse copyFrom = new VirtualMouse();
 		VirtualMouse actual = new VirtualMouse();
 
-		copyFrom.update(VirtualKey.LC.getKeycode(), true, 0, 0, 0);
-		copyFrom.update(VirtualKey.MOUSEMOVED.getKeycode(), false, 120, 10, 20);
+		copyFrom.updateFromEvent(VirtualKey.LC.getKeycode(), true, 0, 0, 0);
+		copyFrom.updateFromEvent(VirtualKey.MOUSEMOVED.getKeycode(), false, 120, 10, 20);
 
 		VirtualMouse expected = copyFrom.clone();
 
-		actual.update(VirtualKey.MBUTTON12.getKeycode(), true, 0, 0, 0);
-		actual.update(VirtualKey.MOUSEMOVED.getKeycode(), true, -120, -10, -10);
+		actual.updateFromEvent(VirtualKey.MBUTTON12.getKeycode(), true, 0, 0, 0);
+		actual.updateFromEvent(VirtualKey.MOUSEMOVED.getKeycode(), true, -120, -10, -10);
 
 		actual.copyFrom(null);
 
@@ -271,8 +271,8 @@ class VirtualMouseTest {
 	@Test
 	void testUpdate() {
 		VirtualMouse actual = new VirtualMouse();
-		actual.update(VirtualKey.LC.getKeycode(), true, -30, 118, 42);
-		actual.update(VirtualKey.MOUSEMOVED.getKeycode(), false, 0, 23, 144);
+		actual.updateFromEvent(VirtualKey.LC.getKeycode(), true, -30, 118, 42);
+		actual.updateFromEvent(VirtualKey.MOUSEMOVED.getKeycode(), false, 0, 23, 144);
 
 		List<VirtualMouse> expected = new ArrayList<>();
 		expected.add(new VirtualMouse(new HashSet<Integer>(Arrays.asList(VirtualKey.LC.getKeycode())), -30, 118, 42));
@@ -304,7 +304,7 @@ class VirtualMouseTest {
 		VirtualMouse unpressed = new VirtualMouse();
 
 		VirtualMouse pressed = new VirtualMouse();
-		pressed.update(VirtualKey.LC.getKeycode(), true, 15, 10, 12);
+		pressed.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 10, 12);
 
 		// Load actual with the events
 		Queue<VirtualMouseEvent> actual = new ConcurrentLinkedQueue<>();
@@ -325,7 +325,7 @@ class VirtualMouseTest {
 		VirtualMouse unpressed = new VirtualMouse();
 
 		VirtualMouse pressed = new VirtualMouse();
-		pressed.update(VirtualKey.LC.getKeycode(), true, 15, 10, 12);
+		pressed.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 10, 12);
 
 		// Load actual with the events
 		Queue<VirtualMouseEvent> actual = new ConcurrentLinkedQueue<>();
@@ -346,8 +346,8 @@ class VirtualMouseTest {
 		VirtualMouse unpressed = new VirtualMouse();
 
 		VirtualMouse pressed = new VirtualMouse();
-		pressed.update(VirtualKey.LC.getKeycode(), true, 0, 10, 12);
-		pressed.update(VirtualKey.LC.getKeycode(), true, 0, 10, 12);
+		pressed.updateFromEvent(VirtualKey.LC.getKeycode(), true, 0, 10, 12);
+		pressed.updateFromEvent(VirtualKey.LC.getKeycode(), true, 0, 10, 12);
 
 		// Load actual with the events
 		Queue<VirtualMouseEvent> actual = new ConcurrentLinkedQueue<>();
@@ -368,8 +368,8 @@ class VirtualMouseTest {
 		VirtualMouse unpressed = new VirtualMouse();
 
 		VirtualMouse pressed = new VirtualMouse();
-		pressed.update(VirtualKey.LC.getKeycode(), true, 15, 10, 12);
-		pressed.update(VirtualKey.LC.getKeycode(), true, 15, 10, 12);
+		pressed.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 10, 12);
+		pressed.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 10, 12);
 
 		// Load actual with the events
 		Queue<VirtualMouseEvent> actual = new ConcurrentLinkedQueue<>();
@@ -390,8 +390,8 @@ class VirtualMouseTest {
 		VirtualMouse unpressed = new VirtualMouse();
 
 		VirtualMouse pressed = new VirtualMouse();
-		pressed.update(VirtualKey.LC.getKeycode(), true, 0, 10, 12);
-		pressed.update(VirtualKey.LC.getKeycode(), true, 0, 11, 12);
+		pressed.updateFromEvent(VirtualKey.LC.getKeycode(), true, 0, 10, 12);
+		pressed.updateFromEvent(VirtualKey.LC.getKeycode(), true, 0, 11, 12);
 
 		// Load actual with the events
 		Queue<VirtualMouseEvent> actual = new ConcurrentLinkedQueue<>();
@@ -412,8 +412,8 @@ class VirtualMouseTest {
 		VirtualMouse unpressed = new VirtualMouse();
 
 		VirtualMouse pressed = new VirtualMouse();
-		pressed.update(VirtualKey.LC.getKeycode(), true, 0, 10, 12);
-		pressed.update(VirtualKey.LC.getKeycode(), true, 0, 10, 120);
+		pressed.updateFromEvent(VirtualKey.LC.getKeycode(), true, 0, 10, 12);
+		pressed.updateFromEvent(VirtualKey.LC.getKeycode(), true, 0, 10, 120);
 
 		// Load actual with the events
 		Queue<VirtualMouseEvent> actual = new ConcurrentLinkedQueue<>();

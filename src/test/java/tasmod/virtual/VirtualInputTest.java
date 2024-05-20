@@ -55,7 +55,7 @@ class VirtualInputTest {
 		VirtualCameraAngle preloadedCameraAngle = new VirtualCameraAngle(0f, 0f);
 		
 		preloadedKeyboard.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
-		preloadedMouse.update(VirtualKey.LC.getKeycode(), true, 15, 0, 0);
+		preloadedMouse.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 0, 0);
 		preloadedCameraAngle.update(1f, 2f);
 		
 		VirtualInput input = new VirtualInput(LOGGER, preloadedKeyboard, preloadedMouse, preloadedCameraAngle);
@@ -88,7 +88,7 @@ class VirtualInputTest {
 		VirtualCameraAngle preloadedCameraAngle = new VirtualCameraAngle(0f, 0f);
 		
 		preloadedKeyboard.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
-		preloadedMouse.update(VirtualKey.LC.getKeycode(), true, 15, 0, 0);
+		preloadedMouse.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 0, 0);
 		preloadedCameraAngle.update(1f, 2f);
 		
 		
@@ -230,7 +230,7 @@ class VirtualInputTest {
 	@Test
 	void testMouseRemovePresses() {
 		VirtualMouse preloadedMouse = new VirtualMouse();
-		preloadedMouse.update(VirtualKey.LC.getKeycode(), true, 15, 10, 20);
+		preloadedMouse.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 10, 20);
 		
 		// Load preloaded mouse
 		VirtualInput virtual = new VirtualInput(LOGGER, new VirtualKeyboard(), preloadedMouse, new VirtualCameraAngle());

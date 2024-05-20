@@ -397,7 +397,7 @@ public class VirtualInput {
 		 */
 		public void updateNextMouse(int keycode, boolean keystate, int scrollwheel, int cursorX, int cursorY) {
 			LOGGER.debug(LoggerMarkers.Mouse,"Update: {} ({}), {}, {}, {}, {}", keycode, VirtualKey.getName(keycode), keystate, scrollwheel, cursorX, cursorY); 	// Activate with -Dtasmod.marker.mouse=ACCEPT in VM arguments (and -Dtasmod.log.level=debug)
-			nextMouse.update(keycode, keystate, scrollwheel, cursorX, cursorY);
+			nextMouse.updateFromEvent(keycode, keystate, scrollwheel, cursorX, cursorY);
 		}
 
 		/**

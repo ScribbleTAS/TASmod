@@ -3,10 +3,8 @@ package tasmod.playback.tasfile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.Serializable;
-import java.rmi.UnexpectedException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -151,7 +149,7 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		
 		// Prepare mouse
 		VirtualMouse mouse = new VirtualMouse();
-		mouse.update(VirtualKey.LC, true, 0, 0, 0);
+		mouse.updateFromEvent(VirtualKey.LC, true, 0, 0, 0);
 		
 		// Prepare camera angle
 		VirtualCameraAngle angle = new VirtualCameraAngle(0f, 0f, true);
@@ -429,11 +427,20 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 	@Test
 	void testDeserialiseKeyboard() {
 		List<String> tick = new ArrayList<>();
-		tick.add("W,LCONTROL;w");
+		tick.add(";a");
+		tick.add("W;w");
+		tick.add("W,LCONTROL;");
+		tick.add("W,LCONTROL,S;s");
 		
 		VirtualKeyboard actual = deserialiseKeyboard(tick);
 		
 		VirtualKeyboard expected = new VirtualKeyboard();
+		expected.updateFromEvent(VirtualKey.ZERO, false, 'a');
+		expected.updateFromEvent(VirtualKey.W, true, 'w');
+		expected.updateFromEvent(VirtualKey.LCONTROL, true, Character.MIN_VALUE);
+		expected.updateFromEvent(VirtualKey.S, true, 's');
+		
+		assertEquals(expected, actual);
 	}
 	
 	@Test

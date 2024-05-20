@@ -73,9 +73,6 @@ public abstract class PlaybackFlavorBase {
      * 
      * You change how each is displayed by overwriting the corresponding method.
      * 
-     * ## Container
-     * 
-     * 
 	 */
 	
 	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList) {
@@ -173,7 +170,7 @@ public abstract class PlaybackFlavorBase {
 		}
 		currentSubtick = null;
 	}
-
+	
 	protected String getOrEmpty(String string) {
 		return string == null ? "" : string;
 	}
@@ -202,7 +199,7 @@ public abstract class PlaybackFlavorBase {
 		}
 		return false;
 	}
-	
+
 	public List<String> extractHeader(BigArrayList<String> lines) {
 		List<String> extracted = new ArrayList<>();
 		for (long i = 0; i < lines.size(); i++) {
@@ -218,9 +215,11 @@ public abstract class PlaybackFlavorBase {
 	/**
 	 * Deserialises {@link PlaybackMetadata} in the header of the file.<br>
 	 * <br>
-	 * First extracts the metadata specific lines, then reads the section names and key value pairs.
+	 * First extracts the metadata specific lines, then reads the section names and
+	 * key value pairs.
 	 * 
-	 * @param headerLines All lines in the header. Can be easily extracted with {@link #extractHeader(List)}
+	 * @param headerLines All lines in the header. Can be easily extracted with
+	 *                    {@link #extractHeader(List)}
 	 * @return A list of {@link PlaybackMetadata}
 	 */
 	public List<PlaybackMetadata> deserialiseMetadata(List<String> headerLines) {
@@ -234,18 +233,18 @@ public abstract class PlaybackFlavorBase {
 
 			String newMetadataName = deserialiseMetadataName(metadataLine);
 
-			if (newMetadataName != null) {	// Means a new metadata section is beginning... In this case, the metadataLine
+			if (newMetadataName != null) { 	// Means a new metadata section is beginning... In this case, the metadataLine
 											// is "### Name" and the newMetadataName is "Name"
 
-				if (metadataName != null && !metadataName.equals(newMetadataName)) {	// If metadataName is null, then the first section begins
-																						// If metadataName is different than the newMetadataName, 
+				if (metadataName != null && !metadataName.equals(newMetadataName)) { 	// If metadataName is null, then the first section begins
+																						// If metadataName is different than the newMetadataName,
 																						// then a new section begins and we first need to store the old.
 					out.add(PlaybackMetadata.fromHashMap(metadataName, values));
 					values = new LinkedHashMap<>();
 				}
 				metadataName = newMetadataName;
 				continue;
-				
+
 			} else if ((pair = deseraialiseMetadataValue(metadataLine)) != null) {
 				values.put(pair.getLeft(), pair.getRight());
 			}
@@ -279,32 +278,34 @@ public abstract class PlaybackFlavorBase {
 
 	protected Pair<String, String> deseraialiseMetadataValue(String metadataLine) {
 		Matcher matcher = extract("^(.+?):(.+)", metadataLine);
-		if(matcher.find())
+		if (matcher.find())
 			return Pair.of(matcher.group(1).trim(), matcher.group(2).trim());
 		return null;
 	}
 
 	/**
 	 * Deserialises the input part of the TASfile
-	 * @param lines The serialised lines of the TASfile
+	 * 
+	 * @param lines    The serialised lines of the TASfile
 	 * @param startPos The position when the header ends and the inputs start
 	 * @return A list of {@link TickInputContainer}
 	 */
 	public BigArrayList<TickInputContainer> deserialise(BigArrayList<String> lines, long startPos) {
 		BigArrayList<TickInputContainer> out = new BigArrayList<>();
-		
+
 		for (long i = startPos; i < lines.size(); i++) {
 			String line = lines.get(i);
-			
+
 		}
 		return out;
 	}
-	
+
 	/**
 	 * Reads the next lines, until a full tick is reached
+	 * 
 	 * @param extracted The extracted lines, passed in by reference
-	 * @param lines The line list
-	 * @param startPos The start position of this tick
+	 * @param lines     The line list
+	 * @param startPos  The start position of this tick
 	 * @return The updated index for the next tick
 	 */
 	protected long extractTick(List<String> extracted, BigArrayList<String> lines, long startPos) {
@@ -313,86 +314,138 @@ public abstract class PlaybackFlavorBase {
 		for (long i = startPos; i < lines.size(); i++) {
 			String line = lines.get(i);
 			if (contains("^\\d+\\|", line)) {
-				if(shouldStop) {
-					return startPos+counter-1;
-				}
-				else {
+				if (shouldStop) {
+					return startPos + counter - 1;
+				} else {
 					shouldStop = true;
 				}
 			}
-			if(shouldStop) {
+			if (shouldStop) {
 				extracted.add(line);
 			}
 			counter++;
 		}
-		return startPos+counter-1;
+		return startPos + counter - 1;
 	}
 
 	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, List<String> tickLines) {
-		
+
 		List<String> keyboardStrings = new ArrayList<>();
 		List<String> mouseStrings = new ArrayList<>();
 		List<String> cameraAngleStrings = new ArrayList<>();
 		List<String> commentsAtEnd = new ArrayList<>();
-		
-		for(String line : tickLines) {
-			if(contains(singleComment(), line)) {
+
+		for (String line : tickLines) {
+			if (contains(singleComment(), line)) {
 				// TODO TASfileExtension
 				continue;
 			}
-			
+
 			splitInputs(tickLines, keyboardStrings, mouseStrings, cameraAngleStrings, commentsAtEnd);
 		}
-		
+
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
+		VirtualMouse mouse = deserialiseMouse(mouseStrings);
 	}
 
 	protected VirtualKeyboard deserialiseKeyboard(List<String> keyboardStrings) {
 		VirtualKeyboard out = new VirtualKeyboard();
-		for(String line : keyboardStrings) {
-			Matcher matcher = extract("(.*?);(.*?)", line);
-			if(matcher.find()) {
-				out.updateFromState(VirtualKey.getKeycodes(matcher.group(1).split(",")), matcher.group(2).toCharArray());
+		for (String line : keyboardStrings) {
+			Matcher matcher = extract("(.*?);(.+?)", line);
+			if (matcher.find()) {
+				String[] keys = matcher.group(1).split(",");
+				char[] chars = matcher.group(2).toCharArray();
+
+				int[] keycodes = dererialiseVirtualKey(keys);
+				out.updateFromState(keycodes, chars);
+			}
+		}
+		return out;
+	}
+
+	protected VirtualMouse deserialiseMouse(List<String> mouseStrings) {
+		VirtualMouse out = new VirtualMouse();
+		for (String line : mouseStrings) {
+			Matcher matcher = extract("(.*?);(.+?)", line);
+			if (matcher.find()) {
+				String[] buttons = matcher.group(1).split(",");
+				String[] functions = matcher.group(2).split(",");
+
+				int[] keycodes = dererialiseVirtualKey(buttons);
+				int scrollwheel;
+				Integer cursorX;
+				Integer cursorY;
+				
+				if (functions.length == 3) {
+					try {
+						scrollwheel = Integer.parseInt(functions[0]);
+						cursorX = Integer.parseInt(functions[1]);
+						cursorY = Integer.parseInt(functions[2]);
+					} catch (NumberFormatException e) {
+						throw new PlaybackLoadException(e);
+					}
+				} else {
+					throw new PlaybackLoadException("");
+				}
+
+				out.updateFromState(keycodes, scrollwheel, cursorX, cursorY);
 			}
 		}
 		return out;
 	}
 //
-//	protected List<String> deserialiseMouse(VirtualMouse mouse) {
-//	}
-//
 //	protected List<String> deserialiseCameraAngle(VirtualCameraAngle cameraAngle) {
 //	}
 
+	protected int[] dererialiseVirtualKey(String[] keyString) {
+		int[] out = new int[keyString.length];
+		for (int i = 0; i < keyString.length; i++) {
+			String key = keyString[i];
+
+			if (isNumeric(key)) {
+				int keycode = Integer.parseInt(key);
+				VirtualKey virtualKey = VirtualKey.get(keycode);
+				if (virtualKey != null) {
+					out[i] = virtualKey.getKeycode();
+				} else {
+					throw new PlaybackLoadException("The specified keycode doesn't exist");
+				}
+				continue;
+			}
+
+			out[i] = VirtualKey.getKeycode(key);
+		}
+		return out;
+	}
+
 	protected void extractComment(List<String> commentsAtEnd, String line, int startPos) {
 		Matcher commentMatcher = extract(endlineComment(), line);
-		if(commentMatcher.find(startPos)) {
+		if (commentMatcher.find(startPos)) {
 			String comment = commentMatcher.group(1);
-			commentsAtEnd.add(comment);					 
+			commentsAtEnd.add(comment);
 		} else {
 			commentsAtEnd.add(null);
 		}
 	}
-	
-	
+
 	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd) {
-		
-		for(String line : lines) {
+
+		for (String line : lines) {
 			Matcher tickMatcher = extract("^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?", line);
 			if (tickMatcher.find()) {
-				if(!tickMatcher.group(1).isEmpty()) {
+				if (!tickMatcher.group(1).isEmpty()) {
 					serialisedKeyboard.add(tickMatcher.group(1));
 				}
-				if(!tickMatcher.group(2).isEmpty()) {
+				if (!tickMatcher.group(2).isEmpty()) {
 					serialisedMouse.add(tickMatcher.group(2));
 				}
-				if(!tickMatcher.group(3).isEmpty()) {
+				if (!tickMatcher.group(3).isEmpty()) {
 					serialisedCameraAngle.add(tickMatcher.group(3));
 				}
 			} else {
 				throw new PlaybackLoadException("Cannot find inputs in line %s", line);
 			}
-			
+
 			extractComment(commentsAtEnd, line, tickMatcher.group(0).length());
 		}
 	}
@@ -403,7 +456,7 @@ public abstract class PlaybackFlavorBase {
 
 		return matcher;
 	}
-	
+
 	protected String extract(String regex, String haystack, int group) {
 		Matcher matcher = extract(regex, haystack);
 		if (matcher.find()) {
@@ -414,6 +467,10 @@ public abstract class PlaybackFlavorBase {
 
 	protected boolean contains(String regex, String haystack) {
 		return extract(regex, haystack).find();
+	}
+
+	protected boolean isNumeric(String string) {
+		return Pattern.matches("-?\\d+", string);
 	}
 
 	/**

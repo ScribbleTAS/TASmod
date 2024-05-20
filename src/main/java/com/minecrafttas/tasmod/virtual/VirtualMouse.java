@@ -1,5 +1,6 @@
 package com.minecrafttas.tasmod.virtual;
 
+import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
 
 import java.io.Serializable;
@@ -74,7 +75,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	 * @param cursorX			The {@link #cursorX}
 	 * @param cursorY			The {@link #cursorY}
 	 * @param subtickList		The {@link VirtualPeripheral#subtickList}
-	 * @param ignoreFirstUpdate	Whether the first call to {@link #update(int, boolean, int, Integer, Integer)} should create a new subtick
+	 * @param ignoreFirstUpdate	Whether the first call to {@link #updateFromEvent(int, boolean, int, Integer, Integer)} should create a new subtick
 	 */
 	public VirtualMouse(Set<Integer> pressedKeys, int scrollWheel, Integer cursorX, Integer cursorY, List<VirtualMouse> subtickList, boolean ignoreFirstUpdate) {
 		super(pressedKeys, subtickList, ignoreFirstUpdate);
@@ -84,36 +85,74 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	}
 
     /**
-     * Updates the mouse, adds a new subtick to this mouse
+     * Updates the mouse, adds a new subtick to this mouse<br>
+     * <br>
+     * An event updates one key at a time.
      * @param keycode The keycode of this button
      * @param keystate The keystate of this button, true for pressed
      * @param scrollwheel The scroll wheel for this mouse
-     * @oaram cursorX The pointer location in the x axis
+     * @param cursorX The pointer location in the x axis
      * @param cursorY The pointer location in the y axis
      */
-	public void update(int keycode, boolean keystate, int scrollwheel, Integer cursorX, Integer cursorY) {
-		if (isParent() && !ignoreFirstUpdate()) {
-			addSubtick(shallowClone());
-		}
+	public void updateFromEvent(int keycode, boolean keystate, int scrollwheel, Integer cursorX, Integer cursorY) {
+		createSubtick();
 		setPressed(keycode, keystate);
 		this.scrollWheel = scrollwheel;
 		this.cursorX = cursorX;
 		this.cursorY = cursorY;
 	}
-
+	
 	/**
-	 * Updates the mouse, adds a new subtick to this mouse
+	 * Updates the mouse, adds a new subtick to this mouse<br>
+     * <br>
+     * An event updates one key at a time.
 	 * 
 	 * @param key         The key
 	 * @param keystate    The keystate of this button, true for pressed
 	 * @param scrollwheel The scroll wheel for this mouse
-	 * @oaram cursorX The pointer location in the x axis
+	 * @param cursorX The pointer location in the x axis
 	 * @param cursorY The pointer location in the y axis
 	 */
-	public void update(VirtualKey key, boolean keystate, int scrollwheel, Integer cursorX, Integer cursorY) {
-		update(key.getKeycode(), keystate, scrollwheel, cursorX, cursorY);
+	public void updateFromEvent(VirtualKey key, boolean keystate, int scrollwheel, Integer cursorX, Integer cursorY) {
+		updateFromEvent(key.getKeycode(), keystate, scrollwheel, cursorX, cursorY);
+	}
+	
+    /**
+     * Updates this mouse from a state, and adds a new subtick.<br>
+     * <br>
+     * The difference to {@link #updateFromEvent(int, boolean, int, Integer, Integer) updateFromEvent} is,<br>
+     * that a state may update multiple pressed keys at once.<br>
+     * <br>
+     * While update fromEvent is used when the player inputs something on the mouse,<br>
+     * updateFromState is used when creating a VirtualMouse by deserialising the TASfile,<br>
+     * as the inputs in the TASfile are stored in states.
+     * 
+     * @param keycodes An array of keycodes, that replaces {@link Subtickable#pressedKeys pressedKeys}
+     * @param scrollwheel The scroll wheel of this mouse state
+     * @param cursorX The pointer location in the x axis
+	 * @param cursorY The pointer location in the y axis
+     * @see PlaybackFlavorBase#deserialiseMouse 
+     */
+	public void updateFromState(int[] keycodes, int scrollwheel, Integer cursorX, Integer cursorY) {
+		createSubtick();
+		
+		this.pressedKeys.clear();
+		for(int i: keycodes) {
+			this.pressedKeys.add(i);
+		}
+		
+		this.scrollWheel = scrollwheel;
+		this.cursorX = cursorX;
+		this.cursorY = cursorY;
 	}
 
+
+	public void createSubtick() {
+		if (isParent() && !ignoreFirstUpdate()) {
+			addSubtick(shallowClone());
+		}
+	}
+	
 	@Override
 	public void setPressed(int keycode, boolean keystate) {
 		if (keycode < 0) {	// Mouse buttons always have a keycode smaller than 0
@@ -122,7 +161,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	}
 
 	/**
-	 * Calculates a list of {@link VirtualMouseEvent}s, when comparing this mouse to
+	 * Calculates a list of {@link VirtualMouseEvent VirtualMouseEvents}, when comparing this mouse to
 	 * the next mouse in the sequence,<br>
 	 * which also includes the subticks.
 	 *
@@ -146,7 +185,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	/**
 	 * Calculates the difference between 2 mice via symmetric difference <br>
 	 * and returns a list of the changes between them in form of
-	 * {@link VirtualMouseEvent}s
+	 * {@link VirtualMouseEvent VirtualMouseEvents}
 	 *
 	 * @param nextMouse The mouse that comes after this one.<br>
 	 *                  If this one is loaded at tick 15, the nextMouse should be

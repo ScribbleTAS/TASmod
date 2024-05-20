@@ -2,7 +2,6 @@ package com.minecrafttas.tasmod.virtual;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -11,10 +10,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
-import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
+import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 
 /**
  * Stores keyboard specific values in a given timeframe.<br>
@@ -137,12 +137,6 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
     	setPressed(keycode, keystate);
     }
 
-	public void createSubtick() {
-		if(isParent() && !ignoreFirstUpdate()) {
-    		addSubtick(shallowClone());
-    	}
-	}
-    
     public void updateFromEvent(int keycode, boolean keystate, char keycharacter) {
     	updateFromEvent(keycode, keystate, keycharacter, false);
     }
@@ -154,19 +148,44 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
     public void updateFromEvent(VirtualKey key, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
     	updateFromEvent(key.getKeycode(), keystate, keycharacter, false);
     }
-    
-    public void updateFromState(int[] keycode, char[] chars) {
+
+    /**
+     * Updates this keyboard from a state, and adds a new subtick.<br>
+     * <br>
+     * The difference to {@link #updateFromEvent(int, boolean, char)} is,<br>
+     * that a state may update multiple pressed keys and chars at once.<br>
+     * <br>
+     * While update fromEvent is used when the player inputs something on the keyboard,<br>
+     * updateFromState is used when creating a VirtualKeyboard by deserialising the TASfile,<br>
+     * as the inputs in the TASfile are stored in states.
+     * 
+     * @param keycodes An array of keycodes, that replaces {@link Subtickable#pressedKeys}
+     * @param chars An array of characters, that replaces {@link #charList}
+     * @see PlaybackFlavorBase#deserialiseKeyboard 
+     */
+    public void updateFromState(int[] keycodes, char[] chars) {
     	createSubtick();
     	
     	this.pressedKeys.clear();
-    	for(int i : keycode) {
+    	for(int i : keycodes) {
     		this.pressedKeys.add(i);
     	}
+    	
     	this.charList.clear();
     	for(char c : chars) {
     		this.charList.add(c);
     	}
     }
+    
+    /**
+     * Creates a new subtick by {@link #shallowClone()}ing this VirtualKeyboard.<br>
+     * If {@link Subtickable#ignoreFirstUpdate} is true, no new subtick will be created.<br>
+     */
+	public void createSubtick() {
+		if(isParent() && !ignoreFirstUpdate()) {
+    		addSubtick(shallowClone());
+    	}
+	}
     
     @Override
     public void setPressed(int keycode, boolean keystate) {

@@ -167,14 +167,6 @@ public enum VirtualKey {
         return null;
     }
     
-    public static int[] getKeycodes(String[] keynames) {
-    	int[] out = new int[keynames.length];
-		for (int i = 0; i < keynames.length; i++) {
-			out[i] = getKeycode(keynames[i]);
-		}
-        return out;
-    }
-
     public static String getName(int keycode) {
         VirtualKey key = get(keycode);
         if (key != null)
@@ -192,6 +184,10 @@ public enum VirtualKey {
     }
 
     public static VirtualKey get(String keyname) {
+    	if(keyname.isEmpty()) {
+    		return VirtualKey.ZERO;
+    	}
+    	
         for (VirtualKey key : values()) {
             if (key.name().equalsIgnoreCase(keyname)) {
                 return key;
@@ -199,4 +195,5 @@ public enum VirtualKey {
         }
         return null;
     }
+    
 }
