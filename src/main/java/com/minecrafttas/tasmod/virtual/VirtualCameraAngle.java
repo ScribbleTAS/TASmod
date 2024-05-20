@@ -79,8 +79,8 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	 * @param pitchDelta The difference between absolute coordinates of the pitch, is added to {@link VirtualCameraAngle#pitch}
 	 * @param yawDelta The difference between absolute coordinates of the yaw, is added to {@link VirtualCameraAngle#yaw}
 	 */
-	public void update(float pitchDelta, float yawDelta) {
-		update(pitchDelta, yawDelta, true);
+	public void updateFromEvent(float pitchDelta, float yawDelta) {
+		updateFromEvent(pitchDelta, yawDelta, true);
 	}
 	
 	/**
@@ -89,15 +89,25 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	 * @param yawDelta The difference between absolute coordinates of the yaw, is added to {@link VirtualCameraAngle#yaw}
 	 * @param updateSubtick If the previous camera should be added to {@link Subtickable#subtickList}
 	 */
-	public void update(float pitchDelta, float yawDelta, boolean updateSubtick) {
+	public void updateFromEvent(float pitchDelta, float yawDelta, boolean updateSubtick) {
 		if(pitch==null || yaw == null) {
 			return;
 		}
+		createSubtick(updateSubtick);
+		this.pitch = MathHelper.clamp(this.pitch + pitchDelta, -90F, 90F);
+		this.yaw += yawDelta;
+	}
+
+	public void updateFromState(float pitch, float yaw) {
+		createSubtick(true);
+		this.pitch = MathHelper.clamp(pitch, -90F, 90F);
+		this.yaw = yaw;
+	}
+	
+	public void createSubtick(boolean updateSubtick) {
 		if(isParent() && !ignoreFirstUpdate() && updateSubtick) {
 			addSubtick(shallowClone());
 		}
-		this.pitch = MathHelper.clamp(this.pitch + pitchDelta, -90.0F, 90.0F);
-		this.yaw += yawDelta;
 	}
 	
 	/**

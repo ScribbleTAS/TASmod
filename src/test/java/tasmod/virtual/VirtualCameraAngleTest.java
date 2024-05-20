@@ -51,7 +51,7 @@ public class VirtualCameraAngleTest {
 
 		VirtualCameraAngle actual = new VirtualCameraAngle(0f, 0f, true);
 
-		actual.update(x, y);
+		actual.updateFromEvent(x, y);
 
 		assertEquals(1f, actual.getPitch());
 		assertEquals(2f, actual.getYaw());
@@ -64,10 +64,10 @@ public class VirtualCameraAngleTest {
 	void testUpdateWithBadPitch() {
 		VirtualCameraAngle actual = new VirtualCameraAngle(0f, 0f, true);
 
-		actual.update(-100f, 0f);
+		actual.updateFromEvent(-100f, 0f);
 		assertEquals(-90f, actual.getPitch());
 
-		actual.update(360f, 0f);
+		actual.updateFromEvent(360f, 0f);
 		assertEquals(90f, actual.getPitch());
 	}
 
@@ -82,13 +82,13 @@ public class VirtualCameraAngleTest {
 
 		VirtualCameraAngle actual = new VirtualCameraAngle();
 
-		actual.update(x, y);
+		actual.updateFromEvent(x, y);
 
 		assertEquals(null, actual.getPitch());
 		assertEquals(null, actual.getYaw());
 
 		VirtualCameraAngle actual2 = new VirtualCameraAngle(1f, null);
-		actual2.update(x, y);
+		actual2.updateFromEvent(x, y);
 
 		assertEquals(null, actual.getPitch());
 		assertEquals(null, actual.getYaw());
@@ -102,7 +102,7 @@ public class VirtualCameraAngleTest {
 		VirtualCameraAngle actual = new VirtualCameraAngle();
 		actual.set(1f, 2f);
 
-		actual.update(1f, 2f);
+		actual.updateFromEvent(1f, 2f);
 
 		assertEquals(2f, actual.getPitch());
 		assertEquals(4f, actual.getYaw());
@@ -115,9 +115,9 @@ public class VirtualCameraAngleTest {
 	void testGetStates() {
 		VirtualCameraAngle test = new VirtualCameraAngle();
 		test.set(0f, 0f);
-		test.update(1f, 1f);
-		test.update(1f, 1f);
-		test.update(1f, 1f);
+		test.updateFromEvent(1f, 1f);
+		test.updateFromEvent(1f, 1f);
+		test.updateFromEvent(1f, 1f);
 		
 		List<VirtualCameraAngle> actual = new ArrayList<>();
 		
@@ -147,8 +147,8 @@ public class VirtualCameraAngleTest {
 	@Test
 	void testCopyFrom() {
 		VirtualCameraAngle expected = new VirtualCameraAngle(0f, 0f, true);
-		expected.update(1f, 2f);
-		expected.update(3f, 4f);
+		expected.updateFromEvent(1f, 2f);
+		expected.updateFromEvent(3f, 4f);
 		
 		VirtualCameraAngle actual = new VirtualCameraAngle(0f, 0f, true);
 		
@@ -176,9 +176,9 @@ public class VirtualCameraAngleTest {
 	void testClear() {
 		VirtualCameraAngle actual = new VirtualCameraAngle();
 		actual.set(0f, 0f);
-		actual.update(1f, 1f);
-		actual.update(1f, 1f);
-		actual.update(1f, 1f);
+		actual.updateFromEvent(1f, 1f);
+		actual.updateFromEvent(1f, 1f);
+		actual.updateFromEvent(1f, 1f);
 		
 		actual.clear();
 		
@@ -206,9 +206,9 @@ public class VirtualCameraAngleTest {
 	@Test
 	void testToStringSubticks() {
 		VirtualCameraAngle actual = new VirtualCameraAngle(0f, 0f, true);
-		actual.update(1f, 2f);
-		actual.update(3f, 4f);
-		actual.update(5f, 6f);
+		actual.updateFromEvent(1f, 2f);
+		actual.updateFromEvent(3f, 4f);
+		actual.updateFromEvent(5f, 6f);
 
 		assertEquals("1.0;2.0\n4.0;6.0\n9.0;12.0", actual.toString());
 	}

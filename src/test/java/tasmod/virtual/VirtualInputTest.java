@@ -56,7 +56,7 @@ class VirtualInputTest {
 		
 		preloadedKeyboard.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
 		preloadedMouse.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 0, 0);
-		preloadedCameraAngle.update(1f, 2f);
+		preloadedCameraAngle.updateFromEvent(1f, 2f);
 		
 		VirtualInput input = new VirtualInput(LOGGER, preloadedKeyboard, preloadedMouse, preloadedCameraAngle);
 		
@@ -89,7 +89,7 @@ class VirtualInputTest {
 		
 		preloadedKeyboard.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
 		preloadedMouse.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 0, 0);
-		preloadedCameraAngle.update(1f, 2f);
+		preloadedCameraAngle.updateFromEvent(1f, 2f);
 		
 		
 		VirtualInput virtual = new VirtualInput(LOGGER, preloadedKeyboard, preloadedMouse, preloadedCameraAngle);

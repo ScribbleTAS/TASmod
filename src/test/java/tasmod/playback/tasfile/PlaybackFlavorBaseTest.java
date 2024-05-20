@@ -153,10 +153,10 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		
 		// Prepare camera angle
 		VirtualCameraAngle angle = new VirtualCameraAngle(0f, 0f, true);
-		angle.update(1, 1);
-		angle.update(1, 1);
-		angle.update(1, 1);
-		angle.update(1, 1);
+		angle.updateFromEvent(1, 1);
+		angle.updateFromEvent(1, 1);
+		angle.updateFromEvent(1, 1);
+		angle.updateFromEvent(1, 1);
 		
 		// Create container and fill actual
 		TickInputContainer container = new TickInputContainer(keyboard, mouse, angle);

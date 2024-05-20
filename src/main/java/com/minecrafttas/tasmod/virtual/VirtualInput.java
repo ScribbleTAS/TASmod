@@ -598,7 +598,7 @@ public class VirtualInput {
 		 */
 		public void updateNextCameraAngle(float pitchDelta, float yawDelta, boolean updateSubtick) {
 //			LOGGER.debug("Pitch: {}, Yaw: {}", pitch, yaw);
-			nextCameraAngle.update(pitchDelta, yawDelta, updateSubtick);
+			nextCameraAngle.updateFromEvent(pitchDelta, yawDelta, updateSubtick);
 		}
 
 		/**

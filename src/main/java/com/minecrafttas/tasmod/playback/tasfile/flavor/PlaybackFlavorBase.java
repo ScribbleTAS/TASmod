@@ -37,14 +37,14 @@ public abstract class PlaybackFlavorBase {
 	public String headerStart() {
 		return createCenteredHeading("TASFile", '#', 50);
 	}
-	
+
 	/**
 	 * @return The regex used for detecting comment lines
 	 */
 	public String singleComment() {
 		return "^//";
 	}
-	
+
 	public String endlineComment() {
 		return "(//.+)";
 	}
@@ -52,7 +52,7 @@ public abstract class PlaybackFlavorBase {
 	public String headerEnd() {
 		return createPaddedString('#', 50);
 	}
-	
+
 	/*==============================================
 		   _____           _       _ _          
 		  / ____|         (_)     | (_)         
@@ -62,23 +62,23 @@ public abstract class PlaybackFlavorBase {
 		 |_____/ \___|_|  |_|\__,_|_|_|___/\___|	
 		 
 	  ==============================================
-     
-     * The following section is dedicated to serialising.
-     * 
-     * The serialisation process is split into 2 parts:
-     * The header and the container.
-     * 
-     * ## Header
-     * The header is where the flavorname, the enabled extensions and the metadata is stored.
-     * 
-     * You change how each is displayed by overwriting the corresponding method.
-     * 
+	 
+	 * The following section is dedicated to serialising.
+	 * 
+	 * The serialisation process is split into 2 parts:
+	 * The header and the container.
+	 * 
+	 * ## Header
+	 * The header is where the flavorname, the enabled extensions and the metadata is stored.
+	 * 
+	 * You change how each is displayed by overwriting the corresponding method.
+	 * 
 	 */
-	
+
 	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList) {
 		List<String> out = new ArrayList<>();
 		serialiseFlavorName(out);
-//		out.add(serializeExtensionNames());
+		//		out.add(serializeExtensionNames());
 		serialiseMetadata(out, metadataList);
 		return out;
 	}
@@ -170,11 +170,10 @@ public abstract class PlaybackFlavorBase {
 		}
 		currentSubtick = null;
 	}
-	
+
 	protected String getOrEmpty(String string) {
 		return string == null ? "" : string;
 	}
-
 
 	/*========================================================
 	 	  _____                      _       _ _          
@@ -183,11 +182,10 @@ public abstract class PlaybackFlavorBase {
 		 | |  | |/ _ \/ __|/ _ \ '__| |/ _` | | / __|/ _ \
 		 | |__| |  __/\__ \  __/ |  | | (_| | | \__ \  __/
 		 |_____/ \___||___/\___|_|  |_|\__,_|_|_|___/\___|
-                                                  
+	                                              
 	  ========================================================                                             
 	 * 
 	 */
-	
 
 	public boolean deserialiseFlavorName(List<String> header) {
 		for (String line : header) {
@@ -233,10 +231,10 @@ public abstract class PlaybackFlavorBase {
 
 			String newMetadataName = deserialiseMetadataName(metadataLine);
 
-			if (newMetadataName != null) { 	// Means a new metadata section is beginning... In this case, the metadataLine
+			if (newMetadataName != null) { // Means a new metadata section is beginning... In this case, the metadataLine
 											// is "### Name" and the newMetadataName is "Name"
 
-				if (metadataName != null && !metadataName.equals(newMetadataName)) { 	// If metadataName is null, then the first section begins
+				if (metadataName != null && !metadataName.equals(newMetadataName)) { // If metadataName is null, then the first section begins
 																						// If metadataName is different than the newMetadataName,
 																						// then a new section begins and we first need to store the old.
 					out.add(PlaybackMetadata.fromHashMap(metadataName, values));
@@ -294,8 +292,11 @@ public abstract class PlaybackFlavorBase {
 		BigArrayList<TickInputContainer> out = new BigArrayList<>();
 
 		for (long i = startPos; i < lines.size(); i++) {
-			String line = lines.get(i);
-
+			List<String> tick = new ArrayList<>();
+			// Extract the tick and set the index
+			i = extractTick(tick, lines, i);
+			// Extract container
+			deserialiseContainer(out, tick);
 		}
 		return out;
 	}
@@ -337,7 +338,7 @@ public abstract class PlaybackFlavorBase {
 
 		for (String line : tickLines) {
 			if (contains(singleComment(), line)) {
-				// TODO TASfileExtension
+				// TODO Store comments
 				continue;
 			}
 
@@ -346,10 +347,15 @@ public abstract class PlaybackFlavorBase {
 
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
+		VirtualCameraAngle cameraAngle = deserialiseCameraAngle(cameraAngleStrings);
+		// TODO Store commentsAtEnd
+		
+		out.add(new TickInputContainer(keyboard, mouse, cameraAngle));
 	}
 
 	protected VirtualKeyboard deserialiseKeyboard(List<String> keyboardStrings) {
 		VirtualKeyboard out = new VirtualKeyboard();
+
 		for (String line : keyboardStrings) {
 			Matcher matcher = extract("(.*?);(.+?)", line);
 			if (matcher.find()) {
@@ -365,6 +371,7 @@ public abstract class PlaybackFlavorBase {
 
 	protected VirtualMouse deserialiseMouse(List<String> mouseStrings) {
 		VirtualMouse out = new VirtualMouse();
+
 		for (String line : mouseStrings) {
 			Matcher matcher = extract("(.*?);(.+?)", line);
 			if (matcher.find()) {
@@ -375,7 +382,7 @@ public abstract class PlaybackFlavorBase {
 				int scrollwheel;
 				Integer cursorX;
 				Integer cursorY;
-				
+
 				if (functions.length == 3) {
 					try {
 						scrollwheel = Integer.parseInt(functions[0]);
@@ -393,9 +400,38 @@ public abstract class PlaybackFlavorBase {
 		}
 		return out;
 	}
-//
-//	protected List<String> deserialiseCameraAngle(VirtualCameraAngle cameraAngle) {
-//	}
+
+	protected VirtualCameraAngle deserialiseCameraAngle(List<String> cameraAngleStrings) {
+		VirtualCameraAngle out = new VirtualCameraAngle();
+
+		for (String line : cameraAngleStrings) {
+			Matcher matcher = extract("(.+?);(.+?)", line);
+			
+			if (matcher.find()) {
+				String cameraPitchString = matcher.group(1);
+				String cameraYawString = matcher.group(2);
+				
+				float cameraPitch;
+				float cameraYaw;
+				
+				if(isFloat(cameraPitchString))
+					cameraPitch = Float.parseFloat(cameraPitchString);
+				else
+					throw new PlaybackLoadException("The camera pitch is not valid");
+				
+				if(isFloat(cameraYawString))
+					cameraYaw = Float.parseFloat(cameraYawString);
+				else
+					throw new PlaybackLoadException("The camera yaw is not valid");
+				
+				out.updateFromState(cameraPitch, cameraYaw);
+				
+			} else {
+				throw new PlaybackLoadException("The cameraAngle is not valid");
+			}
+		}
+		return out;
+	}
 
 	protected int[] dererialiseVirtualKey(String[] keyString) {
 		int[] out = new int[keyString.length];
@@ -471,6 +507,10 @@ public abstract class PlaybackFlavorBase {
 
 	protected boolean isNumeric(String string) {
 		return Pattern.matches("-?\\d+", string);
+	}
+
+	protected boolean isFloat(String string) {
+		return Pattern.matches("-?\\d+(?:\\.\\d+)?", string);
 	}
 
 	/**
