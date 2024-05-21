@@ -61,19 +61,7 @@ public abstract class PlaybackFlavorBase {
 		  ____) |  __/ |  | | (_| | | \__ \  __/
 		 |_____/ \___|_|  |_|\__,_|_|_|___/\___|	
 		 
-	  ==============================================
-	 
-	 * The following section is dedicated to serialising.
-	 * 
-	 * The serialisation process is split into 2 parts:
-	 * The header and the container.
-	 * 
-	 * ## Header
-	 * The header is where the flavorname, the enabled extensions and the metadata is stored.
-	 * 
-	 * You change how each is displayed by overwriting the corresponding method.
-	 * 
-	 */
+	  ==============================================*/
 
 	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList) {
 		List<String> out = new ArrayList<>();
@@ -338,18 +326,17 @@ public abstract class PlaybackFlavorBase {
 
 		for (String line : tickLines) {
 			if (contains(singleComment(), line)) {
-				// TODO Store comments
 				continue;
 			}
 
-			splitInputs(tickLines, keyboardStrings, mouseStrings, cameraAngleStrings, commentsAtEnd);
 		}
+		splitInputs(tickLines, keyboardStrings, mouseStrings, cameraAngleStrings, commentsAtEnd);
 
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
 		VirtualCameraAngle cameraAngle = deserialiseCameraAngle(cameraAngleStrings);
 		// TODO Store commentsAtEnd
-		
+
 		out.add(new TickInputContainer(keyboard, mouse, cameraAngle));
 	}
 
@@ -357,12 +344,12 @@ public abstract class PlaybackFlavorBase {
 		VirtualKeyboard out = new VirtualKeyboard();
 
 		for (String line : keyboardStrings) {
-			Matcher matcher = extract("(.*?);(.+?)", line);
+			Matcher matcher = extract("(.*?);(.*)", line);
 			if (matcher.find()) {
 				String[] keys = matcher.group(1).split(",");
 				char[] chars = matcher.group(2).toCharArray();
 
-				int[] keycodes = dererialiseVirtualKey(keys);
+				int[] keycodes = deserialiseVirtualKey(keys, VirtualKey.ZERO);
 				out.updateFromState(keycodes, chars);
 			}
 		}
@@ -373,12 +360,12 @@ public abstract class PlaybackFlavorBase {
 		VirtualMouse out = new VirtualMouse();
 
 		for (String line : mouseStrings) {
-			Matcher matcher = extract("(.*?);(.+?)", line);
+			Matcher matcher = extract("(.*?);(.+)", line);
 			if (matcher.find()) {
 				String[] buttons = matcher.group(1).split(",");
 				String[] functions = matcher.group(2).split(",");
 
-				int[] keycodes = dererialiseVirtualKey(buttons);
+				int[] keycodes = deserialiseVirtualKey(buttons, VirtualKey.MOUSEMOVED);
 				int scrollwheel;
 				Integer cursorX;
 				Integer cursorY;
@@ -392,7 +379,7 @@ public abstract class PlaybackFlavorBase {
 						throw new PlaybackLoadException(e);
 					}
 				} else {
-					throw new PlaybackLoadException("");
+					throw new PlaybackLoadException("Mouse functions do not have the correct length");
 				}
 
 				out.updateFromState(keycodes, scrollwheel, cursorX, cursorY);
@@ -405,27 +392,27 @@ public abstract class PlaybackFlavorBase {
 		VirtualCameraAngle out = new VirtualCameraAngle();
 
 		for (String line : cameraAngleStrings) {
-			Matcher matcher = extract("(.+?);(.+?)", line);
-			
+			Matcher matcher = extract("(.+?);(.+)", line);
+
 			if (matcher.find()) {
 				String cameraPitchString = matcher.group(1);
 				String cameraYawString = matcher.group(2);
-				
+
 				float cameraPitch;
 				float cameraYaw;
-				
-				if(isFloat(cameraPitchString))
+
+				if (isFloat(cameraPitchString))
 					cameraPitch = Float.parseFloat(cameraPitchString);
 				else
 					throw new PlaybackLoadException("The camera pitch is not valid");
-				
-				if(isFloat(cameraYawString))
+
+				if (isFloat(cameraYawString))
 					cameraYaw = Float.parseFloat(cameraYawString);
 				else
 					throw new PlaybackLoadException("The camera yaw is not valid");
-				
+
 				out.updateFromState(cameraPitch, cameraYaw);
-				
+
 			} else {
 				throw new PlaybackLoadException("The cameraAngle is not valid");
 			}
@@ -433,19 +420,25 @@ public abstract class PlaybackFlavorBase {
 		return out;
 	}
 
-	protected int[] dererialiseVirtualKey(String[] keyString) {
+	protected int[] deserialiseVirtualKey(String[] keyString, VirtualKey defaultKey) {
 		int[] out = new int[keyString.length];
+
 		for (int i = 0; i < keyString.length; i++) {
 			String key = keyString[i];
 
+			/* If no key is pressed, then a zero key will be used for the state.
+			 * This zero key is either VirtualKey.ZERO on a keyboard or VirtualKey.MOUSEMOVED on a mouse,
+			 * hence the parameter */
+			if (key.isEmpty()) {
+				out[i] = defaultKey.getKeycode();
+				continue;
+			}
+
+			/* Instead of keynames such as W, A, S, KEY_1, NUMPAD3 you can also write the numerical keycodes
+			 * into the tasfile, e.g. 17, 30, 31, 2, 81. This enables TASmod to support every current and future
+			 * keycodes, even if no name was given to the key in VirtualKey.*/
 			if (isNumeric(key)) {
-				int keycode = Integer.parseInt(key);
-				VirtualKey virtualKey = VirtualKey.get(keycode);
-				if (virtualKey != null) {
-					out[i] = virtualKey.getKeycode();
-				} else {
-					throw new PlaybackLoadException("The specified keycode doesn't exist");
-				}
+				out[i] = Integer.parseInt(key);
 				continue;
 			}
 
@@ -454,7 +447,7 @@ public abstract class PlaybackFlavorBase {
 		return out;
 	}
 
-	protected void extractComment(List<String> commentsAtEnd, String line, int startPos) {
+	protected void extractCommentAtEnd(List<String> commentsAtEnd, String line, int startPos) {
 		Matcher commentMatcher = extract(endlineComment(), line);
 		if (commentMatcher.find(startPos)) {
 			String comment = commentMatcher.group(1);
@@ -482,7 +475,7 @@ public abstract class PlaybackFlavorBase {
 				throw new PlaybackLoadException("Cannot find inputs in line %s", line);
 			}
 
-			extractComment(commentsAtEnd, line, tickMatcher.group(0).length());
+			extractCommentAtEnd(commentsAtEnd, line, tickMatcher.group(0).length());
 		}
 	}
 

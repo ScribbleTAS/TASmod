@@ -185,7 +185,7 @@ public enum VirtualKey {
 
     public static VirtualKey get(String keyname) {
     	if(keyname.isEmpty()) {
-    		return VirtualKey.ZERO;
+    		return null;
     	}
     	
         for (VirtualKey key : values()) {
