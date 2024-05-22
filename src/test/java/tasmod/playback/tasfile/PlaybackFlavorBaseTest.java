@@ -325,7 +325,7 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		List<Long> actualIndex = new ArrayList<>();
 		for (long i = 0; i < lines.size(); i++) {
 			List<String> tick = new ArrayList<>();
-			long index = extractTick(tick, lines, i);
+			long index = extractContainer(tick, lines, i);
 			i = index;
 			actual.add(tick);
 			actualIndex.add(index);
@@ -360,7 +360,6 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 	 * Test deserialising a container a.k.a a tick
 	 */
 	@Test
-	@Disabled
 	void testDeserialiseContainer() {
 		BigArrayList<TickInputContainer> actual = new BigArrayList<>();
 		List<String> tick = new ArrayList<>();
@@ -382,7 +381,7 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 
 		VirtualCameraAngle cameraAngle = new VirtualCameraAngle();
 		cameraAngle.updateFromState(17.85F, -202.74799F);
-		cameraAngle.updateFromState(17.85F, -2.74799F);
+		cameraAngle.updateFromState(11.85F, -2.74799F);
 		cameraAngle.updateFromState(45F, -22.799F);
 
 		expected.add(new TickInputContainer(keyboard, mouse, cameraAngle));

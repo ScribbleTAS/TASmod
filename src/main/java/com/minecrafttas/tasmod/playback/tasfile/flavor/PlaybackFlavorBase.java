@@ -34,22 +34,22 @@ public abstract class PlaybackFlavorBase {
 
 	public abstract String flavorName();
 
-	public String headerStart() {
+	protected String headerStart() {
 		return createCenteredHeading("TASFile", '#', 50);
 	}
 
 	/**
 	 * @return The regex used for detecting comment lines
 	 */
-	public String singleComment() {
+	protected String singleComment() {
 		return "^//";
 	}
 
-	public String endlineComment() {
+	protected String endlineComment() {
 		return "(//.+)";
 	}
 
-	public String headerEnd() {
+	protected String headerEnd() {
 		return createPaddedString('#', 50);
 	}
 
@@ -282,7 +282,7 @@ public abstract class PlaybackFlavorBase {
 		for (long i = startPos; i < lines.size(); i++) {
 			List<String> tick = new ArrayList<>();
 			// Extract the tick and set the index
-			i = extractTick(tick, lines, i);
+			i = extractContainer(tick, lines, i);
 			// Extract container
 			deserialiseContainer(out, tick);
 		}
@@ -290,14 +290,14 @@ public abstract class PlaybackFlavorBase {
 	}
 
 	/**
-	 * Reads the next lines, until a full tick is reached
+	 * Reads the next lines, until a full tickcontainer is reached
 	 * 
 	 * @param extracted The extracted lines, passed in by reference
 	 * @param lines     The line list
 	 * @param startPos  The start position of this tick
 	 * @return The updated index for the next tick
 	 */
-	protected long extractTick(List<String> extracted, BigArrayList<String> lines, long startPos) {
+	protected long extractContainer(List<String> extracted, BigArrayList<String> lines, long startPos) {
 		boolean shouldStop = false;
 		long counter = 0L;
 		for (long i = startPos; i < lines.size(); i++) {
@@ -317,20 +317,19 @@ public abstract class PlaybackFlavorBase {
 		return startPos + counter - 1;
 	}
 
-	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, List<String> tickLines) {
+	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, List<String> containerLines) {
 
+		List<String> commentLines = new ArrayList<>();
+		List<String> tickLines = new ArrayList<>();
+		
+		splitComments(containerLines, commentLines, tickLines);
+		
 		List<String> keyboardStrings = new ArrayList<>();
 		List<String> mouseStrings = new ArrayList<>();
 		List<String> cameraAngleStrings = new ArrayList<>();
 		List<String> commentsAtEnd = new ArrayList<>();
-
-		for (String line : tickLines) {
-			if (contains(singleComment(), line)) {
-				continue;
-			}
-
-		}
-		splitInputs(tickLines, keyboardStrings, mouseStrings, cameraAngleStrings, commentsAtEnd);
+		
+		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, commentsAtEnd);
 
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
@@ -338,6 +337,20 @@ public abstract class PlaybackFlavorBase {
 		// TODO Store commentsAtEnd
 
 		out.add(new TickInputContainer(keyboard, mouse, cameraAngle));
+	}
+	
+	/**
+	 * Splits lines into comments before the tick and after
+	 * @param lines
+	 */
+	protected void splitComments(List<String> lines, List<String> comments, List<String> tick) {
+		for(String line : lines) {
+			if(contains(singleComment(), line)) {
+				comments.add(line);
+			} else {
+				tick.add(line);
+			}
+		}
 	}
 
 	protected VirtualKeyboard deserialiseKeyboard(List<String> keyboardStrings) {

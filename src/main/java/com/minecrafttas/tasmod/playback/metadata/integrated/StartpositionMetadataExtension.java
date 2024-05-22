@@ -154,7 +154,6 @@ public class StartpositionMetadataExtension implements PlaybackMetadataExtension
 				}
 			}
 		}
-
 	}
 
 	@Override

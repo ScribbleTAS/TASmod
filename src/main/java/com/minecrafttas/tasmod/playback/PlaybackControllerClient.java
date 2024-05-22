@@ -592,23 +592,23 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 		private VirtualMouse mouse;
 
-		private VirtualCameraAngle subticks;
+		private VirtualCameraAngle cameraAngle;
 
 		public TickInputContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
 			this.keyboard = keyboard;
 			this.mouse = mouse;
-			this.subticks = subticks;
+			this.cameraAngle = subticks;
 		}
 
 		public TickInputContainer() {
 			this.keyboard = new VirtualKeyboard();
 			this.mouse = new VirtualMouse();
-			this.subticks = new VirtualCameraAngle();
+			this.cameraAngle = new VirtualCameraAngle();
 		}
 
 		@Override
 		public String toString() {
-			return keyboard.toString() + "|" + mouse.toString() + "|" + subticks.toString();
+			return keyboard.toString() + "|" + mouse.toString() + "|" + cameraAngle.toString();
 		}
 
 		public VirtualKeyboard getKeyboard() {
@@ -620,12 +620,21 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 
 		public VirtualCameraAngle getCameraAngle() {
-			return subticks;
+			return cameraAngle;
 		}
 
 		@Override
 		public TickInputContainer clone() {
-			return new TickInputContainer(keyboard, mouse, subticks);
+			return new TickInputContainer(keyboard, mouse, cameraAngle);
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof TickInputContainer) {
+				TickInputContainer container = (TickInputContainer) other;
+				return keyboard.equals(container.keyboard) || mouse.equals(container.mouse) || cameraAngle.equals(container.cameraAngle);
+			}
+			return super.equals(other);
 		}
 	}
 
