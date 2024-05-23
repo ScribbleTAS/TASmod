@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
@@ -455,6 +454,36 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 		assertIterableEquals(expectedMouse, actualMouse);
 		assertIterableEquals(expectedCameraAngle, actualCameraAngle);
 		assertIterableEquals(expectedComment, actualComment);
+	}
+
+	/**
+	 * Test split container
+	 */
+	@Test
+	void testSplitContainer() {
+		List<String> lines = new ArrayList<>();
+		lines.add("// $interpolation(on);");
+		lines.add("// Test");
+		lines.add("55|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
+		lines.add("\t1||RC;-15,1580,658|11.85;-2.74799");
+		lines.add("\t2||;0,1580,658|45;-22.799");
+
+		List<String> actualComments = new ArrayList<>();
+		List<String> actualTick = new ArrayList<>();
+
+		splitContainer(lines, actualComments, actualTick);
+
+		List<String> expectedComments = new ArrayList<>();
+		List<String> expectedTicks = new ArrayList<>();
+		expectedComments.add("// $interpolation(on);");
+		expectedComments.add("// Test");
+
+		expectedTicks.add("55|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
+		expectedTicks.add("\t1||RC;-15,1580,658|11.85;-2.74799");
+		expectedTicks.add("\t2||;0,1580,658|45;-22.799");
+
+		assertIterableEquals(expectedComments, actualComments);
+		assertIterableEquals(expectedTicks, actualTick);
 	}
 
 	/**

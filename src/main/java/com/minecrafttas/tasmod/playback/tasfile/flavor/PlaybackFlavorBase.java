@@ -321,14 +321,14 @@ public abstract class PlaybackFlavorBase {
 
 		List<String> commentLines = new ArrayList<>();
 		List<String> tickLines = new ArrayList<>();
-		
-		splitComments(containerLines, commentLines, tickLines);
-		
+
+		splitContainer(containerLines, commentLines, tickLines);
+
 		List<String> keyboardStrings = new ArrayList<>();
 		List<String> mouseStrings = new ArrayList<>();
 		List<String> cameraAngleStrings = new ArrayList<>();
 		List<String> commentsAtEnd = new ArrayList<>();
-		
+
 		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, commentsAtEnd);
 
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
@@ -338,14 +338,15 @@ public abstract class PlaybackFlavorBase {
 
 		out.add(new TickInputContainer(keyboard, mouse, cameraAngle));
 	}
-	
+
 	/**
-	 * Splits lines into comments before the tick and after
+	 * Splits lines into comments and ticks.
+	 * 
 	 * @param lines
 	 */
-	protected void splitComments(List<String> lines, List<String> comments, List<String> tick) {
-		for(String line : lines) {
-			if(contains(singleComment(), line)) {
+	protected void splitContainer(List<String> lines, List<String> comments, List<String> tick) {
+		for (String line : lines) {
+			if (contains(singleComment(), line)) {
 				comments.add(line);
 			} else {
 				tick.add(line);

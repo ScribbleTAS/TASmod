@@ -7,7 +7,7 @@ import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
-public class BetaFlavor extends PlaybackFlavorBase {
+public class Beta1Flavor extends PlaybackFlavorBase {
 
 	@Override
 	public String flavorName() {

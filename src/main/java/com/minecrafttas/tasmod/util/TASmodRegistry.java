@@ -3,7 +3,7 @@ package com.minecrafttas.tasmod.util;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorRegistry;
-import com.minecrafttas.tasmod.playback.tasfile.flavor.integrated.BetaFlavor;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.integrated.Beta1Flavor;
 
 public class TASmodRegistry {
 	/**
@@ -20,7 +20,7 @@ public class TASmodRegistry {
 	 * Registry for registering custom seialiser flavors that dictate the syntax of the inputs stored in the TASfile.<br>
 	 * <br>
 	 * Either create a new flavor by extending {@link PlaybackFlavorBase}<br>
-	 * or extend an existing flavor (like {@link BetaFlavor}) and overwrite parts of the methods.<br>
+	 * or extend an existing flavor (like {@link Beta1Flavor}) and overwrite parts of the methods.<br>
 	 * <br>
 	 * The resulting flavor can be registered here and can be found as a saving option with /saveTAS
 	 */
