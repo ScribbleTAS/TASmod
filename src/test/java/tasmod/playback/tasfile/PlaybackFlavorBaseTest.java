@@ -178,7 +178,7 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 
 	@Test
 	void testExtractHeader() {
-		BigArrayList<String> lines = new BigArrayList<>();
+		List<String> lines = new ArrayList<>();
 		lines.add("###### TASfile ######");
 		lines.add("Flavor: beta");
 		lines.add("Extensions: desync_monitor, control_bytes, vanilla_commands");
@@ -205,7 +205,7 @@ public class PlaybackFlavorBaseTest extends PlaybackFlavorBase {
 
 	@Test
 	void testExtractHeaderFail() {
-		BigArrayList<String> lines = new BigArrayList<>();
+		List<String> lines = new ArrayList<>();
 		lines.add("###### TASfile ######");
 		lines.add("Flavor: beta");
 		lines.add("Extensions: desync_monitor, control_bytes, vanilla_commands");

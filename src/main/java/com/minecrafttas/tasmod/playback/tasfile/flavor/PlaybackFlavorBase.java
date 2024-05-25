@@ -186,9 +186,9 @@ public abstract class PlaybackFlavorBase {
 		return false;
 	}
 
-	public List<String> extractHeader(BigArrayList<String> lines) {
+	public List<String> extractHeader(List<String> lines) {
 		List<String> extracted = new ArrayList<>();
-		for (long i = 0; i < lines.size(); i++) {
+		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
 			extracted.add(line);
 
