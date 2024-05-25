@@ -136,7 +136,7 @@ public abstract class VirtualPeripheral<T extends VirtualPeripheral<T>> extends 
 	/**
 	 * Moves the data from another virtual peripheral into this peripheral without creating a new object.<br>
 	 * Deletes the data in the other peripheral.<br>
-	 * <strong>Ignores {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList}</strong>
+	 * <strong>Ignores {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList subtickList}</strong>
 	 * 
 	 * @param peripheral The peripheral to move from
 	 */
@@ -151,7 +151,7 @@ public abstract class VirtualPeripheral<T extends VirtualPeripheral<T>> extends 
 	/**
 	 * Copies the data from another virtual peripheral into this peripheral without creating a new object.<br>
 	 * Does not delete the data from the other peripehral.<br>
-	 * <strong>Ignores {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList}</strong>
+	 * <strong>Ignores the {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList subtickList}</strong>
 	 * 
 	 * @param peripheral The peripheral to copy from
 	 */
@@ -163,7 +163,7 @@ public abstract class VirtualPeripheral<T extends VirtualPeripheral<T>> extends 
 	}
 	
 	/**
-	 * Copies the data from another virtual peripheral similar to {@link #copyFrom(VirtualPeripheral)}, but including the {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList}
+	 * Copies the data from another virtual peripheral similar to {@link #copyFrom(VirtualPeripheral) copyFrom}, but including the {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList subtickList}
 	 * @param peripheral
 	 */
 	protected void deepCopyFrom(T peripheral) {

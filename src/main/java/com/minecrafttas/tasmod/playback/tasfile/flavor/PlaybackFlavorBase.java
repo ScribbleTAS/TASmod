@@ -65,9 +65,11 @@ public abstract class PlaybackFlavorBase {
 
 	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList) {
 		List<String> out = new ArrayList<>();
+		out.add(headerStart());
 		serialiseFlavorName(out);
 		//		out.add(serializeExtensionNames());
 		serialiseMetadata(out, metadataList);
+		out.add(headerEnd());
 		return out;
 	}
 
@@ -186,9 +188,14 @@ public abstract class PlaybackFlavorBase {
 		return false;
 	}
 
-	public List<String> extractHeader(List<String> lines) {
+	public List<String> extractHeader(BigArrayList<String> lines) {
 		List<String> extracted = new ArrayList<>();
-		for (int i = 0; i < lines.size(); i++) {
+		
+		long maxExtract = 1000;
+
+		maxExtract = lines.size() < maxExtract ? lines.size() : maxExtract;
+		
+		for (long i = 0; i < maxExtract; i++) {
 			String line = lines.get(i);
 			extracted.add(line);
 
@@ -215,6 +222,10 @@ public abstract class PlaybackFlavorBase {
 		String metadataName = null;
 		Pair<String, String> pair = null;
 		LinkedHashMap<String, String> values = new LinkedHashMap<>();
+		
+		if(metadataLines.isEmpty())
+			return new ArrayList<>();
+		
 		for (String metadataLine : metadataLines) {
 
 			String newMetadataName = deserialiseMetadataName(metadataLine);

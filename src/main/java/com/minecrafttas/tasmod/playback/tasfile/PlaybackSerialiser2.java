@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
@@ -58,6 +60,7 @@ public class PlaybackSerialiser2 {
 		}
 
 		FileThread writerThread = new FileThread(file, false);
+		writerThread.start();
 
 		PlaybackFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorname);
 
@@ -82,7 +85,7 @@ public class PlaybackSerialiser2 {
 	 * @return The loaded {@link PlaybackControllerClient}
 	 * @throws IOException
 	 */
-	public static PlaybackControllerClient loadFromFile(File file, String flavorName) throws PlaybackLoadException, IOException {
+	public static BigArrayList<TickInputContainer> loadFromFile(File file) throws PlaybackLoadException, IOException {
 		if (file == null) {
 			throw new PlaybackLoadException("Load from file failed. No file specified");
 		}
@@ -112,41 +115,76 @@ public class PlaybackSerialiser2 {
 
 		PlaybackFlavorBase flavor = null;
 
-		if (flavorName == null || flavorName.isEmpty()) {
-			flavor = searchForFlavor(lines, TASmodRegistry.SERIALISER_FLAVOR.getFlavors()); // Test for the correct flavor on the first 100 lines
-			
-		}
+		flavor = searchForFlavor(lines, TASmodRegistry.SERIALISER_FLAVOR.getFlavors()); // Test for the correct flavor on the first 100 lines
 
-		// Deserialise header
-		List<String> headerLines = flavor.extractHeader(lines); // Extract the header for easier processing
-
-		TASmodRegistry.PLAYBACK_METADATA.handleOnLoad(flavor.deserialiseMetadata(headerLines)); // Read metadata and fire loadEvent
-
-		// Deserialise content
-
-		return null;
+		return loadFromFile(file, flavor);
 	}
 
-	private static <T extends Serializable> List<T> subsetBigArrayList(BigArrayList<T> list, long startIndex, long stopIndex) throws Exception {
-		List<T> out = new ArrayList<>();
-
-		if (startIndex < 0)
-			throw new Exception("Cannot subset big arraylist. StartIndex has to be positive: " + startIndex);
-
-		if (startIndex > stopIndex)
-			throw new Exception("Cannot subset big arraylist. StartIndex is bigger than StopIndex:" + startIndex + " " + stopIndex);
-
-		if (startIndex >= list.size())
-			throw new Exception("Cannot subset big arraylist. StartIndex is bigger than the big arraylist" + startIndex + " " + list.size());
-
-		if (stopIndex >= list.size())
-			stopIndex = list.size() - 1;
-
-		for (long i = startIndex; i < stopIndex; i++) {
-			out.add(list.get(i));
+	public static BigArrayList<TickInputContainer> loadFromFile(File file, String flavorName) throws PlaybackLoadException, IOException {
+		if(flavorName == null || flavorName.isEmpty()) {
+			throw new PlaybackLoadException("Flavor name is null or empty");
 		}
-		return out;
+		
+		PlaybackFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
+		
+		if (flavor == null) {
+			throw new PlaybackLoadException("Flavor name %s doesn't exist.", flavorName);
+		}
+		
+		return loadFromFile(file, flavor);
 	}
+	
+	public static BigArrayList<TickInputContainer> loadFromFile(File file, PlaybackFlavorBase flavor) throws PlaybackLoadException, IOException {
+		// Read file
+		BufferedReader reader = null;
+
+		try {
+			reader = new BufferedReader(new FileReader(file));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return null;
+		}
+
+		BigArrayList<String> lines = new BigArrayList<>();
+		String line = null;
+
+		while ((line = reader.readLine()) != null) {
+			lines.add(line);
+		}
+		
+		reader.close();
+		
+		// Deserialise Metadata
+		List<String> headerLines = flavor.extractHeader(lines);
+		List<PlaybackMetadata> deserialisedMetadata = flavor.deserialiseMetadata(headerLines);
+		TASmodRegistry.PLAYBACK_METADATA.handleOnLoad(deserialisedMetadata);
+		
+		// Deserialise main data
+		BigArrayList<TickInputContainer> deserialisedContainers = flavor.deserialise(lines, headerLines.size());
+		
+		return deserialisedContainers;
+	}
+
+//	private static <T extends Serializable> List<T> subsetBigArrayList(BigArrayList<T> list, long startIndex, long stopIndex) throws Exception {
+//		List<T> out = new ArrayList<>();
+//
+//		if (startIndex < 0)
+//			throw new Exception("Cannot subset big arraylist. StartIndex has to be positive: " + startIndex);
+//
+//		if (startIndex > stopIndex)
+//			throw new Exception("Cannot subset big arraylist. StartIndex is bigger than StopIndex:" + startIndex + " " + stopIndex);
+//
+//		if (startIndex >= list.size())
+//			throw new Exception("Cannot subset big arraylist. StartIndex is bigger than the big arraylist" + startIndex + " " + list.size());
+//
+//		if (stopIndex >= list.size())
+//			stopIndex = list.size() - 1;
+//
+//		for (long i = startIndex; i < stopIndex; i++) {
+//			out.add(list.get(i));
+//		}
+//		return out;
+//	}
 
 	public static PlaybackFlavorBase searchForFlavor(List<String> lines, List<PlaybackFlavorBase> flavorList) {
 		for (PlaybackFlavorBase flavor : flavorList) {

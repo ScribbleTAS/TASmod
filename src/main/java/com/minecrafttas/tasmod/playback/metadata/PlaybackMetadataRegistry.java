@@ -67,6 +67,8 @@ public class PlaybackMetadataRegistry extends AbstractRegistry<String, com.minec
 	}
 
 	public void handleOnLoad(List<PlaybackMetadata> meta) {
+		if(meta.isEmpty())
+			return;
 		for(PlaybackMetadata metadata : meta) {
 			if(REGISTRY.containsKey(metadata.getExtensionName())) {
 				PlaybackMetadataExtension extension = REGISTRY.get(metadata.getExtensionName());

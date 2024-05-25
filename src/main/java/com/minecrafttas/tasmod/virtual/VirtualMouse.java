@@ -63,7 +63,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	 * @param cursorY		The {@link #cursorY}
 	 * @param subtickList		The {@link VirtualPeripheral#subtickList}
 	 */
-	public VirtualMouse(Set<Integer> pressedKeys, int scrollWheel, Integer cursorX, Integer cursorY, List<VirtualMouse> subtickList) {
+	public VirtualMouse(Set<Integer> pressedKeys, int scrollWheel, int cursorX, int cursorY, List<VirtualMouse> subtickList) {
 		this(pressedKeys, scrollWheel, cursorX, cursorY, subtickList, false);
 	}
 
@@ -77,7 +77,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	 * @param subtickList		The {@link VirtualPeripheral#subtickList}
 	 * @param ignoreFirstUpdate	Whether the first call to {@link #updateFromEvent(int, boolean, int, Integer, Integer)} should create a new subtick
 	 */
-	public VirtualMouse(Set<Integer> pressedKeys, int scrollWheel, Integer cursorX, Integer cursorY, List<VirtualMouse> subtickList, boolean ignoreFirstUpdate) {
+	public VirtualMouse(Set<Integer> pressedKeys, int scrollWheel, int cursorX, int cursorY, List<VirtualMouse> subtickList, boolean ignoreFirstUpdate) {
 		super(pressedKeys, subtickList, ignoreFirstUpdate);
 		this.scrollWheel = scrollWheel;
 		this.cursorX = cursorX;
@@ -94,7 +94,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
      * @param cursorX The pointer location in the x axis
      * @param cursorY The pointer location in the y axis
      */
-	public void updateFromEvent(int keycode, boolean keystate, int scrollwheel, Integer cursorX, Integer cursorY) {
+	public void updateFromEvent(int keycode, boolean keystate, int scrollwheel, int cursorX, int cursorY) {
 		createSubtick();
 		setPressed(keycode, keystate);
 		this.scrollWheel = scrollwheel;
@@ -113,7 +113,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	 * @param cursorX The pointer location in the x axis
 	 * @param cursorY The pointer location in the y axis
 	 */
-	public void updateFromEvent(VirtualKey key, boolean keystate, int scrollwheel, Integer cursorX, Integer cursorY) {
+	public void updateFromEvent(VirtualKey key, boolean keystate, int scrollwheel, int cursorX, int cursorY) {
 		updateFromEvent(key.getKeycode(), keystate, scrollwheel, cursorX, cursorY);
 	}
 	
@@ -133,7 +133,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	 * @param cursorY The pointer location in the y axis
      * @see PlaybackFlavorBase#deserialiseMouse 
      */
-	public void updateFromState(int[] keycodes, int scrollwheel, Integer cursorX, Integer cursorY) {
+	public void updateFromState(int[] keycodes, int scrollwheel, int cursorX, int cursorY) {
 		createSubtick();
 		
 		this.pressedKeys.clear();
