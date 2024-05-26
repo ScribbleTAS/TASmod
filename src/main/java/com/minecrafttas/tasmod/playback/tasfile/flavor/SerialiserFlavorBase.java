@@ -2,6 +2,7 @@ package com.minecrafttas.tasmod.playback.tasfile.flavor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Queue;
@@ -13,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
+import com.minecrafttas.tasmod.playback.extensions.PlaybackExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
@@ -63,22 +65,26 @@ public abstract class SerialiserFlavorBase {
 		 
 	  ==============================================*/
 
-	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList) {
+	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList, List<PlaybackExtension> extensionList) {
 		List<String> out = new ArrayList<>();
 		out.add(headerStart());
 		serialiseFlavorName(out);
-		//		out.add(serializeExtensionNames());
+		serialiseExtensionNames(out, extensionList);
 		serialiseMetadata(out, metadataList);
 		out.add(headerEnd());
 		return out;
 	}
 
 	protected void serialiseFlavorName(List<String> out) {
-		out.add("# Flavor: " + flavorName());
+		out.add("Flavor: " + flavorName());
 	}
 
-	
-	
+	protected void serialiseExtensionNames(List<String> out, List<PlaybackExtension> extensionList) {
+		List<String> stringlist = new ArrayList<>();
+		extensionList.forEach(extension -> stringlist.add(extension.extensionName()));
+		out.add("Extensions: " + String.join(", ", stringlist));
+	}
+
 	protected void serialiseMetadata(List<String> out, List<PlaybackMetadata> metadataList) {
 		for (PlaybackMetadata metadata : metadataList) {
 			serialiseMetadataName(out, metadata.getExtensionName());
@@ -179,8 +185,8 @@ public abstract class SerialiserFlavorBase {
 	 * 
 	 */
 
-	public boolean deserialiseFlavorName(List<String> header) {
-		for (String line : header) {
+	public boolean deserialiseFlavorName(List<String> headerLines) {
+		for (String line : headerLines) {
 			Matcher matcher = extract("^Flavor: " + flavorName(), line);
 
 			if (matcher.find()) {
@@ -192,11 +198,11 @@ public abstract class SerialiserFlavorBase {
 
 	public List<String> extractHeader(BigArrayList<String> lines) {
 		List<String> extracted = new ArrayList<>();
-		
+
 		long maxExtract = 1000;
 
 		maxExtract = lines.size() < maxExtract ? lines.size() : maxExtract;
-		
+
 		for (long i = 0; i < maxExtract; i++) {
 			String line = lines.get(i);
 			extracted.add(line);
@@ -224,10 +230,10 @@ public abstract class SerialiserFlavorBase {
 		String metadataName = null;
 		Pair<String, String> pair = null;
 		LinkedHashMap<String, String> values = new LinkedHashMap<>();
-		
-		if(metadataLines.isEmpty())
+
+		if (metadataLines.isEmpty())
 			return new ArrayList<>();
-		
+
 		for (String metadataLine : metadataLines) {
 
 			String newMetadataName = deserialiseMetadataName(metadataLine);
@@ -250,6 +256,20 @@ public abstract class SerialiserFlavorBase {
 		}
 		out.add(PlaybackMetadata.fromHashMap(metadataName, values));
 		return out;
+	}
+
+	public List<String> deserialiseExtensions(List<String> headerLines) {
+		for (String line : headerLines) {
+			Matcher matcher = extract("Extensions: ?(.*)", line);
+
+			if (matcher.find()) {
+				String extensionStrings = matcher.group(1);
+				String[] extensionNames = extensionStrings.split(", ");
+
+				return Arrays.asList(extensionNames);
+			}
+		}
+		throw new PlaybackLoadException("Extensions value was not found in the header");
 	}
 
 	protected List<String> extractMetadata(List<String> lines) {

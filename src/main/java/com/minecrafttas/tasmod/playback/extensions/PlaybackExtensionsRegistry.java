@@ -7,7 +7,6 @@ import java.util.List;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 
 public class PlaybackExtensionsRegistry extends AbstractRegistry<String, PlaybackExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick  {

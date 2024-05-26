@@ -14,6 +14,7 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
+import com.minecrafttas.tasmod.playback.extensions.PlaybackExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
@@ -65,8 +66,10 @@ public class PlaybackSerialiser2 {
 		SerialiserFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorname);
 
 		List<PlaybackMetadata> metadataList = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
+		
+		List<PlaybackExtension> extensionList = TASmodRegistry.PLAYBACK_EXTENSION.getEnabled();
 
-		for (String line : flavor.serialiseHeader(metadataList)) {
+		for (String line : flavor.serialiseHeader(metadataList, extensionList)) {
 			writerThread.addLine(line);
 		}
 

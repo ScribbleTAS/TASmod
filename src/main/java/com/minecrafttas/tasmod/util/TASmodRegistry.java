@@ -1,5 +1,6 @@
 package com.minecrafttas.tasmod.util;
 
+import com.minecrafttas.tasmod.playback.extensions.PlaybackExtensionsRegistry;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorRegistry;
@@ -16,6 +17,15 @@ public class TASmodRegistry {
 	 */
 	public static final PlaybackMetadataRegistry PLAYBACK_METADATA = new PlaybackMetadataRegistry();
 
+	/**
+	 * Registry for registering custom behavior for each tick during recording and playback.<br>
+	 * <br>
+	 * Extensions give the opportunity to run on each recorded tick and each played back tick.<br>
+	 * Extensions also have access to the TASFile so that data can be stored and read in/from the TASFile.
+	 * 
+	 */
+	public static final PlaybackExtensionsRegistry PLAYBACK_EXTENSION = new PlaybackExtensionsRegistry();
+	
 	/**
 	 * Registry for registering custom seialiser flavors that dictate the syntax of the inputs stored in the TASfile.<br>
 	 * <br>

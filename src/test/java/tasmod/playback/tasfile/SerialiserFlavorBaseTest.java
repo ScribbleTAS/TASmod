@@ -104,7 +104,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		serialiseFlavorName(actual);
 
 		List<String> expected = new ArrayList<>();
-		expected.add("# Flavor: Test");
+		expected.add("Flavor: Test");
 
 		assertIterableEquals(expected, actual);
 	}

@@ -9,7 +9,7 @@ public interface EventPlaybackClient {
 
 	/**
 	 * Fired when
-	 * {@link PlaybackControllerClient#setTASStateClient(com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate, boolean)}
+	 * {@link PlaybackControllerClient#setTASStateClient(com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate, boolean) PlaybackControllerClient#setTASStateClient}
 	 * is called
 	 */
 	@FunctionalInterface
