@@ -16,7 +16,7 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
-import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.util.TASmodRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualKey;
@@ -25,7 +25,7 @@ import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
 public class PlaybackSerialiserTest {
 	
-	private static class TestFlavor extends PlaybackFlavorBase {
+	private static class TestFlavor extends SerialiserFlavorBase {
 
 		@Override
 		public String flavorName() {

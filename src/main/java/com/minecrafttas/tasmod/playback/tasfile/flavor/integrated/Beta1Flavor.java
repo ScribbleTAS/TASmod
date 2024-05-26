@@ -2,12 +2,12 @@ package com.minecrafttas.tasmod.playback.tasfile.flavor.integrated;
 
 import java.util.List;
 
-import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
-public class Beta1Flavor extends PlaybackFlavorBase {
+public class Beta1Flavor extends SerialiserFlavorBase {
 
 	@Override
 	public String flavorName() {

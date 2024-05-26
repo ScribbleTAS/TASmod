@@ -43,7 +43,7 @@ import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
-import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.util.TASmodRegistry;
@@ -487,7 +487,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			e.printStackTrace();
 		}
 		inputs = new BigArrayList<TickInputContainer>(directory + File.separator + "temp");
-		PlaybackFlavorBase.addAll(this.inputs, inputs);
+		SerialiserFlavorBase.addAll(this.inputs, inputs);
 	}
 
 	public Map<Integer, List<Pair<String, String[]>>> getControlBytes() { // TODO Replace with TASFile extension

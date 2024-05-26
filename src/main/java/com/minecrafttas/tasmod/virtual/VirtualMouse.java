@@ -1,6 +1,6 @@
 package com.minecrafttas.tasmod.virtual;
 
-import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
 
 import java.io.Serializable;
@@ -131,7 +131,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
      * @param scrollwheel The scroll wheel of this mouse state
      * @param cursorX The pointer location in the x axis
 	 * @param cursorY The pointer location in the y axis
-     * @see PlaybackFlavorBase#deserialiseMouse 
+     * @see SerialiserFlavorBase#deserialiseMouse 
      */
 	public void updateFromState(int[] keycodes, int scrollwheel, int cursorX, int cursorY) {
 		createSubtick();

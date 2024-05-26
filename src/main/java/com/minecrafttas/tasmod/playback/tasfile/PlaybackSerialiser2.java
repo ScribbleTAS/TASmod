@@ -16,7 +16,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
-import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.util.FileThread;
 import com.minecrafttas.tasmod.util.TASmodRegistry;
 
@@ -62,7 +62,7 @@ public class PlaybackSerialiser2 {
 		FileThread writerThread = new FileThread(file, false);
 		writerThread.start();
 
-		PlaybackFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorname);
+		SerialiserFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorname);
 
 		List<PlaybackMetadata> metadataList = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
 
@@ -113,7 +113,7 @@ public class PlaybackSerialiser2 {
 		}
 		reader.close();
 
-		PlaybackFlavorBase flavor = null;
+		SerialiserFlavorBase flavor = null;
 
 		flavor = searchForFlavor(lines, TASmodRegistry.SERIALISER_FLAVOR.getFlavors()); // Test for the correct flavor on the first 100 lines
 
@@ -125,7 +125,7 @@ public class PlaybackSerialiser2 {
 			throw new PlaybackLoadException("Flavor name is null or empty");
 		}
 		
-		PlaybackFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
+		SerialiserFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
 		
 		if (flavor == null) {
 			throw new PlaybackLoadException("Flavor name %s doesn't exist.", flavorName);
@@ -134,7 +134,7 @@ public class PlaybackSerialiser2 {
 		return loadFromFile(file, flavor);
 	}
 	
-	public static BigArrayList<TickInputContainer> loadFromFile(File file, PlaybackFlavorBase flavor) throws PlaybackLoadException, IOException {
+	public static BigArrayList<TickInputContainer> loadFromFile(File file, SerialiserFlavorBase flavor) throws PlaybackLoadException, IOException {
 		// Read file
 		BufferedReader reader = null;
 
@@ -186,8 +186,8 @@ public class PlaybackSerialiser2 {
 //		return out;
 //	}
 
-	public static PlaybackFlavorBase searchForFlavor(List<String> lines, List<PlaybackFlavorBase> flavorList) {
-		for (PlaybackFlavorBase flavor : flavorList) {
+	public static SerialiserFlavorBase searchForFlavor(List<String> lines, List<SerialiserFlavorBase> flavorList) {
+		for (SerialiserFlavorBase flavor : flavorList) {
 			if (flavor.deserialiseFlavorName(lines)) {
 				return flavor;
 			}

@@ -13,13 +13,13 @@ import com.minecrafttas.tasmod.TASmod;
  * 
  * @author Scribble
  */
-public class PlaybackFlavorRegistry extends AbstractRegistry<String, PlaybackFlavorBase>{
+public class SerialiserFlavorRegistry extends AbstractRegistry<String, SerialiserFlavorBase>{
 
-	public PlaybackFlavorRegistry() {
+	public SerialiserFlavorRegistry() {
 		super(new LinkedHashMap<>());
 	}
 	
-	public void register(PlaybackFlavorBase flavor) {
+	public void register(SerialiserFlavorBase flavor) {
 		if (flavor == null) {
 			throw new NullPointerException("Tried to register a serialiser flavor. But flavor is null.");
 		}
@@ -37,7 +37,7 @@ public class PlaybackFlavorRegistry extends AbstractRegistry<String, PlaybackFla
 		REGISTRY.put(flavor.flavorName(), flavor);
 	}
 	
-	public void unregister(PlaybackFlavorBase flavor) {
+	public void unregister(SerialiserFlavorBase flavor) {
 		if (flavor == null) {
 			throw new NullPointerException("Tried to unregister a flavor with value null");
 		}
@@ -52,11 +52,11 @@ public class PlaybackFlavorRegistry extends AbstractRegistry<String, PlaybackFla
 		return REGISTRY.keySet();
 	}
 	
-	public PlaybackFlavorBase getFlavor(String name) {
+	public SerialiserFlavorBase getFlavor(String name) {
 		return REGISTRY.get(name);
 	}
 	
-	public List<PlaybackFlavorBase> getFlavors() {
-		return (List<PlaybackFlavorBase>) REGISTRY.values();
+	public List<SerialiserFlavorBase> getFlavors() {
+		return (List<SerialiserFlavorBase>) REGISTRY.values();
 	}
 }

@@ -20,7 +20,7 @@ import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
-public abstract class PlaybackFlavorBase {
+public abstract class SerialiserFlavorBase {
 
 	/**
 	 * The current tick that is being serialised or deserialised

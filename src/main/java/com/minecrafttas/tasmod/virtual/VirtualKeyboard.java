@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.ImmutableList;
-import com.minecrafttas.tasmod.playback.tasfile.flavor.PlaybackFlavorBase;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 
 /**
@@ -161,7 +161,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
      * 
      * @param keycodes An array of keycodes, that replaces {@link Subtickable#pressedKeys}
      * @param chars An array of characters, that replaces {@link #charList}
-     * @see PlaybackFlavorBase#deserialiseKeyboard 
+     * @see SerialiserFlavorBase#deserialiseKeyboard 
      */
     public void updateFromState(int[] keycodes, char[] chars) {
     	createSubtick();
