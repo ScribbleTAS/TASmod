@@ -410,7 +410,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y, true);
 			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 				if (Minecraft.getMinecraft().currentScreen == this) return "PlaybackIndex";
-				return Integer.toString(TASmodClient.controller.index());
+				return Long.toString(TASmodClient.controller.index());
 			}));
 			
 			y = height - 14;

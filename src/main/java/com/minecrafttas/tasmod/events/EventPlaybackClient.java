@@ -3,6 +3,7 @@ package com.minecrafttas.tasmod.events;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 
 public interface EventPlaybackClient {
 
@@ -12,12 +13,12 @@ public interface EventPlaybackClient {
 	 * is called
 	 */
 	@FunctionalInterface
-	public static interface EventControllerStateChange extends EventBase {
+	public interface EventControllerStateChange extends EventBase {
 
 		/**
 		 * Fired when
-		 * {@link PlaybackControllerClient#setTASStateClient(com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate, boolean)}
-		 * is called
+		 * {@link PlaybackControllerClient#setTASStateClient(com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate, boolean)
+		 * PlaybackControllerClient#setTASStateClient} is called
 		 * 
 		 * @param newstate The new state that the playback controller is about to be set
 		 *                 to
@@ -30,8 +31,45 @@ public interface EventPlaybackClient {
 	 * Fired after a player joined the world with a playback/recording running
 	 */
 	@FunctionalInterface
-	public static interface EventPlaybackJoinedWorld extends EventBase {
-		
+	public interface EventPlaybackJoinedWorld extends EventBase {
+
+		/**
+		 * Fired after a player joined the world with a playback/recording running
+		 * 
+		 * @param state The {@link PlaybackControllerClient#state state} of the
+		 *              {@link PlaybackControllerClient} when the player joined the
+		 *              world
+		 */
 		public void onPlaybackJoinedWorld(TASstate state);
+	}
+
+	/**
+	 * Fired when a tick is being recorded
+	 */
+	@FunctionalInterface
+	public interface EventRecordTick extends EventBase {
+
+		/**
+		 * Fired when a tick is being recorded
+		 * 
+		 * @param index     The index of the tick that is being recorded
+		 * @param container The {@link TickInputContainer} that is being recorded
+		 */
+		public void onRecordTick(long index, TickInputContainer container);
+	}
+
+	/**
+	 * Fired when a tick is being played back
+	 */
+	@FunctionalInterface
+	public interface EventPlaybackTick extends EventBase {
+
+		/**
+		 * Fired when a tick is being recorded
+		 * 
+		 * @param index     The index of the tick that is being recorded
+		 * @param container The {@link TickInputContainer} that is being recorded
+		 */
+		public void onPlaybackTick(long index, TickInputContainer container);
 	}
 }

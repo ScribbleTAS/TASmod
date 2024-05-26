@@ -239,7 +239,7 @@ public class DesyncMonitoring {
 			return String.format("%s %s %s %s %s %s %s", values[0], values[1], values[2], values[3], values[4], values[5], seed);
 		}
 		
-		public DesyncStatus getSeverity(int index, double[] playerValues, long seed) {
+		public DesyncStatus getSeverity(long index, double[] playerValues, long seed) {
 			
 			if(this.seed != seed) {
 				if(TASmod.ktrngHandler.isLoaded()) {

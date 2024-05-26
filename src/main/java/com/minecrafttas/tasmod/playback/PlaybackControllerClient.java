@@ -38,6 +38,8 @@ import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
+import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTick;
+import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
 import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
@@ -94,7 +96,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	/**
 	 * The current index of the inputs
 	 */
-	private int index;
+	private long index;
 
 	private VirtualKeyboard keyboard = new VirtualKeyboard();
 
@@ -122,9 +124,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	private Map<Integer, List<Pair<String, String[]>>> controlBytes = new HashMap<Integer, List<Pair<String, String[]>>>(); // TODO Replace with TASFile extension
 
 	/**
-	 * The comments in the file, used to store them again later
+	 * The comments of the TASfile. Contains calls to extensions.
 	 */
-	private Map<Integer, List<String>> comments = new HashMap<>(); // TODO Replace with TASFile extension
+	private CommentHandler comments = new CommentHandler();
 
 	public DesyncMonitoring desyncMonitor = new DesyncMonitoring(this); // TODO Replace with TASFile extension
 
@@ -261,7 +263,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
 		if (this.inputs.isEmpty()) {
 			inputs.add(new TickInputContainer());
-			desyncMonitor.recordNull(index);
+//			desyncMonitor.recordNull(index);
 		}
 	}
 
@@ -411,15 +413,18 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 	private void recordNextTick() {
 		index++;
+		TickInputContainer container = new TickInputContainer(keyboard.clone(), mouse.clone(), camera.clone());
 		if (inputs.size() <= index) {
 			if (inputs.size() < index) {
 				LOGGER.warn("Index is {} inputs bigger than the container!", index - inputs.size());
 			}
-			inputs.add(new TickInputContainer(keyboard.clone(), mouse.clone(), camera.clone()));
+			inputs.add(container);
 		} else {
-			inputs.set(index, new TickInputContainer(keyboard.clone(), mouse.clone(), camera.clone()));
+			inputs.set(index, container);
 		}
-		desyncMonitor.recordMonitor(index); // Capturing monitor values
+		
+		EventListenerRegistry.fireEvent(EventRecordTick.class, index, container);
+//		desyncMonitor.recordMonitor(index); // Capturing monitor values
 	}
 
 	private void playbackNextTick() {
@@ -452,14 +457,16 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 		/* Continue condition */
 		else {
-			TickInputContainer tickcontainer = inputs.get(index); // Loads the new inputs from the container
-			this.keyboard = tickcontainer.getKeyboard().clone();
-			this.mouse = tickcontainer.getMouse().clone();
-			this.camera = tickcontainer.getCameraAngle().clone();
+			TickInputContainer container = inputs.get(index); // Loads the new inputs from the container
+			this.keyboard = container.getKeyboard().clone();
+			this.mouse = container.getMouse().clone();
+			this.camera = container.getCameraAngle().clone();
 			// check for control bytes
-			ControlByteHandler.readCotrolByte(controlBytes.get(index));
+//			ControlByteHandler.readCotrolByte(controlBytes.get(index));
+			EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
 		}
-		desyncMonitor.playMonitor(index);
+		
+//		desyncMonitor.playMonitor(index);
 	}
 	// =====================================================================================================
 	// Methods to manipulate inputs
@@ -472,7 +479,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		return inputs.isEmpty();
 	}
 
-	public int index() {
+	public long index() {
 		return index;
 	}
 
@@ -494,8 +501,12 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		return controlBytes;
 	}
 
-	public Map<Integer, List<String>> getComments() { // TODO Replace with TASFile extension
+	public CommentHandler getComments() { // TODO Replace with TASFile extension
 		return comments;
+	}
+	
+	public void setComments(CommentHandler comments) {
+		this.comments = comments;
 	}
 
 	public void setIndex(int index) throws IndexOutOfBoundsException {
@@ -512,7 +523,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 	}
 
-	public TickInputContainer get(int index) {
+	public TickInputContainer get(long index) {
 		TickInputContainer tickcontainer = null;
 		try {
 			tickcontainer = inputs.get(index);

@@ -97,7 +97,7 @@ public class PlaybackSerialiser {
 	 * @param index index until the inputs get saved
 	 * @throws IOException When the input container is empty
 	 */
-	public void saveToFileV1Until(File file, PlaybackControllerClient container, int index) throws IOException{
+	public void saveToFileV1Until(File file, PlaybackControllerClient container, long index) throws IOException{
 		LOGGER.debug(LoggerMarkers.Playback, "Saving playback controller to file {}", file);
 		if (container.size() == 0) {
 			throw new IOException("There are no inputs to save to a file");
@@ -132,20 +132,20 @@ public class PlaybackSerialiser {
 		
 		BigArrayList<TickInputContainer> ticks = container.getInputs();
 		Map<Integer, List<Pair<String, String[]>>> cbytes= container.getControlBytes();
-		Map<Integer, List<String>> comments = container.getComments();
+//		Map<Integer, List<String>> comments = container.getComments();
 		
 		for (int i = 0; i < ticks.size(); i++) {
 			if(i==index) {
 				break;
 			}
 			
-			// Add comments
-			if(comments.containsKey(i)) {
-				List<String> multiLine=comments.get(i);
-				multiLine.forEach(comment -> {
-					fileThread.addLine("//"+comment+"\n");
-				});
-			}
+//			// Add comments
+//			if(comments.containsKey(i)) {
+//				List<String> multiLine=comments.get(i);
+//				multiLine.forEach(comment -> {
+//					fileThread.addLine("//"+comment+"\n");
+//				});
+//			}
 			
 			// Add controlbytes
 			if(cbytes.containsKey(i)) {
@@ -253,9 +253,9 @@ public class PlaybackSerialiser {
 				controller.getControlBytes().put(tickcount, cbytes);
 			//Read comments
 			} else if (line.startsWith("//")) {
-				List<String> commentList = controller.getComments().getOrDefault(tickcount, new ArrayList<>());
-				commentList.add(line.replace("//", ""));
-				controller.getComments().put(tickcount, commentList);
+//				List<String> commentList = controller.getComments().getOrDefault(tickcount, new ArrayList<>());
+//				commentList.add(line.replace("//", ""));
+//				controller.getComments().put(tickcount, commentList);
 			//Read data
 			} else {
 				
