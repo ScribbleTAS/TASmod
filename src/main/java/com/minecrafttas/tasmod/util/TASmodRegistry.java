@@ -27,7 +27,7 @@ public class TASmodRegistry {
 	public static final PlaybackExtensionsRegistry PLAYBACK_EXTENSION = new PlaybackExtensionsRegistry();
 	
 	/**
-	 * Registry for registering custom seialiser flavors that dictate the syntax of the inputs stored in the TASfile.<br>
+	 * Registry for registering custom serialiser flavors that dictate the syntax of the inputs stored in the TASfile.<br>
 	 * <br>
 	 * Either create a new flavor by extending {@link SerialiserFlavorBase}<br>
 	 * or extend an existing flavor (like {@link Beta1Flavor}) and overwrite parts of the methods.<br>

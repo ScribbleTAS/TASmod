@@ -223,47 +223,6 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	}
 
 	/**
-	 * Test extracting only the metadata (### General and below)
-	 */
-	@Test
-	void testExtractMetadata() {
-		List<String> lines = new ArrayList<>();
-		lines.add("###### TASfile ######");
-		lines.add("Flavor: beta");
-		lines.add("Extensions: desync_monitor, control_bytes, vanilla_commands");
-		lines.add("### General");
-		lines.add("Author: Scribble");
-		lines.add("Title: 77 Buttons");
-		lines.add("##################################################");
-
-		List<String> actual = extractMetadata(lines);
-
-		List<String> expected = new ArrayList<>();
-		expected.add("### General");
-		expected.add("Author: Scribble");
-		expected.add("Title: 77 Buttons");
-
-		assertIterableEquals(expected, actual);
-	}
-
-	/**
-	 * Test extracting metadata, but no metadata was encoded
-	 */
-	@Test
-	void testExtractEmptyMetadata() {
-		List<String> lines = new ArrayList<>();
-		lines.add("###### TASfile ######");
-		lines.add("Flavor: beta");
-		lines.add("Extensions: desync_monitor, control_bytes, vanilla_commands");
-		lines.add("##################################################");
-
-		List<String> actual = extractMetadata(lines);
-
-		List<String> expected = new ArrayList<>();
-		assertIterableEquals(expected, actual);
-	}
-
-	/**
 	 * Test deserialising metadata
 	 */
 	@Test

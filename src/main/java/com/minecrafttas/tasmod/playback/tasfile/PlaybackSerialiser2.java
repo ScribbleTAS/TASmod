@@ -5,13 +5,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 import com.minecrafttas.tasmod.playback.extensions.PlaybackExtension;
@@ -157,9 +154,13 @@ public class PlaybackSerialiser2 {
 		
 		reader.close();
 		
-		// Deserialise Metadata
-		List<String> headerLines = flavor.extractHeader(lines);
-		List<PlaybackMetadata> deserialisedMetadata = flavor.deserialiseMetadata(headerLines);
+		// Deserialise Header
+		List<String> headerLines = new ArrayList<>();
+		List<PlaybackMetadata> deserialisedMetadata = new ArrayList<>();
+		List<String> deserialisedExtensionNames = new ArrayList<>();
+		
+		flavor.deserialiseHeader(headerLines, deserialisedMetadata, deserialisedExtensionNames);
+		
 		TASmodRegistry.PLAYBACK_METADATA.handleOnLoad(deserialisedMetadata);
 		
 		// Deserialise main data

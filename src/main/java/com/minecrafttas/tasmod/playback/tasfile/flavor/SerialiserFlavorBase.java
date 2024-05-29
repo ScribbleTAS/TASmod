@@ -10,8 +10,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
 import com.minecrafttas.tasmod.playback.extensions.PlaybackExtension;
@@ -196,6 +194,10 @@ public abstract class SerialiserFlavorBase {
 		return false;
 	}
 
+	public void deserialiseHeader(List<String> headerLines, List<PlaybackMetadata> metadataList, List<String> activeExtensionList) {
+		metadataList.addAll(deserialiseMetadata(headerLines));
+	}
+	
 	public List<String> extractHeader(BigArrayList<String> lines) {
 		List<String> extracted = new ArrayList<>();
 
@@ -213,51 +215,6 @@ public abstract class SerialiserFlavorBase {
 		throw new PlaybackLoadException("Cannot find the end of the header");
 	}
 
-	/**
-	 * Deserialises {@link PlaybackMetadata} in the header of the file.<br>
-	 * <br>
-	 * First extracts the metadata specific lines, then reads the section names and
-	 * key value pairs.
-	 * 
-	 * @param headerLines All lines in the header. Can be easily extracted with
-	 *                    {@link #extractHeader(List)}
-	 * @return A list of {@link PlaybackMetadata}
-	 */
-	public List<PlaybackMetadata> deserialiseMetadata(List<String> headerLines) {
-		List<String> metadataLines = extractMetadata(headerLines);
-		List<PlaybackMetadata> out = new ArrayList<>();
-
-		String metadataName = null;
-		Pair<String, String> pair = null;
-		LinkedHashMap<String, String> values = new LinkedHashMap<>();
-
-		if (metadataLines.isEmpty())
-			return new ArrayList<>();
-
-		for (String metadataLine : metadataLines) {
-
-			String newMetadataName = deserialiseMetadataName(metadataLine);
-
-			if (newMetadataName != null) { // Means a new metadata section is beginning... In this case, the metadataLine
-											// is "### Name" and the newMetadataName is "Name"
-
-				if (metadataName != null && !metadataName.equals(newMetadataName)) { // If metadataName is null, then the first section begins
-																						// If metadataName is different than the newMetadataName,
-																						// then a new section begins and we first need to store the old.
-					out.add(PlaybackMetadata.fromHashMap(metadataName, values));
-					values = new LinkedHashMap<>();
-				}
-				metadataName = newMetadataName;
-				continue;
-
-			} else if ((pair = deseraialiseMetadataValue(metadataLine)) != null) {
-				values.put(pair.getLeft(), pair.getRight());
-			}
-		}
-		out.add(PlaybackMetadata.fromHashMap(metadataName, values));
-		return out;
-	}
-
 	public List<String> deserialiseExtensions(List<String> headerLines) {
 		for (String line : headerLines) {
 			Matcher matcher = extract("Extensions: ?(.*)", line);
@@ -271,35 +228,38 @@ public abstract class SerialiserFlavorBase {
 		}
 		throw new PlaybackLoadException("Extensions value was not found in the header");
 	}
+	
+	public List<PlaybackMetadata> deserialiseMetadata(List<String> headerLines) {
+		List<PlaybackMetadata> out = new ArrayList<>();
 
-	protected List<String> extractMetadata(List<String> lines) {
-		List<String> extracted = new ArrayList<>();
+		String metadataName = null;
+		LinkedHashMap<String, String> values = new LinkedHashMap<>();
 
-		boolean start = false;
+		for (String headerLine : headerLines) {
 
-		for (String line : lines) {
-			if (deserialiseMetadataName(line) != null)
-				start = true;
+			Matcher nameMatcher = extract("^#{3} (.+)", headerLine); 		// If the line starts with ###, an optional space char after and then capture the name 
+			Matcher valueMatcher = extract("^([^#].*?):\\s*(.+)", headerLine);	// If the line doesn't start with a #, then the key of the metadata, then a : then any or no number of whitespace chars, then the value of the metadata
+			
+			if (nameMatcher.find()) {
 
-			if (line.equals(headerEnd()))
-				break;
+				if (metadataName != null && !metadataName.equals(nameMatcher.group(1))) { // If metadataName is null, then the first section begins
+																						// If metadataName is different than the newMetadataName,
+																						// then a new section begins and we first need to store the old.
+					out.add(PlaybackMetadata.fromHashMap(metadataName, values));
+					values.clear();
+				}
+				metadataName = nameMatcher.group(1);
+				continue;
 
-			if (start)
-				extracted.add(line);
+			} else if (metadataName != null && valueMatcher.find()) {
+				values.put(valueMatcher.group(1), valueMatcher.group(2));
+			}
 		}
-
-		return extracted;
-	}
-
-	protected String deserialiseMetadataName(String line) {
-		return extract("^### (.+)", line, 1);
-	}
-
-	protected Pair<String, String> deseraialiseMetadataValue(String metadataLine) {
-		Matcher matcher = extract("^(.+?):(.+)", metadataLine);
-		if (matcher.find())
-			return Pair.of(matcher.group(1).trim(), matcher.group(2).trim());
-		return null;
+		
+		if(metadataName!=null)
+			out.add(PlaybackMetadata.fromHashMap(metadataName, values));
+		
+		return out;
 	}
 
 	/**

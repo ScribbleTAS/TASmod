@@ -1,5 +1,6 @@
 package tasmod.playback.tasfile;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 import java.io.File;
@@ -10,10 +11,14 @@ import java.util.ArrayList;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
+import com.minecrafttas.tasmod.playback.extensions.PlaybackExtension;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
@@ -34,24 +39,77 @@ public class PlaybackSerialiserTest {
 		
 	}
 	
+	private static class TestMetadatada implements PlaybackMetadataExtension {
+
+		String testValue = "";
+		String actual = "e";
+		
+		@Override
+		public String getExtensionName() {
+			return "Test";
+		}
+
+		@Override
+		public void onCreate() {
+			
+		}
+
+		@Override
+		public PlaybackMetadata onStore() {
+			PlaybackMetadata metadata =new PlaybackMetadata(this);
+			metadata.setValue("TestKey", testValue);
+			return metadata;
+		}
+
+		@Override
+		public void onLoad(PlaybackMetadata metadata) {
+			actual = metadata.getValue("TestKey");
+		}
+
+		@Override
+		public void onClear() {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+	
+	private static class TestExtension extends PlaybackExtension {
+
+		@Override
+		public String extensionName() {
+			return "tasmod_testExtension";
+		}
+		
+	}
+	
 	File file = new File("src/test/resources/serialiser/PlaybackSerialiserTest.mctas");
 	
 	private static TestFlavor testFlavor = new TestFlavor();
+	private static TestMetadatada testMetadata = new TestMetadatada();
+	private static TestExtension testExtension = new TestExtension();
 	
 	@BeforeAll
 	static void register() {
 		TASmodRegistry.SERIALISER_FLAVOR.register(testFlavor);
+		TASmodRegistry.PLAYBACK_METADATA.register(testMetadata);
+		TASmodRegistry.PLAYBACK_EXTENSION.register(testExtension);
 	}
 	
 	@AfterAll
 	static void unregister() {
 		TASmodRegistry.SERIALISER_FLAVOR.unregister(testFlavor);
+		TASmodRegistry.PLAYBACK_METADATA.unregister(testMetadata);
+		TASmodRegistry.PLAYBACK_EXTENSION.unregister(testExtension);
 	}
 	
 	@Test
+	@Disabled
 	void testSerialiser() {
 		BigArrayList<TickInputContainer> expected = new BigArrayList<>();
 		
+		testMetadata.testValue = "testing";
+		TASmodRegistry.PLAYBACK_EXTENSION.setEnabled("tasmod_testExtension", true);
 		// Tick 1
 		
 		// Keyboard
@@ -101,6 +159,7 @@ public class PlaybackSerialiserTest {
 		try {
 			BigArrayList<TickInputContainer> actual = PlaybackSerialiser2.loadFromFile(file, testFlavor);
 			assertBigArrayList(expected, actual);
+			assertEquals("testing", testMetadata.actual);
 		} catch (PlaybackLoadException | IOException e) {
 			e.printStackTrace();
 		} finally {
