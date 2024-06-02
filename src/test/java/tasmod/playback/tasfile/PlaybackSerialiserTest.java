@@ -15,8 +15,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
-import com.minecrafttas.tasmod.playback.extensions.PlaybackExtension;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
@@ -74,10 +74,10 @@ public class PlaybackSerialiserTest {
 		
 	}
 	
-	private static class TestExtension extends PlaybackExtension {
+	private static class TestExtension extends PlaybackFileCommandExtension {
 
 		@Override
-		public String extensionName() {
+		public String name() {
 			return "tasmod_testExtension";
 		}
 		
@@ -93,23 +93,23 @@ public class PlaybackSerialiserTest {
 	static void register() {
 		TASmodRegistry.SERIALISER_FLAVOR.register(testFlavor);
 		TASmodRegistry.PLAYBACK_METADATA.register(testMetadata);
-		TASmodRegistry.PLAYBACK_EXTENSION.register(testExtension);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(testExtension);
 	}
 	
 	@AfterAll
 	static void unregister() {
 		TASmodRegistry.SERIALISER_FLAVOR.unregister(testFlavor);
 		TASmodRegistry.PLAYBACK_METADATA.unregister(testMetadata);
-		TASmodRegistry.PLAYBACK_EXTENSION.unregister(testExtension);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.unregister(testExtension);
 	}
 	
 	@Test
 	@Disabled
 	void testSerialiser() {
-		BigArrayList<TickInputContainer> expected = new BigArrayList<>();
+		BigArrayList<TickContainer> expected = new BigArrayList<>();
 		
 		testMetadata.testValue = "testing";
-		TASmodRegistry.PLAYBACK_EXTENSION.setEnabled("tasmod_testExtension", true);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testExtension", true);
 		// Tick 1
 		
 		// Keyboard
@@ -127,7 +127,7 @@ public class PlaybackSerialiserTest {
 		angle1.set(0, 0);
 		angle1.updateFromEvent(10, 10);
 		
-		expected.add(new TickInputContainer(keyboard1, mouse1, angle1));
+		expected.add(new TickContainer(keyboard1, mouse1, angle1));
 		
 		// Tick 2
 		
@@ -148,7 +148,7 @@ public class PlaybackSerialiserTest {
 		angle2.deepCopyFrom(angle1);
 		angle2.updateFromEvent(-10, -10);
 		
-		expected.add(new TickInputContainer(keyboard2, mouse2, angle2));
+		expected.add(new TickContainer(keyboard2, mouse2, angle2));
 		
 		try {
 			PlaybackSerialiser2.saveToFile(file, expected, "Test");
@@ -157,7 +157,7 @@ public class PlaybackSerialiserTest {
 		}
 		
 		try {
-			BigArrayList<TickInputContainer> actual = PlaybackSerialiser2.loadFromFile(file, testFlavor);
+			BigArrayList<TickContainer> actual = PlaybackSerialiser2.loadFromFile(file, testFlavor);
 			assertBigArrayList(expected, actual);
 			assertEquals("testing", testMetadata.actual);
 		} catch (PlaybackLoadException | IOException e) {

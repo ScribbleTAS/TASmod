@@ -10,8 +10,8 @@ import java.util.List;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
-import com.minecrafttas.tasmod.playback.extensions.PlaybackExtension;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
@@ -44,7 +44,7 @@ public class PlaybackSerialiser2 {
 		saveToFile(file, controller.getInputs(), flavorname);
 	}
 
-	public static void saveToFile(File file, BigArrayList<TickInputContainer> container, String flavorname) throws FileNotFoundException {
+	public static void saveToFile(File file, BigArrayList<TickContainer> container, String flavorname) throws FileNotFoundException {
 		if (file == null) {
 			throw new NullPointerException("Save to file failed. No file specified");
 		}
@@ -64,7 +64,7 @@ public class PlaybackSerialiser2 {
 
 		List<PlaybackMetadata> metadataList = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
 		
-		List<PlaybackExtension> extensionList = TASmodRegistry.PLAYBACK_EXTENSION.getEnabled();
+		List<PlaybackFileCommandExtension> extensionList = TASmodRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
 
 		for (String line : flavor.serialiseHeader(metadataList, extensionList)) {
 			writerThread.addLine(line);
@@ -85,7 +85,7 @@ public class PlaybackSerialiser2 {
 	 * @return The loaded {@link PlaybackControllerClient}
 	 * @throws IOException
 	 */
-	public static BigArrayList<TickInputContainer> loadFromFile(File file) throws PlaybackLoadException, IOException {
+	public static BigArrayList<TickContainer> loadFromFile(File file) throws PlaybackLoadException, IOException {
 		if (file == null) {
 			throw new PlaybackLoadException("Load from file failed. No file specified");
 		}
@@ -120,7 +120,7 @@ public class PlaybackSerialiser2 {
 		return loadFromFile(file, flavor);
 	}
 
-	public static BigArrayList<TickInputContainer> loadFromFile(File file, String flavorName) throws PlaybackLoadException, IOException {
+	public static BigArrayList<TickContainer> loadFromFile(File file, String flavorName) throws PlaybackLoadException, IOException {
 		if(flavorName == null || flavorName.isEmpty()) {
 			throw new PlaybackLoadException("Flavor name is null or empty");
 		}
@@ -134,7 +134,7 @@ public class PlaybackSerialiser2 {
 		return loadFromFile(file, flavor);
 	}
 	
-	public static BigArrayList<TickInputContainer> loadFromFile(File file, SerialiserFlavorBase flavor) throws PlaybackLoadException, IOException {
+	public static BigArrayList<TickContainer> loadFromFile(File file, SerialiserFlavorBase flavor) throws PlaybackLoadException, IOException {
 		// Read file
 		BufferedReader reader = null;
 
@@ -164,7 +164,7 @@ public class PlaybackSerialiser2 {
 		TASmodRegistry.PLAYBACK_METADATA.handleOnLoad(deserialisedMetadata);
 		
 		// Deserialise main data
-		BigArrayList<TickInputContainer> deserialisedContainers = flavor.deserialise(lines, headerLines.size());
+		BigArrayList<TickContainer> deserialisedContainers = flavor.deserialise(lines, headerLines.size());
 		
 		return deserialisedContainers;
 	}

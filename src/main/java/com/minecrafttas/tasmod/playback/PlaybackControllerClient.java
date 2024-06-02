@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,7 +110,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	/**
 	 * The place where all inputs get stored
 	 */
-	private BigArrayList<TickInputContainer> inputs = new BigArrayList<TickInputContainer>(directory + File.separator + "temp");
+	private BigArrayList<TickContainer> inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 
 	/**
 	 * A map of control bytes. Used to change settings during playback via the
@@ -262,7 +263,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	private void startRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
 		if (this.inputs.isEmpty()) {
-			inputs.add(new TickInputContainer());
+			inputs.add(new TickContainer());
 //			desyncMonitor.recordNull(index);
 		}
 	}
@@ -413,7 +414,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 	private void recordNextTick() {
 		index++;
-		TickInputContainer container = new TickInputContainer(keyboard.clone(), mouse.clone(), camera.clone());
+		TickContainer container = new TickContainer(keyboard.clone(), mouse.clone(), camera.clone());
 		if (inputs.size() <= index) {
 			if (inputs.size() < index) {
 				LOGGER.warn("Index is {} inputs bigger than the container!", index - inputs.size());
@@ -457,7 +458,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 		/* Continue condition */
 		else {
-			TickInputContainer container = inputs.get(index); // Loads the new inputs from the container
+			TickContainer container = inputs.get(index); // Loads the new inputs from the container
 			this.keyboard = container.getKeyboard().clone();
 			this.mouse = container.getMouse().clone();
 			this.camera = container.getCameraAngle().clone();
@@ -483,17 +484,17 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		return index;
 	}
 
-	public BigArrayList<TickInputContainer> getInputs() {
+	public BigArrayList<TickContainer> getInputs() {
 		return inputs;
 	}
 	
-	public void setInputs(BigArrayList<TickInputContainer> inputs) {
+	public void setInputs(BigArrayList<TickContainer> inputs) {
 		try {
 			inputs.clearMemory();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		inputs = new BigArrayList<TickInputContainer>(directory + File.separator + "temp");
+		inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 		SerialiserFlavorBase.addAll(this.inputs, inputs);
 	}
 
@@ -513,7 +514,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		if (index <= size()) {
 			this.index = index;
 			if (state == TASstate.PLAYBACK) {
-				TickInputContainer tickcontainer = inputs.get(index);
+				TickContainer tickcontainer = inputs.get(index);
 				this.keyboard = tickcontainer.getKeyboard();
 				this.mouse = tickcontainer.getMouse();
 				this.camera = tickcontainer.getCameraAngle();
@@ -523,8 +524,8 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 	}
 
-	public TickInputContainer get(long index) {
-		TickInputContainer tickcontainer = null;
+	public TickContainer get(long index) {
+		TickContainer tickcontainer = null;
 		try {
 			tickcontainer = inputs.get(index);
 		} catch (IndexOutOfBoundsException e) {
@@ -534,9 +535,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	}
 
 	/**
-	 * @return The {@link TickInputContainer} at the current index
+	 * @return The {@link TickContainer} at the current index
 	 */
-	public TickInputContainer get() {
+	public TickContainer get() {
 		return get(index);
 	}
 
@@ -547,7 +548,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		inputs = new BigArrayList<TickInputContainer>(directory + File.separator + "temp");
+		inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 		controlBytes.clear();
 		comments.clear();
 		index = 0;
@@ -576,9 +577,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	 * Clears {@link #keyboard} and {@link #mouse}
 	 */
 	public void unpressContainer() {
-//		LOGGER.trace(LoggerMarkers.Playback, "Unpressing container");
-//		keyboard.clear();
-//		mouse.clear();
+		LOGGER.trace(LoggerMarkers.Playback, "Unpressing container");
+		keyboard.clear();
+		mouse.clear();
 	}
 
 	// ==============================================================
@@ -595,23 +596,28 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	 * @author Scribble
 	 *
 	 */
-	public static class TickInputContainer implements Serializable {
-
-		private static final long serialVersionUID = -3420565284438152474L;
+	public static class TickContainer implements Serializable {
 
 		private VirtualKeyboard keyboard;
 
 		private VirtualMouse mouse;
 
 		private VirtualCameraAngle cameraAngle;
+		
+		private CommentContainer comments;
 
-		public TickInputContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
+		public TickContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
+			this(keyboard, mouse, subticks, null);
+		}
+		
+		public TickContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle camera, CommentContainer comments) {
 			this.keyboard = keyboard;
 			this.mouse = mouse;
-			this.cameraAngle = subticks;
+			this.cameraAngle = camera;
+			this.comments = comments;
 		}
 
-		public TickInputContainer() {
+		public TickContainer() {
 			this.keyboard = new VirtualKeyboard();
 			this.mouse = new VirtualMouse();
 			this.cameraAngle = new VirtualCameraAngle();
@@ -634,19 +640,31 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			return cameraAngle;
 		}
 
+		public CommentContainer getComments() {
+			return comments;
+		}
+		
 		@Override
-		public TickInputContainer clone() {
-			return new TickInputContainer(keyboard, mouse, cameraAngle);
+		public TickContainer clone() {
+			return new TickContainer(keyboard, mouse, cameraAngle);
 		}
 
 		@Override
 		public boolean equals(Object other) {
-			if (other instanceof TickInputContainer) {
-				TickInputContainer container = (TickInputContainer) other;
+			if (other instanceof TickContainer) {
+				TickContainer container = (TickContainer) other;
 				return keyboard.equals(container.keyboard) || mouse.equals(container.mouse) || cameraAngle.equals(container.cameraAngle);
 			}
 			return super.equals(other);
 		}
+	}
+	
+	public static class CommentContainer implements Serializable{
+		
+		List<String> inlineComments = new ArrayList<>();
+		List<String> endlineComments = new ArrayList<>();
+		
+		
 	}
 
 	/**

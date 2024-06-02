@@ -11,8 +11,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
-import com.minecrafttas.tasmod.playback.extensions.PlaybackExtension;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
@@ -63,11 +63,11 @@ public abstract class SerialiserFlavorBase {
 		 
 	  ==============================================*/
 
-	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList, List<PlaybackExtension> extensionList) {
+	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList, List<PlaybackFileCommandExtension> extensionList) {
 		List<String> out = new ArrayList<>();
 		out.add(headerStart());
 		serialiseFlavorName(out);
-		serialiseExtensionNames(out, extensionList);
+//		serialiseControlByteNames(out, extensionList);
 		serialiseMetadata(out, metadataList);
 		out.add(headerEnd());
 		return out;
@@ -77,9 +77,9 @@ public abstract class SerialiserFlavorBase {
 		out.add("Flavor: " + flavorName());
 	}
 
-	protected void serialiseExtensionNames(List<String> out, List<PlaybackExtension> extensionList) {
+	protected void serialiseControlByteNames(List<String> out, List<PlaybackFileCommandExtension> extensionList) {
 		List<String> stringlist = new ArrayList<>();
-		extensionList.forEach(extension -> stringlist.add(extension.extensionName()));
+		extensionList.forEach(extension -> stringlist.add(extension.name()));
 		out.add("Extensions: " + String.join(", ", stringlist));
 	}
 
@@ -100,18 +100,18 @@ public abstract class SerialiserFlavorBase {
 		});
 	}
 
-	public BigArrayList<String> serialise(BigArrayList<TickInputContainer> inputs) {
+	public BigArrayList<String> serialise(BigArrayList<TickContainer> inputs) {
 		BigArrayList<String> out = new BigArrayList<>();
 
 		for (int i = 0; i < inputs.size(); i++) {
 			currentTick = i;
-			TickInputContainer container = inputs.get(i);
+			TickContainer container = inputs.get(i);
 			serialiseContainer(out, container);
 		}
 		return out;
 	}
 
-	protected void serialiseContainer(BigArrayList<String> out, TickInputContainer container) {
+	protected void serialiseContainer(BigArrayList<String> out, TickContainer container) {
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
@@ -267,10 +267,10 @@ public abstract class SerialiserFlavorBase {
 	 * 
 	 * @param lines    The serialised lines of the TASfile
 	 * @param startPos The position when the header ends and the inputs start
-	 * @return A list of {@link TickInputContainer}
+	 * @return A list of {@link TickContainer}
 	 */
-	public BigArrayList<TickInputContainer> deserialise(BigArrayList<String> lines, long startPos) {
-		BigArrayList<TickInputContainer> out = new BigArrayList<>();
+	public BigArrayList<TickContainer> deserialise(BigArrayList<String> lines, long startPos) {
+		BigArrayList<TickContainer> out = new BigArrayList<>();
 
 		for (long i = startPos; i < lines.size(); i++) {
 			List<String> tick = new ArrayList<>();
@@ -310,7 +310,7 @@ public abstract class SerialiserFlavorBase {
 		return startPos + counter - 1;
 	}
 
-	protected void deserialiseContainer(BigArrayList<TickInputContainer> out, List<String> containerLines) {
+	protected void deserialiseContainer(BigArrayList<TickContainer> out, List<String> containerLines) {
 
 		List<String> commentLines = new ArrayList<>();
 		List<String> tickLines = new ArrayList<>();
@@ -329,7 +329,7 @@ public abstract class SerialiserFlavorBase {
 		VirtualCameraAngle cameraAngle = deserialiseCameraAngle(cameraAngleStrings);
 		// TODO Store commentsAtEnd
 
-		out.add(new TickInputContainer(keyboard, mouse, cameraAngle));
+		out.add(new TickContainer(keyboard, mouse, cameraAngle));
 	}
 
 	/**

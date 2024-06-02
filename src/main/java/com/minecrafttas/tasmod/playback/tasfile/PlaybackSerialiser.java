@@ -5,7 +5,7 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
 import com.minecrafttas.tasmod.playback.ControlByteHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.util.FileThread;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
@@ -130,7 +130,7 @@ public class PlaybackSerialiser {
 //				 + "#############################################################################################################\n"
 //				 + "#Comments start with \"//\" at the start of the line, comments with # will not be saved\n");
 		
-		BigArrayList<TickInputContainer> ticks = container.getInputs();
+		BigArrayList<TickContainer> ticks = container.getInputs();
 		Map<Integer, List<Pair<String, String[]>>> cbytes= container.getControlBytes();
 //		Map<Integer, List<String>> comments = container.getComments();
 		
@@ -157,7 +157,7 @@ public class PlaybackSerialiser {
 			}
 			
 			// Add a data line
-			TickInputContainer tickInput = ticks.get(i);
+			TickContainer tickInput = ticks.get(i);
 			fileThread.addLine(tickInput.toString() + "~&\t\t\t\t//Monitoring:"+container.desyncMonitor.get(i)+"\n");
 		}
 		fileThread.close();
