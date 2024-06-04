@@ -434,8 +434,8 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		List<String> expectedComments = new ArrayList<>();
 		List<String> expectedTicks = new ArrayList<>();
-		expectedComments.add("// $interpolation(on);");
-		expectedComments.add("// Test");
+		expectedComments.add("$interpolation(on);");
+		expectedComments.add("Test");
 
 		expectedTicks.add("55|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
 		expectedTicks.add("\t1||RC;-15,1580,658|11.85;-2.74799");

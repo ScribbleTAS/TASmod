@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.CommentContainer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
@@ -67,7 +68,7 @@ public abstract class SerialiserFlavorBase {
 		List<String> out = new ArrayList<>();
 		out.add(headerStart());
 		serialiseFlavorName(out);
-//		serialiseControlByteNames(out, extensionList);
+		//		serialiseControlByteNames(out, extensionList);
 		serialiseMetadata(out, metadataList);
 		out.add(headerEnd());
 		return out;
@@ -115,8 +116,12 @@ public abstract class SerialiserFlavorBase {
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
+		List<String> serialisedInlineCommments = serialiseInlineComments(container.getComments());
+		List<String> serialisedEndlineComments = serialiseEndlineComments(container.getComments());
 
-		mergeInputs(out, serialisedKeyboard, serialisedMouse, serialisedCameraAngle);
+		addAll(out, serialisedInlineCommments);
+
+		mergeInputs(out, serialisedKeyboard, serialisedMouse, serialisedCameraAngle, serialisedEndlineComments);
 	}
 
 	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
@@ -144,16 +149,39 @@ public abstract class SerialiserFlavorBase {
 		return out;
 	}
 
-	protected void mergeInputs(BigArrayList<String> out, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle) {
+	protected List<String> serialiseInlineComments(CommentContainer container) {
+		List<String> out = new ArrayList<>();
+		if(container == null) {
+			return out;
+		}
+		for (String comment : container.getInlineComments()) {
+			if (comment != null) {
+				out.add("// " + comment);
+			}
+		}
+		return out;
+	}
+
+	protected List<String> serialiseEndlineComments(CommentContainer container) {
+		return serialiseInlineComments(container);
+	}
+
+	protected void mergeInputs(BigArrayList<String> out, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> serialisedEndlineComments) {
 		Queue<String> keyboardQueue = new LinkedBlockingQueue<>(serialisedKeyboard);
 		Queue<String> mouseQueue = new LinkedBlockingQueue<>(serialisedMouse);
 		Queue<String> cameraAngleQueue = new LinkedBlockingQueue<>(serialisedCameraAngle);
+		Queue<String> endlineQueue = new LinkedBlockingQueue<>(serialisedEndlineComments);
 
 		String kb = getOrEmpty(keyboardQueue.poll());
 		String ms = getOrEmpty(mouseQueue.poll());
 		String ca = getOrEmpty(cameraAngleQueue.poll());
 
-		out.add(String.format("%s|%s|%s|%s", currentTick, kb, ms, ca));
+		String elc = getOrEmpty(endlineQueue.poll());
+		if (!elc.isEmpty()) {
+			elc = "\t\t" + elc;
+		}
+
+		out.add(String.format("%s|%s|%s|%s%s", currentTick, kb, ms, ca, elc));
 
 		currentSubtick = 0;
 		while (!keyboardQueue.isEmpty() || !mouseQueue.isEmpty() || !cameraAngleQueue.isEmpty()) {
@@ -197,7 +225,7 @@ public abstract class SerialiserFlavorBase {
 	public void deserialiseHeader(List<String> headerLines, List<PlaybackMetadata> metadataList, List<String> activeExtensionList) {
 		metadataList.addAll(deserialiseMetadata(headerLines));
 	}
-	
+
 	public List<String> extractHeader(BigArrayList<String> lines) {
 		List<String> extracted = new ArrayList<>();
 
@@ -228,7 +256,7 @@ public abstract class SerialiserFlavorBase {
 		}
 		throw new PlaybackLoadException("Extensions value was not found in the header");
 	}
-	
+
 	public List<PlaybackMetadata> deserialiseMetadata(List<String> headerLines) {
 		List<PlaybackMetadata> out = new ArrayList<>();
 
@@ -237,14 +265,14 @@ public abstract class SerialiserFlavorBase {
 
 		for (String headerLine : headerLines) {
 
-			Matcher nameMatcher = extract("^#{3} (.+)", headerLine); 		// If the line starts with ###, an optional space char after and then capture the name 
-			Matcher valueMatcher = extract("^([^#].*?):\\s*(.+)", headerLine);	// If the line doesn't start with a #, then the key of the metadata, then a : then any or no number of whitespace chars, then the value of the metadata
-			
+			Matcher nameMatcher = extract("^#{3} (.+)", headerLine); // If the line starts with ###, an optional space char after and then capture the name 
+			Matcher valueMatcher = extract("^([^#].*?):\\s*(.+)", headerLine); // If the line doesn't start with a #, then the key of the metadata, then a : then any or no number of whitespace chars, then the value of the metadata
+
 			if (nameMatcher.find()) {
 
 				if (metadataName != null && !metadataName.equals(nameMatcher.group(1))) { // If metadataName is null, then the first section begins
-																						// If metadataName is different than the newMetadataName,
-																						// then a new section begins and we first need to store the old.
+																							// If metadataName is different than the newMetadataName,
+																							// then a new section begins and we first need to store the old.
 					out.add(PlaybackMetadata.fromHashMap(metadataName, values));
 					values.clear();
 				}
@@ -255,10 +283,10 @@ public abstract class SerialiserFlavorBase {
 				values.put(valueMatcher.group(1), valueMatcher.group(2));
 			}
 		}
-		
-		if(metadataName!=null)
+
+		if (metadataName != null)
 			out.add(PlaybackMetadata.fromHashMap(metadataName, values));
-		
+
 		return out;
 	}
 
@@ -312,22 +340,21 @@ public abstract class SerialiserFlavorBase {
 
 	protected void deserialiseContainer(BigArrayList<TickContainer> out, List<String> containerLines) {
 
-		List<String> commentLines = new ArrayList<>();
 		List<String> tickLines = new ArrayList<>();
+		List<String> inlineComments = new ArrayList<>();
 
-		splitContainer(containerLines, commentLines, tickLines);
-
+		splitContainer(containerLines, inlineComments, tickLines);
+		
 		List<String> keyboardStrings = new ArrayList<>();
 		List<String> mouseStrings = new ArrayList<>();
 		List<String> cameraAngleStrings = new ArrayList<>();
-		List<String> commentsAtEnd = new ArrayList<>();
+		List<String> endlineComments = new ArrayList<>();
 
-		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, commentsAtEnd);
+		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments);
 
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
 		VirtualCameraAngle cameraAngle = deserialiseCameraAngle(cameraAngleStrings);
-		// TODO Store commentsAtEnd
 
 		out.add(new TickContainer(keyboard, mouse, cameraAngle));
 	}
@@ -340,11 +367,19 @@ public abstract class SerialiserFlavorBase {
 	protected void splitContainer(List<String> lines, List<String> comments, List<String> tick) {
 		for (String line : lines) {
 			if (contains(singleComment(), line)) {
-				comments.add(line);
+				comments.add(deserialiseInlineComment(line));
 			} else {
 				tick.add(line);
 			}
 		}
+	}
+	
+	protected String deserialiseInlineComment(String comment) {
+		return extract("^// ?(.+)", comment, 1);
+	}
+	
+	protected String deserialiseEndlineComment(String comment) {
+		return deserialiseInlineComment(comment);
 	}
 
 	protected VirtualKeyboard deserialiseKeyboard(List<String> keyboardStrings) {

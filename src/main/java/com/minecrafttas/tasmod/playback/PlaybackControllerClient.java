@@ -661,10 +661,29 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	
 	public static class CommentContainer implements Serializable{
 		
-		List<String> inlineComments = new ArrayList<>();
-		List<String> endlineComments = new ArrayList<>();
+		List<String> inlineComments;
+		List<String> endlineComments;
 		
+		public CommentContainer() {
+			this(new ArrayList<>(), new ArrayList<>());
+		}
 		
+		public CommentContainer(List<String> inlineComments, List<String> endlineComments) {
+			this.inlineComments=inlineComments;
+			this.endlineComments=endlineComments;
+		}
+		
+		public void addInlineComment(String inlineComment) {
+			inlineComments.add(inlineComment);
+		}
+		
+		public void addEndlineComment(String endlineComment) {
+			endlineComments.add(endlineComment);
+		}
+		
+		public List<String> getInlineComments() {
+			return inlineComments;
+		}
 	}
 
 	/**
