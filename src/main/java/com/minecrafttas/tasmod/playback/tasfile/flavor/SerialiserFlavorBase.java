@@ -68,7 +68,7 @@ public abstract class SerialiserFlavorBase {
 		List<String> out = new ArrayList<>();
 		out.add(headerStart());
 		serialiseFlavorName(out);
-		//		serialiseControlByteNames(out, extensionList);
+		serialiseFileCommandNames(out, extensionList);
 		serialiseMetadata(out, metadataList);
 		out.add(headerEnd());
 		return out;
@@ -78,10 +78,10 @@ public abstract class SerialiserFlavorBase {
 		out.add("Flavor: " + flavorName());
 	}
 
-	protected void serialiseControlByteNames(List<String> out, List<PlaybackFileCommandExtension> extensionList) {
+	protected void serialiseFileCommandNames(List<String> out, List<PlaybackFileCommandExtension> extensionList) {
 		List<String> stringlist = new ArrayList<>();
 		extensionList.forEach(extension -> stringlist.add(extension.name()));
-		out.add("Extensions: " + String.join(", ", stringlist));
+		out.add("FC_Extensions: " + String.join(", ", stringlist));
 	}
 
 	protected void serialiseMetadata(List<String> out, List<PlaybackMetadata> metadataList) {
@@ -101,23 +101,23 @@ public abstract class SerialiserFlavorBase {
 		});
 	}
 
-	public BigArrayList<String> serialise(BigArrayList<TickContainer> inputs) {
+	public BigArrayList<String> serialise(BigArrayList<TickContainer> inputs, List<PlaybackFileCommandExtension> filecommandextensionList) {
 		BigArrayList<String> out = new BigArrayList<>();
 
 		for (int i = 0; i < inputs.size(); i++) {
 			currentTick = i;
 			TickContainer container = inputs.get(i);
-			serialiseContainer(out, container);
+			serialiseContainer(out, container, filecommandextensionList);
 		}
 		return out;
 	}
 
-	protected void serialiseContainer(BigArrayList<String> out, TickContainer container) {
+	protected void serialiseContainer(BigArrayList<String> out, TickContainer container, List<PlaybackFileCommandExtension> filecommandextensionList) {
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
-		List<String> serialisedInlineCommments = serialiseInlineComments(container.getComments());
-		List<String> serialisedEndlineComments = serialiseEndlineComments(container.getComments());
+		List<String> serialisedInlineCommments = serialiseInlineComments(container.getComments(), filecommandextensionList);
+		List<String> serialisedEndlineComments = serialiseEndlineComments(container.getComments(), filecommandextensionList);
 
 		addAll(out, serialisedInlineCommments);
 
@@ -149,9 +149,9 @@ public abstract class SerialiserFlavorBase {
 		return out;
 	}
 
-	protected List<String> serialiseInlineComments(CommentContainer container) {
+	protected List<String> serialiseInlineComments(CommentContainer container, List<PlaybackFileCommandExtension> filecommandextensionList) {
 		List<String> out = new ArrayList<>();
-		if(container == null) {
+		if (container == null) {
 			return out;
 		}
 		for (String comment : container.getInlineComments()) {
@@ -162,8 +162,17 @@ public abstract class SerialiserFlavorBase {
 		return out;
 	}
 
-	protected List<String> serialiseEndlineComments(CommentContainer container) {
-		return serialiseInlineComments(container);
+	protected List<String> serialiseEndlineComments(CommentContainer container, List<PlaybackFileCommandExtension> filecommandextensionList) {
+		List<String> out = new ArrayList<>();
+		if (container == null) {
+			return out;
+		}
+		for (String comment : container.getInlineComments()) {
+			if (comment != null) {
+				out.add("// " + comment);
+			}
+		}
+		return out;
 	}
 
 	protected void mergeInputs(BigArrayList<String> out, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> serialisedEndlineComments) {
@@ -223,7 +232,9 @@ public abstract class SerialiserFlavorBase {
 	}
 
 	public void deserialiseHeader(List<String> headerLines, List<PlaybackMetadata> metadataList, List<String> activeExtensionList) {
+
 		metadataList.addAll(deserialiseMetadata(headerLines));
+		deserialiseFileCommandNames(headerLines);
 	}
 
 	public List<String> extractHeader(BigArrayList<String> lines) {
@@ -243,9 +254,9 @@ public abstract class SerialiserFlavorBase {
 		throw new PlaybackLoadException("Cannot find the end of the header");
 	}
 
-	public List<String> deserialiseExtensions(List<String> headerLines) {
+	public List<String> deserialiseFileCommandNames(List<String> headerLines) {
 		for (String line : headerLines) {
-			Matcher matcher = extract("Extensions: ?(.*)", line);
+			Matcher matcher = extract("FC_Extensions: ?(.*)", line);
 
 			if (matcher.find()) {
 				String extensionStrings = matcher.group(1);
@@ -344,7 +355,7 @@ public abstract class SerialiserFlavorBase {
 		List<String> inlineComments = new ArrayList<>();
 
 		splitContainer(containerLines, inlineComments, tickLines);
-		
+
 		List<String> keyboardStrings = new ArrayList<>();
 		List<String> mouseStrings = new ArrayList<>();
 		List<String> cameraAngleStrings = new ArrayList<>();
@@ -355,8 +366,9 @@ public abstract class SerialiserFlavorBase {
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
 		VirtualCameraAngle cameraAngle = deserialiseCameraAngle(cameraAngleStrings);
+		CommentContainer comments = new CommentContainer(inlineComments, endlineComments);
 
-		out.add(new TickContainer(keyboard, mouse, cameraAngle));
+		out.add(new TickContainer(keyboard, mouse, cameraAngle, comments));
 	}
 
 	/**
@@ -373,11 +385,11 @@ public abstract class SerialiserFlavorBase {
 			}
 		}
 	}
-	
+
 	protected String deserialiseInlineComment(String comment) {
 		return extract("^// ?(.+)", comment, 1);
 	}
-	
+
 	protected String deserialiseEndlineComment(String comment) {
 		return deserialiseInlineComment(comment);
 	}

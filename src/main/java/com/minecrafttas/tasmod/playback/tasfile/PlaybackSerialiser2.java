@@ -61,16 +61,15 @@ public class PlaybackSerialiser2 {
 		writerThread.start();
 
 		SerialiserFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorname);
-
-		List<PlaybackMetadata> metadataList = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
 		
-		List<PlaybackFileCommandExtension> extensionList = TASmodRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
+		List<PlaybackMetadata> metadataList = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
+		List<PlaybackFileCommandExtension> filecommandextensionList = TASmodRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
 
-		for (String line : flavor.serialiseHeader(metadataList, extensionList)) {
+		for (String line : flavor.serialiseHeader(metadataList, filecommandextensionList)) {
 			writerThread.addLine(line);
 		}
 
-		BigArrayList<String> tickLines = flavor.serialise(container);
+		BigArrayList<String> tickLines = flavor.serialise(container, filecommandextensionList);
 		for (long i = 0; i < tickLines.size(); i++) {
 			writerThread.addLine(tickLines.get(i));
 		}
@@ -155,7 +154,7 @@ public class PlaybackSerialiser2 {
 		reader.close();
 		
 		// Deserialise Header
-		List<String> headerLines = new ArrayList<>();
+		List<String> headerLines = flavor.extractHeader(lines);
 		List<PlaybackMetadata> deserialisedMetadata = new ArrayList<>();
 		List<String> deserialisedExtensionNames = new ArrayList<>();
 		

@@ -163,7 +163,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		// Create container and fill actual
 		TickContainer container = new TickContainer(keyboard, mouse, angle);
 		BigArrayList<String> actual = new BigArrayList<>();
-		serialiseContainer(actual, container);
+		serialiseContainer(actual, container, new ArrayList<>());
 
 		// Fill expected
 		BigArrayList<String> expected = new BigArrayList<>();

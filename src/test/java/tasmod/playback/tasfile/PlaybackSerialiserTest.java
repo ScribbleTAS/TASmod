@@ -2,6 +2,7 @@ package tasmod.playback.tasfile;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -104,7 +105,6 @@ public class PlaybackSerialiserTest {
 	}
 	
 	@Test
-	@Disabled
 	void testSerialiser() {
 		BigArrayList<TickContainer> expected = new BigArrayList<>();
 		
@@ -161,7 +161,7 @@ public class PlaybackSerialiserTest {
 			assertBigArrayList(expected, actual);
 			assertEquals("testing", testMetadata.actual);
 		} catch (PlaybackLoadException | IOException e) {
-			e.printStackTrace();
+			fail(e);
 		} finally {
 			file.delete();
 		}
