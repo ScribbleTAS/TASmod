@@ -1,6 +1,7 @@
 package com.minecrafttas.tasmod.playback.tasfile.flavor;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -18,6 +19,7 @@ import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
+import com.minecrafttas.tasmod.util.TASmodRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
@@ -118,40 +120,21 @@ public abstract class SerialiserFlavorBase {
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
-		List<String> serialisedInlineCommments = serialiseInlineComments(container.getComments());
-		List<String> serialisedEndlineComments = serialiseEndlineComments(container.getComments());
-		List<PlaybackFileCommand> fileCommandsInline = serialiseFileCommandsInline(container, filecommandExtensionList);
-		List<PlaybackFileCommand> fileCommandsEndline = serialiseFileCommandsEndline(container, filecommandExtensionList);
 		
-		for (int i = 0; i < fileCommandsInline.size(); i++) {
-			
-		}
+		List<List<PlaybackFileCommand>> fileCommandsInline = new ArrayList<>();
+		List<List<PlaybackFileCommand>> fileCommandsEndline = new ArrayList<>();
+		
+		List<String> serialisedInlineCommments = serialiseInlineComments(container.getComments(), fileCommandsInline);
+		List<String> serialisedEndlineComments = serialiseEndlineComments(container.getComments(), fileCommandsEndline);
+
 		
 		addAll(out, serialisedInlineCommments);
 
 		mergeInputs(out, serialisedKeyboard, serialisedMouse, serialisedCameraAngle, serialisedEndlineComments);
 	}
 	
-	protected List<PlaybackFileCommand> serialiseFileCommandsInline(TickContainer container, List<PlaybackFileCommandExtension> filecommandExtensionList) {
-		List<PlaybackFileCommand> fileCommands = new ArrayList<>();
-		for (PlaybackFileCommandExtension playbackFileCommandExtension : filecommandExtensionList) {
-			PlaybackFileCommand command = playbackFileCommandExtension.onSerialiseInlineComment(currentTick, container);
-			if (command != null) {
-				fileCommands.add(command);
-			}
-		}
-		return fileCommands;
-	}
-	
-	protected List<PlaybackFileCommand> serialiseFileCommandsEndline(TickContainer container, List<PlaybackFileCommandExtension> filecommandExtensionList){
-		List<PlaybackFileCommand> fileCommands = new ArrayList<>();
-		for (PlaybackFileCommandExtension playbackFileCommandExtension : filecommandExtensionList) {
-			PlaybackFileCommand command = playbackFileCommandExtension.onSerialiseEndlineComment(currentTick, container);
-			if (command != null) {
-				fileCommands.add(command);
-			}
-		}
-		return fileCommands;
+	protected String serialiseFileCommand(PlaybackFileCommand fileCommand) {
+		return String.format("$%s(%s);", fileCommand.getName(),  String.join(", ", fileCommand.getArgs()));
 	}
 
 	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
@@ -179,7 +162,7 @@ public abstract class SerialiserFlavorBase {
 		return out;
 	}
 
-	protected List<String> serialiseInlineComments(CommentContainer container) {
+	protected List<String> serialiseInlineComments(CommentContainer container, List<List<PlaybackFileCommand>> fileCommandsInline) {
 		List<String> out = new ArrayList<>();
 		if (container == null) {
 			return out;
@@ -192,8 +175,8 @@ public abstract class SerialiserFlavorBase {
 		return out;
 	}
 
-	protected List<String> serialiseEndlineComments(CommentContainer container) {
-		return serialiseInlineComments(container);
+	protected List<String> serialiseEndlineComments(CommentContainer container, List<List<PlaybackFileCommand>> fileCommandsEndline) {
+		return serialiseInlineComments(container, fileCommandsEndline);
 	}
 
 	protected void mergeInputs(BigArrayList<String> out, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> serialisedEndlineComments) {
