@@ -31,8 +31,12 @@ public class PlaybackFileCommand{
 		
 		public void onPlayback(long tick, TickContainer container) {};
 
-		public String onSerialiseSingleComment(long tick, String line) {
-			return line;
+		public PlaybackFileCommand onSerialiseInlineComment(long tick, TickContainer container) {
+			return null;
+		}
+
+		public PlaybackFileCommand onSerialiseEndlineComment(long currentTick, TickContainer container) {
+			return null;
 		}
 		
 		public void onDeserialiseSingleComment(long tick, String line) {}
@@ -52,6 +56,7 @@ public class PlaybackFileCommand{
 				onDisable();
 			this.enabled = enabled;
 		}
+
 	}
 }
 
