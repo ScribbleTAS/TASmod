@@ -10,12 +10,11 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
-import com.minecrafttas.tasmod.util.TASmodRegistry;
 
-public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick  {
+public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick {
 
 	private List<PlaybackFileCommandExtension> enabledExtensions = new ArrayList<>();
-	
+
 	public PlaybackFileCommandsRegistry() {
 		super(new LinkedHashMap<>());
 	}
@@ -56,16 +55,29 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 		extension.setEnabled(enabled);
 		enabledExtensions = getEnabled();
 	}
-	
+
+	private void disableAll() {
+		REGISTRY.forEach((name, value) -> {
+			value.setEnabled(false);
+		});
+	}
+
+	public void setEnabled(List<String> extensionNames) {
+		disableAll();
+		for (String name : extensionNames) {
+			setEnabled(name, true);
+		}
+	}
+
 	public List<PlaybackFileCommandExtension> getEnabled() {
 		List<PlaybackFileCommandExtension> out = new ArrayList<>();
-		
-		for(PlaybackFileCommandExtension element : REGISTRY.values()) {
-			if(element.isEnabled()) {
+
+		for (PlaybackFileCommandExtension element : REGISTRY.values()) {
+			if (element.isEnabled()) {
 				out.add(element);
 			}
 		}
-		
+
 		return out;
 	}
 
@@ -90,30 +102,30 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 	public List<List<PlaybackFileCommand>> handleOnSerialiseEndline(long currentTick, TickContainer container) {
 		return onSerialise(currentTick, container, PlaybackFileCommandExtension::getQueueEndlineComment);
 	}
-	
-	private List<List<PlaybackFileCommand>> onSerialise(long currentTick, TickContainer container, OnSerialise serialisationMethod){
+
+	private List<List<PlaybackFileCommand>> onSerialise(long currentTick, TickContainer container, OnSerialise serialisationMethod) {
 		List<List<PlaybackFileCommand>> out = new ArrayList<>();
 		List<PlaybackFileCommandExtension> enabledExtensions = getEnabled();
-		
+
 		List<Queue<PlaybackFileCommand>> commandQueues = new ArrayList<>();
 		for (PlaybackFileCommandExtension playbackFileCommandExtension : enabledExtensions) {
 			Queue<PlaybackFileCommand> fileCommandQueue = serialisationMethod.accept(playbackFileCommandExtension, currentTick, container);
-			if(fileCommandQueue!=null)
+			if (fileCommandQueue != null)
 				commandQueues.add(fileCommandQueue);
 		}
-		
+
 		int biggestSize = 0;
 		for (Queue<PlaybackFileCommand> queue : commandQueues) {
-			if(queue.size()>biggestSize) {
+			if (queue.size() > biggestSize) {
 				biggestSize = queue.size();
 			}
 		}
-		
+
 		for (int i = 0; i < biggestSize; i++) {
 			List<PlaybackFileCommand> commandListForOneLine = new ArrayList<>();
 			for (Queue<PlaybackFileCommand> queue : commandQueues) {
 				PlaybackFileCommand fc = queue.poll();
-				if(fc!=null)
+				if (fc != null)
 					commandListForOneLine.add(fc);
 			}
 			out.add(commandListForOneLine);
@@ -122,7 +134,14 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 	}
 
 	@FunctionalInterface
-	private interface OnSerialise{
+	private interface OnSerialise {
 		Queue<PlaybackFileCommand> accept(PlaybackFileCommandExtension extension, long currentTick, TickContainer container);
+	}
+
+	public void handleOnDeserialiseInline(long currentTick, TickContainer deserialisedContainer, List<List<PlaybackFileCommand>> inlineFileCommands) { // TODO Add deserialisation
+	}
+
+	public void handleOnDeserialiseEndline(long currentTick, TickContainer deserialisedContainer, List<List<PlaybackFileCommand>> endlineFileCommands) {
+
 	}
 }

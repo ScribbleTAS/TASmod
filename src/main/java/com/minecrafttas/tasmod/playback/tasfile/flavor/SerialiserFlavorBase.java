@@ -119,30 +119,29 @@ public abstract class SerialiserFlavorBase {
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
-		
+
 		List<List<PlaybackFileCommand>> fileCommandsInline = TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseInline(currentTick, container);
 		List<List<PlaybackFileCommand>> fileCommandsEndline = TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseEndline(currentTick, container);
-		
+
 		CommentContainer comments = container.getComments();
-		if(comments == null) {
+		if (comments == null) {
 			comments = new CommentContainer(new ArrayList<>(), new ArrayList<>());
 		}
 		List<String> serialisedInlineCommments = serialiseInlineComments(comments.getInlineComments(), fileCommandsInline);
 		List<String> serialisedEndlineComments = serialiseEndlineComments(comments.getEndlineComments(), fileCommandsEndline);
 
-		
 		addAll(out, serialisedInlineCommments);
 
 		mergeInputs(out, serialisedKeyboard, serialisedMouse, serialisedCameraAngle, serialisedEndlineComments);
 	}
-	
+
 	protected String serialiseFileCommand(PlaybackFileCommand fileCommand) {
-		return String.format("$%s(%s);", fileCommand.getName(),  String.join(", ", fileCommand.getArgs()));
+		return String.format("$%s(%s);", fileCommand.getName(), String.join(", ", fileCommand.getArgs()));
 	}
-	
+
 	protected String serialiseMultipleFileCommands(List<PlaybackFileCommand> fileCommands) {
 		List<String> serialisedCommands = new ArrayList<>();
-		for(PlaybackFileCommand command : fileCommands) {
+		for (PlaybackFileCommand command : fileCommands) {
 			serialisedCommands.add(serialiseFileCommand(command));
 		}
 		return String.join(" ", serialisedCommands);
@@ -378,24 +377,30 @@ public abstract class SerialiserFlavorBase {
 
 	protected void deserialiseContainer(BigArrayList<TickContainer> out, List<String> containerLines) {
 
-		List<String> tickLines = new ArrayList<>();
 		List<String> inlineComments = new ArrayList<>();
-
-		splitContainer(containerLines, inlineComments, tickLines);
+		List<String> tickLines = new ArrayList<>();
+		List<List<PlaybackFileCommand>> inlineFileCommands = new ArrayList<>();
+		splitContainer(containerLines, inlineComments, tickLines, inlineFileCommands);
 
 		List<String> keyboardStrings = new ArrayList<>();
 		List<String> mouseStrings = new ArrayList<>();
 		List<String> cameraAngleStrings = new ArrayList<>();
 		List<String> endlineComments = new ArrayList<>();
+		List<List<PlaybackFileCommand>> endlineFileCommands = new ArrayList<>();
 
-		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments);
+		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments, endlineFileCommands);
 
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
 		VirtualCameraAngle cameraAngle = deserialiseCameraAngle(cameraAngleStrings);
 		CommentContainer comments = new CommentContainer(inlineComments, endlineComments);
 
-		out.add(new TickContainer(keyboard, mouse, cameraAngle, comments));
+		TickContainer deserialisedContainer = new TickContainer(keyboard, mouse, cameraAngle, comments);
+		
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
+		
+		out.add(deserialisedContainer);
 	}
 
 	/**
@@ -403,22 +408,36 @@ public abstract class SerialiserFlavorBase {
 	 * 
 	 * @param lines
 	 */
-	protected void splitContainer(List<String> lines, List<String> comments, List<String> tick) {
+	protected void splitContainer(List<String> lines, List<String> comments, List<String> tick, List<List<PlaybackFileCommand>> inlineFileCommands) {
 		for (String line : lines) {
+			List<PlaybackFileCommand> deserialisedFileCommand = new ArrayList<>();
 			if (contains(singleComment(), line)) {
-				comments.add(deserialiseInlineComment(line));
+				comments.add(deserialiseInlineComment(line, deserialisedFileCommand));
 			} else {
 				tick.add(line);
 			}
+			inlineFileCommands.add(deserialisedFileCommand);
 		}
 	}
 
-	protected String deserialiseInlineComment(String comment) {
+	protected String deserialiseInlineComment(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+		comment = deserialiseFileCommands(comment, deserialisedFileCommands);
 		return extract("^// ?(.+)", comment, 1);
 	}
 
-	protected String deserialiseEndlineComment(String comment) {
-		return deserialiseInlineComment(comment);
+	protected String deserialiseEndlineComment(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+		return deserialiseInlineComment(comment, deserialisedFileCommands);
+	}
+
+	protected String deserialiseFileCommands(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+		Matcher matcher = extract("\\$(.+?)\\((.*?)\\);", comment);
+		while (matcher.find()) {
+			String name = matcher.group(1);
+			String[] args = matcher.group(2).split(", ?");
+			deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
+			comment = matcher.replaceFirst("");
+		}
+		return comment;
 	}
 
 	protected VirtualKeyboard deserialiseKeyboard(List<String> keyboardStrings) {
@@ -528,17 +547,7 @@ public abstract class SerialiserFlavorBase {
 		return out;
 	}
 
-	protected void extractCommentAtEnd(List<String> commentsAtEnd, String line, int startPos) {
-		Matcher commentMatcher = extract(endlineComment(), line);
-		if (commentMatcher.find(startPos)) {
-			String comment = commentMatcher.group(1);
-			commentsAtEnd.add(comment);
-		} else {
-			commentsAtEnd.add(null);
-		}
-	}
-
-	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd) {
+	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd, List<List<PlaybackFileCommand>> endlineFileCommands) {
 
 		for (String line : lines) {
 			Matcher tickMatcher = extract("^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?", line);
@@ -555,8 +564,11 @@ public abstract class SerialiserFlavorBase {
 			} else {
 				throw new PlaybackLoadException("Cannot find inputs in line %s", line);
 			}
-
-			extractCommentAtEnd(commentsAtEnd, line, tickMatcher.group(0).length());
+			
+			List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
+			String endlineComment = line.substring(tickMatcher.group(0).length());
+			commentsAtEnd.add(deserialiseEndlineComment(endlineComment, deserialisedFileCommands));
+			endlineFileCommands.add(deserialisedFileCommands);
 		}
 	}
 
