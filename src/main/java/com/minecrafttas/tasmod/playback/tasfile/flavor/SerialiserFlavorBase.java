@@ -1,13 +1,12 @@
 package com.minecrafttas.tasmod.playback.tasfile.flavor;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -105,27 +104,31 @@ public abstract class SerialiserFlavorBase {
 		});
 	}
 
-	public BigArrayList<String> serialise(BigArrayList<TickContainer> inputs, List<PlaybackFileCommandExtension> filecommandextensionList) {
+	public BigArrayList<String> serialise(BigArrayList<TickContainer> inputs) {
 		BigArrayList<String> out = new BigArrayList<>();
 
 		for (int i = 0; i < inputs.size(); i++) {
 			currentTick = i;
 			TickContainer container = inputs.get(i);
-			serialiseContainer(out, container, filecommandextensionList);
+			serialiseContainer(out, container);
 		}
 		return out;
 	}
 
-	protected void serialiseContainer(BigArrayList<String> out, TickContainer container, List<PlaybackFileCommandExtension> filecommandExtensionList) {
+	protected void serialiseContainer(BigArrayList<String> out, TickContainer container) {
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
 		
-		List<List<PlaybackFileCommand>> fileCommandsInline = new ArrayList<>();
-		List<List<PlaybackFileCommand>> fileCommandsEndline = new ArrayList<>();
+		List<List<PlaybackFileCommand>> fileCommandsInline = TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseInline(currentTick, container);
+		List<List<PlaybackFileCommand>> fileCommandsEndline = TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseEndline(currentTick, container);
 		
-		List<String> serialisedInlineCommments = serialiseInlineComments(container.getComments(), fileCommandsInline);
-		List<String> serialisedEndlineComments = serialiseEndlineComments(container.getComments(), fileCommandsEndline);
+		CommentContainer comments = container.getComments();
+		if(comments == null) {
+			comments = new CommentContainer(new ArrayList<>(), new ArrayList<>());
+		}
+		List<String> serialisedInlineCommments = serialiseInlineComments(comments.getInlineComments(), fileCommandsInline);
+		List<String> serialisedEndlineComments = serialiseEndlineComments(comments.getEndlineComments(), fileCommandsEndline);
 
 		
 		addAll(out, serialisedInlineCommments);
@@ -135,6 +138,14 @@ public abstract class SerialiserFlavorBase {
 	
 	protected String serialiseFileCommand(PlaybackFileCommand fileCommand) {
 		return String.format("$%s(%s);", fileCommand.getName(),  String.join(", ", fileCommand.getArgs()));
+	}
+	
+	protected String serialiseMultipleFileCommands(List<PlaybackFileCommand> fileCommands) {
+		List<String> serialisedCommands = new ArrayList<>();
+		for(PlaybackFileCommand command : fileCommands) {
+			serialisedCommands.add(serialiseFileCommand(command));
+		}
+		return String.join(" ", serialisedCommands);
 	}
 
 	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
@@ -162,21 +173,33 @@ public abstract class SerialiserFlavorBase {
 		return out;
 	}
 
-	protected List<String> serialiseInlineComments(CommentContainer container, List<List<PlaybackFileCommand>> fileCommandsInline) {
+	protected List<String> serialiseInlineComments(List<String> inlineComments, List<List<PlaybackFileCommand>> fileCommandsInline) {
 		List<String> out = new ArrayList<>();
-		if (container == null) {
+		if (inlineComments == null) {
 			return out;
 		}
-		for (String comment : container.getInlineComments()) {
+
+		Queue<List<PlaybackFileCommand>> fcListQueue = new ConcurrentLinkedQueue<>(fileCommandsInline);
+
+		for (String comment : inlineComments) {
+			String serialisedFileCommand = serialiseMultipleFileCommands(fcListQueue.poll());
+
 			if (comment != null) {
-				out.add("// " + comment);
+				out.add(String.format("// %s %s", serialisedFileCommand, comment));
 			}
 		}
+
+		while (!fcListQueue.isEmpty()) {
+			String serialisedFileCommand = serialiseMultipleFileCommands(fcListQueue.poll());
+
+			out.add(String.format("// %s", serialisedFileCommand));
+		}
+
 		return out;
 	}
 
-	protected List<String> serialiseEndlineComments(CommentContainer container, List<List<PlaybackFileCommand>> fileCommandsEndline) {
-		return serialiseInlineComments(container, fileCommandsEndline);
+	protected List<String> serialiseEndlineComments(List<String> endlineComments, List<List<PlaybackFileCommand>> fileCommandsEndline) {
+		return serialiseInlineComments(endlineComments, fileCommandsEndline);
 	}
 
 	protected void mergeInputs(BigArrayList<String> out, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> serialisedEndlineComments) {

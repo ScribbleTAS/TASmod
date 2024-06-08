@@ -109,6 +109,11 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertIterableEquals(expected, actual);
 	}
 
+	@Test
+	void testSerialiseHeaderStart() {
+		assertEquals("##################### TASFile ####################", headerStart());
+	}
+
 	/**
 	 * Test serialising metadata part of the header
 	 */
@@ -163,7 +168,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		// Create container and fill actual
 		TickContainer container = new TickContainer(keyboard, mouse, angle);
 		BigArrayList<String> actual = new BigArrayList<>();
-		serialiseContainer(actual, container, new ArrayList<>());
+		serialiseContainer(actual, container);
 
 		// Fill expected
 		BigArrayList<String> expected = new BigArrayList<>();

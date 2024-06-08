@@ -661,8 +661,8 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	
 	public static class CommentContainer implements Serializable{
 		
-		List<String> inlineComments;
-		List<String> endlineComments;
+		private List<String> inlineComments;
+		private List<String> endlineComments;
 		
 		public CommentContainer() {
 			this(new ArrayList<>(), new ArrayList<>());
@@ -683,6 +683,10 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		
 		public List<String> getInlineComments() {
 			return inlineComments;
+		}
+
+		public List<String> getEndlineComments() {
+			return endlineComments;
 		}
 	}
 

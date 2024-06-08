@@ -3,12 +3,14 @@ package com.minecrafttas.tasmod.playback.filecommands;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Queue;
 
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
+import com.minecrafttas.tasmod.util.TASmodRegistry;
 
 public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick  {
 
@@ -79,5 +81,48 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 		enabledExtensions.forEach(extension -> {
 			extension.onPlayback(index, container);
 		});
+	}
+
+	public List<List<PlaybackFileCommand>> handleOnSerialiseInline(long currentTick, TickContainer container) {
+		return onSerialise(currentTick, container, PlaybackFileCommandExtension::getQueueInlineComment);
+	}
+
+	public List<List<PlaybackFileCommand>> handleOnSerialiseEndline(long currentTick, TickContainer container) {
+		return onSerialise(currentTick, container, PlaybackFileCommandExtension::getQueueEndlineComment);
+	}
+	
+	private List<List<PlaybackFileCommand>> onSerialise(long currentTick, TickContainer container, OnSerialise serialisationMethod){
+		List<List<PlaybackFileCommand>> out = new ArrayList<>();
+		List<PlaybackFileCommandExtension> enabledExtensions = getEnabled();
+		
+		List<Queue<PlaybackFileCommand>> commandQueues = new ArrayList<>();
+		for (PlaybackFileCommandExtension playbackFileCommandExtension : enabledExtensions) {
+			Queue<PlaybackFileCommand> fileCommandQueue = serialisationMethod.accept(playbackFileCommandExtension, currentTick, container);
+			if(fileCommandQueue!=null)
+				commandQueues.add(fileCommandQueue);
+		}
+		
+		int biggestSize = 0;
+		for (Queue<PlaybackFileCommand> queue : commandQueues) {
+			if(queue.size()>biggestSize) {
+				biggestSize = queue.size();
+			}
+		}
+		
+		for (int i = 0; i < biggestSize; i++) {
+			List<PlaybackFileCommand> commandListForOneLine = new ArrayList<>();
+			for (Queue<PlaybackFileCommand> queue : commandQueues) {
+				PlaybackFileCommand fc = queue.poll();
+				if(fc!=null)
+					commandListForOneLine.add(fc);
+			}
+			out.add(commandListForOneLine);
+		}
+		return out;
+	}
+
+	@FunctionalInterface
+	private interface OnSerialise{
+		Queue<PlaybackFileCommand> accept(PlaybackFileCommandExtension extension, long currentTick, TickContainer container);
 	}
 }

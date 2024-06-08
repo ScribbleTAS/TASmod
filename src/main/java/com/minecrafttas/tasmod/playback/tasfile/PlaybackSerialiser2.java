@@ -69,7 +69,7 @@ public class PlaybackSerialiser2 {
 			writerThread.addLine(line);
 		}
 
-		BigArrayList<String> tickLines = flavor.serialise(container, filecommandextensionList);
+		BigArrayList<String> tickLines = flavor.serialise(container);
 		for (long i = 0; i < tickLines.size(); i++) {
 			writerThread.addLine(tickLines.get(i));
 		}

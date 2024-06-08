@@ -1,8 +1,10 @@
 package com.minecrafttas.tasmod.playback.filecommands;
 
 import java.util.List;
+import java.util.Queue;
 
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 
 public class PlaybackFileCommand{
 	
@@ -41,11 +43,11 @@ public class PlaybackFileCommand{
 		
 		public void onPlayback(long tick, TickContainer container) {};
 
-		public List<PlaybackFileCommand> onSerialiseInlineComment(long tick, TickContainer container) {
+		protected Queue<PlaybackFileCommand> onSerialiseInlineComment(long tick, TickContainer container) {
 			return null;
 		}
 
-		public List<PlaybackFileCommand> onSerialiseEndlineComment(long currentTick, TickContainer container) {
+		protected Queue<PlaybackFileCommand> onSerialiseEndlineComment(long currentTick, TickContainer container) {
 			return null;
 		}
 		
@@ -65,6 +67,14 @@ public class PlaybackFileCommand{
 			else
 				onDisable();
 			this.enabled = enabled;
+		}
+		
+		public static Queue<PlaybackFileCommand> getQueueInlineComment(PlaybackFileCommandExtension extension, long currentTick, TickContainer container) {
+			return extension.onSerialiseInlineComment(currentTick, container);
+		}
+		
+		public static Queue<PlaybackFileCommand> getQueueEndlineComment(PlaybackFileCommandExtension extension, long currentTick, TickContainer container) {
+			return extension.onSerialiseEndlineComment(currentTick, container);
 		}
 		
 	}
