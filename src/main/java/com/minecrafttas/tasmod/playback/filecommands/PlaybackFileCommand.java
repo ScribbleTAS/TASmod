@@ -1,10 +1,12 @@
 package com.minecrafttas.tasmod.playback.filecommands;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Queue;
+import java.util.Map;
 
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
-import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 
 public class PlaybackFileCommand{
 	
@@ -31,31 +33,29 @@ public class PlaybackFileCommand{
 		
 		public abstract String name();
 		
-		public String[] controlByteNames() {
-			return null;
+		public String[] getFileCommandNames() {
+			return new String[] {};
 		}
 		
 		public void onEnable() {};
 		
 		public void onDisable() {};
 		
-		public void onRecord(long tick, TickContainer container) {};
+		public void onRecord(long tick, TickContainer tickContainer) {};
 		
-		public void onPlayback(long tick, TickContainer container) {};
-
-		protected Queue<PlaybackFileCommand> onSerialiseInlineComment(long tick, TickContainer container) {
+		public void onPlayback(long tick, TickContainer tickContainer) {};
+		
+		protected PlaybackFileCommandContainer onSerialiseInlineComment(long tick, TickContainer tickContainer) {
 			return null;
 		}
 
-		protected Queue<PlaybackFileCommand> onSerialiseEndlineComment(long currentTick, TickContainer container) {
+		protected PlaybackFileCommandContainer onSerialiseEndlineComment(long currentTick, TickContainer tickContainer) {
 			return null;
 		}
 		
-		public void onDeserialiseSingleComment(long tick, String line) {}
+		public void onDeserialiseInlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {}
 		
-		public void onSerialiseCommentAtEnd(long tick, String line) {}
-		
-		public void onDeserialiseCommentAtEnd(long tick, String line) {}
+		public void onDeserialiseEndlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {}
 		
 		public boolean isEnabled() {
 			return enabled;
@@ -68,15 +68,76 @@ public class PlaybackFileCommand{
 				onDisable();
 			this.enabled = enabled;
 		}
-		
-		public static Queue<PlaybackFileCommand> getQueueInlineComment(PlaybackFileCommandExtension extension, long currentTick, TickContainer container) {
-			return extension.onSerialiseInlineComment(currentTick, container);
+	}
+	
+	public static class PlaybackFileCommandContainer extends LinkedHashMap<String, List<PlaybackFileCommand>> {
+
+		public PlaybackFileCommandContainer() {
 		}
 		
-		public static Queue<PlaybackFileCommand> getQueueEndlineComment(PlaybackFileCommandExtension extension, long currentTick, TickContainer container) {
-			return extension.onSerialiseEndlineComment(currentTick, container);
+		public PlaybackFileCommandContainer(List<List<PlaybackFileCommand>> list) {
+			for(List<PlaybackFileCommand> lists : list) {
+				for(PlaybackFileCommand command : lists) {
+					this.put(command.getName(), new ArrayList<>());
+				}
+			}
+			
+			for(List<PlaybackFileCommand> lists : list) {
+				for (Map.Entry<String, List<PlaybackFileCommand>> entry : this.entrySet()) {
+					String key = entry.getKey();
+					List<PlaybackFileCommand> val = entry.getValue();
+					
+					boolean valuePresent = false;
+					for(PlaybackFileCommand command : lists) {
+						if(key.equals(command.getName())) {
+							valuePresent = true;
+							val.add(command);
+						}
+					}
+					if(!valuePresent) {
+						val.add(null);
+					}
+				}
+			}
 		}
 		
+		public PlaybackFileCommandContainer split(String... keys) {
+			return split(Arrays.asList(keys));
+		}
+
+		public PlaybackFileCommandContainer split(Iterable<String> keys) {
+			PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
+			for (String key : keys) {
+				out.put(key, this.get(key));
+			}
+			return out;
+		}
+
+		public List<List<PlaybackFileCommand>> valuesBySubtick() {
+			List<List<PlaybackFileCommand>> out = new ArrayList<>();
+			
+			int biggestSize = 0;
+			for (List<PlaybackFileCommand> list : values()) {
+				if (list.size() > biggestSize) {
+					biggestSize = list.size();
+				}
+			}
+			
+			for (int i = 0; i < biggestSize; i++) {
+				List<PlaybackFileCommand> commandListForOneLine = new ArrayList<>();
+				for (List<PlaybackFileCommand> list : values()) {
+					if(i<list.size()) {
+						PlaybackFileCommand fc = list.get(i);
+						commandListForOneLine.add(fc);
+					}else {
+						commandListForOneLine.add(null);
+					}
+				}
+				out.add(commandListForOneLine);
+			}
+			
+			return out;
+		}
 	}
 }
 

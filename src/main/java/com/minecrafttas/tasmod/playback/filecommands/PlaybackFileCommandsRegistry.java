@@ -9,6 +9,7 @@ import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 
 public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick {
@@ -95,40 +96,24 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 		});
 	}
 
-	public List<List<PlaybackFileCommand>> handleOnSerialiseInline(long currentTick, TickContainer container) {
-		return onSerialise(currentTick, container, PlaybackFileCommandExtension::getQueueInlineComment);
-	}
-
-	public List<List<PlaybackFileCommand>> handleOnSerialiseEndline(long currentTick, TickContainer container) {
-		return onSerialise(currentTick, container, PlaybackFileCommandExtension::getQueueEndlineComment);
-	}
-
-	private List<List<PlaybackFileCommand>> onSerialise(long currentTick, TickContainer container, OnSerialise serialisationMethod) {
-		List<List<PlaybackFileCommand>> out = new ArrayList<>();
-		List<PlaybackFileCommandExtension> enabledExtensions = getEnabled();
-
-		List<Queue<PlaybackFileCommand>> commandQueues = new ArrayList<>();
-		for (PlaybackFileCommandExtension playbackFileCommandExtension : enabledExtensions) {
-			Queue<PlaybackFileCommand> fileCommandQueue = serialisationMethod.accept(playbackFileCommandExtension, currentTick, container);
-			if (fileCommandQueue != null)
-				commandQueues.add(fileCommandQueue);
-		}
-
-		int biggestSize = 0;
-		for (Queue<PlaybackFileCommand> queue : commandQueues) {
-			if (queue.size() > biggestSize) {
-				biggestSize = queue.size();
+	public PlaybackFileCommandContainer handleOnSerialiseInline(long currentTick, TickContainer container) {
+		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
+		for (PlaybackFileCommandExtension extension : enabledExtensions) {
+			PlaybackFileCommandContainer extensionContainer=extension.onSerialiseInlineComment(currentTick, container);
+			if(extensionContainer!=null) {
+				out.putAll(extensionContainer);
 			}
 		}
+		return out;
+	}
 
-		for (int i = 0; i < biggestSize; i++) {
-			List<PlaybackFileCommand> commandListForOneLine = new ArrayList<>();
-			for (Queue<PlaybackFileCommand> queue : commandQueues) {
-				PlaybackFileCommand fc = queue.poll();
-				if (fc != null)
-					commandListForOneLine.add(fc);
+	public PlaybackFileCommandContainer handleOnSerialiseEndline(long currentTick, TickContainer container) {
+		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
+		for (PlaybackFileCommandExtension extension : enabledExtensions) {
+			PlaybackFileCommandContainer extensionContainer=extension.onSerialiseEndlineComment(currentTick, container);
+			if(extensionContainer!=null) {
+				out.putAll(extensionContainer);
 			}
-			out.add(commandListForOneLine);
 		}
 		return out;
 	}
@@ -138,10 +123,20 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 		Queue<PlaybackFileCommand> accept(PlaybackFileCommandExtension extension, long currentTick, TickContainer container);
 	}
 
-	public void handleOnDeserialiseInline(long currentTick, TickContainer deserialisedContainer, List<List<PlaybackFileCommand>> inlineFileCommands) { // TODO Add deserialisation
+	public void handleOnDeserialiseInline(long currentTick, TickContainer deserialisedContainer, List<List<PlaybackFileCommand>> inlineFileCommands) {
+		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer(inlineFileCommands);
+		for (PlaybackFileCommandExtension extension : enabledExtensions) {
+			String[] fileCommandNames = extension.getFileCommandNames();
+			extension.onDeserialiseInlineComment(currentTick, deserialisedContainer, fileCommandContainer.split(fileCommandNames));
+		}
 	}
 
 	public void handleOnDeserialiseEndline(long currentTick, TickContainer deserialisedContainer, List<List<PlaybackFileCommand>> endlineFileCommands) {
-
+		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer(endlineFileCommands);
+		for (PlaybackFileCommandExtension extension : enabledExtensions) {
+			String[] fileCommandNames = extension.getFileCommandNames();
+			extension.onDeserialiseEndlineComment(currentTick, deserialisedContainer, fileCommandContainer.split(fileCommandNames));
+		}
 	}
+
 }

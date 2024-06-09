@@ -15,6 +15,7 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.CommentContainer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
@@ -120,15 +121,15 @@ public abstract class SerialiserFlavorBase {
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
 
-		List<List<PlaybackFileCommand>> fileCommandsInline = TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseInline(currentTick, container);
-		List<List<PlaybackFileCommand>> fileCommandsEndline = TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseEndline(currentTick, container);
+		PlaybackFileCommandContainer fileCommandsInline = TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseInline(currentTick, container);
+		PlaybackFileCommandContainer fileCommandsEndline = TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseEndline(currentTick, container);
 
 		CommentContainer comments = container.getComments();
 		if (comments == null) {
 			comments = new CommentContainer(new ArrayList<>(), new ArrayList<>());
 		}
-		List<String> serialisedInlineCommments = serialiseInlineComments(comments.getInlineComments(), fileCommandsInline);
-		List<String> serialisedEndlineComments = serialiseEndlineComments(comments.getEndlineComments(), fileCommandsEndline);
+		List<String> serialisedInlineCommments = serialiseInlineComments(comments.getInlineComments(), fileCommandsInline.valuesBySubtick());
+		List<String> serialisedEndlineComments = serialiseEndlineComments(comments.getEndlineComments(), fileCommandsEndline.valuesBySubtick());
 
 		addAll(out, serialisedInlineCommments);
 
@@ -184,14 +185,15 @@ public abstract class SerialiserFlavorBase {
 			String serialisedFileCommand = serialiseMultipleFileCommands(fcListQueue.poll());
 
 			if (comment != null) {
-				out.add(String.format("// %s %s", serialisedFileCommand, comment));
+				out.add(String.format("//%s %s", serialisedFileCommand != null ? " " + serialisedFileCommand : "", comment));
 			}
 		}
 
 		while (!fcListQueue.isEmpty()) {
 			String serialisedFileCommand = serialiseMultipleFileCommands(fcListQueue.poll());
-
-			out.add(String.format("// %s", serialisedFileCommand));
+			if (serialisedFileCommand != null) {
+				out.add(String.format("// %s", serialisedFileCommand));
+			}
 		}
 
 		return out;
@@ -396,10 +398,10 @@ public abstract class SerialiserFlavorBase {
 		CommentContainer comments = new CommentContainer(inlineComments, endlineComments);
 
 		TickContainer deserialisedContainer = new TickContainer(keyboard, mouse, cameraAngle, comments);
-		
+
 		TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
 		TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
-		
+
 		out.add(deserialisedContainer);
 	}
 
@@ -564,7 +566,7 @@ public abstract class SerialiserFlavorBase {
 			} else {
 				throw new PlaybackLoadException("Cannot find inputs in line %s", line);
 			}
-			
+
 			List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
 			String endlineComment = line.substring(tickMatcher.group(0).length());
 			commentsAtEnd.add(deserialiseEndlineComment(endlineComment, deserialisedFileCommands));
