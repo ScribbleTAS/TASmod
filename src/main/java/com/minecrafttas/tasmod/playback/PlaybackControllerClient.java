@@ -23,8 +23,8 @@ import org.lwjgl.opengl.Display;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
-import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.server.ByteBufferBuilder;
 import com.minecrafttas.mctcommon.server.Client.Side;
 import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
@@ -123,11 +123,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	 * <code>Map(int playbackLine, List(Pair(String controlCommand, String[] arguments))</code>"
 	 */
 	private Map<Integer, List<Pair<String, String[]>>> controlBytes = new HashMap<Integer, List<Pair<String, String[]>>>(); // TODO Replace with TASFile extension
-
-	/**
-	 * The comments of the TASfile. Contains calls to extensions.
-	 */
-	private CommentHandler comments = new CommentHandler();
 
 	public DesyncMonitoring desyncMonitor = new DesyncMonitoring(this); // TODO Replace with TASFile extension
 
@@ -502,14 +497,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		return controlBytes;
 	}
 
-	public CommentHandler getComments() { // TODO Replace with TASFile extension
-		return comments;
-	}
-	
-	public void setComments(CommentHandler comments) {
-		this.comments = comments;
-	}
-
 	public void setIndex(int index) throws IndexOutOfBoundsException {
 		if (index <= size()) {
 			this.index = index;
@@ -550,7 +537,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 		inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 		controlBytes.clear();
-		comments.clear();
 		index = 0;
 		desyncMonitor.clear();
 		TASmodRegistry.PLAYBACK_METADATA.handleOnClear();
@@ -661,7 +647,40 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	
 	public static class CommentContainer implements Serializable{
 		
+		/**
+		 * List of all inline comments in a tick.<br>
+		 * These comments take the form:
+		 * 
+		 * <pre>
+		 * // This is an inline comment
+		 * // This is a second inline comment
+		 * 1|W;w|;0;0;0|0.0;0.0
+		 * 	1|||1.0;1.0
+		 * </pre>
+		 * 
+		 * Inline comments are supposed to describe the tick as a whole and therefore
+		 * can not be attached to subticks.<br>
+		 * like so:
+		 * 
+		 * <pre>
+		 * 1|W;w|;0;0;0|0.0;0.0
+		 * // This is not allowed. This comment won't be saved
+		 * 	1|||1.0;1.0
+		 * </pre>
+		 */
 		private List<String> inlineComments;
+		
+		/**
+		 * List of all endline comments.<br>
+		 * These comments take the form:
+		 * 
+		 * <pre>
+		 * 1|W;w|;0;0;0|0.0;0.0		// This is an endline comment
+		 * 	1|||1.0;1.0		// This is a second endline comment
+		 * </pre>
+		 * 
+		 * Endline comments are supposed to describe individual subticks.<br>
+		 */
 		private List<String> endlineComments;
 		
 		public CommentContainer() {

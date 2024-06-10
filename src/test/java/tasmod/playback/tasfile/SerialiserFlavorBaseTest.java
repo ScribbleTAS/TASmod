@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
@@ -354,55 +354,28 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	}
 
 	/**
-	 * Testing extracting the comment from the end of the line
-	 */
-	@Test
-	@Disabled
-	void testExtractCommentEndline() {
-		List<String> actual = new ArrayList<>();
-//		extractCommentAtEnd(actual, "55|W,LCONTROL;|;0,887,626|17.85;-202.74799	// Test", 43);
-
-		List<String> expected = new ArrayList<>();
-		expected.add("// Test");
-		assertIterableEquals(expected, actual);
-	}
-
-	/**
-	 * Test extracting the comment from the end of the line, but there is no comment
-	 */
-	@Test
-	@Disabled
-	void testExtractCommentEndlineEmpty() {
-		List<String> actual = new ArrayList<>();
-//		extractCommentAtEnd(actual, "55|W,LCONTROL;//|;0,887,626|17.85;-202.74799", 44);
-
-		List<String> expected = new ArrayList<>();
-		expected.add(null);
-		assertIterableEquals(expected, actual);
-	}
-
-	/**
 	 * Test splitting the stringd of inputs including subticks into it's elements
 	 */
 	@Test
-	@Disabled
 	void testSplitInputs() {
 		List<String> tick = new ArrayList<>();
 		tick.add("55|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
 		tick.add("\t1||RC;0,1580,658|17.85;-202.74799 //Test");
-		tick.add("\t2||;0,1580,658|17.85;-202.74799");
+		tick.add("\t2||;0,1580,658|17.85;-202.74799 // $test(true);");
 
 		List<String> actualKeyboard = new ArrayList<>();
 		List<String> actualMouse = new ArrayList<>();
 		List<String> actualCameraAngle = new ArrayList<>();
 		List<String> actualComment = new ArrayList<>();
+		List<List<PlaybackFileCommand>> actualFileCommand = new ArrayList<>();
 
-		splitInputs(tick, actualKeyboard, actualMouse, actualCameraAngle, actualComment, new ArrayList<>()); //TODO Test endlineComments
+		splitInputs(tick, actualKeyboard, actualMouse, actualCameraAngle, actualComment, actualFileCommand);
 
 		List<String> expectedKeyboard = new ArrayList<>();
 		List<String> expectedMouse = new ArrayList<>();
 		List<String> expectedCameraAngle = new ArrayList<>();
 		List<String> expectedComment = new ArrayList<>();
+		List<List<PlaybackFileCommand>> expectedFileCommand = new ArrayList<>();
 
 		expectedKeyboard.add("W,LCONTROL;w");
 
@@ -415,20 +388,30 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		expectedCameraAngle.add("17.85;-202.74799");
 
 		expectedComment.add(null);
-		expectedComment.add("//Test");
+		expectedComment.add("Test");
 		expectedComment.add(null);
+
+		
+		
+		expectedFileCommand.add(new ArrayList<>());
+		expectedFileCommand.add(new ArrayList<>());
+		
+		List<PlaybackFileCommand> lineCommand = new ArrayList<>();
+		lineCommand.add(new PlaybackFileCommand("test","true"));
+		
+		expectedFileCommand.add(lineCommand);
 
 		assertIterableEquals(actualKeyboard, expectedKeyboard);
 		assertIterableEquals(expectedMouse, actualMouse);
 		assertIterableEquals(expectedCameraAngle, actualCameraAngle);
 		assertIterableEquals(expectedComment, actualComment);
+		assertIterableEquals(expectedFileCommand, actualFileCommand);
 	}
 
 	/**
 	 * Test split container
 	 */
 	@Test
-	@Disabled
 	void testSplitContainer() {
 		List<String> lines = new ArrayList<>();
 		lines.add("// $interpolation(on);");
@@ -439,20 +422,28 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		List<String> actualComments = new ArrayList<>();
 		List<String> actualTick = new ArrayList<>();
+		List<List<PlaybackFileCommand>> actualInlineFileCommands = new ArrayList<>();
 
-		splitContainer(lines, actualComments, actualTick, new ArrayList<>()); // TODO Test inlineFileCommands
+		splitContainer(lines, actualComments, actualTick, actualInlineFileCommands);
 
 		List<String> expectedComments = new ArrayList<>();
 		List<String> expectedTicks = new ArrayList<>();
-		expectedComments.add("$interpolation(on);");
+		expectedComments.add(null);
 		expectedComments.add("Test");
 
 		expectedTicks.add("55|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
 		expectedTicks.add("\t1||RC;-15,1580,658|11.85;-2.74799");
 		expectedTicks.add("\t2||;0,1580,658|45;-22.799");
+		
+		List<List<PlaybackFileCommand>> expectedInlineFileCommands = new ArrayList<>();
+		List<PlaybackFileCommand> commands = new ArrayList<>();
+		commands.add(new PlaybackFileCommand("interpolation", "on"));
+		expectedInlineFileCommands.add(commands);
+		expectedInlineFileCommands.add(null);
 
 		assertIterableEquals(expectedComments, actualComments);
 		assertIterableEquals(expectedTicks, actualTick);
+		assertIterableEquals(expectedInlineFileCommands, actualInlineFileCommands);
 	}
 
 	/**

@@ -27,6 +27,20 @@ public class PlaybackFileCommand{
 		return args;
 	}
 	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof PlaybackFileCommand) {
+			PlaybackFileCommand other = (PlaybackFileCommand) obj;
+			return this.name.equals(other.name) && Arrays.equals(this.args, other.args);
+		}
+		return super.equals(obj);
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("$%s(%s);", name, String.join(", ", args));
+	}
+	
 	public static abstract class PlaybackFileCommandExtension {
 		
 		protected boolean enabled=false;

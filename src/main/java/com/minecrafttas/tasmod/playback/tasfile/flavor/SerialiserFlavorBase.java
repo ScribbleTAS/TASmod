@@ -412,19 +412,29 @@ public abstract class SerialiserFlavorBase {
 	 */
 	protected void splitContainer(List<String> lines, List<String> comments, List<String> tick, List<List<PlaybackFileCommand>> inlineFileCommands) {
 		for (String line : lines) {
-			List<PlaybackFileCommand> deserialisedFileCommand = new ArrayList<>();
 			if (contains(singleComment(), line)) {
+				List<PlaybackFileCommand> deserialisedFileCommand = new ArrayList<>();
 				comments.add(deserialiseInlineComment(line, deserialisedFileCommand));
+				if(deserialisedFileCommand.isEmpty()) {
+					deserialisedFileCommand = null;
+				}
+				inlineFileCommands.add(deserialisedFileCommand);
 			} else {
 				tick.add(line);
 			}
-			inlineFileCommands.add(deserialisedFileCommand);
 		}
 	}
 
 	protected String deserialiseInlineComment(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
 		comment = deserialiseFileCommands(comment, deserialisedFileCommands);
-		return extract("^// ?(.+)", comment, 1);
+		comment = extract("^// ?(.+)", comment, 1);
+		if(comment!=null) {
+			comment = comment.trim();
+			if(comment.isEmpty()) {
+				comment = null;
+			}
+		}
+		return comment;
 	}
 
 	protected String deserialiseEndlineComment(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
