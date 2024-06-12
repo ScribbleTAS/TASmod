@@ -141,6 +141,9 @@ public abstract class SerialiserFlavorBase {
 	}
 
 	protected String serialiseMultipleFileCommands(List<PlaybackFileCommand> fileCommands) {
+		if(fileCommands == null) {
+			return null;
+		}
 		List<String> serialisedCommands = new ArrayList<>();
 		for (PlaybackFileCommand command : fileCommands) {
 			serialisedCommands.add(serialiseFileCommand(command));
@@ -181,12 +184,19 @@ public abstract class SerialiserFlavorBase {
 
 		Queue<List<PlaybackFileCommand>> fcListQueue = new ConcurrentLinkedQueue<>(fileCommandsInline);
 
-		for (String comment : inlineComments) {
+		for (String inlineComment : inlineComments) {
 			String serialisedFileCommand = serialiseMultipleFileCommands(fcListQueue.poll());
 
-			if (comment != null) {
-				out.add(String.format("//%s %s", serialisedFileCommand != null ? " " + serialisedFileCommand : "", comment));
+			if(inlineComment == null && serialisedFileCommand == null) {
+				out.add("");
+				continue;
 			}
+			
+			inlineComment = inlineComment != null ? inlineComment : "";
+			serialisedFileCommand = serialisedFileCommand != null ? serialisedFileCommand+" " : "";
+			
+			
+			out.add(String.format("// %s%s", serialisedFileCommand, inlineComment));
 		}
 
 		while (!fcListQueue.isEmpty()) {

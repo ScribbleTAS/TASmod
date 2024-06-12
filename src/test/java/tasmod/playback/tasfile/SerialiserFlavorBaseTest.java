@@ -14,6 +14,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.CommentContainer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
@@ -180,6 +181,24 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		// C o m p a r e
 		assertBigArrayList(expected, actual);
+	}
+	
+	@Test
+	void testSerialiseComments() {
+		List<String> inlineComments = new ArrayList<>();
+		
+		inlineComments.add("Test");
+		inlineComments.add(null);
+		inlineComments.add("Test2");
+		
+		List<String> actual = serialiseInlineComments(inlineComments, new ArrayList<>());
+		
+		List<String> expected = new ArrayList<>();
+		expected.add("// Test");
+		expected.add("");
+		expected.add("// Test2");
+		
+		assertIterableEquals(expected, actual);
 	}
 
 	@Test
