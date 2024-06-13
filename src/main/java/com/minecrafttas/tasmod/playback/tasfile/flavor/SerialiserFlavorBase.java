@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -140,8 +140,8 @@ public abstract class SerialiserFlavorBase {
 		return String.format("$%s(%s);", fileCommand.getName(), String.join(", ", fileCommand.getArgs()));
 	}
 
-	protected String serialiseMultipleFileCommands(List<PlaybackFileCommand> fileCommands) {
-		if(fileCommands == null) {
+	protected String serialiseFileCommandsInLine(List<PlaybackFileCommand> fileCommands) {
+		if (fileCommands == null) {
 			return null;
 		}
 		List<String> serialisedCommands = new ArrayList<>();
@@ -178,31 +178,48 @@ public abstract class SerialiserFlavorBase {
 
 	protected List<String> serialiseInlineComments(List<String> inlineComments, List<List<PlaybackFileCommand>> fileCommandsInline) {
 		List<String> out = new ArrayList<>();
-		if (inlineComments == null) {
-			return out;
+
+		Queue<List<PlaybackFileCommand>> fileCommandQueue = null;
+		if (fileCommandsInline != null) {
+			fileCommandQueue = new LinkedList<>(fileCommandsInline);
 		}
 
-		Queue<List<PlaybackFileCommand>> fcListQueue = new ConcurrentLinkedQueue<>(fileCommandsInline);
+		// Serialise comments and merge them with file commands
+		if (inlineComments != null) {
 
-		for (String inlineComment : inlineComments) {
-			String serialisedFileCommand = serialiseMultipleFileCommands(fcListQueue.poll());
+			Queue<String> commentQueue = new LinkedList<>(inlineComments);
 
-			if(inlineComment == null && serialisedFileCommand == null) {
-				out.add("");
-				continue;
+			// Iterate through comments
+			while (!commentQueue.isEmpty()) {
+				String comment = commentQueue.poll(); // Due to commentQueue being a LinkedList, comment can be null at this point! 
+
+				String command = null;
+				if (fileCommandQueue != null) {
+					command = serialiseFileCommandsInLine(fileCommandQueue.poll()); // Trying to poll a fileCommand. Command can be null at this point
+				}
+
+				// Add an empty line if comment and command is null
+				if (comment == null && command == null) {
+					out.add("");
+					continue;
+				}
+
+				out.add(String.format("// %s", joinNotEmpty(" ", command, comment)));
 			}
-			
-			inlineComment = inlineComment != null ? inlineComment : "";
-			serialisedFileCommand = serialisedFileCommand != null ? serialisedFileCommand+" " : "";
-			
-			
-			out.add(String.format("// %s%s", serialisedFileCommand, inlineComment));
 		}
 
-		while (!fcListQueue.isEmpty()) {
-			String serialisedFileCommand = serialiseMultipleFileCommands(fcListQueue.poll());
-			if (serialisedFileCommand != null) {
-				out.add(String.format("// %s", serialisedFileCommand));
+		if (fileCommandQueue != null) {
+
+			// If the fileCommandQueue is not empty or longer than the commentQueue,
+			// add the rest of the fileCommands to the end
+			while (!fileCommandQueue.isEmpty()) {
+
+				String command = serialiseFileCommandsInLine(fileCommandQueue.poll());
+				if (command != null) {
+					out.add(String.format("// %s", command));
+				} else {
+					out.add(""); // Add an empty line if command is null
+				}
 			}
 		}
 
@@ -244,6 +261,33 @@ public abstract class SerialiserFlavorBase {
 
 	protected String getOrEmpty(String string) {
 		return string == null ? "" : string;
+	}
+
+	/**
+	 * Joins strings together but ignores empty strings
+	 * 
+	 * @param delimiter The delimiter of the joined string
+	 * @param args The strings to join
+	 * @return Joined string
+	 */
+	protected String joinNotEmpty(String delimiter, Iterable<String> args) {
+		String out = "";
+
+		List<String> copy = new ArrayList<>();
+
+		args.forEach((arg) -> {
+			if (arg != null && !arg.isEmpty()) {
+				copy.add(arg);
+			}
+		});
+
+		out = String.join(delimiter, copy);
+
+		return out;
+	}
+
+	protected String joinNotEmpty(String delimiter, String... args) {
+		return joinNotEmpty(delimiter, Arrays.asList(args));
 	}
 
 	/*========================================================
@@ -425,7 +469,7 @@ public abstract class SerialiserFlavorBase {
 			if (contains(singleComment(), line)) {
 				List<PlaybackFileCommand> deserialisedFileCommand = new ArrayList<>();
 				comments.add(deserialiseInlineComment(line, deserialisedFileCommand));
-				if(deserialisedFileCommand.isEmpty()) {
+				if (deserialisedFileCommand.isEmpty()) {
 					deserialisedFileCommand = null;
 				}
 				inlineFileCommands.add(deserialisedFileCommand);
@@ -438,9 +482,9 @@ public abstract class SerialiserFlavorBase {
 	protected String deserialiseInlineComment(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
 		comment = deserialiseFileCommands(comment, deserialisedFileCommands);
 		comment = extract("^// ?(.+)", comment, 1);
-		if(comment!=null) {
+		if (comment != null) {
 			comment = comment.trim();
-			if(comment.isEmpty()) {
+			if (comment.isEmpty()) {
 				comment = null;
 			}
 		}
@@ -459,6 +503,7 @@ public abstract class SerialiserFlavorBase {
 			deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
 			comment = matcher.replaceFirst("");
 		}
+		
 		return comment;
 	}
 

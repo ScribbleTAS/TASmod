@@ -14,7 +14,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.CommentContainer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
@@ -182,22 +181,103 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		// C o m p a r e
 		assertBigArrayList(expected, actual);
 	}
-	
+
+	/**
+	 * Test serialising inline and endline comments.
+	 */
 	@Test
 	void testSerialiseComments() {
 		List<String> inlineComments = new ArrayList<>();
-		
+
 		inlineComments.add("Test");
-		inlineComments.add(null);
+		inlineComments.add(null); // Should result in an empty line
 		inlineComments.add("Test2");
-		
+		inlineComments.add(""); // Should result in "// "
+
 		List<String> actual = serialiseInlineComments(inlineComments, new ArrayList<>());
-		
+
 		List<String> expected = new ArrayList<>();
 		expected.add("// Test");
 		expected.add("");
 		expected.add("// Test2");
-		
+		expected.add("// ");
+
+		assertIterableEquals(expected, actual);
+
+		actual = serialiseEndlineComments(inlineComments, null);
+
+		assertIterableEquals(expected, actual);
+
+	}
+
+	@Test
+	void testSerialiseFileCommands() {
+		List<List<PlaybackFileCommand>> fileCommands = new ArrayList<>();
+		List<PlaybackFileCommand> fcInLine = new ArrayList<>();
+		fcInLine.add(new PlaybackFileCommand("test"));
+		fcInLine.add(new PlaybackFileCommand("testing2", "true", "false"));
+
+		List<PlaybackFileCommand> fcInLine2 = new ArrayList<>();
+		fcInLine2.add(new PlaybackFileCommand("interpolation", "true"));
+
+		fileCommands.add(fcInLine);
+		fileCommands.add(null);
+		fileCommands.add(fcInLine2);
+		fileCommands.add(new ArrayList<>());
+
+		List<String> actual = serialiseInlineComments(null, fileCommands);
+
+		List<String> expected = new ArrayList<>();
+		expected.add("// $test(); $testing2(true, false);");
+		expected.add("");
+		expected.add("// $interpolation(true);");
+		expected.add("// ");
+
+		assertIterableEquals(expected, actual);
+	}
+
+	@Test
+	void testMergingCommentsAndCommands() {
+		List<List<PlaybackFileCommand>> fileCommands = new ArrayList<>();
+		List<PlaybackFileCommand> fcInLine = new ArrayList<>();
+		fcInLine.add(new PlaybackFileCommand("test"));
+		fcInLine.add(new PlaybackFileCommand("testing2", "true", "false"));
+
+		fileCommands.add(fcInLine);
+		fileCommands.add(null);
+		fileCommands.add(null);
+		fileCommands.add(new ArrayList<>());
+
+		List<PlaybackFileCommand> fcInLine2 = new ArrayList<>();
+		fcInLine2.add(new PlaybackFileCommand("interpolation", "true"));
+
+		fileCommands.add(fcInLine2);
+
+		List<PlaybackFileCommand> fcInLine3 = new ArrayList<>();
+		fcInLine3.add(new PlaybackFileCommand("info", "Scribble"));
+		fcInLine3.add(new PlaybackFileCommand("info", "Dribble"));
+
+		fileCommands.add(fcInLine3);
+
+		List<String> inlineComments = new ArrayList<>();
+
+		inlineComments.add("Test");
+		inlineComments.add(null);
+		inlineComments.add("Test2");
+		inlineComments.add("");
+		inlineComments.add(null);
+
+		List<String> actual = serialiseInlineComments(inlineComments, fileCommands);
+
+		List<String> expected = new ArrayList<>();
+
+		expected.add("// $test(); $testing2(true, false); Test"); // Test both filecommand and comment
+		expected.add(""); // Test null from both
+		expected.add("// Test2"); // Test comment only
+		expected.add("// "); // Test empty from both
+		expected.add("// $interpolation(true);"); // Test command only
+		expected.add("// $info(Scribble); $info(Dribble);"); // Test command can't be merged with comments and is added at the end instead
+
 		assertIterableEquals(expected, actual);
 	}
 
@@ -410,14 +490,12 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		expectedComment.add("Test");
 		expectedComment.add(null);
 
-		
-		
 		expectedFileCommand.add(new ArrayList<>());
 		expectedFileCommand.add(new ArrayList<>());
-		
+
 		List<PlaybackFileCommand> lineCommand = new ArrayList<>();
-		lineCommand.add(new PlaybackFileCommand("test","true"));
-		
+		lineCommand.add(new PlaybackFileCommand("test", "true"));
+
 		expectedFileCommand.add(lineCommand);
 
 		assertIterableEquals(actualKeyboard, expectedKeyboard);
@@ -453,7 +531,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		expectedTicks.add("55|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
 		expectedTicks.add("\t1||RC;-15,1580,658|11.85;-2.74799");
 		expectedTicks.add("\t2||;0,1580,658|45;-22.799");
-		
+
 		List<List<PlaybackFileCommand>> expectedInlineFileCommands = new ArrayList<>();
 		List<PlaybackFileCommand> commands = new ArrayList<>();
 		commands.add(new PlaybackFileCommand("interpolation", "on"));
@@ -589,6 +667,25 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	void testCenterHeadingEvenText2() {
 		String actual = SerialiserFlavorBase.createCenteredHeading("Keystrokes", '#', 51);
 		String expected = "#################### Keystrokes ###################";
+		assertEquals(expected, actual);
+	}
+
+	@Test
+	void testJoinNotEmpty() {
+		String actual = joinNotEmpty(" ", "Test", "", "Weee", "", "Wow");
+
+		String expected = "Test Weee Wow";
+
+		assertEquals(expected, actual);
+
+		List<String> actual2 = new ArrayList<>();
+		actual2.add("Test");
+		actual2.add("");
+		actual2.add("Weee");
+		actual2.add(null);
+		actual2.add("Wow");
+
+		actual = joinNotEmpty(" ", actual2);
 		assertEquals(expected, actual);
 	}
 

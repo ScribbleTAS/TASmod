@@ -14,7 +14,14 @@ public class PlaybackFileCommand{
 	
 	private String[] args;
 	
+	public PlaybackFileCommand(String name) {
+		this(name,(String[]) null);
+	}
+	
 	public PlaybackFileCommand(String name, String... args) {
+		if(args == null) {
+			args = new String[] {};
+		}
 		this.name = name;
 		this.args = args;
 	}
