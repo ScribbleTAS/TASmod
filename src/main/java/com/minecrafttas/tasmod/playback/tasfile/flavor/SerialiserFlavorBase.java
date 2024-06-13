@@ -635,6 +635,10 @@ public abstract class SerialiserFlavorBase {
 			List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
 			String endlineComment = line.substring(tickMatcher.group(0).length());
 			commentsAtEnd.add(deserialiseEndlineComment(endlineComment, deserialisedFileCommands));
+			
+			if(deserialisedFileCommands.isEmpty())
+				deserialisedFileCommands = null;
+			
 			endlineFileCommands.add(deserialisedFileCommands);
 		}
 	}

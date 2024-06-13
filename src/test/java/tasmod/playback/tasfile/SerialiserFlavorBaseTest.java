@@ -490,8 +490,8 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		expectedComment.add("Test");
 		expectedComment.add(null);
 
-		expectedFileCommand.add(new ArrayList<>());
-		expectedFileCommand.add(new ArrayList<>());
+		expectedFileCommand.add(null);
+		expectedFileCommand.add(null);
 
 		List<PlaybackFileCommand> lineCommand = new ArrayList<>();
 		lineCommand.add(new PlaybackFileCommand("test", "true"));
