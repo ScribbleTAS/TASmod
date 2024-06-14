@@ -35,7 +35,7 @@ public abstract class SerialiserFlavorBase {
 	/**
 	 * Debug subtick field for error handling
 	 */
-	protected Integer currentSubtick = null;
+	protected int currentSubtick = 0;
 
 	public abstract String flavorName();
 
@@ -256,7 +256,7 @@ public abstract class SerialiserFlavorBase {
 
 			out.add(String.format("\t%s|%s|%s|%s", currentSubtick, kb, ms, ca));
 		}
-		currentSubtick = null;
+		currentSubtick = 0;
 	}
 
 	protected String getOrEmpty(String string) {
@@ -267,7 +267,7 @@ public abstract class SerialiserFlavorBase {
 	 * Joins strings together but ignores empty strings
 	 * 
 	 * @param delimiter The delimiter of the joined string
-	 * @param args The strings to join
+	 * @param args      The strings to join
 	 * @return Joined string
 	 */
 	protected String joinNotEmpty(String delimiter, Iterable<String> args) {
@@ -301,6 +301,8 @@ public abstract class SerialiserFlavorBase {
 	  ========================================================                                             
 	 * 
 	 */
+
+	private TickContainer previousTickContainer = null;
 
 	public boolean deserialiseFlavorName(List<String> headerLines) {
 		for (String line : headerLines) {
@@ -397,9 +399,11 @@ public abstract class SerialiserFlavorBase {
 			List<String> tick = new ArrayList<>();
 			// Extract the tick and set the index
 			i = extractContainer(tick, lines, i);
+			currentTick = i;
 			// Extract container
 			deserialiseContainer(out, tick);
 		}
+		previousTickContainer = null;
 		return out;
 	}
 
@@ -456,6 +460,8 @@ public abstract class SerialiserFlavorBase {
 		TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
 		TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
 
+		previousTickContainer = deserialisedContainer;
+
 		out.add(deserialisedContainer);
 	}
 
@@ -503,13 +509,14 @@ public abstract class SerialiserFlavorBase {
 			deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
 			comment = matcher.replaceFirst("");
 		}
-		
+
 		return comment;
 	}
 
 	protected VirtualKeyboard deserialiseKeyboard(List<String> keyboardStrings) {
 		VirtualKeyboard out = new VirtualKeyboard();
 
+		currentSubtick = 0;
 		for (String line : keyboardStrings) {
 			Matcher matcher = extract("(.*?);(.*)", line);
 			if (matcher.find()) {
@@ -519,6 +526,7 @@ public abstract class SerialiserFlavorBase {
 				int[] keycodes = deserialiseVirtualKey(keys, VirtualKey.ZERO);
 				out.updateFromState(keycodes, chars);
 			}
+			currentSubtick++;
 		}
 		return out;
 	}
@@ -526,6 +534,10 @@ public abstract class SerialiserFlavorBase {
 	protected VirtualMouse deserialiseMouse(List<String> mouseStrings) {
 		VirtualMouse out = new VirtualMouse();
 
+		currentSubtick = 0;
+		Integer previousCursorX = previousTickContainer == null? null : previousTickContainer.getMouse().getCursorX();
+		Integer previousCursorY = previousTickContainer== null? null : previousTickContainer.getMouse().getCursorY();
+		
 		for (String line : mouseStrings) {
 			Matcher matcher = extract("(.*?);(.+)", line);
 			if (matcher.find()) {
@@ -538,19 +550,19 @@ public abstract class SerialiserFlavorBase {
 				Integer cursorY;
 
 				if (functions.length == 3) {
-					try {
-						scrollwheel = Integer.parseInt(functions[0]);
-						cursorX = Integer.parseInt(functions[1]);
-						cursorY = Integer.parseInt(functions[2]);
-					} catch (NumberFormatException e) {
-						throw new PlaybackLoadException(e);
-					}
+					scrollwheel = parseInt("scrollwheel", functions[0]);
+					cursorX = deserialiseRelativeInt("cursorX", functions[1], previousCursorX);
+					cursorY = deserialiseRelativeInt("cursorY", functions[2], previousCursorY);
 				} else {
 					throw new PlaybackLoadException("Mouse functions do not have the correct length");
 				}
 
 				out.updateFromState(keycodes, scrollwheel, cursorX, cursorY);
+				
+				previousCursorX = cursorX;
+				previousCursorY = cursorY;
 			}
+			currentSubtick++;
 		}
 		return out;
 	}
@@ -558,6 +570,10 @@ public abstract class SerialiserFlavorBase {
 	protected VirtualCameraAngle deserialiseCameraAngle(List<String> cameraAngleStrings) {
 		VirtualCameraAngle out = new VirtualCameraAngle();
 
+		currentSubtick = 0;
+		Float previousPitch = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getPitch();
+		Float previousYaw = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getYaw();
+		
 		for (String line : cameraAngleStrings) {
 			Matcher matcher = extract("(.+?);(.+)", line);
 
@@ -565,24 +581,12 @@ public abstract class SerialiserFlavorBase {
 				String cameraPitchString = matcher.group(1);
 				String cameraYawString = matcher.group(2);
 
-				float cameraPitch;
-				float cameraYaw;
-
-				if (isFloat(cameraPitchString))
-					cameraPitch = Float.parseFloat(cameraPitchString);
-				else
-					throw new PlaybackLoadException("The camera pitch is not valid");
-
-				if (isFloat(cameraYawString))
-					cameraYaw = Float.parseFloat(cameraYawString);
-				else
-					throw new PlaybackLoadException("The camera yaw is not valid");
+				float cameraPitch = deserialiseRelativeFloat("camera pitch", cameraPitchString, previousPitch);
+				float cameraYaw = deserialiseRelativeFloat("camera yaw", cameraYawString, previousYaw);
 
 				out.updateFromState(cameraPitch, cameraYaw);
-
-			} else {
-				throw new PlaybackLoadException("The cameraAngle is not valid");
 			}
+			currentSubtick++;
 		}
 		return out;
 	}
@@ -614,6 +618,54 @@ public abstract class SerialiserFlavorBase {
 		return out;
 	}
 
+	protected int parseInt(String name, String intstring) {
+		try {
+			return Integer.parseInt(intstring);
+		} catch (NumberFormatException e) {
+			throw new PlaybackLoadException(currentTick, currentSubtick, e, "Can't parse integer in %s", name);
+		}
+	}
+
+	protected int deserialiseRelativeInt(String name, String intstring, Integer previous) {
+		int out = 0;
+		if(intstring.startsWith("~")) {
+			intstring = intstring.replace("~", "");
+			int relative = parseInt(name, intstring);
+			if(previous != null) {
+				out = previous + relative;
+			} else {
+				throw new PlaybackLoadException(currentTick, currentSubtick, "Can't process relative value ~%s in %s. Previous value for comparing is not available", intstring, name);
+			}
+		} else {
+			out = parseInt(name, intstring);
+		}
+		return out;
+	}
+	
+	protected float parseFloat(String name, String floatstring) {
+		try {
+			return Float.parseFloat(floatstring);
+		} catch (NumberFormatException e) {
+			throw new PlaybackLoadException(currentTick, currentSubtick, e, "Can't parse float in %s", name);
+		}
+	}
+
+	protected float deserialiseRelativeFloat(String name, String floatstring, Float previous) {
+		float out = 0;
+		if(floatstring.startsWith("~")) {
+			floatstring = floatstring.replace("~", "");
+			float relative = parseFloat(name, floatstring);
+			if(previous != null) {
+				out = previous + relative;
+			} else {
+				throw new PlaybackLoadException(currentTick, currentSubtick, "Can't process relative value ~%s in %s. Previous value for comparing is not available", floatstring, name);
+			}
+		} else {
+			out = parseFloat(name, floatstring);
+		}
+		return out;
+	}
+	
 	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd, List<List<PlaybackFileCommand>> endlineFileCommands) {
 
 		for (String line : lines) {
@@ -635,10 +687,10 @@ public abstract class SerialiserFlavorBase {
 			List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
 			String endlineComment = line.substring(tickMatcher.group(0).length());
 			commentsAtEnd.add(deserialiseEndlineComment(endlineComment, deserialisedFileCommands));
-			
-			if(deserialisedFileCommands.isEmpty())
+
+			if (deserialisedFileCommands.isEmpty())
 				deserialisedFileCommands = null;
-			
+
 			endlineFileCommands.add(deserialisedFileCommands);
 		}
 	}

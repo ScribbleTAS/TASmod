@@ -627,6 +627,78 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertTrue(isFloat("-145.23"));
 		assertTrue(isFloat(Long.toString(Integer.MAX_VALUE + 1L)));
 	}
+	
+	@Test
+	void testParseInt() {
+		int actual = parseInt("testParseInt", "12");
+		assertEquals(12, actual);
+		
+		this.currentTick = 13;
+		this.currentSubtick = 1;
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			parseInt("testParseInt", "12.1");
+		});
+		
+		assertEquals("Tick 13, Subtick 1: Can't parse integer in testParseInt", t.getMessage());
+		assertEquals(NumberFormatException.class, t.getCause().getClass());
+		assertEquals("For input string: \"12.1\"", t.getCause().getMessage());
+		this.currentTick = 0;
+		this.currentSubtick = 0;
+	}
+	
+	@Test
+	void testParseFloat() {
+		float actual = parseFloat("testParseFloat", "12.1");
+		assertEquals(12.1f, actual);
+		
+		this.currentTick = 15;
+		this.currentSubtick = 6;
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			parseFloat("testParseFloat", "12.123h");
+		});
+		
+		assertEquals("Tick 15, Subtick 6: Can't parse float in testParseFloat", t.getMessage());
+		assertEquals(NumberFormatException.class, t.getCause().getClass());
+		assertEquals("For input string: \"12.123h\"", t.getCause().getMessage());
+		this.currentTick = 0;
+		this.currentSubtick = 0;
+	}
+	
+	@Test
+	void testDeserialiseRelativeInt() {
+		int actual = deserialiseRelativeInt("testParseRelativeInt", "12", null);
+		assertEquals(12, actual);
+		
+		actual = deserialiseRelativeInt("test", "~2", 14);
+		assertEquals(16, actual);
+		
+		this.currentTick = 23;
+		this.currentSubtick = 11;
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			deserialiseRelativeInt("testParseRelativeInt", "~12", null);
+		});
+		assertEquals("Tick 23, Subtick 11: Can't process relative value ~12 in testParseRelativeInt. Previous value for comparing is not available", t.getMessage());
+		this.currentTick = 0;
+		this.currentSubtick = 0;
+	}
+	
+	@Test
+	void testDeserialiseRelativeFloat() {
+		float actual = deserialiseRelativeFloat("testParseRelativeFloat", "12.2", null);
+		assertEquals(12.2f, actual);
+		
+		actual = deserialiseRelativeFloat("test", "~2.4", 14.4f);
+		assertEquals(16.8f, actual);
+		
+		this.currentTick = 20;
+		this.currentSubtick = 2;
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			deserialiseRelativeFloat("testParseRelativeFloat", "~12.3", null);
+		});
+		assertEquals("Tick 20, Subtick 2: Can't process relative value ~12.3 in testParseRelativeFloat. Previous value for comparing is not available", t.getMessage());
+		this.currentTick = 0;
+		this.currentSubtick = 0;
+	}
 
 	@Test
 	void testStringPaddingEven() {
