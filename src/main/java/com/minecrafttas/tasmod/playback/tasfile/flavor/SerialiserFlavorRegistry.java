@@ -53,7 +53,7 @@ public class SerialiserFlavorRegistry extends AbstractRegistry<String, Serialise
 	}
 	
 	public SerialiserFlavorBase getFlavor(String name) {
-		return REGISTRY.get(name);
+		return REGISTRY.get(name).clone();
 	}
 	
 	public List<SerialiserFlavorBase> getFlavors() {

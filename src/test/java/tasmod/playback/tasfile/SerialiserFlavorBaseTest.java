@@ -11,11 +11,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
@@ -28,72 +30,17 @@ import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
 public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
-	class MetadataTest implements PlaybackMetadataExtension {
-
-		public String testValue;
-
-		@Override
-		public String getExtensionName() {
-			return "Test1";
-		}
-
-		@Override
-		public void onCreate() {
-
-		}
-
-		@Override
-		public PlaybackMetadata onStore() {
-			PlaybackMetadata metadata = new PlaybackMetadata(this);
-			metadata.setValue("TestKey", testValue);
-			return metadata;
-		}
-
-		@Override
-		public void onLoad(PlaybackMetadata metadata) {
-			testValue = metadata.getValue("TestKey");
-		}
-
-		@Override
-		public void onClear() {
-			this.testValue = null;
-		}
-
+	@AfterEach
+	void afterEach() {
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.clear();
+		TASmodRegistry.PLAYBACK_METADATA.clear();
+		TASmodRegistry.SERIALISER_FLAVOR.clear();
+		
+		this.currentTick = 0;
+		this.currentSubtick = 0;
+		this.previousTickContainer = null;
 	}
-
-	class MetadataTest2 implements PlaybackMetadataExtension {
-
-		public String testValue;
-
-		@Override
-		public String getExtensionName() {
-			return "Test2";
-		}
-
-		@Override
-		public void onCreate() {
-
-		}
-
-		@Override
-		public PlaybackMetadata onStore() {
-			PlaybackMetadata metadata = new PlaybackMetadata(this);
-			metadata.setValue("TestKey", testValue);
-			return metadata;
-		}
-
-		@Override
-		public void onLoad(PlaybackMetadata metadata) {
-			testValue = metadata.getValue("TestKey");
-		}
-
-		@Override
-		public void onClear() {
-			this.testValue = null;
-		}
-
-	}
-
+	
 	@Override
 	public String flavorName() {
 		return "Test";
@@ -120,6 +67,73 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	 */
 	@Test
 	void testSerialiseMetadata() {
+		
+		class MetadataTest implements PlaybackMetadataExtension {
+
+			public String testValue;
+
+			@Override
+			public String getExtensionName() {
+				return "Test1";
+			}
+
+			@Override
+			public void onCreate() {
+
+			}
+
+			@Override
+			public PlaybackMetadata onStore() {
+				PlaybackMetadata metadata = new PlaybackMetadata(this);
+				metadata.setValue("TestKey", testValue);
+				return metadata;
+			}
+
+			@Override
+			public void onLoad(PlaybackMetadata metadata) {
+				testValue = metadata.getValue("TestKey");
+			}
+
+			@Override
+			public void onClear() {
+				this.testValue = null;
+			}
+
+		}
+		
+		class MetadataTest2 implements PlaybackMetadataExtension {
+
+			public String testValue;
+
+			@Override
+			public String getExtensionName() {
+				return "Test2";
+			}
+
+			@Override
+			public void onCreate() {
+
+			}
+
+			@Override
+			public PlaybackMetadata onStore() {
+				PlaybackMetadata metadata = new PlaybackMetadata(this);
+				metadata.setValue("TestKey", testValue);
+				return metadata;
+			}
+
+			@Override
+			public void onLoad(PlaybackMetadata metadata) {
+				testValue = metadata.getValue("TestKey");
+			}
+
+			@Override
+			public void onClear() {
+				this.testValue = null;
+			}
+
+		}
+		
 		MetadataTest testmetadata1 = new MetadataTest();
 		testmetadata1.testValue = "This is a test";
 
@@ -130,7 +144,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		TASmodRegistry.PLAYBACK_METADATA.register(testmetadata2);
 
 		List<String> actual = new ArrayList<>();
-		serialiseMetadata(actual, TASmodRegistry.PLAYBACK_METADATA.handleOnStore());
+		serialiseMetadata(actual);
 
 		List<String> expected = new ArrayList<>();
 		expected.add("### Test1");
@@ -141,6 +155,33 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		assertIterableEquals(expected, actual);
 		assertEquals(0, currentTick);
+		
+		TASmodRegistry.PLAYBACK_METADATA.unregister(testmetadata1);
+		TASmodRegistry.PLAYBACK_METADATA.unregister(testmetadata2);
+	}
+	
+	@Test
+	void testSerialiseFileCommandNames() {
+		
+		class TestFileCommand extends PlaybackFileCommandExtension {
+
+			@Override
+			public String name() {
+				return "tasmod_testFileCommand";
+			}
+		}
+		
+		TestFileCommand fc = new TestFileCommand();
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(fc);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testFileCommand", true);
+		
+		List<String> actual = new ArrayList<>();
+		serialiseFileCommandNames(actual);
+		
+		List<String> expected = new ArrayList<>();
+		expected.add("FileCommand-Extensions: tasmod_testFileCommand");
+		
+		assertIterableEquals(expected, actual);
 	}
 
 	/**
@@ -332,6 +373,71 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	 */
 	@Test
 	void testDeserialiseMetadata() {
+		
+		class GeneralMetadata implements PlaybackMetadataExtension{
+
+			PlaybackMetadata metadata = null;
+			
+			@Override
+			public String getExtensionName() {
+				return "General";
+			}
+
+			@Override
+			public void onCreate() {
+			}
+
+			@Override
+			public PlaybackMetadata onStore() {
+				return null;
+			}
+
+			@Override
+			public void onLoad(PlaybackMetadata metadata) {
+				this.metadata = metadata;
+			}
+
+			@Override
+			public void onClear() {
+			}
+			
+		}
+		
+		class StartPositionMetadata implements PlaybackMetadataExtension {
+
+			PlaybackMetadata metadata = null;
+			
+			@Override
+			public String getExtensionName() {
+				return "StartPosition";
+			}
+
+			@Override
+			public void onCreate() {
+			}
+
+			@Override
+			public PlaybackMetadata onStore() {
+				return null;
+			}
+
+			@Override
+			public void onLoad(PlaybackMetadata metadata) {
+				this.metadata = metadata;
+			}
+
+			@Override
+			public void onClear() {
+			}
+			
+		}
+		
+		GeneralMetadata general = new GeneralMetadata();
+		StartPositionMetadata startPosition = new StartPositionMetadata();
+		
+		TASmodRegistry.PLAYBACK_METADATA.register(general);
+		TASmodRegistry.PLAYBACK_METADATA.register(startPosition);
+		
 		List<String> lines = new ArrayList<>();
 		lines.add("### General");
 		lines.add("Author: Scribble");
@@ -344,14 +450,13 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		lines.add("pitch:4.0");
 		lines.add("yaw:5.0");
 
-		List<PlaybackMetadata> actual = deserialiseMetadata(lines);
+		deserialiseMetadata(lines);
 
-		List<PlaybackMetadata> expected = new ArrayList<>();
 		LinkedHashMap<String, String> first = new LinkedHashMap<>();
 		first.put("Author", "Scribble");
 		first.put("Title", "77 Buttons");
 		first.put("Playing Time", "00:00.0");
-		expected.add(PlaybackMetadata.fromHashMap("General", first));
+		PlaybackMetadata expected = PlaybackMetadata.fromHashMap("General", first);
 
 		LinkedHashMap<String, String> second = new LinkedHashMap<>();
 		second.put("x", "1.0");
@@ -359,11 +464,73 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		second.put("z", "3.0");
 		second.put("pitch", "4.0");
 		second.put("yaw", "5.0");
-		expected.add(PlaybackMetadata.fromHashMap("StartPosition", second));
+		PlaybackMetadata expected2 = PlaybackMetadata.fromHashMap("StartPosition", second);
 
-		assertIterableEquals(expected, actual);
+		assertEquals(expected, general.metadata);
+		assertEquals(expected2, startPosition.metadata);
 	}
 
+	@Test
+	void testDeserialiseFileCommandNames() {
+		
+		class Test1 extends PlaybackFileCommandExtension{
+
+			@Override
+			public String name() {
+				return "tasmod_test1";
+			}
+			
+		}
+		
+		class Test2 extends PlaybackFileCommandExtension {
+
+			@Override
+			public String name() {
+				return "tasmod_test2";
+			}
+			
+		}
+		
+		Test1 test1 = new Test1();
+		Test2 test2 = new Test2();
+		
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(test1);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(test2);
+		
+		List<String> lines = new ArrayList<>();
+		lines.add("FileCommand-Extensions: tasmod_test1, tasmod_test2");
+		
+		deserialiseFileCommandNames(lines);
+		
+		assertTrue(test1.isEnabled());
+		assertTrue(test2.isEnabled());
+		
+		lines = new ArrayList<>();
+		lines.add("FileCommand-Extensions: ");
+		
+		deserialiseFileCommandNames(lines);
+		
+		assertFalse(test1.isEnabled());
+		assertFalse(test2.isEnabled());
+		
+		lines = new ArrayList<>();
+		lines.add("FileCommand-Extensions: tasmod_test1,tasmod_test2");
+		
+		deserialiseFileCommandNames(lines);
+		
+		assertTrue(test1.isEnabled());
+		assertTrue(test2.isEnabled());
+		
+		final List<String> lines2 = new ArrayList<>();
+		lines2.add("FileCommand-Extensions tasmod_test1,tasmod_test2");
+		
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			deserialiseFileCommandNames(lines2);
+		});
+
+		assertEquals("FileCommand-Extensions value was not found in the header", t.getMessage());
+	}
+	
 	/**
 	 * Test extracing ticks from some lines
 	 */
@@ -380,6 +547,12 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		lines.add("\t2||;0,1580,658|17.85;-202.74799");
 		lines.add("56|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
 		lines.add("\t1||RC;0,1580,658|17.85;-202.74799");
+		lines.add("\t2||;0,1580,658|17.85;-202.74799");
+		lines.add("// This is a comment");
+		lines.add("// $fileCommand();");
+		lines.add("");
+		lines.add("57|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
+		lines.add("\t1||RC;0,1580,658|17.85;-202.74799\t\t// This is an endline comment");
 		lines.add("\t2||;0,1580,658|17.85;-202.74799");
 
 		// Fill the actual with lists of the extracted ticks
@@ -405,14 +578,24 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		tick2.add("56|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
 		tick2.add("\t1||RC;0,1580,658|17.85;-202.74799");
 		tick2.add("\t2||;0,1580,658|17.85;-202.74799");
+		
+		List<String> tick3 = new ArrayList<>();
+		tick3.add("// This is a comment");
+		tick3.add("// $fileCommand();");
+		tick3.add("");
+		tick3.add("57|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
+		tick3.add("\t1||RC;0,1580,658|17.85;-202.74799\t\t// This is an endline comment");
+		tick3.add("\t2||;0,1580,658|17.85;-202.74799");
 
 		expected.add(tick1);
 		expected.add(tick2);
+		expected.add(tick3);
 
 		// Fill expectedIndex
 		List<Long> expectedIndex = new ArrayList<>();
 		expectedIndex.add(6L);
 		expectedIndex.add(9L);
+		expectedIndex.add(15L);
 
 		// C o m p a r e
 		assertIterableEquals(expected, actual);
@@ -564,6 +747,27 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		assertEquals(expected, actual);
 	}
+	
+	@Test
+	void testDeserialiseKeyboardWithKeyCodes() {
+		List<String> tick = new ArrayList<>();
+		tick.add(";a");
+		tick.add("17;w");
+		tick.add("17,29;");
+		tick.add("17,29,31;s");
+		tick.add("17,29,31,500;"); // Test theoretical keycode that doesn't exist
+
+		VirtualKeyboard actual = deserialiseKeyboard(tick);
+
+		VirtualKeyboard expected = new VirtualKeyboard();
+		expected.updateFromEvent(VirtualKey.ZERO, false, 'a');
+		expected.updateFromEvent(VirtualKey.W, true, 'w');
+		expected.updateFromEvent(VirtualKey.LCONTROL, true, Character.MIN_VALUE);
+		expected.updateFromEvent(VirtualKey.S, true, 's');
+		expected.updateFromEvent(500, true, Character.MIN_VALUE);
+
+		assertEquals(expected, actual);
+	}
 
 	/**
 	 * Test deserialising mouse
@@ -583,6 +787,30 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		expected.updateFromEvent(VirtualKey.MC, true, 15, 25, 34);
 
 		assertEquals(expected, actual);
+		
+		currentTick=29;
+		List<String> tick2 = new ArrayList<>();
+		tick2.add(";0,0,0");
+		tick2.add("LC;0,12,35");
+		tick2.add("LC,MC;15,25");
+		
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			deserialiseMouse(tick2);
+		});
+		
+		assertEquals("Tick 29, Subtick 2: Mouse functions do not have the correct length", t.getMessage());
+		
+		currentTick=30;
+		List<String> tick3 = new ArrayList<>();
+		tick3.add(";0,0,0");
+		tick3.add("LC;0,12,35,12");
+		tick3.add("LC,MC;15,25,15");
+		
+		Throwable t1 = assertThrows(PlaybackLoadException.class, ()->{
+			deserialiseMouse(tick3);
+		});
+		
+		assertEquals("Tick 30, Subtick 1: Mouse functions do not have the correct length", t1.getMessage());
 	}
 
 	/**
@@ -642,8 +870,6 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertEquals("Tick 13, Subtick 1: Can't parse integer in testParseInt", t.getMessage());
 		assertEquals(NumberFormatException.class, t.getCause().getClass());
 		assertEquals("For input string: \"12.1\"", t.getCause().getMessage());
-		this.currentTick = 0;
-		this.currentSubtick = 0;
 	}
 	
 	@Test
@@ -660,8 +886,6 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertEquals("Tick 15, Subtick 6: Can't parse float in testParseFloat", t.getMessage());
 		assertEquals(NumberFormatException.class, t.getCause().getClass());
 		assertEquals("For input string: \"12.123h\"", t.getCause().getMessage());
-		this.currentTick = 0;
-		this.currentSubtick = 0;
 	}
 	
 	@Test
@@ -678,8 +902,6 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			deserialiseRelativeInt("testParseRelativeInt", "~12", null);
 		});
 		assertEquals("Tick 23, Subtick 11: Can't process relative value ~12 in testParseRelativeInt. Previous value for comparing is not available", t.getMessage());
-		this.currentTick = 0;
-		this.currentSubtick = 0;
 	}
 	
 	@Test
@@ -696,8 +918,6 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			deserialiseRelativeFloat("testParseRelativeFloat", "~12.3", null);
 		});
 		assertEquals("Tick 20, Subtick 2: Can't process relative value ~12.3 in testParseRelativeFloat. Previous value for comparing is not available", t.getMessage());
-		this.currentTick = 0;
-		this.currentSubtick = 0;
 	}
 
 	@Test
@@ -772,4 +992,11 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		}
 		return out;
 	}
+
+	@Override
+	protected SerialiserFlavorBase clone() {
+		return new SerialiserFlavorBaseTest();
+	}
+	
+	
 }

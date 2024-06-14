@@ -155,13 +155,8 @@ public class PlaybackSerialiser2 {
 		
 		// Deserialise Header
 		List<String> headerLines = flavor.extractHeader(lines);
-		List<PlaybackMetadata> deserialisedMetadata = new ArrayList<>();
-		List<String> deserialisedExtensionNames = new ArrayList<>();
 		
-		flavor.deserialiseHeader(headerLines, deserialisedMetadata, deserialisedExtensionNames);
-		
-		TASmodRegistry.PLAYBACK_METADATA.handleOnLoad(deserialisedMetadata);
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.setEnabled(deserialisedExtensionNames);
+		flavor.deserialiseHeader(headerLines);
 		
 		// Deserialise main data
 		BigArrayList<TickContainer> deserialisedContainers = flavor.deserialise(lines, headerLines.size());

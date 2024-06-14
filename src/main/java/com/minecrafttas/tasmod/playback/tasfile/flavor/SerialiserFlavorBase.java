@@ -72,8 +72,8 @@ public abstract class SerialiserFlavorBase {
 		List<String> out = new ArrayList<>();
 		out.add(headerStart());
 		serialiseFlavorName(out);
-		serialiseFileCommandNames(out, extensionList);
-		serialiseMetadata(out, metadataList);
+		serialiseFileCommandNames(out);
+		serialiseMetadata(out);
 		out.add(headerEnd());
 		return out;
 	}
@@ -82,13 +82,16 @@ public abstract class SerialiserFlavorBase {
 		out.add("Flavor: " + flavorName());
 	}
 
-	protected void serialiseFileCommandNames(List<String> out, List<PlaybackFileCommandExtension> extensionList) {
+	protected void serialiseFileCommandNames(List<String> out) {
 		List<String> stringlist = new ArrayList<>();
+		List<PlaybackFileCommandExtension> extensionList = TASmodRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
 		extensionList.forEach(extension -> stringlist.add(extension.name()));
-		out.add("FC_Extensions: " + String.join(", ", stringlist));
+		out.add("FileCommand-Extensions: " + String.join(", ", stringlist));
 	}
 
-	protected void serialiseMetadata(List<String> out, List<PlaybackMetadata> metadataList) {
+	protected void serialiseMetadata(List<String> out) {
+		List<PlaybackMetadata> metadataList = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
+
 		for (PlaybackMetadata metadata : metadataList) {
 			serialiseMetadataName(out, metadata.getExtensionName());
 			serialiseMetadataValue(out, metadata.getData());
@@ -302,7 +305,7 @@ public abstract class SerialiserFlavorBase {
 	 * 
 	 */
 
-	private TickContainer previousTickContainer = null;
+	protected TickContainer previousTickContainer = null;
 
 	public boolean deserialiseFlavorName(List<String> headerLines) {
 		for (String line : headerLines) {
@@ -315,9 +318,8 @@ public abstract class SerialiserFlavorBase {
 		return false;
 	}
 
-	public void deserialiseHeader(List<String> headerLines, List<PlaybackMetadata> metadataList, List<String> activeExtensionList) {
-
-		metadataList.addAll(deserialiseMetadata(headerLines));
+	public void deserialiseHeader(List<String> headerLines) {
+		deserialiseMetadata(headerLines);
 		deserialiseFileCommandNames(headerLines);
 	}
 
@@ -338,21 +340,22 @@ public abstract class SerialiserFlavorBase {
 		throw new PlaybackLoadException("Cannot find the end of the header");
 	}
 
-	public List<String> deserialiseFileCommandNames(List<String> headerLines) {
+	public void deserialiseFileCommandNames(List<String> headerLines) {
 		for (String line : headerLines) {
-			Matcher matcher = extract("FC_Extensions: ?(.*)", line);
+			Matcher matcher = extract("FileCommand-Extensions: ?(.*)", line);
 
 			if (matcher.find()) {
 				String extensionStrings = matcher.group(1);
-				String[] extensionNames = extensionStrings.split(", ");
+				String[] extensionNames = extensionStrings.split(", ?");
 
-				return Arrays.asList(extensionNames);
+				TASmodRegistry.PLAYBACK_FILE_COMMAND.setEnabled(Arrays.asList(extensionNames));
+				return;
 			}
 		}
-		throw new PlaybackLoadException("Extensions value was not found in the header");
+		throw new PlaybackLoadException("FileCommand-Extensions value was not found in the header");
 	}
 
-	public List<PlaybackMetadata> deserialiseMetadata(List<String> headerLines) {
+	public void deserialiseMetadata(List<String> headerLines) {
 		List<PlaybackMetadata> out = new ArrayList<>();
 
 		String metadataName = null;
@@ -382,7 +385,7 @@ public abstract class SerialiserFlavorBase {
 		if (metadataName != null)
 			out.add(PlaybackMetadata.fromHashMap(metadataName, values));
 
-		return out;
+		TASmodRegistry.PLAYBACK_METADATA.handleOnLoad(out);
 	}
 
 	/**
@@ -407,27 +410,148 @@ public abstract class SerialiserFlavorBase {
 		return out;
 	}
 
+	protected enum ExtractPhases {
+		/**
+		 * InlineComment phase.
+		 * <pre>
+		 * ---
+		 * // This is a comment
+		 * // $fileCommand();
+		 * 
+		 * ---
+		 * </pre>
+		 * Empty lines also count as comments
+		 */
+		COMMENTS,
+		/**
+		 * Tick phase. Start with a number, then a | character
+		 * <pre>
+		 * ---
+		 * 57|W,LCONTROL;w|;0,887,626|17.85;-202.74799
+		 * ---
+		 * </pre>
+		 * Only one line should be in this phase
+		 */
+		TICK,
+		/**
+		 * Subtick phase. Start with a tabulator, then a number, then a | character
+		 * <pre>
+		 * ---
+		 * 	1||RC;0,1580,658|17.85;-202.74799\t\t// This is an endline comment
+		 * 	2||;0,1580,658|17.85;-202.74799
+		 * ---
+		 * Can have multiple subticks
+		 */
+		SUBTICK,
+		/**
+		 * We are outside a tick
+		 */
+		NONE
+	}
+
 	/**
-	 * Reads the next lines, until a full tickcontainer is reached
+	 * <p>
+	 * Extracts all the lines corresponding to one tick+subticks a.k.a one
+	 * "container" from the incoming lines.<br>
+	 * The extracted ticks are easier to process than using a huge list.<br>
+	 * <p>
+	 * A container has multiple parts to it, that are split into
+	 * {@link ExtractPhases}<br>
+	 * The container starts in {@link ExtractPhases#NONE}.
 	 * 
+	 * <pre>
+	 * --- {@link ExtractPhases#COMMENTS Comment phase} --- 
+	 * // This is a comment 
+	 * // $fileCommand(); 
+	 * --- {@link ExtractPhases#TICK Tick phase} ---
+	 * 57|W,LCONTROL;w|;0,887,626|17.85;-202.74799 
+	 * --- {@link ExtractPhases#SUBTICK Subtick phase} --- 
+	 * 	1||RC;0,1580,658|17.85;-202.74799	// This is an endline comment 
+	 * 	2||;0,1580,658|17.85;-202.74799
+	 * ---------------------
+	 * </pre>
+	 * <h2>Logic</h2>
+	 * <ol>
+	 * <li>Phase: None
+	 * <ol>
+	 * <li>If a comment is found, set the phase to comment</li>
+	 * <li>If a tick is found, set the phase to tick</li>
+	 * <li>If a subtick is found, throw an error. Subticks always come after ticks</li>
+	 * </ol></li>
+	 * <li>Phase: Comment
+	 * <ol>
+	 * <li>If a tick is found, set the phase to tick</li>
+	 * <li>If a subtick is found, throw an error. Subticks always come after ticks</li>
+	 * </ol></li>
+	 * <li>Phase: Tick
+	 * <ol>
+	 * <li>If a subtick is found, set the phase to subticks</li>
+	 * <li>If a tick is found, end the extraction</li>
+	 * <li>If a comment is found, end the extraction</li>
+	 * </ol></li>
+	 * <li>Phase: Subtick
+	 * <ol>
+	 * <li>If a tick is found, end the extraction</li>
+	 * <li>If a comment is found, end the extraction</li>
+	 * </ol></li>
+	 * </ol> 
 	 * @param extracted The extracted lines, passed in by reference
 	 * @param lines     The line list
 	 * @param startPos  The start position of this tick
 	 * @return The updated index for the next tick
 	 */
 	protected long extractContainer(List<String> extracted, BigArrayList<String> lines, long startPos) {
-		boolean shouldStop = false;
+		ExtractPhases phase = ExtractPhases.NONE;
+
+		String commentRegex = "^//";
+		String tickRegex = "^\\d+\\|";
+		String subtickRegex = "^\t\\d+\\|";
+
 		long counter = 0L;
 		for (long i = startPos; i < lines.size(); i++) {
 			String line = lines.get(i);
-			if (contains("^\\d+\\|", line)) {
-				if (shouldStop) {
-					return startPos + counter - 1;
-				} else {
-					shouldStop = true;
-				}
+
+			switch (phase) {
+				case NONE:
+					if (contains(subtickRegex, line)) {	// Subtick
+						throw new PlaybackLoadException(currentTick, currentSubtick, "Error while trying to parse line %s in line %s. This should not be a subtick at this position", line, startPos + counter);
+					}
+
+					if (contains(commentRegex, line)||line.isEmpty()) { // Comment
+						phase = ExtractPhases.COMMENTS;
+					}
+					else if (contains(tickRegex, line)) { // Tick
+						phase = ExtractPhases.TICK;
+					}
+
+					break;
+				case COMMENTS:
+					if (contains(subtickRegex, line)) {	// Subtick
+						throw new PlaybackLoadException(currentTick, currentSubtick, "Error while trying to parse line %s in line %s. This should not be a subtick at this position", line, startPos + counter);
+					}
+
+					if (contains(tickRegex, line)) {
+						phase = ExtractPhases.TICK;
+					}
+
+					break;
+				case TICK:
+					if (contains(subtickRegex, line)) {
+						phase = ExtractPhases.SUBTICK;
+					}
+
+					if (contains(commentRegex, line) || contains(tickRegex, line) || line.isEmpty()) {
+						return startPos + counter - 1;
+					}
+
+					break;
+				case SUBTICK:
+					if (contains(commentRegex, line) || contains(tickRegex, line) || line.isEmpty()) {
+						return startPos + counter - 1;
+					}
+					break;
 			}
-			if (shouldStop) {
+			if (phase != ExtractPhases.NONE) {
 				extracted.add(line);
 			}
 			counter++;
@@ -535,9 +659,9 @@ public abstract class SerialiserFlavorBase {
 		VirtualMouse out = new VirtualMouse();
 
 		currentSubtick = 0;
-		Integer previousCursorX = previousTickContainer == null? null : previousTickContainer.getMouse().getCursorX();
-		Integer previousCursorY = previousTickContainer== null? null : previousTickContainer.getMouse().getCursorY();
-		
+		Integer previousCursorX = previousTickContainer == null ? null : previousTickContainer.getMouse().getCursorX();
+		Integer previousCursorY = previousTickContainer == null ? null : previousTickContainer.getMouse().getCursorY();
+
 		for (String line : mouseStrings) {
 			Matcher matcher = extract("(.*?);(.+)", line);
 			if (matcher.find()) {
@@ -554,11 +678,11 @@ public abstract class SerialiserFlavorBase {
 					cursorX = deserialiseRelativeInt("cursorX", functions[1], previousCursorX);
 					cursorY = deserialiseRelativeInt("cursorY", functions[2], previousCursorY);
 				} else {
-					throw new PlaybackLoadException("Mouse functions do not have the correct length");
+					throw new PlaybackLoadException(currentTick, currentSubtick, "Mouse functions do not have the correct length");
 				}
 
 				out.updateFromState(keycodes, scrollwheel, cursorX, cursorY);
-				
+
 				previousCursorX = cursorX;
 				previousCursorY = cursorY;
 			}
@@ -573,7 +697,7 @@ public abstract class SerialiserFlavorBase {
 		currentSubtick = 0;
 		Float previousPitch = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getPitch();
 		Float previousYaw = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getYaw();
-		
+
 		for (String line : cameraAngleStrings) {
 			Matcher matcher = extract("(.+?);(.+)", line);
 
@@ -628,10 +752,10 @@ public abstract class SerialiserFlavorBase {
 
 	protected int deserialiseRelativeInt(String name, String intstring, Integer previous) {
 		int out = 0;
-		if(intstring.startsWith("~")) {
+		if (intstring.startsWith("~")) {
 			intstring = intstring.replace("~", "");
 			int relative = parseInt(name, intstring);
-			if(previous != null) {
+			if (previous != null) {
 				out = previous + relative;
 			} else {
 				throw new PlaybackLoadException(currentTick, currentSubtick, "Can't process relative value ~%s in %s. Previous value for comparing is not available", intstring, name);
@@ -641,7 +765,7 @@ public abstract class SerialiserFlavorBase {
 		}
 		return out;
 	}
-	
+
 	protected float parseFloat(String name, String floatstring) {
 		try {
 			return Float.parseFloat(floatstring);
@@ -652,10 +776,10 @@ public abstract class SerialiserFlavorBase {
 
 	protected float deserialiseRelativeFloat(String name, String floatstring, Float previous) {
 		float out = 0;
-		if(floatstring.startsWith("~")) {
+		if (floatstring.startsWith("~")) {
 			floatstring = floatstring.replace("~", "");
 			float relative = parseFloat(name, floatstring);
-			if(previous != null) {
+			if (previous != null) {
 				out = previous + relative;
 			} else {
 				throw new PlaybackLoadException(currentTick, currentSubtick, "Can't process relative value ~%s in %s. Previous value for comparing is not available", floatstring, name);
@@ -665,7 +789,7 @@ public abstract class SerialiserFlavorBase {
 		}
 		return out;
 	}
-	
+
 	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd, List<List<PlaybackFileCommand>> endlineFileCommands) {
 
 		for (String line : lines) {
@@ -773,4 +897,7 @@ public abstract class SerialiserFlavorBase {
 			list.add(element);
 		}
 	}
+
+	@Override
+	protected abstract SerialiserFlavorBase clone();
 }

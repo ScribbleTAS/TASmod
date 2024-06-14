@@ -12,7 +12,6 @@ import java.util.ArrayList;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
@@ -38,6 +37,11 @@ public class PlaybackSerialiserTest {
 			return "Test";
 		}
 		
+		
+		@Override
+		protected SerialiserFlavorBase clone() {
+			return new TestFlavor();
+		}
 	}
 	
 	private static class TestMetadatada implements PlaybackMetadataExtension {

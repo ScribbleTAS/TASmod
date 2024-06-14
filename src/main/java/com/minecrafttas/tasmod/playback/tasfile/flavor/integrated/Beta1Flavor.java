@@ -29,4 +29,9 @@ public class Beta1Flavor extends SerialiserFlavorBase {
 	protected List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle) {
 		return null;
 	}
+	
+	@Override
+	protected SerialiserFlavorBase clone() {
+		return new Beta1Flavor();
+	}
 }

@@ -35,4 +35,5 @@ public class TASmodRegistry {
 	 * The resulting flavor can be registered here and can be found as a saving option with /saveTAS
 	 */
 	public static final SerialiserFlavorRegistry SERIALISER_FLAVOR = new SerialiserFlavorRegistry();
+	
 }
