@@ -601,7 +601,59 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertIterableEquals(expected, actual);
 		assertIterableEquals(expectedIndex, actualIndex);
 	}
+	
+	@Test
+	void testExtractExceptions() {
+		// Create lines to be extracted from
+		BigArrayList<String> lines = new BigArrayList<>();
+		lines.add("\t1||RC;0,1580,658|17.85;-202.74799");
+		lines.add("55|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
+		lines.add("\t2||;0,1580,658|17.85;-202.74799");
 
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			extractContainer(new ArrayList<>(), lines, 0);
+		});
+
+		// C o m p a r e
+		assertEquals("Tick 0, Subtick 0: Error while trying to parse the file in line 1. This should not be a subtick at this position", t.getMessage());
+	}
+	
+	@Test
+	void testExtractExceptions2() {
+		// Create lines to be extracted from
+		BigArrayList<String> lines = new BigArrayList<>();
+		lines.add("// Comment");
+		lines.add("\t1||RC;0,1580,658|17.85;-202.74799\t\t// This is an endline comment");
+		lines.add("57|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
+		lines.add("\t2||;0,1580,658|17.85;-202.74799");
+
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			extractContainer(new ArrayList<>(), lines, 0);
+		});
+
+		// C o m p a r e
+		assertEquals("Tick 0, Subtick 0: Error while trying to parse the file in line 2. This should not be a subtick at this position", t.getMessage());
+	}
+	
+	@Test
+	void testExtractExceptions3() {
+		// Create lines to be extracted from
+		BigArrayList<String> lines = new BigArrayList<>();
+		lines.add("57|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
+		lines.add("// Comment");
+		lines.add("\t1||RC;0,1580,658|17.85;-202.74799\t\t// This is an endline comment");
+		lines.add("\t2||;0,1580,658|17.85;-202.74799");
+
+		extractContainer(new ArrayList<>(), lines, 0); // First extraction passes as it parses up to the comment.
+		
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			extractContainer(new ArrayList<>(), lines, 1);	// Second extraction fails as it starts with the comment then, a subtick which is disallowed
+		});
+
+		// C o m p a r e
+		assertEquals("Tick 0, Subtick 0: Error while trying to parse the file in line 3. This should not be a subtick at this position", t.getMessage());
+	}
+	
 	/**
 	 * Test deserialising a container a.k.a a tick
 	 */

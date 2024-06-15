@@ -413,6 +413,7 @@ public abstract class SerialiserFlavorBase {
 	protected enum ExtractPhases {
 		/**
 		 * InlineComment phase.
+		 * 
 		 * <pre>
 		 * ---
 		 * // This is a comment
@@ -420,27 +421,28 @@ public abstract class SerialiserFlavorBase {
 		 * 
 		 * ---
 		 * </pre>
+		 * 
 		 * Empty lines also count as comments
 		 */
 		COMMENTS,
 		/**
 		 * Tick phase. Start with a number, then a | character
+		 * 
 		 * <pre>
 		 * ---
 		 * 57|W,LCONTROL;w|;0,887,626|17.85;-202.74799
 		 * ---
 		 * </pre>
+		 * 
 		 * Only one line should be in this phase
 		 */
 		TICK,
 		/**
 		 * Subtick phase. Start with a tabulator, then a number, then a | character
+		 * 
 		 * <pre>
-		 * ---
-		 * 	1||RC;0,1580,658|17.85;-202.74799\t\t// This is an endline comment
-		 * 	2||;0,1580,658|17.85;-202.74799
-		 * ---
-		 * Can have multiple subticks
+		 * --- 1||RC;0,1580,658|17.85;-202.74799\t\t// This is an endline comment
+		 * 2||;0,1580,658|17.85;-202.74799 --- Can have multiple subticks
 		 */
 		SUBTICK,
 		/**
@@ -470,31 +472,39 @@ public abstract class SerialiserFlavorBase {
 	 * 	2||;0,1580,658|17.85;-202.74799
 	 * ---------------------
 	 * </pre>
+	 * 
 	 * <h2>Logic</h2>
 	 * <ol>
 	 * <li>Phase: None
 	 * <ol>
 	 * <li>If a comment is found, set the phase to comment</li>
 	 * <li>If a tick is found, set the phase to tick</li>
-	 * <li>If a subtick is found, throw an error. Subticks always come after ticks</li>
-	 * </ol></li>
+	 * <li>If a subtick is found, throw an error. Subticks always come after
+	 * ticks</li>
+	 * </ol>
+	 * </li>
 	 * <li>Phase: Comment
 	 * <ol>
 	 * <li>If a tick is found, set the phase to tick</li>
-	 * <li>If a subtick is found, throw an error. Subticks always come after ticks</li>
-	 * </ol></li>
+	 * <li>If a subtick is found, throw an error. Subticks always come after
+	 * ticks</li>
+	 * </ol>
+	 * </li>
 	 * <li>Phase: Tick
 	 * <ol>
 	 * <li>If a subtick is found, set the phase to subticks</li>
 	 * <li>If a tick is found, end the extraction</li>
 	 * <li>If a comment is found, end the extraction</li>
-	 * </ol></li>
+	 * </ol>
+	 * </li>
 	 * <li>Phase: Subtick
 	 * <ol>
 	 * <li>If a tick is found, end the extraction</li>
 	 * <li>If a comment is found, end the extraction</li>
-	 * </ol></li>
-	 * </ol> 
+	 * </ol>
+	 * </li>
+	 * </ol>
+	 * 
 	 * @param extracted The extracted lines, passed in by reference
 	 * @param lines     The line list
 	 * @param startPos  The start position of this tick
@@ -513,40 +523,39 @@ public abstract class SerialiserFlavorBase {
 
 			switch (phase) {
 				case NONE:
-					if (contains(subtickRegex, line)) {	// Subtick
-						throw new PlaybackLoadException(currentTick, currentSubtick, "Error while trying to parse line %s in line %s. This should not be a subtick at this position", line, startPos + counter);
+					if (contains(subtickRegex, line)) { // Subtick
+						throw new PlaybackLoadException(currentTick, currentSubtick, "Error while trying to parse the file in line %s. This should not be a subtick at this position", startPos + counter + 1);
 					}
 
-					if (contains(commentRegex, line)||line.isEmpty()) { // Comment
+					if (contains(commentRegex, line) || line.isEmpty()) { // Comment
 						phase = ExtractPhases.COMMENTS;
-					}
-					else if (contains(tickRegex, line)) { // Tick
+					} else if (contains(tickRegex, line)) { // Tick
 						phase = ExtractPhases.TICK;
 					}
 
 					break;
 				case COMMENTS:
-					if (contains(subtickRegex, line)) {	// Subtick
-						throw new PlaybackLoadException(currentTick, currentSubtick, "Error while trying to parse line %s in line %s. This should not be a subtick at this position", line, startPos + counter);
+					if (contains(subtickRegex, line)) { // Subtick
+						throw new PlaybackLoadException(currentTick, currentSubtick, "Error while trying to parse the file in line %s. This should not be a subtick at this position", startPos + counter + 1);
 					}
 
-					if (contains(tickRegex, line)) {
+					if (contains(tickRegex, line)) { // Tick
 						phase = ExtractPhases.TICK;
 					}
 
 					break;
 				case TICK:
-					if (contains(subtickRegex, line)) {
+					if (contains(subtickRegex, line)) { // Subtick
 						phase = ExtractPhases.SUBTICK;
 					}
 
-					if (contains(commentRegex, line) || contains(tickRegex, line) || line.isEmpty()) {
+					if (contains(commentRegex, line) || contains(tickRegex, line) || line.isEmpty()) { // Comment
 						return startPos + counter - 1;
 					}
 
 					break;
 				case SUBTICK:
-					if (contains(commentRegex, line) || contains(tickRegex, line) || line.isEmpty()) {
+					if (contains(commentRegex, line) || contains(tickRegex, line) || line.isEmpty()) { // Comment
 						return startPos + counter - 1;
 					}
 					break;
@@ -804,8 +813,6 @@ public abstract class SerialiserFlavorBase {
 				if (!tickMatcher.group(3).isEmpty()) {
 					serialisedCameraAngle.add(tickMatcher.group(3));
 				}
-			} else {
-				throw new PlaybackLoadException("Cannot find inputs in line %s", line);
 			}
 
 			List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
