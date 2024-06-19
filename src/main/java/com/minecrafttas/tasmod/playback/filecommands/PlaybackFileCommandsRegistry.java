@@ -51,12 +51,14 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 		}
 	}
 
-	public void setEnabled(String extensionName, boolean enabled) {
+	public boolean setEnabled(String extensionName, boolean enabled) {
 		PlaybackFileCommandExtension extension = REGISTRY.get(extensionName);
-		if(extension != null) {
-			extension.setEnabled(enabled);
-			enabledExtensions = getEnabled();
+		if(extension == null) {
+			return false;
 		}
+		extension.setEnabled(enabled);
+		enabledExtensions = getEnabled();
+		return true;
 	}
 
 	private void disableAll() {

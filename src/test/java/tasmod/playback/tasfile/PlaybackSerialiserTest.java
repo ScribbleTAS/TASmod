@@ -9,13 +9,19 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.CommentContainer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
@@ -73,39 +79,53 @@ public class PlaybackSerialiserTest {
 
 		@Override
 		public void onClear() {
-			// TODO Auto-generated method stub
-			
 		}
 		
 	}
 	
-	private static class TestExtension extends PlaybackFileCommandExtension {
+	private static class TestFileCommand extends PlaybackFileCommandExtension {
 
+		List<PlaybackFileCommandContainer> inline = new ArrayList<>();
+		
 		@Override
 		public String name() {
-			return "tasmod_testExtension";
+			return "tasmod_testFileExtension";
 		}
 		
+		@Override
+		public void onDeserialiseInlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+			inline.add(fileCommandContainer);
+		}
+		
+		@Override
+		public String[] getFileCommandNames() {
+			return new String[]{"testKey"};
+		}
 	}
 	
 	File file = new File("src/test/resources/serialiser/PlaybackSerialiserTest.mctas");
 	
 	private static TestFlavor testFlavor = new TestFlavor();
 	private static TestMetadatada testMetadata = new TestMetadatada();
-	private static TestExtension testExtension = new TestExtension();
+	private static TestFileCommand testFileCommand = new TestFileCommand();
 	
 	@BeforeAll
 	static void register() {
 		TASmodRegistry.SERIALISER_FLAVOR.register(testFlavor);
 		TASmodRegistry.PLAYBACK_METADATA.register(testMetadata);
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(testExtension);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(testFileCommand);
+	}
+	
+	@AfterEach
+	void afterEach() {
+		testFileCommand.inline.clear();
 	}
 	
 	@AfterAll
 	static void unregister() {
 		TASmodRegistry.SERIALISER_FLAVOR.unregister(testFlavor);
 		TASmodRegistry.PLAYBACK_METADATA.unregister(testMetadata);
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.unregister(testExtension);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.unregister(testFileCommand);
 	}
 	
 	@Test
@@ -113,7 +133,7 @@ public class PlaybackSerialiserTest {
 		BigArrayList<TickContainer> expected = new BigArrayList<>();
 		
 		testMetadata.testValue = "testing";
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testExtension", true);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testFileExtension", true);
 		// Tick 1
 		
 		// Keyboard
@@ -169,6 +189,53 @@ public class PlaybackSerialiserTest {
 		} finally {
 			file.delete();
 		}
+	}
+	
+	@Test
+	void testDeserialiser() throws PlaybackLoadException, IOException {
+		List<String> lines = new ArrayList<>();
+		lines.add("TASFile");
+		lines.add("FileCommand-Extensions: tasmod_testFileExtension");
+		lines.add("Flavor: Test");
+		lines.add("### Test");
+		lines.add("TestKey: Wat");
+		lines.add("##################################################");
+		lines.add("// $testKey(test);");
+		lines.add("1|W;w|| // test");
+		lines.add("\t1|W,T;t||");
+		
+		File file = new File("src/test/resources/serialiser/PlaybackSerialiserTest2.mctas");
+		try {
+			FileUtils.writeLines(file, lines);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		BigArrayList<TickContainer> actual = PlaybackSerialiser2.loadFromFile(file);
+
+		BigArrayList<TickContainer> expected = new BigArrayList<>();
+		
+		VirtualKeyboard keyboard = new VirtualKeyboard();
+		keyboard.updateFromEvent(VirtualKey.W, true, 'w');
+		keyboard.updateFromEvent(VirtualKey.T, true, 't');
+		
+		CommentContainer container = new CommentContainer();
+		container.addEndlineComment("test");
+		expected.add(new TickContainer(keyboard, new VirtualMouse(), new VirtualCameraAngle(), container));
+		
+		assertBigArrayList(expected, actual);
+		
+		assertEquals("Wat", testMetadata.actual);
+		
+		List<PlaybackFileCommandContainer> fclist = new ArrayList<>();
+		PlaybackFileCommandContainer fccontainer = new PlaybackFileCommandContainer();
+		fccontainer.add("testKey", new PlaybackFileCommand("testKey", "test"));
+		
+		fclist.add(fccontainer);
+		
+		assertIterableEquals(fclist, testFileCommand.inline);
+		
+		file.delete();
 	}
 	
 	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {

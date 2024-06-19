@@ -62,6 +62,7 @@ public class PlaybackFileCommand {
 		};
 
 		public void onDisable() {
+			
 		};
 
 		public void onRecord(long tick, TickContainer tickContainer) {
@@ -129,6 +130,15 @@ public class PlaybackFileCommand {
 				}
 			}
 		}
+		
+		public void add(String key, PlaybackFileCommand fileCommand) {
+			List<PlaybackFileCommand> toAdd = getOrDefault(key, new ArrayList<>());
+			if(toAdd.isEmpty()) {
+				put(key, toAdd);
+			}
+			
+			toAdd.add(fileCommand);
+		}
 
 		public PlaybackFileCommandContainer split(String... keys) {
 			return split(Arrays.asList(keys));
@@ -166,6 +176,11 @@ public class PlaybackFileCommand {
 			}
 
 			return out;
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			return super.equals(o);
 		}
 	}
 }

@@ -399,12 +399,12 @@ public abstract class SerialiserFlavorBase {
 		BigArrayList<TickContainer> out = new BigArrayList<>();
 
 		for (long i = startPos; i < lines.size(); i++) {
-			List<String> tick = new ArrayList<>();
+			List<String> container = new ArrayList<>();
 			// Extract the tick and set the index
-			i = extractContainer(tick, lines, i);
+			i = extractContainer(container, lines, i);
 			currentTick = i;
 			// Extract container
-			deserialiseContainer(out, tick);
+			deserialiseContainer(out, container);
 		}
 		previousTickContainer = null;
 		return out;
@@ -802,6 +802,8 @@ public abstract class SerialiserFlavorBase {
 	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd, List<List<PlaybackFileCommand>> endlineFileCommands) {
 
 		for (String line : lines) {
+			List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
+
 			Matcher tickMatcher = extract("^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?", line);
 			if (tickMatcher.find()) {
 				if (!tickMatcher.group(1).isEmpty()) {
@@ -813,11 +815,10 @@ public abstract class SerialiserFlavorBase {
 				if (!tickMatcher.group(3).isEmpty()) {
 					serialisedCameraAngle.add(tickMatcher.group(3));
 				}
+				String endlineComment = line.substring(tickMatcher.group(0).length());
+				commentsAtEnd.add(deserialiseEndlineComment(endlineComment, deserialisedFileCommands));
 			}
 
-			List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
-			String endlineComment = line.substring(tickMatcher.group(0).length());
-			commentsAtEnd.add(deserialiseEndlineComment(endlineComment, deserialisedFileCommands));
 
 			if (deserialisedFileCommands.isEmpty())
 				deserialisedFileCommands = null;

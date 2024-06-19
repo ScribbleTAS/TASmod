@@ -1,5 +1,6 @@
 package com.minecrafttas.tasmod.playback.tasfile.flavor;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -57,6 +58,6 @@ public class SerialiserFlavorRegistry extends AbstractRegistry<String, Serialise
 	}
 	
 	public List<SerialiserFlavorBase> getFlavors() {
-		return (List<SerialiserFlavorBase>) REGISTRY.values();
+		return new ArrayList<>(REGISTRY.values());
 	}
 }

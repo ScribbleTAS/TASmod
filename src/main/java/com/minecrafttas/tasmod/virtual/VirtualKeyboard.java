@@ -177,10 +177,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
     	}
     }
     
-    /**
-     * Creates a new subtick by {@link #shallowClone()}ing this VirtualKeyboard.<br>
-     * If {@link Subtickable#ignoreFirstUpdate} is true, no new subtick will be created.<br>
-     */
+    @Override
 	public void createSubtick() {
 		if(isParent() && !ignoreFirstUpdate()) {
     		addSubtick(shallowClone());

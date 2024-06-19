@@ -78,6 +78,12 @@ public abstract class VirtualPeripheral<T extends VirtualPeripheral<T>> extends 
 		return out;
 	}
 
+    /**
+     * Creates a new subtick by {@link #shallowClone() shallowCloning} this VirtualPeripheral.<br>
+     * If {@link Subtickable#ignoreFirstUpdate} is true, no new subtick will be created.<br>
+     */
+	public void createSubtick() {}
+	
 	@Override
 	public String toString() {
 		return String.join(",", getCurrentPresses());
