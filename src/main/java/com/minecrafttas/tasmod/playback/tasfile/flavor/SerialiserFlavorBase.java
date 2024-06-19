@@ -68,7 +68,7 @@ public abstract class SerialiserFlavorBase {
 		 
 	  ==============================================*/
 
-	public List<String> serialiseHeader(List<PlaybackMetadata> metadataList, List<PlaybackFileCommandExtension> extensionList) {
+	public List<String> serialiseHeader() {
 		List<String> out = new ArrayList<>();
 		out.add(headerStart());
 		serialiseFlavorName(out);
@@ -641,6 +641,7 @@ public abstract class SerialiserFlavorBase {
 			String[] args = matcher.group(2).split(", ?");
 			deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
 			comment = matcher.replaceFirst("");
+			matcher.reset(comment);
 		}
 
 		return comment;
@@ -802,7 +803,6 @@ public abstract class SerialiserFlavorBase {
 	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd, List<List<PlaybackFileCommand>> endlineFileCommands) {
 
 		for (String line : lines) {
-			List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
 
 			Matcher tickMatcher = extract("^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?", line);
 			if (tickMatcher.find()) {
@@ -815,15 +815,19 @@ public abstract class SerialiserFlavorBase {
 				if (!tickMatcher.group(3).isEmpty()) {
 					serialisedCameraAngle.add(tickMatcher.group(3));
 				}
+				
+				List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
+				
 				String endlineComment = line.substring(tickMatcher.group(0).length());
 				commentsAtEnd.add(deserialiseEndlineComment(endlineComment, deserialisedFileCommands));
+				
+				if (deserialisedFileCommands.isEmpty())
+					deserialisedFileCommands = null;
+				
+				endlineFileCommands.add(deserialisedFileCommands);
 			}
 
 
-			if (deserialisedFileCommands.isEmpty())
-				deserialisedFileCommands = null;
-
-			endlineFileCommands.add(deserialisedFileCommands);
 		}
 	}
 

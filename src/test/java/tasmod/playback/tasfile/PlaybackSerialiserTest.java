@@ -86,6 +86,7 @@ public class PlaybackSerialiserTest {
 	private static class TestFileCommand extends PlaybackFileCommandExtension {
 
 		List<PlaybackFileCommandContainer> inline = new ArrayList<>();
+		List<PlaybackFileCommandContainer> endline = new ArrayList<>();
 		
 		@Override
 		public String name() {
@@ -94,12 +95,17 @@ public class PlaybackSerialiserTest {
 		
 		@Override
 		public void onDeserialiseInlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
-			inline.add(fileCommandContainer);
+			inline.add(fileCommandContainer.split("testKey"));
+		}
+		
+		@Override
+		public void onDeserialiseEndlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+			endline.add(fileCommandContainer.split("endlineKey"));
 		}
 		
 		@Override
 		public String[] getFileCommandNames() {
-			return new String[]{"testKey"};
+			return new String[]{"testKey", "endlineKey"};
 		}
 	}
 	
@@ -119,6 +125,7 @@ public class PlaybackSerialiserTest {
 	@AfterEach
 	void afterEach() {
 		testFileCommand.inline.clear();
+		testFileCommand.endline.clear();
 	}
 	
 	@AfterAll
@@ -200,9 +207,11 @@ public class PlaybackSerialiserTest {
 		lines.add("### Test");
 		lines.add("TestKey: Wat");
 		lines.add("##################################################");
+		lines.add("// This is a regular comment");
+		lines.add("");
 		lines.add("// $testKey(test);");
 		lines.add("1|W;w|| // test");
-		lines.add("\t1|W,T;t||");
+		lines.add("\t1|W,T;t||	// $testKey(test);$endlineKey();");
 		
 		File file = new File("src/test/resources/serialiser/PlaybackSerialiserTest2.mctas");
 		try {
@@ -230,10 +239,17 @@ public class PlaybackSerialiserTest {
 		List<PlaybackFileCommandContainer> fclist = new ArrayList<>();
 		PlaybackFileCommandContainer fccontainer = new PlaybackFileCommandContainer();
 		fccontainer.add("testKey", new PlaybackFileCommand("testKey", "test"));
-		
+
 		fclist.add(fccontainer);
-		
 		assertIterableEquals(fclist, testFileCommand.inline);
+		
+		List<PlaybackFileCommandContainer> fclistEnd = new ArrayList<>();
+		PlaybackFileCommandContainer fccontainerEnd = new PlaybackFileCommandContainer();
+		fccontainerEnd.add("endlineKey", null);
+		fccontainerEnd.add("endlineKey", new PlaybackFileCommand("endlineKey"));
+		
+		fclistEnd.add(fccontainerEnd);
+		assertIterableEquals(fclistEnd, testFileCommand.endline);
 		
 		file.delete();
 	}

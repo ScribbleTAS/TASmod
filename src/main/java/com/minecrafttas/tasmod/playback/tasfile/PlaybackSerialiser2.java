@@ -61,11 +61,9 @@ public class PlaybackSerialiser2 {
 		writerThread.start();
 
 		SerialiserFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorname);
-		
-		List<PlaybackMetadata> metadataList = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
-		List<PlaybackFileCommandExtension> filecommandextensionList = TASmodRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
 
-		for (String line : flavor.serialiseHeader(metadataList, filecommandextensionList)) {
+		List<String> header = flavor.serialiseHeader();
+		for (String line : header) {
 			writerThread.addLine(line);
 		}
 

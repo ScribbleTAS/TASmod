@@ -118,10 +118,12 @@ public class PlaybackFileCommand {
 					List<PlaybackFileCommand> val = entry.getValue();
 
 					boolean valuePresent = false;
-					for (PlaybackFileCommand command : lists) {
-						if (key.equals(command.getName())) {
-							valuePresent = true;
-							val.add(command);
+					if(lists!=null) {
+						for (PlaybackFileCommand command : lists) {
+							if (key.equals(command.getName())) {
+								valuePresent = true;
+								val.add(command);
+							}
 						}
 					}
 					if (!valuePresent) {
@@ -180,6 +182,17 @@ public class PlaybackFileCommand {
 		
 		@Override
 		public boolean equals(Object o) {
+			if(o instanceof PlaybackFileCommandContainer) {
+				PlaybackFileCommandContainer other = (PlaybackFileCommandContainer) o;
+				for (java.util.Map.Entry<String, List<PlaybackFileCommand>> entry : other.entrySet()) {
+					String key = entry.getKey();
+					List<PlaybackFileCommand> val = entry.getValue();
+					
+					if(!this.containsKey(key) && !this.get(key).equals(val))
+						return false;
+				}
+				return true;
+			}
 			return super.equals(o);
 		}
 	}

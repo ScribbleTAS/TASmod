@@ -3,7 +3,6 @@ package com.minecrafttas.tasmod.playback.filecommands;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Queue;
 
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
@@ -120,11 +119,6 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 			}
 		}
 		return out;
-	}
-
-	@FunctionalInterface
-	private interface OnSerialise {
-		Queue<PlaybackFileCommand> accept(PlaybackFileCommandExtension extension, long currentTick, TickContainer container);
 	}
 
 	public void handleOnDeserialiseInline(long currentTick, TickContainer deserialisedContainer, List<List<PlaybackFileCommand>> inlineFileCommands) {

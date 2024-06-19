@@ -593,7 +593,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		private CommentContainer comments;
 
 		public TickContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
-			this(keyboard, mouse, subticks, null);
+			this(keyboard, mouse, subticks, new CommentContainer());
 		}
 		
 		public TickContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle camera, CommentContainer comments) {
@@ -639,7 +639,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		public boolean equals(Object other) {
 			if (other instanceof TickContainer) {
 				TickContainer container = (TickContainer) other;
-				return keyboard.equals(container.keyboard) || mouse.equals(container.mouse) || cameraAngle.equals(container.cameraAngle);
+				return keyboard.equals(container.keyboard) && mouse.equals(container.mouse) && cameraAngle.equals(container.cameraAngle) && comments.equals(container.comments);
 			}
 			return super.equals(other);
 		}
@@ -706,6 +706,15 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 		public List<String> getEndlineComments() {
 			return endlineComments;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if(obj instanceof CommentContainer) {
+				CommentContainer other = (CommentContainer) obj;
+				return inlineComments.equals(other.inlineComments) && endlineComments.equals(other.endlineComments);
+			}
+			return super.equals(obj);
 		}
 	}
 
