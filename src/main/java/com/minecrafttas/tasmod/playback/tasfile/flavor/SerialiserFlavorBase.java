@@ -36,6 +36,8 @@ public abstract class SerialiserFlavorBase {
 	 * Debug subtick field for error handling
 	 */
 	protected int currentSubtick = 0;
+	
+	protected TickContainer previousTickContainer = null;
 
 	public abstract String flavorName();
 
@@ -305,8 +307,6 @@ public abstract class SerialiserFlavorBase {
 	 * 
 	 */
 
-	protected TickContainer previousTickContainer = null;
-
 	public boolean deserialiseFlavorName(List<String> headerLines) {
 		for (String line : headerLines) {
 			Matcher matcher = extract("^Flavor: " + flavorName(), line);
@@ -340,7 +340,7 @@ public abstract class SerialiserFlavorBase {
 		throw new PlaybackLoadException("Cannot find the end of the header");
 	}
 
-	public void deserialiseFileCommandNames(List<String> headerLines) {
+	protected void deserialiseFileCommandNames(List<String> headerLines) {
 		for (String line : headerLines) {
 			Matcher matcher = extract("FileCommand-Extensions: ?(.*)", line);
 
@@ -355,7 +355,7 @@ public abstract class SerialiserFlavorBase {
 		throw new PlaybackLoadException("FileCommand-Extensions value was not found in the header");
 	}
 
-	public void deserialiseMetadata(List<String> headerLines) {
+	protected void deserialiseMetadata(List<String> headerLines) {
 		List<PlaybackMetadata> out = new ArrayList<>();
 
 		String metadataName = null;
@@ -582,7 +582,9 @@ public abstract class SerialiserFlavorBase {
 		List<List<PlaybackFileCommand>> endlineFileCommands = new ArrayList<>();
 
 		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments, endlineFileCommands);
-
+		
+		pruneList(endlineComments);
+		
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
 		VirtualCameraAngle cameraAngle = deserialiseCameraAngle(cameraAngleStrings);
@@ -826,8 +828,6 @@ public abstract class SerialiserFlavorBase {
 				
 				endlineFileCommands.add(deserialisedFileCommands);
 			}
-
-
 		}
 	}
 
@@ -908,6 +908,20 @@ public abstract class SerialiserFlavorBase {
 			T element = toAdd.get(i);
 			list.add(element);
 		}
+	}
+	
+	/**
+	 * Empties the list if it only consists of null values
+	 * @param <T> The element of the list
+	 * @param list The list to prune
+	 */
+	protected <T> void pruneList(List<T> list){
+		for(T element : list) {
+			if(element != null) {
+				return;
+			}
+		}
+		list.clear();
 	}
 
 	@Override

@@ -611,6 +611,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 		@Override
 		public String toString() {
+			String.join("\n// ", comments.inlineComments);
 			return keyboard.toString() + "|" + mouse.toString() + "|" + cameraAngle.toString();
 		}
 
@@ -715,6 +716,11 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				return inlineComments.equals(other.inlineComments) && endlineComments.equals(other.endlineComments);
 			}
 			return super.equals(obj);
+		}
+		
+		@Override
+		public String toString() {
+			return inlineComments.toString()+"\n\n"+endlineComments.toString();
 		}
 	}
 

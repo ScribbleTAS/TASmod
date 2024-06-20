@@ -185,7 +185,18 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	public boolean equals(Object obj) {
 		if (obj instanceof VirtualCameraAngle) {
 			VirtualCameraAngle angle = (VirtualCameraAngle) obj;
-			return (pitch != null && pitch.equals(angle.pitch)) && (yaw != null && yaw.equals(angle.yaw));
+			if(pitch == null && angle.pitch != null) {
+				return false;
+			}
+			if(yaw == null && angle.yaw != null) {
+				return false;
+			}
+			if(pitch != null && !pitch.equals(angle.pitch)) {
+				return false;
+			}
+			if(yaw != null && !yaw.equals(angle.yaw))
+				return false;
+			return true;
 		}
 		return super.equals(obj);
 	}

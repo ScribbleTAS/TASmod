@@ -229,7 +229,10 @@ public class PlaybackSerialiserTest {
 		keyboard.updateFromEvent(VirtualKey.T, true, 't');
 		
 		CommentContainer container = new CommentContainer();
+		container.addInlineComment("This is a regular comment");
+		container.addInlineComment(null);
 		container.addEndlineComment("test");
+		container.addEndlineComment(null);
 		expected.add(new TickContainer(keyboard, new VirtualMouse(), new VirtualCameraAngle(), container));
 		
 		assertBigArrayList(expected, actual);
