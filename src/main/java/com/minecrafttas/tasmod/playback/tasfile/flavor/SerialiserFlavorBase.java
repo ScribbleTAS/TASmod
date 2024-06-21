@@ -583,7 +583,7 @@ public abstract class SerialiserFlavorBase {
 
 		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments, endlineFileCommands);
 		
-		pruneList(endlineComments);
+		pruneListEnd(endlineComments);
 		
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
@@ -711,7 +711,7 @@ public abstract class SerialiserFlavorBase {
 		Float previousYaw = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getYaw();
 
 		for (String line : cameraAngleStrings) {
-			Matcher matcher = extract("(.+?);(.+)", line);
+			Matcher matcher = extract("\\|(.+?);(.+)", line);
 
 			if (matcher.find()) {
 				String cameraPitchString = matcher.group(1);
@@ -915,13 +915,14 @@ public abstract class SerialiserFlavorBase {
 	 * @param <T> The element of the list
 	 * @param list The list to prune
 	 */
-	protected <T> void pruneList(List<T> list){
-		for(T element : list) {
-			if(element != null) {
+	protected <T> void pruneListEnd(List<T> list){
+		List<T> copy = new ArrayList<>(list);
+		for (int i = copy.size()-1; i >=0; i--) {
+			T element = copy.get(i);
+			if(element != null)
 				return;
-			}
+			list.remove(list.size()-1);
 		}
-		list.clear();
 	}
 
 	@Override

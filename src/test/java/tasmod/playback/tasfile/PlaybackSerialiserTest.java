@@ -212,6 +212,9 @@ public class PlaybackSerialiserTest {
 		lines.add("// $testKey(test);");
 		lines.add("1|W;w|| // test");
 		lines.add("\t1|W,T;t||	// $testKey(test);$endlineKey();");
+		lines.add("2|W;w|-101;0,1,1|1;1");
+		lines.add("3|;|-101;0,~1,~1|~1;~1");
+		lines.add("\t1|;|-101;|;0,~1,~1|~1;~1");
 		
 		File file = new File("src/test/resources/serialiser/PlaybackSerialiserTest2.mctas");
 		try {
@@ -228,12 +231,35 @@ public class PlaybackSerialiserTest {
 		keyboard.updateFromEvent(VirtualKey.W, true, 'w');
 		keyboard.updateFromEvent(VirtualKey.T, true, 't');
 		
+		
 		CommentContainer container = new CommentContainer();
 		container.addInlineComment("This is a regular comment");
 		container.addInlineComment(null);
 		container.addEndlineComment("test");
-		container.addEndlineComment(null);
 		expected.add(new TickContainer(keyboard, new VirtualMouse(), new VirtualCameraAngle(), container));
+
+		
+		VirtualKeyboard keyboard2 = new VirtualKeyboard();
+		keyboard2.updateFromEvent(VirtualKey.W, true, 'w');
+		
+		VirtualMouse mouse2 = new VirtualMouse();
+		mouse2.updateFromEvent(VirtualKey.MOUSEMOVED, false, 0, 1, 1);
+		
+		VirtualCameraAngle cameraAngle2 = new VirtualCameraAngle();
+		cameraAngle2.set(1f, 1f);
+		
+		expected.add(new TickContainer(keyboard2, mouse2, cameraAngle2));
+
+		
+		VirtualMouse mouse3 = new VirtualMouse();
+		mouse3.updateFromEvent(VirtualKey.MOUSEMOVED, false, 0, 2, 2);
+		mouse3.updateFromEvent(VirtualKey.MOUSEMOVED, false, 0, 3, 3);
+		
+		VirtualCameraAngle cameraAngle3 = new VirtualCameraAngle();
+		cameraAngle3.set(2f, 2f);
+		cameraAngle3.updateFromEvent(3f, 3f);
+
+		expected.add(new TickContainer(null, mouse3, cameraAngle3));
 		
 		assertBigArrayList(expected, actual);
 		

@@ -612,7 +612,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		@Override
 		public String toString() {
 			String.join("\n// ", comments.inlineComments);
-			return keyboard.toString() + "|" + mouse.toString() + "|" + cameraAngle.toString();
+			return keyboard.toString() + "|" + mouse.toString() + "|" + cameraAngle.toString() + "\t\t// " + comments.endlineComments;
 		}
 
 		public VirtualKeyboard getKeyboard() {
