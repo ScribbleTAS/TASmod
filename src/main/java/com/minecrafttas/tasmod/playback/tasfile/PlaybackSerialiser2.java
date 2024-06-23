@@ -86,6 +86,9 @@ public class PlaybackSerialiser2 {
 		if (file == null) {
 			throw new PlaybackLoadException("Load from file failed. No file specified");
 		}
+		if(!file.exists()) {
+			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
+		}
 
 		// Read file
 		BufferedReader reader = null;
@@ -132,6 +135,13 @@ public class PlaybackSerialiser2 {
 	}
 	
 	public static BigArrayList<TickContainer> loadFromFile(File file, SerialiserFlavorBase flavor) throws PlaybackLoadException, IOException {
+		if (file == null) {
+			throw new PlaybackLoadException("Load from file failed. No file specified");
+		}
+		if(!file.exists()) {
+			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
+		}
+		
 		// Read file
 		BufferedReader reader = null;
 
@@ -162,33 +172,12 @@ public class PlaybackSerialiser2 {
 		return deserialisedContainers;
 	}
 
-//	private static <T extends Serializable> List<T> subsetBigArrayList(BigArrayList<T> list, long startIndex, long stopIndex) throws Exception {
-//		List<T> out = new ArrayList<>();
-//
-//		if (startIndex < 0)
-//			throw new Exception("Cannot subset big arraylist. StartIndex has to be positive: " + startIndex);
-//
-//		if (startIndex > stopIndex)
-//			throw new Exception("Cannot subset big arraylist. StartIndex is bigger than StopIndex:" + startIndex + " " + stopIndex);
-//
-//		if (startIndex >= list.size())
-//			throw new Exception("Cannot subset big arraylist. StartIndex is bigger than the big arraylist" + startIndex + " " + list.size());
-//
-//		if (stopIndex >= list.size())
-//			stopIndex = list.size() - 1;
-//
-//		for (long i = startIndex; i < stopIndex; i++) {
-//			out.add(list.get(i));
-//		}
-//		return out;
-//	}
-
 	public static SerialiserFlavorBase searchForFlavor(List<String> lines, List<SerialiserFlavorBase> flavorList) {
 		for (SerialiserFlavorBase flavor : flavorList) {
 			if (flavor.deserialiseFlavorName(lines)) {
 				return flavor.clone();
 			}
 		}
-		throw new PlaybackLoadException("Couldn't find a flavorname in the file while loading it");
+		throw new PlaybackLoadException("Couldn't find a flavorname in the file. TASmod is missing a flavor-extension or the file is broken");
 	}
 }

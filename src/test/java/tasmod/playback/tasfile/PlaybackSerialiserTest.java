@@ -2,6 +2,7 @@ package tasmod.playback.tasfile;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
@@ -126,7 +127,9 @@ public class PlaybackSerialiserTest {
 	void afterEach() {
 		testFileCommand.inline.clear();
 		testFileCommand.endline.clear();
-		file.delete();
+		if(file!=null) {
+			file.delete();
+		}
 	}
 	
 	@AfterAll
@@ -289,6 +292,37 @@ public class PlaybackSerialiserTest {
 		fclistEnd.add(fccontainerEndEmpty);
 		fclistEnd.add(fccontainerEndEmpty);
 		assertIterableEquals(fclistEnd, testFileCommand.endline);
+	}
+	
+	@Test
+	void testFlavorNotFound() {
+		List<String> lines = new ArrayList<>();
+		for (int i = 0; i < 500; i++) {
+			lines.add("Test");
+		}
+		
+		file = new File("src/test/resources/serialiser/PlaybackSerialiserTest3.mctas");
+		try {
+			FileUtils.writeLines(file, lines);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			PlaybackSerialiser2.loadFromFile(file);
+		});
+		
+		assertEquals("Couldn't find a flavorname in the file. TASmod is missing a flavor-extension or the file is broken", t.getMessage());
+	}
+	
+	@Test
+	void testFlavorIsNull() {
+		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+			PlaybackSerialiser2.loadFromFile(file, "NotAFlavor");
+		});
+		
+		assertEquals("Flavor name NotAFlavor doesn't exist.", t.getMessage());
+		
 	}
 	
 	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {
