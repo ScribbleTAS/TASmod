@@ -27,6 +27,8 @@ import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
 public abstract class SerialiserFlavorBase {
 
+	private long currentLine = 0;
+	
 	/**
 	 * The current tick that is being serialised or deserialised
 	 */
@@ -38,6 +40,7 @@ public abstract class SerialiserFlavorBase {
 	protected int currentSubtick = 0;
 	
 	protected TickContainer previousTickContainer = null;
+
 
 	public abstract String flavorName();
 
@@ -397,12 +400,12 @@ public abstract class SerialiserFlavorBase {
 	 */
 	public BigArrayList<TickContainer> deserialise(BigArrayList<String> lines, long startPos) {
 		BigArrayList<TickContainer> out = new BigArrayList<>();
-
 		for (long i = startPos; i < lines.size(); i++) {
 			List<String> container = new ArrayList<>();
 			// Extract the tick and set the index
 			i = extractContainer(container, lines, i);
-			currentTick = i;
+			currentLine = i;
+			currentTick++;
 			// Extract container
 			deserialiseContainer(out, container);
 		}
@@ -711,7 +714,7 @@ public abstract class SerialiserFlavorBase {
 		Float previousYaw = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getYaw();
 
 		for (String line : cameraAngleStrings) {
-			Matcher matcher = extract("\\|(.+?);(.+)", line);
+			Matcher matcher = extract("(.+?);(.+)", line);
 
 			if (matcher.find()) {
 				String cameraPitchString = matcher.group(1);
@@ -926,5 +929,5 @@ public abstract class SerialiserFlavorBase {
 	}
 
 	@Override
-	protected abstract SerialiserFlavorBase clone();
+	public abstract SerialiserFlavorBase clone();
 }

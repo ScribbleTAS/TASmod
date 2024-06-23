@@ -186,7 +186,7 @@ public class PlaybackSerialiser2 {
 	public static SerialiserFlavorBase searchForFlavor(List<String> lines, List<SerialiserFlavorBase> flavorList) {
 		for (SerialiserFlavorBase flavor : flavorList) {
 			if (flavor.deserialiseFlavorName(lines)) {
-				return flavor;
+				return flavor.clone();
 			}
 		}
 		throw new PlaybackLoadException("Couldn't find a flavorname in the file while loading it");

@@ -45,7 +45,7 @@ public class PlaybackSerialiserTest {
 		
 		
 		@Override
-		protected SerialiserFlavorBase clone() {
+		public SerialiserFlavorBase clone() {
 			return new TestFlavor();
 		}
 	}
@@ -109,7 +109,7 @@ public class PlaybackSerialiserTest {
 		}
 	}
 	
-	File file = new File("src/test/resources/serialiser/PlaybackSerialiserTest.mctas");
+	File file;
 	
 	private static TestFlavor testFlavor = new TestFlavor();
 	private static TestMetadatada testMetadata = new TestMetadatada();
@@ -126,6 +126,7 @@ public class PlaybackSerialiserTest {
 	void afterEach() {
 		testFileCommand.inline.clear();
 		testFileCommand.endline.clear();
+		file.delete();
 	}
 	
 	@AfterAll
@@ -138,6 +139,8 @@ public class PlaybackSerialiserTest {
 	@Test
 	void testSerialiser() {
 		BigArrayList<TickContainer> expected = new BigArrayList<>();
+		
+		file = new File("src/test/resources/serialiser/PlaybackSerialiserTest.mctas");
 		
 		testMetadata.testValue = "testing";
 		TASmodRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testFileExtension", true);
@@ -193,8 +196,6 @@ public class PlaybackSerialiserTest {
 			assertEquals("testing", testMetadata.actual);
 		} catch (PlaybackLoadException | IOException e) {
 			fail(e);
-		} finally {
-			file.delete();
 		}
 	}
 	
@@ -214,9 +215,9 @@ public class PlaybackSerialiserTest {
 		lines.add("\t1|W,T;t||	// $testKey(test);$endlineKey();");
 		lines.add("2|W;w|-101;0,1,1|1;1");
 		lines.add("3|;|-101;0,~1,~1|~1;~1");
-		lines.add("\t1|;|-101;|;0,~1,~1|~1;~1");
+		lines.add("\t1|;|-101;0,~1,~1|~1;~1");
 		
-		File file = new File("src/test/resources/serialiser/PlaybackSerialiserTest2.mctas");
+		file = new File("src/test/resources/serialiser/PlaybackSerialiserTest2.mctas");
 		try {
 			FileUtils.writeLines(file, lines);
 		} catch (IOException e) {
@@ -256,10 +257,9 @@ public class PlaybackSerialiserTest {
 		mouse3.updateFromEvent(VirtualKey.MOUSEMOVED, false, 0, 3, 3);
 		
 		VirtualCameraAngle cameraAngle3 = new VirtualCameraAngle();
-		cameraAngle3.set(2f, 2f);
-		cameraAngle3.updateFromEvent(3f, 3f);
+		cameraAngle3.updateFromState(2f, 2f);
 
-		expected.add(new TickContainer(null, mouse3, cameraAngle3));
+		expected.add(new TickContainer(new VirtualKeyboard(), mouse3, cameraAngle3));
 		
 		assertBigArrayList(expected, actual);
 		
@@ -269,7 +269,12 @@ public class PlaybackSerialiserTest {
 		PlaybackFileCommandContainer fccontainer = new PlaybackFileCommandContainer();
 		fccontainer.add("testKey", new PlaybackFileCommand("testKey", "test"));
 
+		PlaybackFileCommandContainer fccontainerempty = new PlaybackFileCommandContainer();
+		fccontainerempty.put("testKey", null);
+		
 		fclist.add(fccontainer);
+		fclist.add(fccontainerempty);
+		fclist.add(fccontainerempty);
 		assertIterableEquals(fclist, testFileCommand.inline);
 		
 		List<PlaybackFileCommandContainer> fclistEnd = new ArrayList<>();
@@ -277,10 +282,13 @@ public class PlaybackSerialiserTest {
 		fccontainerEnd.add("endlineKey", null);
 		fccontainerEnd.add("endlineKey", new PlaybackFileCommand("endlineKey"));
 		
-		fclistEnd.add(fccontainerEnd);
-		assertIterableEquals(fclistEnd, testFileCommand.endline);
+		PlaybackFileCommandContainer fccontainerEndEmpty = new PlaybackFileCommandContainer();
+		fccontainerEndEmpty.put("endlineKey", null);
 		
-		file.delete();
+		fclistEnd.add(fccontainerEnd);
+		fclistEnd.add(fccontainerEndEmpty);
+		fclistEnd.add(fccontainerEndEmpty);
+		assertIterableEquals(fclistEnd, testFileCommand.endline);
 	}
 	
 	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {

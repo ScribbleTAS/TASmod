@@ -31,7 +31,7 @@ public class Beta1Flavor extends SerialiserFlavorBase {
 	}
 	
 	@Override
-	protected SerialiserFlavorBase clone() {
+	public SerialiserFlavorBase clone() {
 		return new Beta1Flavor();
 	}
 }

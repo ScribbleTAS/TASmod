@@ -1046,7 +1046,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	}
 
 	@Override
-	protected SerialiserFlavorBase clone() {
+	public SerialiserFlavorBase clone() {
 		return new SerialiserFlavorBaseTest();
 	}
 	
