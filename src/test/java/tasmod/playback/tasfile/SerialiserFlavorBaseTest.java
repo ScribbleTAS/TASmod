@@ -169,6 +169,11 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			public String name() {
 				return "tasmod_testFileCommand";
 			}
+
+			@Override
+			public String[] getFileCommandNames() {
+				return null;
+			}
 		}
 		
 		TestFileCommand fc = new TestFileCommand();
@@ -479,6 +484,11 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			public String name() {
 				return "tasmod_test1";
 			}
+
+			@Override
+			public String[] getFileCommandNames() {
+				return null;
+			}
 			
 		}
 		
@@ -487,6 +497,11 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			@Override
 			public String name() {
 				return "tasmod_test2";
+			}
+
+			@Override
+			public String[] getFileCommandNames() {
+				return null;
 			}
 			
 		}

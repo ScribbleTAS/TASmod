@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.monitoring;
+package com.minecrafttas.tasmod.util;
 
 import java.lang.reflect.Field;
 

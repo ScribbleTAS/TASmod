@@ -54,9 +54,7 @@ public class PlaybackFileCommand {
 
 		public abstract String name();
 
-		public String[] getFileCommandNames() {
-			return new String[] {};
-		}
+		public abstract String[] getFileCommandNames();
 
 		public void onEnable() {
 		};
@@ -71,11 +69,11 @@ public class PlaybackFileCommand {
 		public void onPlayback(long tick, TickContainer tickContainer) {
 		};
 
-		protected PlaybackFileCommandContainer onSerialiseInlineComment(long tick, TickContainer tickContainer) {
+		public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, TickContainer tickContainer) {
 			return null;
 		}
 
-		protected PlaybackFileCommandContainer onSerialiseEndlineComment(long currentTick, TickContainer tickContainer) {
+		public PlaybackFileCommandContainer onSerialiseEndlineComment(long currentTick, TickContainer tickContainer) {
 			return null;
 		}
 

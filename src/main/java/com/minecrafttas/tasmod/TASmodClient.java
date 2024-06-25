@@ -24,6 +24,8 @@ import com.minecrafttas.tasmod.handlers.LoadingScreenHandler;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
+import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.integrated.CreditsMetadataExtension;
 import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
@@ -166,12 +168,13 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		EventListenerRegistry.register(creditsMetadataExtension);
 		EventListenerRegistry.register(startpositionMetadataExtension);
 	}
-
+	
 	@Override
 	public void onClientInit(Minecraft mc) {
 		registerKeybindings(mc);
 		registerPlaybackMetadata(mc);
 		registerSerialiserFlavors(mc);
+		registerFileCommands();
 		
 		createTASDir();
 		createSavestatesDir();
@@ -294,6 +297,12 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	
 	private void registerSerialiserFlavors(Minecraft mc) {
 		TASmodRegistry.SERIALISER_FLAVOR.register(betaFlavor);
+	}
+	
+	public static PlaybackFileCommandExtension desyncMonitorFileCommandExtension = new DesyncMonitorFileCommandExtension();
+	
+	private void registerFileCommands() {
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(desyncMonitorFileCommandExtension);
 	}
 	
 	private void loadConfig(Minecraft mc) {

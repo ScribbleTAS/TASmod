@@ -41,9 +41,9 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateCh
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTick;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
-import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
+import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
@@ -124,7 +124,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	 */
 	private Map<Integer, List<Pair<String, String[]>>> controlBytes = new HashMap<Integer, List<Pair<String, String[]>>>(); // TODO Replace with TASFile extension
 
-	public DesyncMonitoring desyncMonitor = new DesyncMonitoring(this); // TODO Replace with TASFile extension
+	public DesyncMonitorFileCommandExtension desyncMonitor = new DesyncMonitorFileCommandExtension(); // TODO Replace with TASFile extension
 
 	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 

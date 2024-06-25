@@ -2,10 +2,10 @@ package com.minecrafttas.tasmod.playback.tasfile;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
 import com.minecrafttas.tasmod.playback.ControlByteHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
 import com.minecrafttas.tasmod.util.FileThread;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
@@ -29,7 +29,7 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
  * <br>
  * I plan to be backwards compatible so all the save functions have a V1 in their name by the time of writing this<br>
  * <br>
- * It also serializes the {@linkplain DesyncMonitoring} from the input container<br>
+ * It also serializes the {@linkplain DesyncMonitorFileCommandExtension} from the input container<br>
  * <br>
  * Side: Client
  * 
@@ -290,7 +290,7 @@ public class PlaybackSerialiser {
 //		controller.setStartLocation(startLocation);
 //		controller.setStartSeed(startSeed);
 		if(!monitorLines.isEmpty()) {
-			controller.desyncMonitor = new DesyncMonitoring(controller, monitorLines);
+//			controller.desyncMonitor = new DesyncMonitoringFileCommand(controller, monitorLines);
 		}
 		
 		//If an old monitoring file is loaded, save the file immediately to not loose any data.
