@@ -615,7 +615,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		});
 
 		// C o m p a r e
-		assertEquals("Tick 0, Subtick 0: Error while trying to parse the file in line 1. This should not be a subtick at this position", t.getMessage());
+		assertEquals("Line 1, Tick 0, Subtick 0: Error while trying to parse the file. This should not be a subtick at this position", t.getMessage());
 	}
 	
 	@Test
@@ -632,7 +632,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		});
 
 		// C o m p a r e
-		assertEquals("Tick 0, Subtick 0: Error while trying to parse the file in line 2. This should not be a subtick at this position", t.getMessage());
+		assertEquals("Line 2, Tick 0, Subtick 0: Error while trying to parse the file. This should not be a subtick at this position", t.getMessage());
 	}
 	
 	@Test
@@ -651,7 +651,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		});
 
 		// C o m p a r e
-		assertEquals("Tick 0, Subtick 0: Error while trying to parse the file in line 3. This should not be a subtick at this position", t.getMessage());
+		assertEquals("Line 3, Tick 0, Subtick 0: Error while trying to parse the file. This should not be a subtick at this position", t.getMessage());
 	}
 	
 	/**
@@ -850,7 +850,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			deserialiseMouse(tick2);
 		});
 		
-		assertEquals("Tick 29, Subtick 2: Mouse functions do not have the correct length", t.getMessage());
+		assertEquals("Line 1, Tick 29, Subtick 2: Mouse functions do not have the correct length", t.getMessage());
 		
 		currentTick=30;
 		List<String> tick3 = new ArrayList<>();
@@ -862,7 +862,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			deserialiseMouse(tick3);
 		});
 		
-		assertEquals("Tick 30, Subtick 1: Mouse functions do not have the correct length", t1.getMessage());
+		assertEquals("Line 1, Tick 30, Subtick 1: Mouse functions do not have the correct length", t1.getMessage());
 	}
 
 	/**
@@ -919,7 +919,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			parseInt("testParseInt", "12.1");
 		});
 		
-		assertEquals("Tick 13, Subtick 1: Can't parse integer in testParseInt", t.getMessage());
+		assertEquals("Line 1, Tick 13, Subtick 1: Can't parse integer in testParseInt", t.getMessage());
 		assertEquals(NumberFormatException.class, t.getCause().getClass());
 		assertEquals("For input string: \"12.1\"", t.getCause().getMessage());
 	}
@@ -935,7 +935,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			parseFloat("testParseFloat", "12.123h");
 		});
 		
-		assertEquals("Tick 15, Subtick 6: Can't parse float in testParseFloat", t.getMessage());
+		assertEquals("Line 1, Tick 15, Subtick 6: Can't parse float in testParseFloat", t.getMessage());
 		assertEquals(NumberFormatException.class, t.getCause().getClass());
 		assertEquals("For input string: \"12.123h\"", t.getCause().getMessage());
 	}
@@ -953,7 +953,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
 			deserialiseRelativeInt("testParseRelativeInt", "~12", null);
 		});
-		assertEquals("Tick 23, Subtick 11: Can't process relative value ~12 in testParseRelativeInt. Previous value for comparing is not available", t.getMessage());
+		assertEquals("Line 1, Tick 23, Subtick 11: Can't process relative value ~12 in testParseRelativeInt. Previous value for comparing is not available", t.getMessage());
 	}
 	
 	@Test
@@ -969,7 +969,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
 			deserialiseRelativeFloat("testParseRelativeFloat", "~12.3", null);
 		});
-		assertEquals("Tick 20, Subtick 2: Can't process relative value ~12.3 in testParseRelativeFloat. Previous value for comparing is not available", t.getMessage());
+		assertEquals("Line 1, Tick 20, Subtick 2: Can't process relative value ~12.3 in testParseRelativeFloat. Previous value for comparing is not available", t.getMessage());
 	}
 
 	@Test

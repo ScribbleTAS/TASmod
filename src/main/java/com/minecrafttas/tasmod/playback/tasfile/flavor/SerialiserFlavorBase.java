@@ -27,7 +27,7 @@ import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
 public abstract class SerialiserFlavorBase {
 
-	private long currentLine = 0;
+	private long currentLine = 1;
 	
 	/**
 	 * The current tick that is being serialised or deserialised
@@ -527,7 +527,7 @@ public abstract class SerialiserFlavorBase {
 			switch (phase) {
 				case NONE:
 					if (contains(subtickRegex, line)) { // Subtick
-						throw new PlaybackLoadException(currentTick, currentSubtick, "Error while trying to parse the file in line %s. This should not be a subtick at this position", startPos + counter + 1);
+						throw new PlaybackLoadException(startPos + counter + 1, currentTick, currentSubtick, "Error while trying to parse the file. This should not be a subtick at this position");
 					}
 
 					if (contains(commentRegex, line) || line.isEmpty()) { // Comment
@@ -539,7 +539,7 @@ public abstract class SerialiserFlavorBase {
 					break;
 				case COMMENTS:
 					if (contains(subtickRegex, line)) { // Subtick
-						throw new PlaybackLoadException(currentTick, currentSubtick, "Error while trying to parse the file in line %s. This should not be a subtick at this position", startPos + counter + 1);
+						throw new PlaybackLoadException(startPos + counter + 1, currentTick, currentSubtick, "Error while trying to parse the file. This should not be a subtick at this position");
 					}
 
 					if (contains(tickRegex, line)) { // Tick
@@ -693,7 +693,7 @@ public abstract class SerialiserFlavorBase {
 					cursorX = deserialiseRelativeInt("cursorX", functions[1], previousCursorX);
 					cursorY = deserialiseRelativeInt("cursorY", functions[2], previousCursorY);
 				} else {
-					throw new PlaybackLoadException(currentTick, currentSubtick, "Mouse functions do not have the correct length");
+					throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Mouse functions do not have the correct length");
 				}
 
 				out.updateFromState(keycodes, scrollwheel, cursorX, cursorY);
@@ -761,7 +761,7 @@ public abstract class SerialiserFlavorBase {
 		try {
 			return Integer.parseInt(intstring);
 		} catch (NumberFormatException e) {
-			throw new PlaybackLoadException(currentTick, currentSubtick, e, "Can't parse integer in %s", name);
+			throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, e, "Can't parse integer in %s", name);
 		}
 	}
 
@@ -773,7 +773,7 @@ public abstract class SerialiserFlavorBase {
 			if (previous != null) {
 				out = previous + relative;
 			} else {
-				throw new PlaybackLoadException(currentTick, currentSubtick, "Can't process relative value ~%s in %s. Previous value for comparing is not available", intstring, name);
+				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Can't process relative value ~%s in %s. Previous value for comparing is not available", intstring, name);
 			}
 		} else {
 			out = parseInt(name, intstring);
@@ -785,7 +785,7 @@ public abstract class SerialiserFlavorBase {
 		try {
 			return Float.parseFloat(floatstring);
 		} catch (NumberFormatException e) {
-			throw new PlaybackLoadException(currentTick, currentSubtick, e, "Can't parse float in %s", name);
+			throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, e, "Can't parse float in %s", name);
 		}
 	}
 
@@ -797,7 +797,7 @@ public abstract class SerialiserFlavorBase {
 			if (previous != null) {
 				out = previous + relative;
 			} else {
-				throw new PlaybackLoadException(currentTick, currentSubtick, "Can't process relative value ~%s in %s. Previous value for comparing is not available", floatstring, name);
+				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Can't process relative value ~%s in %s. Previous value for comparing is not available", floatstring, name);
 			}
 		} else {
 			out = parseFloat(name, floatstring);
