@@ -96,7 +96,7 @@ public class PlaybackFileCommand {
 		}
 	}
 
-	public static class PlaybackFileCommandContainer extends LinkedHashMap<String, List<PlaybackFileCommand>> {
+	public static class PlaybackFileCommandContainer extends LinkedHashMap<String, PlaybackFileCommandLine> {
 
 		public PlaybackFileCommandContainer() {
 		}
@@ -105,18 +105,18 @@ public class PlaybackFileCommand {
 			for (List<PlaybackFileCommand> lists : list) {
 				if (lists != null) {
 					for (PlaybackFileCommand command : lists) {
-						this.put(command.getName(), new ArrayList<>());
+						this.put(command.getName(), new PlaybackFileCommandLine());
 					}
 				}
 			}
 
 			for (List<PlaybackFileCommand> lists : list) {
-				for (Map.Entry<String, List<PlaybackFileCommand>> entry : this.entrySet()) {
+				for (Map.Entry<String, PlaybackFileCommandLine> entry : this.entrySet()) {
 					String key = entry.getKey();
 					List<PlaybackFileCommand> val = entry.getValue();
 
 					boolean valuePresent = false;
-					if(lists!=null) {
+					if (lists != null) {
 						for (PlaybackFileCommand command : lists) {
 							if (key.equals(command.getName())) {
 								valuePresent = true;
@@ -130,13 +130,13 @@ public class PlaybackFileCommand {
 				}
 			}
 		}
-		
+
 		public void add(String key, PlaybackFileCommand fileCommand) {
-			List<PlaybackFileCommand> toAdd = getOrDefault(key, new ArrayList<>());
-			if(toAdd.isEmpty()) {
+			PlaybackFileCommandLine toAdd = getOrDefault(key, new PlaybackFileCommandLine());
+			if (toAdd.isEmpty()) {
 				put(key, toAdd);
 			}
-			
+
 			toAdd.add(fileCommand);
 		}
 
@@ -156,7 +156,7 @@ public class PlaybackFileCommand {
 			List<List<PlaybackFileCommand>> out = new ArrayList<>();
 
 			int biggestSize = 0;
-			for (List<PlaybackFileCommand> list : values()) {
+			for (PlaybackFileCommandLine list : values()) {
 				if (list.size() > biggestSize) {
 					biggestSize = list.size();
 				}
@@ -164,7 +164,7 @@ public class PlaybackFileCommand {
 
 			for (int i = 0; i < biggestSize; i++) {
 				List<PlaybackFileCommand> commandListForOneLine = new ArrayList<>();
-				for (List<PlaybackFileCommand> list : values()) {
+				for (PlaybackFileCommandLine list : values()) {
 					if (i < list.size()) {
 						PlaybackFileCommand fc = list.get(i);
 						commandListForOneLine.add(fc);
@@ -177,21 +177,25 @@ public class PlaybackFileCommand {
 
 			return out;
 		}
-		
+
 		@Override
 		public boolean equals(Object o) {
-			if(o instanceof PlaybackFileCommandContainer) {
+			if (o instanceof PlaybackFileCommandContainer) {
 				PlaybackFileCommandContainer other = (PlaybackFileCommandContainer) o;
-				for (java.util.Map.Entry<String, List<PlaybackFileCommand>> entry : other.entrySet()) {
+				for (java.util.Map.Entry<String, PlaybackFileCommandLine> entry : other.entrySet()) {
 					String key = entry.getKey();
-					List<PlaybackFileCommand> val = entry.getValue();
-					
-					if(!this.containsKey(key) && !this.get(key).equals(val))
+					PlaybackFileCommandLine val = entry.getValue();
+
+					if (!this.containsKey(key) && !this.get(key).equals(val))
 						return false;
 				}
 				return true;
 			}
 			return super.equals(o);
 		}
+	}
+	
+	public static class PlaybackFileCommandLine extends ArrayList<PlaybackFileCommand> {
+		
 	}
 }
