@@ -72,4 +72,16 @@ public interface EventPlaybackClient {
 		 */
 		public void onPlaybackTick(long index, TickContainer container);
 	}
+	
+	/**
+	 * Fired when a recording is cleared
+	 */
+	@FunctionalInterface
+	public interface EventRecordClear extends EventBase {
+		
+		/**
+		 * Fired when a recording is cleared
+		 */
+		public void onClear();
+	}
 }

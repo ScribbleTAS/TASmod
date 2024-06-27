@@ -37,6 +37,7 @@ import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
+import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTick;
@@ -49,7 +50,6 @@ import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
-import com.minecrafttas.tasmod.util.TASmodRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
@@ -530,16 +530,13 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 	public void clear() {
 		LOGGER.debug(LoggerMarkers.Playback, "Clearing playback controller");
+		EventListenerRegistry.fireEvent(EventPlaybackClient.EventRecordClear.class);
 		try {
 			inputs.clearMemory();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
-		controlBytes.clear();
-		index = 0;
-		desyncMonitor.clear();
-		TASmodRegistry.PLAYBACK_METADATA.handleOnClear();
 	}
 
 	/**

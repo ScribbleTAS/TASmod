@@ -11,7 +11,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 
-public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick {
+public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick, EventPlaybackClient.EventRecordClear {
 
 	private List<PlaybackFileCommandExtension> enabledExtensions = new ArrayList<>();
 
@@ -135,6 +135,13 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 			String[] fileCommandNames = extension.getFileCommandNames();
 			extension.onDeserialiseEndlineComment(currentTick, deserialisedContainer, fileCommandContainer.split(fileCommandNames));
 		}
+	}
+
+	@Override
+	public void onClear() {
+		REGISTRY.values().forEach(fc -> {
+			fc.onClear();
+		});
 	}
 
 }

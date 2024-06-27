@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.events.EventPlaybackClient;
 
 /**
  * Registry for registering custom metadata that is stored in the TASFile.<br>
@@ -17,7 +18,7 @@ import com.minecrafttas.tasmod.TASmod;
  * 
  * @author Scribble
  */
-public class PlaybackMetadataRegistry extends AbstractRegistry<String, com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension>{
+public class PlaybackMetadataRegistry extends AbstractRegistry<String, com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension> implements EventPlaybackClient.EventRecordClear{
 
 	public PlaybackMetadataRegistry() {
 		super(new LinkedHashMap<>());
@@ -80,7 +81,8 @@ public class PlaybackMetadataRegistry extends AbstractRegistry<String, com.minec
 		}
 	}
 	
-	public void handleOnClear() {
+	@Override
+	public void onClear() {
 		REGISTRY.forEach((key, extension) ->{
 			extension.onClear();
 		});

@@ -423,10 +423,11 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 	@Override
 	public void onDrawHotbar() {
 		// render custom info box if control byte is set
-		if (!ControlByteHandler.hideInfoBox && TASmodClient.controller.isPlayingback())
-			drawRectWithText(ControlByteHandler.text, 10, 10, true);
+		String text = TASmodClient.labelFileCommandExtension.getLabelText();
+		if (!text.isEmpty() && TASmodClient.controller.isPlayingback())
+			drawRectWithText(text, 10, 10, true);
 		// skip rendering of control byte is set
-		if (!ControlByteHandler.shouldRenderHud && TASmodClient.controller.isPlayingback())
+		if (!TASmodClient.optionsFileCommandExtension.shouldRenderHud() && TASmodClient.controller.isPlayingback())
 			return;
 		int xpos=40;
 		int ypos=190;

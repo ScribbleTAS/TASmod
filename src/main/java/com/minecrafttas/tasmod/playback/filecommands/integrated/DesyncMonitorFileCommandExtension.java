@@ -1,6 +1,7 @@
 package com.minecrafttas.tasmod.playback.filecommands.integrated;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -9,7 +10,9 @@ import java.util.Locale;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
@@ -26,11 +29,11 @@ import net.minecraft.util.text.TextFormatting;
  * 
  * @author Scribble
  */
-public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtension {
+public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtension implements EventPlaybackClient.EventControllerStateChange {
 
 	private File tempDir = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles" + File.separator + "temp" + File.separator + "monitoring");
 
-	private BigArrayList<MonitorContainer> container = new BigArrayList<MonitorContainer>(tempDir.toString());
+	private BigArrayList<MonitorContainer> monitorContainer = new BigArrayList<MonitorContainer>(tempDir.toString());
 
 	private MonitorContainer currentValues;
 
@@ -40,10 +43,17 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	public String name() {
 		return "tasmod_desyncMonitoring@v1";
 	}
-	
+
 	@Override
 	public String[] getFileCommandNames() {
-		return new String[] {"desyncMonitoring"};
+		return new String[] { "desyncMonitoring" };
+	}
+
+	@Override
+	public void onControllerStateChange(TASstate newstate, TASstate oldstate) {
+		if(newstate==TASstate.RECORDING && monitorContainer.isEmpty()) {
+			recordNull(0);
+		}
 	}
 
 	@Override
@@ -56,40 +66,45 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 			values = new MonitorContainer(tick);
 		}
 
-		if (container.size() <= tick) {
-			container.add(values);
+		if (monitorContainer.size() <= tick) {
+			monitorContainer.add(values);
 		} else {
-			container.set(tick, values);
+			monitorContainer.set(tick, values);
 		}
+	}
+
+	@Override
+	public void onDisable() {
+		this.onClear();
 	}
 
 	@Override
 	public PlaybackFileCommandContainer onSerialiseEndlineComment(long currentTick, TickContainer tickContainer) {
 		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
-		MonitorContainer monitoredValues = container.get(currentTick);
+		MonitorContainer monitoredValues = monitorContainer.get(currentTick);
 		PlaybackFileCommand command = new PlaybackFileCommand("desyncMonitor", monitoredValues.toStringArray());
-		
+
 		out.add("desyncMonitor", command);
 
 		return out;
 	}
-	
+
 	@Override
 	public void onDeserialiseEndlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
 		List<PlaybackFileCommand> commandsEndline = fileCommandContainer.get("desyncMonitor");
-		if(commandsEndline == null || commandsEndline.isEmpty()) {
-			return;
+		if (commandsEndline == null || commandsEndline.isEmpty()) {
+			recordNull(tick);
 		}
-		
+
 		PlaybackFileCommand command = commandsEndline.get(0);
-		this.container.add(loadFromFile(tick, command.getArgs()));
+		this.monitorContainer.add(loadFromFile(tick, command.getArgs()));
 	}
 
-	public void recordNull(int index) {
-		if (container.size() <= index) {
-			container.add(new MonitorContainer(index));
+	public void recordNull(long tick) {
+		if (monitorContainer.size() <= tick) {
+			monitorContainer.add(new MonitorContainer(tick));
 		} else {
-			container.set(index, new MonitorContainer(index));
+			monitorContainer.set(tick, new MonitorContainer(tick));
 		}
 	}
 
@@ -119,13 +134,13 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		} catch (ParseException e) {
 			throw new PlaybackLoadException(e);
 		}
-		
+
 		return new MonitorContainer(tick, x, y, z, mx, my, mz);
 	}
 
 	public MonitorContainer get(long l) {
 		try {
-			return container.get(l);
+			return monitorContainer.get(l);
 		} catch (IndexOutOfBoundsException e) {
 			return null;
 		}
@@ -226,7 +241,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		public MonitorContainer(long index) {
 			this(index, 0, 0, 0, 0, 0, 0);
 		}
-		
+
 		public String[] toStringArray() {
 			String[] out = new String[values.length];
 			for (int i = 0; i < values.length; i++) {
@@ -313,16 +328,22 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 			return text;
 		}
 	}
-	
-	private double parseDouble(String doublestring) throws ParseException{
+
+	private double parseDouble(String doublestring) throws ParseException {
 		NumberFormat format = NumberFormat.getInstance(Locale.ENGLISH);
 		Number number = format.parse(doublestring);
 		return number.doubleValue();
 	}
 
-	public void clear() {
+	@Override
+	public void onClear() {
 		currentValues = null;
-		container = new BigArrayList<MonitorContainer>(tempDir.toString());
+		try {
+			monitorContainer.clearMemory();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		monitorContainer = new BigArrayList<MonitorContainer>(tempDir.toString());
 		lastStatus = TextFormatting.GRAY + "Empty";
 		lastPos = "";
 		lastMotion = "";

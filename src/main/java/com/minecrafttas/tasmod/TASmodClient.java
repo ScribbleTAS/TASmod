@@ -24,8 +24,9 @@ import com.minecrafttas.tasmod.handlers.LoadingScreenHandler;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
+import com.minecrafttas.tasmod.playback.filecommands.integrated.LabelFileCommandExtension;
+import com.minecrafttas.tasmod.playback.filecommands.integrated.OptionsFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.integrated.CreditsMetadataExtension;
 import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
@@ -167,6 +168,11 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		EventListenerRegistry.register(controller);
 		EventListenerRegistry.register(creditsMetadataExtension);
 		EventListenerRegistry.register(startpositionMetadataExtension);
+		
+		EventListenerRegistry.register(desyncMonitorFileCommandExtension);
+		
+		EventListenerRegistry.register(TASmodRegistry.PLAYBACK_METADATA);
+		EventListenerRegistry.register(TASmodRegistry.PLAYBACK_FILE_COMMAND);
 	}
 	
 	@Override
@@ -299,10 +305,14 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		TASmodRegistry.SERIALISER_FLAVOR.register(betaFlavor);
 	}
 	
-	public static PlaybackFileCommandExtension desyncMonitorFileCommandExtension = new DesyncMonitorFileCommandExtension();
+	public static DesyncMonitorFileCommandExtension desyncMonitorFileCommandExtension = new DesyncMonitorFileCommandExtension();
+	public static OptionsFileCommandExtension optionsFileCommandExtension = new OptionsFileCommandExtension();
+	public static LabelFileCommandExtension labelFileCommandExtension = new LabelFileCommandExtension();
 	
 	private void registerFileCommands() {
 		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(desyncMonitorFileCommandExtension);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(optionsFileCommandExtension);
+		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(labelFileCommandExtension);
 	}
 	
 	private void loadConfig(Minecraft mc) {

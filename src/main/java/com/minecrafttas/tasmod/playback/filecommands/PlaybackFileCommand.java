@@ -60,7 +60,9 @@ public class PlaybackFileCommand {
 		};
 
 		public void onDisable() {
-			
+		};
+
+		public void onClear() {
 		};
 
 		public void onRecord(long tick, TickContainer tickContainer) {
