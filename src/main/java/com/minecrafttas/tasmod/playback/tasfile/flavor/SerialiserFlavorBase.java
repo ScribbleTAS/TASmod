@@ -27,7 +27,7 @@ import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
 public abstract class SerialiserFlavorBase {
 
-	private long currentLine = 1;
+	protected long currentLine = 1;
 	
 	/**
 	 * The current tick that is being serialised or deserialised

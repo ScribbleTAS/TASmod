@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
@@ -36,8 +37,6 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private BigArrayList<MonitorContainer> monitorContainer = new BigArrayList<MonitorContainer>(tempDir.toString());
 
 	private MonitorContainer currentValues;
-
-	private PlaybackControllerClient controller;
 
 	@Override
 	public String name() {
@@ -149,7 +148,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private String lastStatus = TextFormatting.GRAY + "Empty";
 
 	public String getStatus(EntityPlayerSP player) {
-		if (!controller.isNothingPlaying()) {
+		if (!TASmodClient.controller.isNothingPlaying()) {
 			if (currentValues != null) {
 				double[] playervalues = new double[6];
 				playervalues[0] = player.posX;
@@ -158,7 +157,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 				playervalues[3] = player.motionX;
 				playervalues[4] = player.motionY;
 				playervalues[5] = player.motionZ;
-				DesyncStatus status = currentValues.getSeverity(controller.index(), playervalues, TASmod.ktrngHandler.getGlobalSeedClient());
+				DesyncStatus status = currentValues.getSeverity(TASmodClient.controller.index(), playervalues, TASmod.ktrngHandler.getGlobalSeedClient());
 				lastStatus = status.getFormat() + status.getText();
 			} else {
 				lastStatus = TextFormatting.GRAY + "Empty";
@@ -170,7 +169,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private String lastPos = "";
 
 	public String getPos() {
-		if (currentValues != null && !controller.isNothingPlaying()) {
+		if (currentValues != null && !TASmodClient.controller.isNothingPlaying()) {
 			EntityPlayerSP player = Minecraft.getMinecraft().player;
 			String[] values = new String[3];
 			values[0] = getFormattedString(player.posX - currentValues.values[0]);
@@ -191,7 +190,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private String lastMotion = "";
 
 	public String getMotion() {
-		if (currentValues != null && !controller.isNothingPlaying()) {
+		if (currentValues != null && !TASmodClient.controller.isNothingPlaying()) {
 			EntityPlayerSP player = Minecraft.getMinecraft().player;
 			String[] values = new String[3];
 			values[0] = getFormattedString(player.motionX - currentValues.values[3]);

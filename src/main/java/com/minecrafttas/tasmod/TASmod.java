@@ -24,6 +24,7 @@ import com.minecrafttas.tasmod.commands.CommandRestartAndPlay;
 import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
+import com.minecrafttas.tasmod.commands.TabCompletionUtils;
 import com.minecrafttas.tasmod.ktrng.KillTheRNGHandler;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
@@ -71,6 +72,8 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
 	
 	public static final StartpositionMetadataExtension startPositionMetadataExtension = new StartpositionMetadataExtension();
 	
+	public static final TabCompletionUtils tabCompletionUtils = new TabCompletionUtils();
+	
 	@Override
 	public void onInitialize() {
 		
@@ -100,6 +103,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
 		PacketHandlerRegistry.register(ktrngHandler);
 		PacketHandlerRegistry.register(playbackControllerServer);
 		PacketHandlerRegistry.register(startPositionMetadataExtension);
+		PacketHandlerRegistry.register(tabCompletionUtils);
 	}
 	
 	@Override

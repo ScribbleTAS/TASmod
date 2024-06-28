@@ -181,6 +181,22 @@ public enum TASmodPackets implements PacketID {
 		}
 	}),
 	/**
+	 * <p>Requests the list of TASfiles in the folder from the client for use in tab completions
+	 * <p>SIDE: Both<br>
+	 * ARGS: <br>
+	 * <strong>Server->Client</strong> None<br>
+	 * <strong>Client->Server</strong> String The string of TASfilenames seperated with /
+	 */
+	COMMAND_TASFILELIST,
+	/**
+	 * <p>Requests the list of SerialiserFlavors from the client for use in tab completions
+	 * <p>SIDE: Both<br>
+	 * ARGS: <br>
+	 * <strong>Server->Client</strong> None<br>
+	 * <strong>Client->Server</strong> String The string of flavors seperated with /
+	 */
+	COMMAND_FLAVORLIST,
+	/**
 	 * <p>Sets the KillTheRNG seed
 	 * <p>SIDE: Both<br>
 	 * ARGS: <br>

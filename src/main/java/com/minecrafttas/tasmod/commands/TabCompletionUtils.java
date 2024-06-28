@@ -1,0 +1,110 @@
+package com.minecrafttas.tasmod.commands;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.server.exception.WrongSideException;
+import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
+import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import static com.minecrafttas.tasmod.networking.TASmodPackets.*;
+import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
+import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
+import com.minecrafttas.tasmod.networking.TASmodPackets;
+import com.minecrafttas.tasmod.util.TASmodRegistry;
+
+import net.minecraft.client.Minecraft;
+
+public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHandler{
+
+	private volatile CompletableFuture<List<String>> fileList = null;
+	private volatile CompletableFuture<List<String>> flavorList = null;
+	
+	@Override
+	public PacketID[] getAcceptedPacketIDs() {
+		return new PacketID[] { COMMAND_TASFILELIST, COMMAND_FLAVORLIST };
+	}
+
+	//======== SERVER SIDE
+	
+	@Override
+	public void onServerPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
+		TASmodPackets packet = (TASmodPackets) id;
+		switch (packet) {
+			case COMMAND_TASFILELIST:
+				String filenames = TASmodBufferBuilder.readString(buf);
+				fileList.complete(Arrays.asList(filenames.split("/")));
+				break;
+			case COMMAND_FLAVORLIST:
+				String flavornames = TASmodBufferBuilder.readString(buf);
+				flavorList.complete(Arrays.asList(flavornames.split("/")));
+			default:
+				break;
+		}
+	}
+	
+	public List<String> getTASFileList(String playername) throws InterruptedException, ExecutionException, TimeoutException {
+		fileList = new CompletableFuture<>();
+		try {
+			TASmod.server.sendTo(playername, new TASmodBufferBuilder(COMMAND_TASFILELIST));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return fileList.get(2,TimeUnit.SECONDS);
+	}
+	
+	public List<String> getFlavorList(String playername) throws InterruptedException, ExecutionException, TimeoutException {
+		flavorList = new CompletableFuture<>();
+		try {
+			TASmod.server.sendTo(playername, new TASmodBufferBuilder(COMMAND_FLAVORLIST));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return flavorList.get(2,TimeUnit.SECONDS);
+	}
+	
+	//======== CLIENT SIDE
+	
+	@Override
+	public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
+		TASmodPackets packet = (TASmodPackets) id;
+		switch (packet) {
+			case COMMAND_TASFILELIST:
+				String filenames = String.join("/", getFilenames());
+				TASmodClient.client.send(new TASmodBufferBuilder(COMMAND_TASFILELIST).writeString(filenames));
+				break;
+
+			case COMMAND_FLAVORLIST:
+				String flavornames = String.join("/", TASmodRegistry.SERIALISER_FLAVOR.getFlavorNames());
+				TASmodClient.client.send(new TASmodBufferBuilder(COMMAND_FLAVORLIST).writeString(flavornames));
+			default:
+				break;
+		}
+	}
+	
+	private List<String> getFilenames() {
+		List<String> tab = new ArrayList<String>();
+		File folder = new File(Minecraft.getMinecraft().mcDataDir, "saves" + File.separator + "tasfiles");
+
+		File[] listOfFiles = folder.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.getName().endsWith(".mctas");
+			}
+		});
+		for (int i = 0; i < listOfFiles.length; i++) {
+			tab.add(listOfFiles[i].getName().replaceAll("\\.mctas", ""));
+		}
+		return tab;
+	}
+}
