@@ -930,4 +930,13 @@ public abstract class SerialiserFlavorBase {
 
 	@Override
 	public abstract SerialiserFlavorBase clone();
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof SerialiserFlavorBase) {
+			SerialiserFlavorBase flavor = (SerialiserFlavorBase) obj;
+			return this.flavorName().equals(flavor.flavorName());
+		}
+		return super.equals(obj);
+	}
 }

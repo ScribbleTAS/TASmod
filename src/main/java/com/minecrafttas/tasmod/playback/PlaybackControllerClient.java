@@ -47,6 +47,8 @@ import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
@@ -106,7 +108,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	private VirtualCameraAngle camera = new VirtualCameraAngle();
 
 	public final File directory = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles");
-
+	
 	/**
 	 * The place where all inputs get stored
 	 */
@@ -781,21 +783,25 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
 		TASmodPackets packet = (TASmodPackets) id;
 		String name = null;
+		String flavor = null;
 		Minecraft mc = Minecraft.getMinecraft();
 
 		switch (packet) {
 
 			case PLAYBACK_SAVE:
 				name = TASmodBufferBuilder.readString(buf);
-//				try {
-//					TASmodClient.virtual.saveInputs(name); TODO Move to PlaybackController
-//				} catch (IOException e) {
-//					if (mc.world != null)
-//						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
-//					else
-//						e.printStackTrace();
-//					return;
-//				}
+				flavor = TASmodBufferBuilder.readString(buf);
+				
+				try {
+					PlaybackSerialiser2.saveToFile(new File(directory, name + ".mctas"), this, flavor);
+				} catch (IOException e) {
+					if (mc.world != null)
+						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
+					else
+						LOGGER.catching(e);
+					return;
+				}
+				
 				if (mc.world != null) {
 					TextComponentString confirm = new TextComponentString(TextFormatting.GREEN + "Saved inputs to " + name + ".mctas" + TextFormatting.RESET + " [" + TextFormatting.YELLOW + "Open folder" + TextFormatting.RESET + "]");
 					confirm.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/folder tasfiles"));
@@ -807,15 +813,22 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 			case PLAYBACK_LOAD:
 				name = TASmodBufferBuilder.readString(buf);
-//				try {
-//					TASmodClient.virtual.loadInputs(name); TODO Move to PlaybackController
-//				} catch (IOException e) {
-//					if (mc.world != null)
-//						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
-//					else
-//						e.printStackTrace();
-//					return;
-//				}
+				flavor = TASmodBufferBuilder.readString(buf);
+				
+				try {
+					PlaybackSerialiser2.loadFromFile(new File(directory, name + ".mctas"), flavor);
+				} catch (PlaybackLoadException e) {
+					if (mc.world != null)
+						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
+					else
+						LOGGER.catching(e);
+					return;
+				} catch (Exception e) {
+					if (mc.world != null) {
+						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Something went very wrong"));
+					}
+				}
+				
 				if (mc.world != null)
 					mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.GREEN + "Loaded inputs from " + name + ".mctas"));
 				else

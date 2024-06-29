@@ -88,45 +88,26 @@ public class PlaybackSerialiser2 {
 			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
 		}
 
-		// Read file
-		BufferedReader reader = null;
-
-		try {
-			reader = new BufferedReader(new FileReader(file));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return null;
-		}
-
-		List<String> lines = new ArrayList<>();
-		String line = null;
-
-		for (int i = 0; i < 100; i++) {
-			
-			line = reader.readLine();
-			
-			if (line != null) {
-				lines.add(line);
-			}
-		}
-		reader.close();
-
-		SerialiserFlavorBase flavor = null;
-
-		flavor = searchForFlavor(lines, TASmodRegistry.SERIALISER_FLAVOR.getFlavors()); // Test for the correct flavor on the first 100 lines
+		SerialiserFlavorBase flavor = readFlavor(file);
 
 		return loadFromFile(file, flavor);
 	}
 
 	public static BigArrayList<TickContainer> loadFromFile(File file, String flavorName) throws PlaybackLoadException, IOException {
+		
 		if(flavorName == null || flavorName.isEmpty()) {
-			throw new PlaybackLoadException("Flavor name is null or empty");
+			return loadFromFile(file);
 		}
 		
 		SerialiserFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
-		
+
 		if (flavor == null) {
 			throw new PlaybackLoadException("Flavor name %s doesn't exist.", flavorName);
+		}
+
+		SerialiserFlavorBase flavorInFile = readFlavor(file);
+		if(!flavor.equals(flavorInFile)) {
+			throw new PlaybackLoadException("Detected flavor %s in the TASfile, which does not match the specified flavor: %s");
 		}
 		
 		return loadFromFile(file, flavor);
@@ -136,9 +117,6 @@ public class PlaybackSerialiser2 {
 		if (file == null) {
 			throw new PlaybackLoadException("Load from file failed. No file specified");
 		}
-		if(!file.exists()) {
-			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
-		}
 		
 		// Read file
 		BufferedReader reader = null;
@@ -146,8 +124,7 @@ public class PlaybackSerialiser2 {
 		try {
 			reader = new BufferedReader(new FileReader(file));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return null;
+			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
 		}
 
 		BigArrayList<String> lines = new BigArrayList<>();
@@ -177,5 +154,34 @@ public class PlaybackSerialiser2 {
 			}
 		}
 		throw new PlaybackLoadException("Couldn't find a flavorname in the file. TASmod is missing a flavor-extension or the file is broken");
+	}
+	
+	public static SerialiserFlavorBase readFlavor(File file) throws PlaybackLoadException, IOException {
+		// Read file
+		BufferedReader reader = null;
+
+		try {
+			reader = new BufferedReader(new FileReader(file));
+		} catch (FileNotFoundException e) {
+			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
+		}
+
+		List<String> lines = new ArrayList<>();
+		String line = null;
+
+		for (int i = 0; i < 100; i++) {
+			
+			line = reader.readLine();
+			
+			if (line != null) {
+				lines.add(line);
+			}
+		}
+		reader.close();
+
+		SerialiserFlavorBase flavor = null;
+
+		flavor = searchForFlavor(lines, TASmodRegistry.SERIALISER_FLAVOR.getFlavors()); // Test for the correct flavor on the first 100 lines
+		return flavor;
 	}
 }
