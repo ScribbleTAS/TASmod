@@ -12,6 +12,7 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.util.FileThread;
 import com.minecrafttas.tasmod.util.TASmodRegistry;
@@ -35,27 +36,36 @@ public class PlaybackSerialiser2 {
 	 * @param flavor
 	 * @throws FileNotFoundException
 	 */
-	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorname) throws FileNotFoundException {
+	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorname) throws PlaybackSaveException {
 		if (controller == null) {
-			throw new NullPointerException("Save to file failed. No controller specified");
+			throw new PlaybackSaveException("Save to file failed. No controller specified");
 		}
 		saveToFile(file, controller.getInputs(), flavorname);
 	}
 
-	public static void saveToFile(File file, BigArrayList<TickContainer> container, String flavorname) throws FileNotFoundException {
+	public static void saveToFile(File file, BigArrayList<TickContainer> container, String flavorname) throws PlaybackSaveException {
 		if (file == null) {
-			throw new NullPointerException("Save to file failed. No file specified");
+			throw new PlaybackSaveException("Save to file failed. No file specified");
 		}
 
 		if (container == null) {
-			throw new NullPointerException("Save to file failed. No tickcontainer list specified");
+			throw new PlaybackSaveException("Save to file failed. No tickcontainer list specified");
 		}
 
-		if (flavorname == null) {
+		if (flavorname == null || flavorname.isEmpty()) {
+			if(defaultFlavor == null || defaultFlavor.isEmpty())
+				throw new PlaybackSaveException("No default flavor specified... Please specify a flavor name first");
 			flavorname = defaultFlavor;
+		} else {
+			defaultFlavor = flavorname;
 		}
-
-		FileThread writerThread = new FileThread(file, false);
+		
+		FileThread writerThread;
+		try {
+			writerThread = new FileThread(file, false);
+		} catch (FileNotFoundException e) {
+			throw new PlaybackSaveException(e, "Trying to save the file %s, but the file can't be created", file.getName());
+		}
 		writerThread.start();
 
 		SerialiserFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorname);
@@ -124,7 +134,7 @@ public class PlaybackSerialiser2 {
 		try {
 			reader = new BufferedReader(new FileReader(file));
 		} catch (FileNotFoundException e) {
-			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
+			throw new PlaybackLoadException("Trying to load %s, but the file doesn't exist", file.getName());
 		}
 
 		BigArrayList<String> lines = new BigArrayList<>();

@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -28,6 +27,7 @@ import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.util.TASmodRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
@@ -189,7 +189,7 @@ public class PlaybackSerialiserTest {
 		
 		try {
 			PlaybackSerialiser2.saveToFile(file, expected, "Test");
-		} catch (FileNotFoundException e) {
+		} catch (PlaybackSaveException e) {
 			e.printStackTrace();
 		}
 		

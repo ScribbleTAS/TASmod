@@ -49,6 +49,7 @@ import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
@@ -794,9 +795,15 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				
 				try {
 					PlaybackSerialiser2.saveToFile(new File(directory, name + ".mctas"), this, flavor);
-				} catch (IOException e) {
+				} catch (PlaybackSaveException e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
+					else
+						LOGGER.catching(e);
+					return;
+				} catch (Exception e) {
+					if (mc.world != null)
+						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Saving failed, something went very wrong"));
 					else
 						LOGGER.catching(e);
 					return;
@@ -824,9 +831,10 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 						LOGGER.catching(e);
 					return;
 				} catch (Exception e) {
-					if (mc.world != null) {
-						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Something went very wrong"));
-					}
+					if (mc.world != null) 
+						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Loading failed, something went very wrong"));
+					else
+						LOGGER.catching(e);
 				}
 				
 				if (mc.world != null)
