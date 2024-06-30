@@ -30,7 +30,6 @@ public class CommandLoadTAS extends CommandBase {
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		sender.sendMessage(new TextComponentString(TextFormatting.RED + "This feature does not work at the moment!"));
 		if (sender instanceof EntityPlayer) {
 			if (sender.canUseCommand(2, "load")) {
 				if (args.length < 1) {

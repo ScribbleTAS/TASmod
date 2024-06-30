@@ -1,18 +1,6 @@
 package com.minecrafttas.tasmod.playback.tasfile;
 
-import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.playback.ControlByteHandler;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
-import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
-import com.minecrafttas.tasmod.util.FileThread;
-import com.minecrafttas.tasmod.util.LoggerMarkers;
-import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
-import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
-import com.minecrafttas.tasmod.virtual.VirtualMouse;
-import com.mojang.realmsclient.util.Pair;
-import org.apache.commons.io.FileUtils;
+import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.minecrafttas.tasmod.TASmod.LOGGER;
+import org.apache.commons.io.FileUtils;
+
+import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
+import com.minecrafttas.tasmod.util.FileThread;
+import com.minecrafttas.tasmod.util.LoggerMarkers;
+import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
+import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
+import com.minecrafttas.tasmod.virtual.VirtualMouse;
+import com.mojang.realmsclient.util.Pair;
 
 /**
  * Saves a given {@linkplain PlaybackControllerClient} to a file. Is also able to read an input container from a file. <br>
@@ -36,6 +36,7 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
  * @author ScribbleLP
  *
  */
+@Deprecated
 public class PlaybackSerialiser {
 	
 	/**
@@ -131,14 +132,14 @@ public class PlaybackSerialiser {
 //				 + "#Comments start with \"//\" at the start of the line, comments with # will not be saved\n");
 		
 		BigArrayList<TickContainer> ticks = container.getInputs();
-		Map<Integer, List<Pair<String, String[]>>> cbytes= container.getControlBytes();
+//		Map<Integer, List<Pair<String, String[]>>> cbytes= container.getControlBytes();
 //		Map<Integer, List<String>> comments = container.getComments();
 		
-		for (int i = 0; i < ticks.size(); i++) {
-			if(i==index) {
-				break;
-			}
-			
+//		for (int i = 0; i < ticks.size(); i++) {
+//			if(i==index) {
+//				break;
+//			}
+//			
 //			// Add comments
 //			if(comments.containsKey(i)) {
 //				List<String> multiLine=comments.get(i);
@@ -148,19 +149,19 @@ public class PlaybackSerialiser {
 //			}
 			
 			// Add controlbytes
-			if(cbytes.containsKey(i)) {
-				List<Pair<String, String[]>> cbytelist= cbytes.get(i);
-				String cbyteString= ControlByteHandler.toString(cbytelist);
-				if(!cbyteString.isEmpty()) {
-					fileThread.addLine(cbyteString);
-				}
-			}
-			
-			// Add a data line
-			TickContainer tickInput = ticks.get(i);
-			fileThread.addLine(tickInput.toString() + "~&\t\t\t\t//Monitoring:"+container.desyncMonitor.get(i)+"\n");
-		}
-		fileThread.close();
+//			if(cbytes.containsKey(i)) {
+//				List<Pair<String, String[]>> cbytelist= cbytes.get(i);
+//				String cbyteString= ControlByteHandler.toString(cbytelist);
+//				if(!cbyteString.isEmpty()) {
+//					fileThread.addLine(cbyteString);
+//				}
+//			}
+//			
+//			// Add a data line
+//			TickContainer tickInput = ticks.get(i);
+//			fileThread.addLine(tickInput.toString() + "~&\t\t\t\t//Monitoring:"+container.desyncMonitor.get(i)+"\n");
+//		}
+//		fileThread.close();
 	}
 
 	public int getFileVersion(File file) throws IOException {
@@ -248,9 +249,9 @@ public class PlaybackSerialiser {
 					continue;
 				String control = sections[0];
 				String[] params = sections[1].split(" ");
-				List<Pair<String, String[]>> cbytes = controller.getControlBytes().getOrDefault(tickcount, new ArrayList<>());
-				cbytes.add(Pair.of(control, params));
-				controller.getControlBytes().put(tickcount, cbytes);
+//				List<Pair<String, String[]>> cbytes = controller.getControlBytes().getOrDefault(tickcount, new ArrayList<>());
+//				cbytes.add(Pair.of(control, params));
+//				controller.getControlBytes().put(tickcount, cbytes);
 			//Read comments
 			} else if (line.startsWith("//")) {
 //				List<String> commentList = controller.getComments().getOrDefault(tickcount, new ArrayList<>());

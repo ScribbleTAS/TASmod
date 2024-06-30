@@ -15,9 +15,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.lwjgl.opengl.Display;
 
@@ -31,7 +29,6 @@ import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException
 import com.minecrafttas.mctcommon.server.exception.WrongSideException;
 import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
@@ -44,9 +41,7 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTick;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
-import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
@@ -57,7 +52,6 @@ import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
-import com.mojang.realmsclient.util.Pair;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -115,21 +109,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	 */
 	private BigArrayList<TickContainer> inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 
-	/**
-	 * A map of control bytes. Used to change settings during playback via the
-	 * playback file.
-	 * <p>
-	 * A full list of changes can be found in {@link ControlByteHandler}
-	 * <p>
-	 * The values are as follows:
-	 * <p>
-	 * <code>Map(int playbackLine, List(Pair(String controlCommand, String[] arguments))</code>"
-	 */
-	private Map<Integer, List<Pair<String, String[]>>> controlBytes = new HashMap<Integer, List<Pair<String, String[]>>>(); // TODO Replace with TASFile extension
-
-	public DesyncMonitorFileCommandExtension desyncMonitor = new DesyncMonitorFileCommandExtension(); // TODO Replace with TASFile extension
-
-	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
+//	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 
 	// =====================================================================================================
 
@@ -171,8 +151,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	 */
 	public String setTASStateClient(TASstate stateIn, boolean verbose) {
 		EventListenerRegistry.fireEvent(EventControllerStateChange.class, stateIn, state);
-		ControlByteHandler.reset(); // FIXME Controlbytes are resetting when loading a world, due to "Paused" state
-									// being active during loading... Fix Paused state shenanigans?
+		
 		if (state == stateIn) {
 			switch (stateIn) {
 				case PLAYBACK:
@@ -262,7 +241,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
 		if (this.inputs.isEmpty()) {
 			inputs.add(new TickContainer());
-//			desyncMonitor.recordNull(index);
 		}
 	}
 
@@ -275,7 +253,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
 		Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
 		index = 0;
-		TASmod.ktrngHandler.setInitialSeed(startSeed);
+//		TASmod.ktrngHandler.setInitialSeed(startSeed);
 	}
 
 	private void stopPlayback() {
@@ -423,7 +401,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 		
 		EventListenerRegistry.fireEvent(EventRecordTick.class, index, container);
-//		desyncMonitor.recordMonitor(index); // Capturing monitor values
 	}
 
 	private void playbackNextTick() {
@@ -460,8 +437,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			this.keyboard = container.getKeyboard().clone();
 			this.mouse = container.getMouse().clone();
 			this.camera = container.getCameraAngle().clone();
-			// check for control bytes
-//			ControlByteHandler.readCotrolByte(controlBytes.get(index));
 			EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
 		}
 		
@@ -494,10 +469,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 		inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 		SerialiserFlavorBase.addAll(this.inputs, inputs);
-	}
-
-	public Map<Integer, List<Pair<String, String[]>>> getControlBytes() { // TODO Replace with TASFile extension
-		return controlBytes;
 	}
 
 	public void setIndex(int index) throws IndexOutOfBoundsException {
@@ -798,14 +769,12 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				} catch (PlaybackSaveException e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
-					else
-						LOGGER.catching(e);
+					LOGGER.catching(e);
 					return;
 				} catch (Exception e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Saving failed, something went very wrong"));
-					else
-						LOGGER.catching(e);
+					LOGGER.catching(e);
 					return;
 				}
 				
@@ -827,14 +796,12 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				} catch (PlaybackLoadException e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
-					else
-						LOGGER.catching(e);
+					LOGGER.catching(e);
 					return;
 				} catch (Exception e) {
 					if (mc.world != null) 
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Loading failed, something went very wrong"));
-					else
-						LOGGER.catching(e);
+					LOGGER.catching(e);
 				}
 				
 				if (mc.world != null)
