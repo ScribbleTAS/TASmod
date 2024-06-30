@@ -468,8 +468,14 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	}
 	
 	public void setInputs(BigArrayList<TickContainer> inputs) {
-		clear();
+		try {
+			this.inputs.clearMemory();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		this.inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 		SerialiserFlavorBase.addAll(this.inputs, inputs);
+		index = 0;
 	}
 
 	public void setIndex(int index) throws IndexOutOfBoundsException {
