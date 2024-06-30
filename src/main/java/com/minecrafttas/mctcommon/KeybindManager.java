@@ -55,6 +55,10 @@ public class KeybindManager implements EventClientGameLoop {
 			this.isKeyDownFunc = func;
 		}
 
+		@Override
+		public String toString() {
+			return this.vanillaKeyBinding.getKeyDescription();
+		}
 	}
 
 	private List<Keybind> keybindings;
