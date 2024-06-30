@@ -98,11 +98,14 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 		this.yaw += yawDelta;
 	}
 
-	public void updateFromState(float pitch, float yaw) {
+	public void updateFromState(Float pitch, Float yaw) {
 		if(this.pitch!=null && this.yaw != null) {
 			createSubtick(true);
 		}
-		this.pitch = MathHelper.clamp(pitch, -90F, 90F);
+		if(pitch != null) {
+			pitch = MathHelper.clamp(pitch, -90F, 90F);
+		}
+		this.pitch = pitch;
 		this.yaw = yaw;
 	}
 	

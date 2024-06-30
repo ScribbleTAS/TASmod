@@ -153,7 +153,6 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 	private void registerEventListeners() {
 		EventListenerRegistry.register(this);
-//		EventListenerRegistry.register(virtual); TODO Remove if unnecessary
 		EventListenerRegistry.register(hud);
 		EventListenerRegistry.register(shieldDownloader);
 		EventListenerRegistry.register(loadingScreenHandler);

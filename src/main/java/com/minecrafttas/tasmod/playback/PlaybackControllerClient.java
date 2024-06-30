@@ -50,6 +50,7 @@ import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
+import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
@@ -239,7 +240,12 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 	private void startRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
-		if (this.inputs.isEmpty()) {
+		if(this.inputs.isEmpty()) {
+			VirtualCameraAngleInput CAMERA_ANGLE = TASmodClient.virtual.CAMERA_ANGLE;
+			Float pitch = CAMERA_ANGLE.getCurrentPitch();
+			Float yaw = CAMERA_ANGLE.getCurrentYaw();
+			this.camera.set(pitch, yaw);
+			
 			inputs.add(new TickContainer());
 		}
 	}
@@ -462,12 +468,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	}
 	
 	public void setInputs(BigArrayList<TickContainer> inputs) {
-		try {
-			inputs.clearMemory();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
+		clear();
 		SerialiserFlavorBase.addAll(this.inputs, inputs);
 	}
 
@@ -503,7 +504,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	}
 
 	public void clear() {
-		LOGGER.debug(LoggerMarkers.Playback, "Clearing playback controller");
+		LOGGER.info(LoggerMarkers.Playback, "Clearing playback controller");
 		EventListenerRegistry.fireEvent(EventPlaybackClient.EventRecordClear.class);
 		try {
 			inputs.clearMemory();
@@ -511,6 +512,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			e.printStackTrace();
 		}
 		inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
+		index = 0;
 	}
 
 	/**
@@ -575,9 +577,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 
 		public TickContainer() {
-			this.keyboard = new VirtualKeyboard();
-			this.mouse = new VirtualMouse();
-			this.cameraAngle = new VirtualCameraAngle();
+			this(new VirtualKeyboard(), new VirtualMouse(), new VirtualCameraAngle());
 		}
 
 		@Override
@@ -792,7 +792,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				flavor = TASmodBufferBuilder.readString(buf);
 				
 				try {
-					PlaybackSerialiser2.loadFromFile(new File(directory, name + ".mctas"), flavor);
+					TASmodClient.controller.setInputs(PlaybackSerialiser2.loadFromFile(new File(directory, name + ".mctas"), flavor));
 				} catch (PlaybackLoadException e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));

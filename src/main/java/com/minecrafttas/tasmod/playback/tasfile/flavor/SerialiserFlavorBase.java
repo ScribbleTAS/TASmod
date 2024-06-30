@@ -719,9 +719,15 @@ public abstract class SerialiserFlavorBase {
 			if (matcher.find()) {
 				String cameraPitchString = matcher.group(1);
 				String cameraYawString = matcher.group(2);
-
-				float cameraPitch = deserialiseRelativeFloat("camera pitch", cameraPitchString, previousPitch);
-				float cameraYaw = deserialiseRelativeFloat("camera yaw", cameraYawString, previousYaw);
+				
+				Float cameraPitch = null;
+				Float cameraYaw = null;
+				
+				if(!"null".equals(cameraPitchString))
+					cameraPitch = deserialiseRelativeFloat("camera pitch", cameraPitchString, previousPitch);
+				
+				if(!"null".equals(cameraYawString))
+					cameraYaw = deserialiseRelativeFloat("camera yaw", cameraYawString, previousYaw);
 
 				out.updateFromState(cameraPitch, cameraYaw);
 			}
@@ -789,7 +795,11 @@ public abstract class SerialiserFlavorBase {
 		}
 	}
 
-	protected float deserialiseRelativeFloat(String name, String floatstring, Float previous) {
+	protected Float deserialiseRelativeFloat(String name, String floatstring, Float previous) {
+		if(floatstring == null) {
+			return null;
+		}
+		
 		float out = 0;
 		if (floatstring.startsWith("~")) {
 			floatstring = floatstring.replace("~", "");
