@@ -36,6 +36,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 		}
 
 		REGISTRY.put(extension.name(), extension);
+		enabledExtensions = getEnabled();
 	}
 
 	@Override
@@ -86,16 +87,20 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, Playb
 	}
 
 	@Override
-	public void onPlaybackTick(long index, TickContainer container) {
-		enabledExtensions.forEach(extension -> {
-			extension.onRecord(index, container);
-		});
-	}
-
-	@Override
 	public void onRecordTick(long index, TickContainer container) {
 		enabledExtensions.forEach(extension -> {
-			extension.onPlayback(index, container);
+			if(extension.isEnabled()) {
+				extension.onRecord(index, container);
+			}
+		});
+	}
+	
+	@Override
+	public void onPlaybackTick(long index, TickContainer container) {
+		enabledExtensions.forEach(extension -> {
+			if(extension.isEnabled()) {
+				extension.onPlayback(index, container);
+			}
 		});
 	}
 

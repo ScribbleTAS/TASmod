@@ -12,7 +12,6 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
@@ -37,6 +36,10 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private BigArrayList<MonitorContainer> monitorContainer = new BigArrayList<MonitorContainer>(tempDir.toString());
 
 	private MonitorContainer currentValues;
+
+	public DesyncMonitorFileCommandExtension() {
+		enabled = true;
+	}
 
 	@Override
 	public String name() {
@@ -93,6 +96,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		List<PlaybackFileCommand> commandsEndline = fileCommandContainer.get("desyncMonitor");
 		if (commandsEndline == null || commandsEndline.isEmpty()) {
 			recordNull(tick);
+			return;
 		}
 
 		PlaybackFileCommand command = commandsEndline.get(0);

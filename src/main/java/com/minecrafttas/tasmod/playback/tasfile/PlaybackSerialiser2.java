@@ -163,7 +163,7 @@ public class PlaybackSerialiser2 {
 				return flavor.clone();
 			}
 		}
-		throw new PlaybackLoadException("Couldn't find a flavorname in the file. TASmod is missing a flavor-extension or the file is broken");
+		throw new PlaybackLoadException("Couldn't find a flavorname in the file. TASfile is missing a flavor-extension or the file is broken");
 	}
 	
 	public static SerialiserFlavorBase readFlavor(File file) throws PlaybackLoadException, IOException {

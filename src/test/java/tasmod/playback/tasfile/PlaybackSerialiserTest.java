@@ -312,7 +312,7 @@ public class PlaybackSerialiserTest {
 			PlaybackSerialiser2.loadFromFile(file);
 		});
 		
-		assertEquals("Couldn't find a flavorname in the file. TASmod is missing a flavor-extension or the file is broken", t.getMessage());
+		assertEquals("Couldn't find a flavorname in the file. TASfile is missing a flavor-extension or the file is broken", t.getMessage());
 	}
 	
 	@Test

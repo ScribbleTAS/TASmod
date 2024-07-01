@@ -42,6 +42,7 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
@@ -800,8 +801,10 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				try {
 					TASmodClient.controller.setInputs(PlaybackSerialiser2.loadFromFile(new File(directory, name + ".mctas"), flavor));
 				} catch (PlaybackLoadException e) {
-					if (mc.world != null)
-						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
+					if (mc.world != null) {
+						TextComponentString textComponent =  new TextComponentString(e.getMessage());
+						mc.ingameGUI.getChatGUI().printChatMessage(textComponent);
+					}
 					LOGGER.catching(e);
 					return;
 				} catch (Exception e) {
