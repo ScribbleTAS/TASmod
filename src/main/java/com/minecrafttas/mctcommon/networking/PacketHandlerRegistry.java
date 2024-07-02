@@ -1,4 +1,4 @@
-package com.minecrafttas.mctcommon.server;
+package com.minecrafttas.mctcommon.networking;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -6,13 +6,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.minecrafttas.mctcommon.MCTCommon;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
-import com.minecrafttas.mctcommon.server.interfaces.PacketHandlerBase;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketHandlerBase;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 
 public class PacketHandlerRegistry {
 	private static final List<PacketHandlerBase> REGISTRY = new ArrayList<>();

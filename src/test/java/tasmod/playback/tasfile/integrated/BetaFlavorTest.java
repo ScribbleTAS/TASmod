@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.integrated.Beta1Flavor;
-import com.minecrafttas.tasmod.util.TASmodRegistry;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 
 public class BetaFlavorTest {
 	

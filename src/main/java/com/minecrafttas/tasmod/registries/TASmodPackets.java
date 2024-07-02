@@ -1,12 +1,12 @@
-package com.minecrafttas.tasmod.networking;
+package com.minecrafttas.tasmod.registries;
 
-import com.minecrafttas.mctcommon.server.CompactPacketHandler;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.commands.CommandFolder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 
@@ -113,7 +113,7 @@ public enum TASmodPackets implements PacketID {
 	 */
 	PLAYBACK_RESTARTANDPLAY,
 	/**
-	 * <p>Notifies the client to store the current inputs to a file in {@link PlaybackControllerClient}. This is done using {@link PlaybackSerialiser}
+	 * <p>Notifies the client to store the current inputs to a file in {@link PlaybackControllerClient}. This is done using {@link PlaybackSerialiser2}
 	 * <p>SIDE: Both<br>
 	 * ARGS: <br>
 	 * <strong>Client->Server</strong> None<br>
@@ -121,7 +121,7 @@ public enum TASmodPackets implements PacketID {
 	 */
 	PLAYBACK_SAVE,
 	/**
-	 * <p>Notifies the client to load the inputs from a file in {@link PlaybackControllerClient}. This is done using {@link PlaybackSerialiser}
+	 * <p>Notifies the client to load the inputs from a file in {@link PlaybackControllerClient}. This is done using {@link PlaybackSerialiser2}
 	 * <p>SIDE: Both<br>
 	 * ARGS: <br>
 	 * <strong>Client->Server</strong> None<br>
@@ -255,5 +255,10 @@ public enum TASmodPackets implements PacketID {
 	@Override
 	public boolean shouldTrace() {
 		return shouldTrace;
+	}
+
+	@Override
+	public String getExtensionName() {
+		return "TASmodPackets";
 	}
 }

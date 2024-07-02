@@ -6,7 +6,7 @@ import java.util.concurrent.TimeoutException;
 import com.google.common.collect.ImmutableList;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;

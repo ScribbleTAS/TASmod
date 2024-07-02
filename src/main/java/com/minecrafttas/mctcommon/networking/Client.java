@@ -1,9 +1,9 @@
-package com.minecrafttas.mctcommon.server;
+package com.minecrafttas.mctcommon.networking;
 
 import static com.minecrafttas.mctcommon.MCTCommon.Client;
 import static com.minecrafttas.mctcommon.MCTCommon.LOGGER;
 import static com.minecrafttas.mctcommon.MCTCommon.Server;
-import static com.minecrafttas.mctcommon.server.SecureList.BUFFER_SIZE;
+import static com.minecrafttas.mctcommon.networking.SecureList.BUFFER_SIZE;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -22,10 +22,10 @@ import com.minecrafttas.mctcommon.MCTCommon;
 import com.minecrafttas.mctcommon.events.EventClient.EventDisconnectClient;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.events.EventServer.EventClientCompleteAuthentication;
-import com.minecrafttas.mctcommon.server.exception.InvalidPacketException;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.exception.InvalidPacketException;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 
 /**
  * A custom asynchronous client

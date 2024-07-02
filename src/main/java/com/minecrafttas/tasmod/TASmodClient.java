@@ -9,19 +9,17 @@ import java.util.Arrays;
 import org.apache.logging.log4j.Level;
 
 import com.minecrafttas.mctcommon.Configuration;
-import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
 import com.minecrafttas.mctcommon.KeybindManager;
 import com.minecrafttas.mctcommon.LanguageManager;
 import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
 import com.minecrafttas.mctcommon.events.EventClient.EventOpenGui;
 import com.minecrafttas.mctcommon.events.EventClient.EventPlayerJoinedClientSide;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
-import com.minecrafttas.mctcommon.server.Client;
-import com.minecrafttas.mctcommon.server.PacketHandlerRegistry;
-import com.minecrafttas.mctcommon.server.Server;
+import com.minecrafttas.mctcommon.networking.Client;
+import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
+import com.minecrafttas.mctcommon.networking.Server;
 import com.minecrafttas.tasmod.gui.InfoHud;
 import com.minecrafttas.tasmod.handlers.LoadingScreenHandler;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
@@ -31,14 +29,16 @@ import com.minecrafttas.tasmod.playback.metadata.integrated.CreditsMetadataExten
 import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.integrated.Beta1Flavor;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
+import com.minecrafttas.tasmod.registries.TASmodConfig;
+import com.minecrafttas.tasmod.registries.TASmodKeybinds;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerClient;
 import com.minecrafttas.tasmod.ticksync.TickSyncClient;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler;
 import com.minecrafttas.tasmod.util.ShieldDownloader;
-import com.minecrafttas.tasmod.util.TASmodKeybinds;
-import com.minecrafttas.tasmod.util.TASmodRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeybindings;
 
@@ -170,8 +170,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		
 		EventListenerRegistry.register(desyncMonitorFileCommandExtension);
 		
-		EventListenerRegistry.register(TASmodRegistry.PLAYBACK_METADATA);
-		EventListenerRegistry.register(TASmodRegistry.PLAYBACK_FILE_COMMAND);
+		EventListenerRegistry.register(TASmodAPIRegistry.PLAYBACK_METADATA);
+		EventListenerRegistry.register(TASmodAPIRegistry.PLAYBACK_FILE_COMMAND);
 	}
 	
 	@Override
@@ -265,7 +265,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			int PORT = TASmod.networkingport - 1;
 			
 			// Get the connection on startup from config
-			String configAddress = config.get(ConfigOptions.ServerConnection);
+			String configAddress = config.get(TASmodConfig.ServerConnection);
 			if(configAddress != null && !configAddress.isEmpty()) {
 				String[] ipSplit = configAddress.split(":");
 				IP = ipSplit[0];
@@ -294,14 +294,14 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	}
 	
 	private void registerPlaybackMetadata(Minecraft mc) {
-		TASmodRegistry.PLAYBACK_METADATA.register(creditsMetadataExtension);
-		TASmodRegistry.PLAYBACK_METADATA.register(startpositionMetadataExtension);
+		TASmodAPIRegistry.PLAYBACK_METADATA.register(creditsMetadataExtension);
+		TASmodAPIRegistry.PLAYBACK_METADATA.register(startpositionMetadataExtension);
 	}
 	
 	public static Beta1Flavor betaFlavor = new Beta1Flavor();
 	
 	private void registerSerialiserFlavors(Minecraft mc) {
-		TASmodRegistry.SERIALISER_FLAVOR.register(betaFlavor);
+		TASmodAPIRegistry.SERIALISER_FLAVOR.register(betaFlavor);
 	}
 	
 	public static DesyncMonitorFileCommandExtension desyncMonitorFileCommandExtension = new DesyncMonitorFileCommandExtension();
@@ -309,9 +309,9 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	public static LabelFileCommandExtension labelFileCommandExtension = new LabelFileCommandExtension();
 	
 	private void registerFileCommands() {
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(desyncMonitorFileCommandExtension);
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(optionsFileCommandExtension);
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(labelFileCommandExtension);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(desyncMonitorFileCommandExtension);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(optionsFileCommandExtension);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(labelFileCommandExtension);
 	}
 	
 	private void loadConfig(Minecraft mc) {
@@ -320,5 +320,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			configDir.mkdir();
 		}
 		config = new Configuration("TASmod configuration", new File(configDir, "tasmod.cfg"));
+		config.register(TASmodConfig.values());
+		config.load();
 	}
 }

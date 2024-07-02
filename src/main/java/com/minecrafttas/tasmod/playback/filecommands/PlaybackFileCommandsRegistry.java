@@ -5,50 +5,29 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
-import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 
-public class PlaybackFileCommandsRegistry extends AbstractRegistry<String, PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick, EventPlaybackClient.EventRecordClear {
+public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick, EventPlaybackClient.EventRecordClear {
 
 	private List<PlaybackFileCommandExtension> enabledExtensions = new ArrayList<>();
 
 	public PlaybackFileCommandsRegistry() {
-		super(new LinkedHashMap<>());
+		super("FILECOMMAND_REGISTRY", new LinkedHashMap<>());
 	}
 
 	@Override
 	public void register(PlaybackFileCommandExtension extension) {
-		if (extension == null) {
-			throw new NullPointerException("Tried to register a serialiser flavor. But flavor is null.");
-		}
-
-		if (containsClass(extension)) {
-			TASmod.LOGGER.warn("Tried to register the serialiser flavor {}, but another instance of this class is already registered!", extension.getClass().getName());
-			return;
-		}
-
-		if (REGISTRY.containsKey(extension.name())) {
-			TASmod.LOGGER.warn("Trying to register the playback extension{}, but a flavor with the same name is already registered!", extension.name());
-			return;
-		}
-
-		REGISTRY.put(extension.name(), extension);
+		super.register(extension);
 		enabledExtensions = getEnabled();
 	}
 
 	@Override
 	public void unregister(PlaybackFileCommandExtension extension) {
-		if (extension == null) {
-			throw new NullPointerException("Tried to unregister an playback extension with value null");
-		}
-		if (REGISTRY.containsKey(extension.name())) {
-			REGISTRY.remove(extension.name());
-		} else {
-			TASmod.LOGGER.warn("Trying to unregister the playback extension {}, but it was not registered!", extension.getClass().getName());
-		}
+		super.unregister(extension);
+		enabledExtensions = getEnabled();
 	}
 
 	public boolean setEnabled(String extensionName, boolean enabled) {

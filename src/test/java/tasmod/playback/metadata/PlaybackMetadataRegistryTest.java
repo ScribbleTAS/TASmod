@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
-import com.minecrafttas.tasmod.util.TASmodRegistry;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 
 
 public class PlaybackMetadataRegistryTest {
@@ -57,7 +57,7 @@ public class PlaybackMetadataRegistryTest {
 	File file = new File("src/test/resources/metadata/MetadataRegistry.txt");
 	
 	void store() {
-		List<PlaybackMetadata> list = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
+		List<PlaybackMetadata> list = TASmodAPIRegistry.PLAYBACK_METADATA.handleOnStore();
 		List<String> out = new ArrayList<>();
 		
 		list.forEach(data -> {
@@ -84,7 +84,7 @@ public class PlaybackMetadataRegistryTest {
 		
 		meta.add(PlaybackMetadata.fromStringList("Test1", loaded));
 		
-		TASmodRegistry.PLAYBACK_METADATA.handleOnLoad(meta);
+		TASmodAPIRegistry.PLAYBACK_METADATA.handleOnLoad(meta);
 	}
 	
 	/**
@@ -93,7 +93,7 @@ public class PlaybackMetadataRegistryTest {
 	@Test
 	void testRegistry() {
 		Test1 actual = new Test1();
-		TASmodRegistry.PLAYBACK_METADATA.register(actual);
+		TASmodAPIRegistry.PLAYBACK_METADATA.register(actual);
 		
 		store();
 		load();
@@ -106,6 +106,6 @@ public class PlaybackMetadataRegistryTest {
 	
 	@AfterAll
 	static void afterAll() {
-		TASmodRegistry.PLAYBACK_METADATA.clear();
+		TASmodAPIRegistry.PLAYBACK_METADATA.clear();
 	}
 }

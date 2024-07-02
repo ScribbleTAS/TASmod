@@ -4,19 +4,19 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.nio.ByteBuffer;
 
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.minecraft.client.Minecraft;

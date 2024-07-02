@@ -18,7 +18,7 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	BigArrayList<PlaybackFileCommandContainer> hud = new BigArrayList<>();
 
 	@Override
-	public String name() {
+	public String getExtensionName() {
 		return "tasmod_options@v1";
 	}
 

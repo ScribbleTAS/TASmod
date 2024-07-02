@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.mctcommon.registry.Registerable;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.CommentContainer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
@@ -19,13 +20,13 @@ import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.Playbac
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
-import com.minecrafttas.tasmod.util.TASmodRegistry;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
-public abstract class SerialiserFlavorBase {
+public abstract class SerialiserFlavorBase implements Registerable{
 
 	protected long currentLine = 1;
 	
@@ -40,9 +41,6 @@ public abstract class SerialiserFlavorBase {
 	protected int currentSubtick = 0;
 	
 	protected TickContainer previousTickContainer = null;
-
-
-	public abstract String flavorName();
 
 	protected String headerStart() {
 		return createCenteredHeading("TASFile", '#', 50);
@@ -84,18 +82,18 @@ public abstract class SerialiserFlavorBase {
 	}
 
 	protected void serialiseFlavorName(List<String> out) {
-		out.add("Flavor: " + flavorName());
+		out.add("Flavor: " + getExtensionName());
 	}
 
 	protected void serialiseFileCommandNames(List<String> out) {
 		List<String> stringlist = new ArrayList<>();
-		List<PlaybackFileCommandExtension> extensionList = TASmodRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
-		extensionList.forEach(extension -> stringlist.add(extension.name()));
+		List<PlaybackFileCommandExtension> extensionList = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
+		extensionList.forEach(extension -> stringlist.add(extension.getExtensionName()));
 		out.add("FileCommand-Extensions: " + String.join(", ", stringlist));
 	}
 
 	protected void serialiseMetadata(List<String> out) {
-		List<PlaybackMetadata> metadataList = TASmodRegistry.PLAYBACK_METADATA.handleOnStore();
+		List<PlaybackMetadata> metadataList = TASmodAPIRegistry.PLAYBACK_METADATA.handleOnStore();
 
 		for (PlaybackMetadata metadata : metadataList) {
 			serialiseMetadataName(out, metadata.getExtensionName());
@@ -129,8 +127,8 @@ public abstract class SerialiserFlavorBase {
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
 
-		PlaybackFileCommandContainer fileCommandsInline = TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseInline(currentTick, container);
-		PlaybackFileCommandContainer fileCommandsEndline = TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseEndline(currentTick, container);
+		PlaybackFileCommandContainer fileCommandsInline = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseInline(currentTick, container);
+		PlaybackFileCommandContainer fileCommandsEndline = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseEndline(currentTick, container);
 
 		CommentContainer comments = container.getComments();
 		if (comments == null) {
@@ -312,7 +310,7 @@ public abstract class SerialiserFlavorBase {
 
 	public boolean deserialiseFlavorName(List<String> headerLines) {
 		for (String line : headerLines) {
-			Matcher matcher = extract("^Flavor: " + flavorName(), line);
+			Matcher matcher = extract("^Flavor: " + getExtensionName(), line);
 
 			if (matcher.find()) {
 				return true;
@@ -351,7 +349,7 @@ public abstract class SerialiserFlavorBase {
 				String extensionStrings = matcher.group(1);
 				String[] extensionNames = extensionStrings.split(", ?");
 
-				TASmodRegistry.PLAYBACK_FILE_COMMAND.setEnabled(Arrays.asList(extensionNames));
+				TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled(Arrays.asList(extensionNames));
 				return;
 			}
 		}
@@ -388,7 +386,7 @@ public abstract class SerialiserFlavorBase {
 		if (metadataName != null)
 			out.add(PlaybackMetadata.fromHashMap(metadataName, values));
 
-		TASmodRegistry.PLAYBACK_METADATA.handleOnLoad(out);
+		TASmodAPIRegistry.PLAYBACK_METADATA.handleOnLoad(out);
 	}
 
 	/**
@@ -595,8 +593,8 @@ public abstract class SerialiserFlavorBase {
 
 		TickContainer deserialisedContainer = new TickContainer(keyboard, mouse, cameraAngle, comments);
 
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
 
 		previousTickContainer = deserialisedContainer;
 
@@ -945,7 +943,7 @@ public abstract class SerialiserFlavorBase {
 	public boolean equals(Object obj) {
 		if(obj instanceof SerialiserFlavorBase) {
 			SerialiserFlavorBase flavor = (SerialiserFlavorBase) obj;
-			return this.flavorName().equals(flavor.flavorName());
+			return this.getExtensionName().equals(flavor.getExtensionName());
 		}
 		return super.equals(obj);
 	}

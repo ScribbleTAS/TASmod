@@ -22,7 +22,7 @@ import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
-import com.minecrafttas.tasmod.util.TASmodRegistry;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
@@ -32,9 +32,9 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 	@AfterEach
 	void afterEach() {
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.clear();
-		TASmodRegistry.PLAYBACK_METADATA.clear();
-		TASmodRegistry.SERIALISER_FLAVOR.clear();
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.clear();
+		TASmodAPIRegistry.PLAYBACK_METADATA.clear();
+		TASmodAPIRegistry.SERIALISER_FLAVOR.clear();
 		
 		this.currentTick = 0;
 		this.currentSubtick = 0;
@@ -42,7 +42,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	}
 	
 	@Override
-	public String flavorName() {
+	public String getExtensionName() {
 		return "Test";
 	}
 
@@ -140,8 +140,8 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		MetadataTest2 testmetadata2 = new MetadataTest2();
 		testmetadata2.testValue = "This is a second test";
 
-		TASmodRegistry.PLAYBACK_METADATA.register(testmetadata1);
-		TASmodRegistry.PLAYBACK_METADATA.register(testmetadata2);
+		TASmodAPIRegistry.PLAYBACK_METADATA.register(testmetadata1);
+		TASmodAPIRegistry.PLAYBACK_METADATA.register(testmetadata2);
 
 		List<String> actual = new ArrayList<>();
 		serialiseMetadata(actual);
@@ -156,8 +156,8 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertIterableEquals(expected, actual);
 		assertEquals(0, currentTick);
 		
-		TASmodRegistry.PLAYBACK_METADATA.unregister(testmetadata1);
-		TASmodRegistry.PLAYBACK_METADATA.unregister(testmetadata2);
+		TASmodAPIRegistry.PLAYBACK_METADATA.unregister(testmetadata1);
+		TASmodAPIRegistry.PLAYBACK_METADATA.unregister(testmetadata2);
 	}
 	
 	@Test
@@ -166,7 +166,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		class TestFileCommand extends PlaybackFileCommandExtension {
 
 			@Override
-			public String name() {
+			public String getExtensionName() {
 				return "tasmod_testFileCommand";
 			}
 
@@ -177,8 +177,8 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		}
 		
 		TestFileCommand fc = new TestFileCommand();
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(fc);
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testFileCommand", true);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(fc);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testFileCommand", true);
 		
 		List<String> actual = new ArrayList<>();
 		serialiseFileCommandNames(actual);
@@ -440,8 +440,8 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		GeneralMetadata general = new GeneralMetadata();
 		StartPositionMetadata startPosition = new StartPositionMetadata();
 		
-		TASmodRegistry.PLAYBACK_METADATA.register(general);
-		TASmodRegistry.PLAYBACK_METADATA.register(startPosition);
+		TASmodAPIRegistry.PLAYBACK_METADATA.register(general);
+		TASmodAPIRegistry.PLAYBACK_METADATA.register(startPosition);
 		
 		List<String> lines = new ArrayList<>();
 		lines.add("### General");
@@ -481,7 +481,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		class Test1 extends PlaybackFileCommandExtension{
 
 			@Override
-			public String name() {
+			public String getExtensionName() {
 				return "tasmod_test1";
 			}
 
@@ -495,7 +495,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		class Test2 extends PlaybackFileCommandExtension {
 
 			@Override
-			public String name() {
+			public String getExtensionName() {
 				return "tasmod_test2";
 			}
 
@@ -509,8 +509,8 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		Test1 test1 = new Test1();
 		Test2 test2 = new Test2();
 		
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(test1);
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(test2);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(test1);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(test2);
 		
 		List<String> lines = new ArrayList<>();
 		lines.add("FileCommand-Extensions: tasmod_test1, tasmod_test2");

@@ -1,9 +1,10 @@
-package com.minecrafttas.mctcommon.server.interfaces;
+package com.minecrafttas.mctcommon.networking.interfaces;
 
-import com.minecrafttas.mctcommon.server.CompactPacketHandler;
-import com.minecrafttas.mctcommon.server.Client.Side;
+import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
+import com.minecrafttas.mctcommon.registry.Registerable;
+import com.minecrafttas.mctcommon.networking.Client.Side;
 
-public interface PacketID {
+public interface PacketID extends Registerable{
 	/**
 	 * @return The numerical ID of the packet
 	 */

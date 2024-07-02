@@ -1,7 +1,7 @@
-package com.minecrafttas.mctcommon.server.exception;
+package com.minecrafttas.mctcommon.networking.exception;
 
-import com.minecrafttas.mctcommon.server.Client;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.Client;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 
 public class WrongSideException extends Exception {
 

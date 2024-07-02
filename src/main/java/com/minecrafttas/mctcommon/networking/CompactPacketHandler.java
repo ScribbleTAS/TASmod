@@ -1,8 +1,8 @@
-package com.minecrafttas.mctcommon.server;
+package com.minecrafttas.mctcommon.networking;
 
 import java.nio.ByteBuffer;
 
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
 
 @FunctionalInterface
 public interface CompactPacketHandler {

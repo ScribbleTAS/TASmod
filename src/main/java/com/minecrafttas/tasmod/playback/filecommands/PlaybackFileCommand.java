@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.minecrafttas.mctcommon.registry.Registerable;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 
 public class PlaybackFileCommand {
@@ -48,11 +49,9 @@ public class PlaybackFileCommand {
 		return String.format("$%s(%s);", name, String.join(", ", args));
 	}
 
-	public static abstract class PlaybackFileCommandExtension {
+	public static abstract class PlaybackFileCommandExtension implements Registerable{
 
 		protected boolean enabled = false;
-
-		public abstract String name();
 
 		public abstract String[] getFileCommandNames();
 

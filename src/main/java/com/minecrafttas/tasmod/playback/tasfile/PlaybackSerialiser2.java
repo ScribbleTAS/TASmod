@@ -14,8 +14,8 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.util.FileThread;
-import com.minecrafttas.tasmod.util.TASmodRegistry;
 
 /**
  * Serialises and deserialises the {@link PlaybackControllerClient}.<br>
@@ -68,7 +68,7 @@ public class PlaybackSerialiser2 {
 		}
 		writerThread.start();
 
-		SerialiserFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorname);
+		SerialiserFlavorBase flavor = TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavor(flavorname);
 
 		List<String> header = flavor.serialiseHeader();
 		for (String line : header) {
@@ -109,7 +109,7 @@ public class PlaybackSerialiser2 {
 			return loadFromFile(file);
 		}
 		
-		SerialiserFlavorBase flavor = TASmodRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
+		SerialiserFlavorBase flavor = TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
 
 		if (flavor == null) {
 			throw new PlaybackLoadException("Flavor name %s doesn't exist.", flavorName);
@@ -191,7 +191,7 @@ public class PlaybackSerialiser2 {
 
 		SerialiserFlavorBase flavor = null;
 
-		flavor = searchForFlavor(lines, TASmodRegistry.SERIALISER_FLAVOR.getFlavors()); // Test for the correct flavor on the first 100 lines
+		flavor = searchForFlavor(lines, TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavors()); // Test for the correct flavor on the first 100 lines
 		return flavor;
 	}
 }

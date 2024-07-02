@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.io.File;
 
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,21 +14,46 @@ import com.minecrafttas.mctcommon.Configuration;
 import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
 
 class TestConfiguration {
+	
+	enum TestConfig implements ConfigOptions {
+		FileToOpen("fileToOpen", ""),
+		ServerConnection("serverConnection", "");
 
-	private static Configuration config;
+		private String configKey;
+		private String defaultValue;
+		
+		private TestConfig(String configKey, String defaultValue) {
+			this.configKey = configKey;
+			this.defaultValue = defaultValue;
+		}
+		
+		@Override
+		public String getDefaultValue() {
+			return defaultValue;
+		}
+
+		@Override
+		public String getConfigKey() {
+			return configKey;
+		}
+		
+		@Override
+		public String getExtensionName() {
+			return "TestConfig";
+		}
+	}
+
+	private Configuration config;
 	
 	private static final File configPath = new File("./config.xml");
 	
-	@BeforeAll
-	static void setUpBeforeClass() throws Exception {
+	@BeforeEach
+	void beforeEach() {
 		config = new Configuration("Test config", configPath);
+		config.register(TestConfig.values());
+		config.load();
 	}
 
-	@BeforeEach
-	void resetOptions() throws Exception {
-		config.reset(ConfigOptions.FileToOpen);
-	}
-	
 	@AfterAll
 	static void tearDownAfterClass() throws Exception {
 		configPath.delete();
@@ -50,7 +74,9 @@ class TestConfiguration {
 	void testDefault() {
 		configPath.delete();
 		config = new Configuration("Test config", configPath);
-		assertEquals("", config.get(ConfigOptions.FileToOpen));
+		config.register(TestConfig.values());
+		config.load();
+		assertEquals("", config.get(TestConfig.FileToOpen));
 	}
 	
 	/**
@@ -58,9 +84,11 @@ class TestConfiguration {
 	 */
 	@Test
 	void testSavingAndLoading() {
-		config.set(ConfigOptions.FileToOpen, "Test");
+		config.set(TestConfig.FileToOpen, "Test");
 		config = new Configuration("Test config", configPath);
-		assertEquals("Test", config.get(ConfigOptions.FileToOpen));
+		config.register(TestConfig.values());
+		config.load();
+		assertEquals("Test", config.get(TestConfig.FileToOpen));
 	}
 	
 	/**
@@ -68,8 +96,8 @@ class TestConfiguration {
 	 */
 	@Test
 	void testIntegers() {
-		config.set(ConfigOptions.FileToOpen, 3);
-		assertEquals(3, config.getInt(ConfigOptions.FileToOpen));
+		config.set(TestConfig.FileToOpen, 3);
+		assertEquals(3, config.getInt(TestConfig.FileToOpen));
 	}
 
 	/**
@@ -77,8 +105,8 @@ class TestConfiguration {
 	 */
 	@Test
 	void testBooleans() {
-		config.set(ConfigOptions.FileToOpen, true);
-		assertEquals(true, config.getBoolean(ConfigOptions.FileToOpen));
+		config.set(TestConfig.FileToOpen, true);
+		assertEquals(true, config.getBoolean(TestConfig.FileToOpen));
 	}
 	
 	/**
@@ -86,8 +114,8 @@ class TestConfiguration {
 	 */
 	@Test
 	void testDeleteAndContains() {
-		config.delete(ConfigOptions.FileToOpen);
-		assertFalse(config.has(ConfigOptions.FileToOpen));
+		config.delete(TestConfig.FileToOpen);
+		assertFalse(config.has(TestConfig.FileToOpen));
 	}
 	
 	/**
@@ -95,7 +123,7 @@ class TestConfiguration {
 	 */
 	@Test
 	void resetToDefault() {
-		config.reset(ConfigOptions.FileToOpen);
-		assertEquals("", config.get(ConfigOptions.FileToOpen));
+		config.reset(TestConfig.FileToOpen);
+		assertEquals("", config.get(TestConfig.FileToOpen));
 	}
 }

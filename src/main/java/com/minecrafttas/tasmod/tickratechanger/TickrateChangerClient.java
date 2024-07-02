@@ -5,15 +5,15 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 import java.nio.ByteBuffer;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickrateChange;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 

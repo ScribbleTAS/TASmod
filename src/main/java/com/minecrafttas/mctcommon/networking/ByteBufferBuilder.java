@@ -1,10 +1,10 @@
-package com.minecrafttas.mctcommon.server;
+package com.minecrafttas.mctcommon.networking;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 
 /**
  * Helper method for creating byte buffers which get pooled from a

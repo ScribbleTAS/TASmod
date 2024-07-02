@@ -6,17 +6,17 @@ import java.nio.ByteBuffer;
 
 import com.minecrafttas.mctcommon.events.EventClient.EventPlayerJoinedClientSide;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerTick;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -29,6 +29,7 @@ import net.minecraft.server.MinecraftServer;
  * @author Scribble
  *
  */
+@Deprecated
 public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClientSide, ClientPacketHandler, ServerPacketHandler {
 
 	private boolean isLoaded;

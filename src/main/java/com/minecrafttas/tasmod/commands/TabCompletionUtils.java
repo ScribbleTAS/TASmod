@@ -1,5 +1,7 @@
 package com.minecrafttas.tasmod.commands;
 
+import static com.minecrafttas.tasmod.registries.TASmodPackets.*;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.nio.ByteBuffer;
@@ -11,17 +13,16 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.*;
-import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
-import com.minecrafttas.tasmod.util.TASmodRegistry;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 
 import net.minecraft.client.Minecraft;
 
@@ -85,7 +86,7 @@ public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHand
 				break;
 
 			case COMMAND_FLAVORLIST:
-				String flavornames = String.join("/", TASmodRegistry.SERIALISER_FLAVOR.getFlavorNames());
+				String flavornames = String.join("/", TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavorNames());
 				TASmodClient.client.send(new TASmodBufferBuilder(COMMAND_FLAVORLIST).writeString(flavornames));
 			default:
 				break;

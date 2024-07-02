@@ -2,8 +2,8 @@ package com.minecrafttas.tasmod.commands;
 
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 

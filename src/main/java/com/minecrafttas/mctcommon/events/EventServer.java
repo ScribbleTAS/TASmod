@@ -1,7 +1,7 @@
 package com.minecrafttas.mctcommon.events;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
-import com.minecrafttas.mctcommon.server.Client;
+import com.minecrafttas.mctcommon.networking.Client;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;

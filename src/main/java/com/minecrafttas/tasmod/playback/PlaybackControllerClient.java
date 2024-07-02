@@ -1,14 +1,14 @@
 package com.minecrafttas.tasmod.playback;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_CLEAR_INPUTS;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_FULLPLAY;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_FULLRECORD;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_LOAD;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_PLAYUNTIL;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_SAVE;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_STATE;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_CLEAR_INPUTS;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLPLAY;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLRECORD;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_LOAD;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_PLAYUNTIL;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_SAVE;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,15 +20,14 @@ import java.util.List;
 import org.lwjgl.opengl.Display;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
 import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
-import com.minecrafttas.mctcommon.server.ByteBufferBuilder;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.ByteBufferBuilder;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
@@ -40,13 +39,13 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWor
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTick;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
+import com.minecrafttas.tasmod.registries.TASmodConfig;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
@@ -76,7 +75,7 @@ import net.minecraft.util.text.event.ClickEvent;
  * Information about the author etc. get stored in the playback controller too
  * and will be printed out in chat when the player loads into a world <br>
  * Inputs are saved and loaded to/from file via the
- * {@linkplain PlaybackSerialiser} TODO Update with new {@link PlaybackMetadata}
+ * {@linkplain PlaybackSerialiser2} TODO Update with new {@link PlaybackMetadata}
  * 
  * @author Scribble
  *
@@ -856,7 +855,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 					e.printStackTrace();
 				}
 				Minecraft.getMinecraft().addScheduledTask(() -> {
-					TASmodClient.config.set(ConfigOptions.FileToOpen, finalname);
+					TASmodClient.config.set(TASmodConfig.FileToOpen, finalname);
 					System.exit(0);
 				});
 				break;
@@ -910,11 +909,11 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	@Override
 	public void onClientInit(Minecraft mc) {
 		// Execute /restartandplay. Load the file to start from the config. If it exists load the playback file on start.
-		String fileOnStart = TASmodClient.config.get(ConfigOptions.FileToOpen);
+		String fileOnStart = TASmodClient.config.get(TASmodConfig.FileToOpen);
 		if (fileOnStart.isEmpty()) {
 			fileOnStart = null;
 		} else {
-			TASmodClient.config.reset(ConfigOptions.FileToOpen);
+			TASmodClient.config.reset(TASmodConfig.FileToOpen);
 		}
 	}
 }

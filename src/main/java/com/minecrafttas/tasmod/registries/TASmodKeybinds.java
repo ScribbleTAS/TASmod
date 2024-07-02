@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.util;
+package com.minecrafttas.tasmod.registries;
 
 import org.lwjgl.input.Keyboard;
 
@@ -6,7 +6,6 @@ import com.minecrafttas.mctcommon.KeybindManager.IsKeyDownFunc;
 import com.minecrafttas.mctcommon.KeybindManager.Keybind;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.virtual.VirtualKeybindings;
 

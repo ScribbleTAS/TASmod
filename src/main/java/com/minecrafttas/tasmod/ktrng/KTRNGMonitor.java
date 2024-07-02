@@ -1,6 +1,6 @@
 package com.minecrafttas.tasmod.ktrng;
 
-
+@Deprecated
 public class KTRNGMonitor {
 	
 //	@CaptureRandomness(name = "jukeboxRecordDropPosition")

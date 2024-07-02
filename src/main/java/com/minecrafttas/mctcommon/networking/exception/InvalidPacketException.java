@@ -1,4 +1,4 @@
-package com.minecrafttas.mctcommon.server.exception;
+package com.minecrafttas.mctcommon.networking.exception;
 
 public class InvalidPacketException extends Exception {
 

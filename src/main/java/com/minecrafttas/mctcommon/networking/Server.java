@@ -1,4 +1,4 @@
-package com.minecrafttas.mctcommon.server;
+package com.minecrafttas.mctcommon.networking;
 
 import static com.minecrafttas.mctcommon.MCTCommon.LOGGER;
 import static com.minecrafttas.mctcommon.MCTCommon.Server;
@@ -15,8 +15,8 @@ import java.util.List;
 import com.minecrafttas.mctcommon.MCTCommon;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.events.EventServer.EventDisconnectServer;
-import com.minecrafttas.mctcommon.server.Client.ClientCallback;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.Client.ClientCallback;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 
 import net.minecraft.entity.player.EntityPlayer;
 

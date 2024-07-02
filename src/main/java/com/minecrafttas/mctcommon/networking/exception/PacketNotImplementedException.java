@@ -1,8 +1,8 @@
-package com.minecrafttas.mctcommon.server.exception;
+package com.minecrafttas.mctcommon.networking.exception;
 
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.interfaces.PacketHandlerBase;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketHandlerBase;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 
 public class PacketNotImplementedException extends Exception {
 

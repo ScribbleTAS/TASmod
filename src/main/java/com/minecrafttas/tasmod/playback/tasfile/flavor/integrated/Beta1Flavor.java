@@ -5,7 +5,7 @@ import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 public class Beta1Flavor extends SerialiserFlavorBase {
 
 	@Override
-	public String flavorName() {
+	public String getExtensionName() {
 		return "beta1";
 	}
 

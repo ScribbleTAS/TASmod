@@ -29,7 +29,7 @@ import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
-import com.minecrafttas.tasmod.util.TASmodRegistry;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
@@ -40,7 +40,7 @@ public class PlaybackSerialiserTest {
 	private static class TestFlavor extends SerialiserFlavorBase {
 
 		@Override
-		public String flavorName() {
+		public String getExtensionName() {
 			return "Test";
 		}
 		
@@ -90,7 +90,7 @@ public class PlaybackSerialiserTest {
 		List<PlaybackFileCommandContainer> endline = new ArrayList<>();
 		
 		@Override
-		public String name() {
+		public String getExtensionName() {
 			return "tasmod_testFileExtension";
 		}
 		
@@ -118,9 +118,9 @@ public class PlaybackSerialiserTest {
 	
 	@BeforeAll
 	static void register() {
-		TASmodRegistry.SERIALISER_FLAVOR.register(testFlavor);
-		TASmodRegistry.PLAYBACK_METADATA.register(testMetadata);
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.register(testFileCommand);
+		TASmodAPIRegistry.SERIALISER_FLAVOR.register(testFlavor);
+		TASmodAPIRegistry.PLAYBACK_METADATA.register(testMetadata);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(testFileCommand);
 	}
 	
 	@AfterEach
@@ -134,9 +134,9 @@ public class PlaybackSerialiserTest {
 	
 	@AfterAll
 	static void unregister() {
-		TASmodRegistry.SERIALISER_FLAVOR.unregister(testFlavor);
-		TASmodRegistry.PLAYBACK_METADATA.unregister(testMetadata);
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.unregister(testFileCommand);
+		TASmodAPIRegistry.SERIALISER_FLAVOR.unregister(testFlavor);
+		TASmodAPIRegistry.PLAYBACK_METADATA.unregister(testMetadata);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.unregister(testFileCommand);
 	}
 	
 	@Test
@@ -146,7 +146,7 @@ public class PlaybackSerialiserTest {
 		file = new File("src/test/resources/serialiser/PlaybackSerialiserTest.mctas");
 		
 		testMetadata.testValue = "testing";
-		TASmodRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testFileExtension", true);
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testFileExtension", true);
 		// Tick 1
 		
 		// Keyboard

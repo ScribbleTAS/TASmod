@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Locale;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
@@ -42,7 +41,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	}
 
 	@Override
-	public String name() {
+	public String getExtensionName() {
 		return "tasmod_desyncMonitoring@v1";
 	}
 
@@ -161,7 +160,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 				playervalues[3] = player.motionX;
 				playervalues[4] = player.motionY;
 				playervalues[5] = player.motionZ;
-				DesyncStatus status = currentValues.getSeverity(TASmodClient.controller.index(), playervalues, TASmod.ktrngHandler.getGlobalSeedClient());
+				DesyncStatus status = currentValues.getSeverity(TASmodClient.controller.index(), playervalues);
 				lastStatus = status.getFormat() + status.getText();
 			} else {
 				lastStatus = TextFormatting.GRAY + "Empty";
@@ -258,7 +257,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 			return String.format(Locale.US, "%d, %d, %d, %d, %d, %d", values[0], values[1], values[2], values[3], values[4], values[5]);
 		}
 
-		public DesyncStatus getSeverity(long index, double[] playerValues, long seed) {
+		public DesyncStatus getSeverity(long index, double[] playerValues) {
 
 			DesyncStatus out = null;
 

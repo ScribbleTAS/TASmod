@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.util;
+package com.minecrafttas.tasmod.registries;
 
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommandsRegistry;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
@@ -6,7 +6,7 @@ import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorRegistry;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.integrated.Beta1Flavor;
 
-public class TASmodRegistry {
+public class TASmodAPIRegistry {
 	/**
 	 * Registry for registering custom metadata that is stored in the TASFile.<br>
 	 * <br>

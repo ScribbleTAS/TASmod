@@ -18,41 +18,10 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient;
  * 
  * @author Scribble
  */
-public class PlaybackMetadataRegistry extends AbstractRegistry<String, com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension> implements EventPlaybackClient.EventRecordClear{
+public class PlaybackMetadataRegistry extends AbstractRegistry<com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension> implements EventPlaybackClient.EventRecordClear{
 
 	public PlaybackMetadataRegistry() {
-		super(new LinkedHashMap<>());
-	}
-
-	@Override
-	public void register(PlaybackMetadataExtension extension) {
-		if (extension == null) {
-			throw new NullPointerException("Tried to register a playback extension with value null");
-		}
-
-		if (containsClass(extension)) {
-			TASmod.LOGGER.warn("Trying to register the playback extension {}, but another instance of this class is already registered!", extension.getClass().getName());
-			return;
-		}
-
-		if(REGISTRY.containsKey(extension.getExtensionName())) {
-			TASmod.LOGGER.warn("Trying to register the playback extension {}, but an extension with the same name is already registered!", extension.getExtensionName());
-			return;
-		}
-		
-		REGISTRY.put(extension.getExtensionName(), extension);
-	}
-
-	@Override
-	public void unregister(PlaybackMetadataExtension extension) {
-		if (extension == null) {
-			throw new NullPointerException("Tried to unregister an extension with value null");
-		}
-		if (REGISTRY.containsKey(extension.getExtensionName())) {
-			REGISTRY.remove(extension.getExtensionName());
-		} else {
-			TASmod.LOGGER.warn("Trying to unregister the playback extension {}, but it was not registered!", extension.getClass().getName());
-		}
+		super("METADATA_REGISTRY", new LinkedHashMap<>());
 	}
 
 	public static void handleOnCreate() {
@@ -88,16 +57,8 @@ public class PlaybackMetadataRegistry extends AbstractRegistry<String, com.minec
 		});
 	}
 
-	public static interface PlaybackMetadataExtension {
+	public static interface PlaybackMetadataExtension extends com.minecrafttas.mctcommon.registry.Registerable {
 		
-		/**
-		 * The name of this playback metadata extension.<br>
-		 * The name is printed in the playback file and declares this "section".<br>
-		 * It is also used in the {@link PlaybackMetadata} itself to link the metadata to the extension.<br>
-		 * @return The name of this playback metadata extension.
-		 */
-		public String getExtensionName();
-
 		/**
 		 * Currently unused.<br>
 		 * Maybe in the future, TASes have to be created with /create, then you can interactively set the values...<br>

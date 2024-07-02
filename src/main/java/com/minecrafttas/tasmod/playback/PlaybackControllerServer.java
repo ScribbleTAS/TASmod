@@ -1,27 +1,27 @@
 package com.minecrafttas.tasmod.playback;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_CLEAR_INPUTS;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_FULLPLAY;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_FULLRECORD;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_LOAD;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_PLAYUNTIL;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_SAVE;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_STATE;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_CLEAR_INPUTS;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLPLAY;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLRECORD;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_LOAD;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_PLAYUNTIL;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_SAVE;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE;
 import static com.minecrafttas.tasmod.util.LoggerMarkers.Playback;
 
 import java.nio.ByteBuffer;
 
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 
 /**
  * The playback controller on the server side.<br>

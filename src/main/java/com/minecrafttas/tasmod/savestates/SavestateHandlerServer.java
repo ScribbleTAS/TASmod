@@ -16,15 +16,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Maps;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventServer.EventCompleteLoadstate;
 import com.minecrafttas.tasmod.events.EventServer.EventLoadstate;
@@ -33,7 +34,7 @@ import com.minecrafttas.tasmod.mixin.savestates.AccessorAnvilChunkLoader;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorChunkLoader;
 import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateDeleteException;
