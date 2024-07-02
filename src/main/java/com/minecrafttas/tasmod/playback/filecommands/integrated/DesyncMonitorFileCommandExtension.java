@@ -48,7 +48,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 
 	@Override
 	public String[] getFileCommandNames() {
-		return new String[] { "desyncMonitoring" };
+		return new String[] { "desyncMonitor" };
 	}
 
 	@Override
