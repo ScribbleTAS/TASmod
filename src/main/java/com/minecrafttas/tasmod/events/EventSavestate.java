@@ -49,5 +49,10 @@ public interface EventSavestate {
 		 */
 		public void onServerLoadstateComplete();
 	}
-
+	
+	@FunctionalInterface
+	interface EventClientSavestate extends EventBase {
+		
+		public void onClientSavestate();
+	}
 }

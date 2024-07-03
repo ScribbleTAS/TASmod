@@ -13,9 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
-import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualCameraAngleTick;
-import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualKeyboardTick;
-import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinMinecraft;
 import com.minecrafttas.tasmod.util.Ducks;
@@ -24,6 +21,7 @@ import com.minecrafttas.tasmod.util.PointerNormalizer;
 import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.math.MathHelper;
 
@@ -88,14 +86,14 @@ public class VirtualInput {
 		}
 		while (Mouse.next()) {
 			if (currentScreen == null) {
-				MOUSE.updateNextMouse(Mouse.getEventButton()-100, Mouse.getEventButtonState(), Mouse.getEventDWheel(), 0, 0);
+				MOUSE.updateNextMouse(Mouse.getEventButton() - 100, Mouse.getEventButtonState(), Mouse.getEventDWheel(), 0, 0);
 			} else {
 				Ducks.GuiScreenDuck screen = (Ducks.GuiScreenDuck) currentScreen;
 				int eventX = screen.unscaleX(Mouse.getEventX());
 				int eventY = screen.unscaleY(Mouse.getEventY());
 				eventX = PointerNormalizer.getNormalizedX(eventX);
 				eventY = PointerNormalizer.getNormalizedY(eventY);
-				MOUSE.updateNextMouse(Mouse.getEventButton()-100, Mouse.getEventButtonState(), Mouse.getEventDWheel(), eventX, eventY);
+				MOUSE.updateNextMouse(Mouse.getEventButton() - 100, Mouse.getEventButtonState(), Mouse.getEventDWheel(), eventX, eventY);
 			}
 		}
 	}
@@ -109,13 +107,13 @@ public class VirtualInput {
 	 * @return If the key is down either on mouse or keyboard
 	 */
 	public boolean isKeyDown(int keycode) {
-		if(keycode >= 0) {
+		if (keycode >= 0) {
 			return KEYBOARD.isKeyDown(keycode);
 		} else {
 			return MOUSE.isKeyDown(keycode);
 		}
 	}
-	
+
 	/**
 	 * If the keyboard or mouse key is will be down in the next tick.
 	 * If keycode >= 0 then {@link VirtualKeyboardInput#willKeyBeDown(int)} will be called,<br>
@@ -125,13 +123,13 @@ public class VirtualInput {
 	 * @return If the key will be down either on mouse or keyboard
 	 */
 	public boolean willKeyBeDown(int keycode) {
-		if(keycode >= 0) {
+		if (keycode >= 0) {
 			return KEYBOARD.willKeyBeDown(keycode);
 		} else {
 			return MOUSE.willKeyBeDown(keycode);
 		}
 	}
-	
+
 	/**
 	 * Unpresses all keys in {@link VirtualKeyboardInput#nextKeyboard} and {@link VirtualMouseInput#nextMouse}
 	 */
@@ -140,7 +138,16 @@ public class VirtualInput {
 		MOUSE.nextMouse.clear();
 		CAMERA_ANGLE.nextCameraAngle.clear();
 	}
-	
+
+	public void preloadInput(VirtualKeyboard keyboardToPreload, VirtualMouse mouseToPreload, VirtualCameraAngle angleToPreload) {
+		KEYBOARD.nextKeyboard.deepCopyFrom(keyboardToPreload);
+		MOUSE.nextMouse.deepCopyFrom(mouseToPreload);
+		CAMERA_ANGLE.nextCameraAngle.deepCopyFrom(angleToPreload);
+		Minecraft.getMinecraft().runTickKeyboard(); // Letting mouse and keyboard tick once to load inputs into the "currentKeyboard"
+													// 
+		Minecraft.getMinecraft().runTickMouse();
+	}
+
 	/**
 	 * Subclass of {@link VirtualInput} handling keyboard logic.<br>
 	 * <br>
@@ -226,7 +233,7 @@ public class VirtualInput {
 		public void updateNextKeyboard(int keycode, boolean keystate, char character) {
 			updateNextKeyboard(keycode, keystate, character, false);
 		}
-		
+
 		/**
 		 * Updates the next keyboard
 		 * 
@@ -237,10 +244,10 @@ public class VirtualInput {
 		 * @param repeatEventsEnabled If repeat events are enabled
 		 */
 		public void updateNextKeyboard(int keycode, boolean keystate, char character, boolean repeatEventsEnabled) {
-			LOGGER.debug(LoggerMarkers.Keyboard, "Update: {}, {}, {}, {}", keycode, keystate, character); 	// Activate with -Dtasmod.marker.keyboard=ACCEPT in VM arguments (and -Dtasmod.log.level=debug)
+			LOGGER.debug(LoggerMarkers.Keyboard, "Update: {}, {}, {}, {}", keycode, keystate, character); // Activate with -Dtasmod.marker.keyboard=ACCEPT in VM arguments (and -Dtasmod.log.level=debug)
 			nextKeyboard.updateFromEvent(keycode, keystate, character, repeatEventsEnabled);
 		}
-		
+
 		/**
 		 * Runs when the next keyboard tick is about to occur.<br>
 		 * Used to load {@link #nextKeyboard} into {@link #currentKeyboard}, creating
@@ -285,7 +292,7 @@ public class VirtualInput {
 		public char getEventKeyboardCharacter() {
 			return currentKeyboardEvent.getCharacter();
 		}
-		
+
 		/**
 		 * If the key is currently down and recognised by Minecraft
 		 * @param keycode The keycode of the key in question
@@ -294,7 +301,7 @@ public class VirtualInput {
 		public boolean isKeyDown(int keycode) {
 			return currentKeyboard.isKeyDown(keycode);
 		}
-		
+
 		/**
 		 * If the key will be down and recognised in the next tick by Minecraft.<br>
 		 * This is equal to checking if a key on the physical keyboard is pressed
@@ -397,7 +404,7 @@ public class VirtualInput {
 		 * @param cursorY The y coordinate of the cursot of this event
 		 */
 		public void updateNextMouse(int keycode, boolean keystate, int scrollwheel, int cursorX, int cursorY) {
-			LOGGER.debug(LoggerMarkers.Mouse,"Update: {} ({}), {}, {}, {}, {}", keycode, VirtualKey.getName(keycode), keystate, scrollwheel, cursorX, cursorY); 	// Activate with -Dtasmod.marker.mouse=ACCEPT in VM arguments (and -Dtasmod.log.level=debug)
+			LOGGER.debug(LoggerMarkers.Mouse, "Update: {} ({}), {}, {}, {}, {}", keycode, VirtualKey.getName(keycode), keystate, scrollwheel, cursorX, cursorY); // Activate with -Dtasmod.marker.mouse=ACCEPT in VM arguments (and -Dtasmod.log.level=debug)
 			nextMouse.updateFromEvent(keycode, keystate, scrollwheel, cursorX, cursorY);
 		}
 
@@ -459,21 +466,21 @@ public class VirtualInput {
 		public int getNormalizedCursorX() {
 			return currentMouseEvent.getCursorX();
 		}
-		
+
 		/**
 		 * @return The scaled y coordinate of the cursor of {@link #currentMouseEvent}
 		 */
 		public int getEventCursorY() {
 			return PointerNormalizer.reapplyScalingY(getNormalizedCursorY());
 		}
-		
+
 		/**
 		 * @return The y coordinate of the cursor of {@link #currentMouseEvent}
 		 */
 		public int getNormalizedCursorY() {
 			return currentMouseEvent.getCursorY();
 		}
-		
+
 		/**
 		 * If the key is currently down and recognised by Minecraft
 		 * @param keycode The keycode of the key in question
@@ -482,7 +489,7 @@ public class VirtualInput {
 		public boolean isKeyDown(int keycode) {
 			return currentMouse.isKeyDown(keycode);
 		}
-		
+
 		/**
 		 * If the key will be down and recognised in the next tick by Minecraft.<br>
 		 * This is equal to checking if a key on the physical mouse is pressed
@@ -492,7 +499,7 @@ public class VirtualInput {
 		public boolean willKeyBeDown(int keycode) {
 			return nextMouse.isKeyDown(keycode);
 		}
-		
+
 	}
 
 	/**
@@ -586,19 +593,19 @@ public class VirtualInput {
 		public void updateNextCameraAngle(float pitchDelta, float yawDelta) {
 			updateNextCameraAngle(pitchDelta, yawDelta, true);
 		}
-		
+
 		/**
 		 * Update the camera angle.<br>
 		 * <br>
 		 * Runs every frame
 		 * 
 		 * @see com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer#runUpdate(float);
-		 * @param pitchDelta    Relative rotationPitch delta from LWJGLs mouse delta.
-		 * @param yawDelta      Relative rotationYaw delta from LWJGLs mouse delta.
+		 * @param pitchDelta Relative rotationPitch delta from LWJGLs mouse delta.
+		 * @param yawDelta Relative rotationYaw delta from LWJGLs mouse delta.
 		 * @param updateSubtick Whether to add the previous camera angle to the {@link Subtickable#subtickList}
 		 */
 		public void updateNextCameraAngle(float pitchDelta, float yawDelta, boolean updateSubtick) {
-//			LOGGER.debug("Pitch: {}, Yaw: {}", pitch, yaw);
+			//			LOGGER.debug("Pitch: {}, Yaw: {}", pitch, yaw);
 			nextCameraAngle.updateFromEvent(pitchDelta, yawDelta, updateSubtick);
 		}
 
@@ -639,7 +646,7 @@ public class VirtualInput {
 		public Float getCurrentPitch() {
 			return currentCameraAngle.getPitch();
 		}
-		
+
 		/**
 		 * @return The absolute yaw coordinate of the player. May be null when it's initialized
 		 */
@@ -657,7 +664,7 @@ public class VirtualInput {
 		 * @return A triple of pitch, yaw and roll, as left, middle and right respectively 
 		 */
 		public Triple<Float, Float, Float> getInterpolatedState(float partialTick, float pitch, float yaw, boolean enable) {
-			
+
 			float interpolatedPitch = nextCameraAngle.getPitch() == null ? pitch : nextCameraAngle.getPitch();
 			float interpolatedYaw = nextCameraAngle.getYaw() == null ? yaw : nextCameraAngle.getYaw() + 180;
 

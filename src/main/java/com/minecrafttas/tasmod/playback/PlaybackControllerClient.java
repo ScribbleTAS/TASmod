@@ -89,9 +89,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	private TASstate state = TASstate.NONE;
 
 	/**
-	 * The state of the controller when the {@link #state} is paused
+	 * The {@link #state} that this controller will return to, after a pause
 	 */
-	private TASstate tempPause = TASstate.NONE;
+	private TASstate stateAfterPause = TASstate.NONE;
 
 	/**
 	 * The current index of the inputs
@@ -190,7 +190,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				case PAUSED:
 					LOGGER.debug(LoggerMarkers.Playback, "Pausing a recording");
 					state = TASstate.PAUSED;
-					tempPause = TASstate.RECORDING;
+					stateAfterPause = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Pausing a recording" : "";
 				case NONE:
 					stopRecording();
@@ -206,7 +206,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				case PAUSED:
 					LOGGER.debug(LoggerMarkers.Playback, "Pausing a playback");
 					state = TASstate.PAUSED;
-					tempPause = TASstate.PLAYBACK;
+					stateAfterPause = TASstate.PLAYBACK;
 					TASmodClient.virtual.clear();
 					return verbose ? TextFormatting.GREEN + "Pausing a playback" : "";
 				case NONE:
@@ -219,20 +219,20 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				case PLAYBACK:
 					LOGGER.debug(LoggerMarkers.Playback, "Resuming a playback");
 					state = TASstate.PLAYBACK;
-					tempPause = TASstate.NONE;
+					stateAfterPause = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Resuming a playback" : "";
 				case RECORDING:
 					LOGGER.debug(LoggerMarkers.Playback, "Resuming a recording");
 					state = TASstate.RECORDING;
-					tempPause = TASstate.NONE;
+					stateAfterPause = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Resuming a recording" : "";
 				case PAUSED:
 					return TextFormatting.RED + "Please report this message to the mod author, because you should never be able to see this (Error: Paused)";
 				case NONE:
 					LOGGER.debug(LoggerMarkers.Playback, "Aborting pausing");
 					state = TASstate.NONE;
-					TASstate statey = tempPause;
-					tempPause = TASstate.NONE;
+					TASstate statey = stateAfterPause;
+					stateAfterPause = TASstate.NONE;
 					return TextFormatting.GREEN + "Aborting a " + statey.toString().toLowerCase() + " that was paused";
 			}
 		}
@@ -278,7 +278,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		if (state != TASstate.PAUSED) {
 			setTASStateClient(TASstate.PAUSED);
 		} else {
-			setTASStateClient(tempPause);
+			setTASStateClient(stateAfterPause);
 		}
 		return state;
 	}
@@ -296,7 +296,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			}
 		} else {
 			if (state == TASstate.PAUSED) {
-				setTASStateClient(tempPause, false);
+				setTASStateClient(stateAfterPause, false);
 			}
 		}
 	}
@@ -322,6 +322,10 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	 */
 	public TASstate getState() {
 		return state;
+	}
+	
+	public TASstate getStateAfterPause() {
+		return stateAfterPause;
 	}
 
 	// =====================================================================================================
@@ -380,8 +384,8 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		EntityPlayerSP player = mc.player;
 
 		if (player != null && player.addedToChunk) {
-			if (isPaused() && tempPause != TASstate.NONE) {
-				setTASState(tempPause); // The recording is paused in LoadWorldEvents#startLaunchServer
+			if (isPaused() && stateAfterPause != TASstate.NONE) {
+				setTASState(stateAfterPause); // The recording is paused in LoadWorldEvents#startLaunchServer
 				pause(false);
 				EventListenerRegistry.fireEvent(EventPlaybackJoinedWorld.class, state);
 			}
@@ -468,6 +472,10 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	}
 	
 	public void setInputs(BigArrayList<TickContainer> inputs) {
+		this.setInputs(inputs, 0);
+	}
+	
+	public void setInputs(BigArrayList<TickContainer> inputs, long index) {
 		try {
 			this.inputs.clearMemory();
 		} catch (IOException e) {
@@ -475,6 +483,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 		this.inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 		SerialiserFlavorBase.addAll(this.inputs, inputs);
+		setIndex(index);
 	}
 
 	public void setIndex(long index) throws IndexOutOfBoundsException {

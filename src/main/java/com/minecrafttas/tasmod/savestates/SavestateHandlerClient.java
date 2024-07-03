@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
@@ -16,6 +17,7 @@ import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
@@ -80,7 +82,6 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 	 * This state is fixed, once the player moves into a different chunk, since the
 	 * new chunk adds the player to it's list. <br>
 	 * <br>
-	 * 
 	 * TLDR:<br>
 	 * Adds the player to the chunk so the player is shown in third person <br>
 	 * <br>
@@ -129,9 +130,10 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 	}
 
 	/**
-	 * Replaces the current recording with the recording from the savestate. Gets
-	 * triggered when a savestate is loaded on the server<br>
-	 * Side: Client
+	 * <p>Loads a copy of the TASfile from the file system and applies it depending on the {@link PlaybackControllerClient#state TASstate}.
+	 * 
+	 * <p>Savestates can be loaded while the state is {@link TASstate#RECORDING recording}, {@link TASstate#PLAYBACK playing back} or {@link TASstate#PAUSED paused},<br>
+	 * in that case however, the {@link PlaybackControllerClient#stateAfterPause TASstate after pause} will be used.
 	 * 
 	 * @param nameOfSavestate coming from the server
 	 * @throws IOException
@@ -145,20 +147,108 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 
 		savestateDirectory.mkdir();
 
+		PlaybackControllerClient controller = TASmodClient.controller;
+		
+		TASstate state = controller.getState();
+		
+		if (state == TASstate.NONE) {
+			return;
+		}
+		
+		if(state == TASstate.PAUSED) {
+			state = controller.getStateAfterPause();
+		}
+
 		File targetfile = new File(savestateDirectory, nameOfSavestate + ".mctas");
 
-		PlaybackControllerClient container = TASmodClient.controller;
-		if (!container.isNothingPlaying()) { // If the file exists and the container is recording or playing, load the
-												// clientSavestate
-			if (targetfile.exists()) {
-				TASmodClient.controller.setInputs(PlaybackSerialiser2.loadFromFile(targetfile));
-			} else {
-				TASmodClient.controller.setTASStateClient(TASstate.NONE, false);
-				Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "Inputs could not be loaded for this savestate,"));
-				Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "since the file doesn't exist. Stopping!"));
-				LOGGER.warn(LoggerMarkers.Savestate, "Inputs could not be loaded for this savestate, since the file doesn't exist.");
+		BigArrayList<TickContainer> savestateContainerList;
+
+		if (targetfile.exists()) {
+			savestateContainerList = PlaybackSerialiser2.loadFromFile(targetfile);
+		} else {
+			controller.setTASStateClient(TASstate.NONE, false);
+			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "Inputs could not be loaded for this savestate,"));
+			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "since the file doesn't exist. Stopping!"));
+			LOGGER.warn(LoggerMarkers.Savestate, "Inputs could not be loaded for this savestate, since the file doesn't exist.");
+			return;
+		}
+
+		/*
+		 * Imagine a recording that is 20 tick long with VV showing the current index of the controller:
+		 * 					   VV
+		 *  0                  20
+		 * <====================>
+		 * 
+		 * Now we load a savestate with only 10 ticks:
+		 * 
+		 * 0         10
+		 * <==========>
+		 * 
+		 * We expect to resume the recording at the 10th tick.
+		 * Therefore when loading a client savestate during a recording we set the index to size-1 and preload the inputs at the same index.
+		 * 			 VV
+		 * 0         10
+		 * <==========> 
+		 * 
+		 * */
+		if (state == TASstate.RECORDING) {
+			long index = savestateContainerList.size()-1;
+			
+			preload(savestateContainerList, index);
+			controller.setInputs(savestateContainerList, index);
+
+		/*
+		 * When loading a savestate during a playback 2 different scenarios can happen.
+		 * */
+		} else if (state == TASstate.PLAYBACK) {
+
+			/*
+			 * Scenario 1:
+			 * The loadstated file is SMALLER than the total inputs in the controller:
+			 * 
+			 * The recording is 20 ticks long, with VV being the index where the playback is currently at.
+			 * 				 VV
+			 *  0            13    20
+			 * <====================>
+			 * 
+			 * And our loadstated file being only 10 ticks long:
+			 * 
+			 * 0         10
+			 * <==========>
+			 * 
+			 * We expect to start at tick 10 WITHOUT clearing the controller.
+			 * If we were to replace the controller, everything above tick 10 would be lost.
+			 * So we only set the index to 10, preload and preload the inputs.
+			 * 
+			 * 			  VV
+			 *  0         10       20
+			 * <====================>
+			 * */
+			if (controller.size() >= savestateContainerList.size()) {
+				long index = savestateContainerList.size();
+			
+				preload(controller.getInputs(), index);
+				controller.setIndex(index);
+			}
+			/*
+			 * Scenario 2:
+			 * The loadstated file is LARGER than the controller, 
+			 * which may happen when loading a more recent savestate after loading an old one
+			 * 
+			 * In that case we just apply the playback just like in the recording
+			 * */
+			else {
+				long index = savestateContainerList.size()-1;
+				
+				preload(savestateContainerList, index);
+				controller.setInputs(savestateContainerList, index);
 			}
 		}
+	}
+	
+	private static void preload(BigArrayList<TickContainer> containerList, long index) {
+		TickContainer containerToPreload = containerList.get(index);
+		TASmodClient.virtual.preloadInput(containerToPreload.getKeyboard(), containerToPreload.getMouse(), containerToPreload.getCameraAngle());
 	}
 
 	public static void loadPlayer(NBTTagCompound compound) {
@@ -168,8 +258,8 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 
 		player.readFromNBT(compound);
 		NBTTagCompound motion = compound.getCompoundTag("clientMotion");
-		
-		if(motion.hasNoTags()) {
+
+		if (motion.hasNoTags()) {
 			LOGGER.warn(LoggerMarkers.Savestate, "Could not load the motion from the savestate. Savestate seems to be created manually or by a different mod");
 		} else {
 			LOGGER.trace(LoggerMarkers.Savestate, "Loading client motion from NBT");
@@ -179,14 +269,14 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 			player.motionX = x;
 			player.motionY = y;
 			player.motionZ = z;
-			
+
 			float rx = motion.getFloat("RelativeX");
 			float ry = motion.getFloat("RelativeY");
 			float rz = motion.getFloat("RelativeZ");
 			player.moveForward = rx;
 			player.moveVertical = ry;
 			player.moveStrafing = rz;
-			
+
 			boolean sprinting = motion.getBoolean("Sprinting");
 			float jumpVector = motion.getFloat("JumpFactor");
 			player.setSprinting(sprinting);
@@ -200,8 +290,8 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		mc.playerController.setGameType(type);
 
 		// #?? Player rotation does not change when loading a savestate
-//		CameraInterpolationEvents.rotationPitch = player.rotationPitch;
-//		CameraInterpolationEvents.rotationYaw = player.rotationYaw + 180f;
+		//		CameraInterpolationEvents.rotationPitch = player.rotationPitch;
+		//		CameraInterpolationEvents.rotationYaw = player.rotationYaw + 180f;
 
 		SavestateHandlerClient.keepPlayerInLoadedEntityList(player);
 	}
@@ -227,14 +317,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new TASmodPackets[] { 
-				TASmodPackets.SAVESTATE_SAVE, 
-				TASmodPackets.SAVESTATE_LOAD, 
-				TASmodPackets.SAVESTATE_PLAYER,
-				TASmodPackets.SAVESTATE_REQUEST_MOTION,
-				TASmodPackets.SAVESTATE_SCREEN,
-				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS
-				};
+		return new TASmodPackets[] { TASmodPackets.SAVESTATE_SAVE, TASmodPackets.SAVESTATE_LOAD, TASmodPackets.SAVESTATE_PLAYER, TASmodPackets.SAVESTATE_REQUEST_MOTION, TASmodPackets.SAVESTATE_SCREEN, TASmodPackets.SAVESTATE_UNLOAD_CHUNKS };
 	}
 
 	@Override
@@ -288,20 +371,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 					if (!(Minecraft.getMinecraft().currentScreen instanceof GuiSavestateSavingScreen)) {
 						Minecraft.getMinecraft().displayGuiScreen(new GuiSavestateSavingScreen());
 					}
-					TASmodClient.client.send(
-							new TASmodBufferBuilder(TASmodPackets.SAVESTATE_REQUEST_MOTION)
-							.writeMotionData(
-									new MotionData(
-											player.motionX,
-											player.motionY,
-											player.motionZ,
-											player.moveForward,
-											player.moveVertical,
-											player.moveStrafing,
-											player.isSprinting(),
-											player.jumpMovementFactor)
-									)
-							);
+					TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_REQUEST_MOTION).writeMotionData(new MotionData(player.motionX, player.motionY, player.motionZ, player.moveForward, player.moveVertical, player.moveStrafing, player.isSprinting(), player.jumpMovementFactor)));
 				}
 				break;
 			case SAVESTATE_SCREEN:
