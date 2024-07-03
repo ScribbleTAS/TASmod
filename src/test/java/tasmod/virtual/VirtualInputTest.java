@@ -12,9 +12,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualCameraAngleTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualKeyboardTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKey;
@@ -27,9 +28,9 @@ class VirtualInputTest {
 	
 	@BeforeAll
 	static void beforeAll() {
-		EventVirtualKeyboardTick kb = (keyboard)->null;
-		EventVirtualMouseTick ms = (mouse)->null;
-		EventVirtualCameraAngleTick cmra = (cameraangle)->null;
+		EventVirtualInput.EventVirtualKeyboardTick kb = (keyboard)->null;
+		EventVirtualInput.EventVirtualMouseTick ms = (mouse)->null;
+		EventVirtualInput.EventVirtualCameraAngleTick cmra = (cameraangle)->null;
 		EventListenerRegistry.register(kb, ms, cmra);
 	}
 	

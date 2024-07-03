@@ -27,9 +27,10 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Maps;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.events.EventServer.EventCompleteLoadstate;
-import com.minecrafttas.tasmod.events.EventServer.EventLoadstate;
-import com.minecrafttas.tasmod.events.EventServer.EventSavestate;
+import com.minecrafttas.tasmod.events.EventSavestate;
+import com.minecrafttas.tasmod.events.EventSavestate.EventServerCompleteLoadstate;
+import com.minecrafttas.tasmod.events.EventSavestate.EventServerLoadstate;
+import com.minecrafttas.tasmod.events.EventSavestate.EventServerSavestate;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorAnvilChunkLoader;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorChunkLoader;
 import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer;
@@ -198,7 +199,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		File currentfolder = new File(savestateDirectory, ".." + File.separator + worldname);
 		File targetfolder = getSavestateFile(indexToSave);
 		
-		EventListenerRegistry.fireEvent(EventSavestate.class, indexToSave, targetfolder, currentfolder);
+		EventListenerRegistry.fireEvent(EventSavestate.EventServerSavestate.class, indexToSave, targetfolder, currentfolder);
 
 		if (targetfolder.exists()) {
 			logger.warn(LoggerMarkers.Savestate, "WARNING! Overwriting the savestate with the index {}", indexToSave);
@@ -341,7 +342,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		File currentfolder = new File(savestateDirectory, ".." + File.separator + worldname);
 		File targetfolder = getSavestateFile(indexToLoad);
 
-		EventListenerRegistry.fireEvent(EventLoadstate.class, indexToLoad, targetfolder, currentfolder);
+		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstate.class, indexToLoad, targetfolder, currentfolder);
 		
 		/*
 		 * Prevents loading an InputSavestate when loading index 0 (Index 0 is the
@@ -420,7 +421,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		
 		TASmod.tickSchedulerServer.add(()->{
-			EventListenerRegistry.fireEvent(EventCompleteLoadstate.class);
+			EventListenerRegistry.fireEvent(EventSavestate.EventServerCompleteLoadstate.class);
 			onLoadstateComplete();
 			
 			// Unlock savestating

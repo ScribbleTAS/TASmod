@@ -30,14 +30,15 @@ import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTick;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualCameraAngleTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualKeyboardTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
@@ -80,7 +81,7 @@ import net.minecraft.util.text.event.ClickEvent;
  * @author Scribble
  *
  */
-public class PlaybackControllerClient implements ClientPacketHandler, EventClientInit, EventVirtualKeyboardTick, EventVirtualMouseTick, EventVirtualCameraAngleTick, EventClientTickPost {
+public class PlaybackControllerClient implements ClientPacketHandler, EventClientInit, EventVirtualInput.EventVirtualKeyboardTick, EventVirtualInput.EventVirtualMouseTick, EventVirtualInput.EventVirtualCameraAngleTick, EventClientTickPost {
 
 	/**
 	 * The current state of the controller.
@@ -476,7 +477,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		SerialiserFlavorBase.addAll(this.inputs, inputs);
 	}
 
-	public void setIndex(int index) throws IndexOutOfBoundsException {
+	public void setIndex(long index) throws IndexOutOfBoundsException {
 		if (index <= size()) {
 			this.index = index;
 			if (state == TASstate.PLAYBACK) {

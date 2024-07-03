@@ -9,8 +9,8 @@ public interface EventPlaybackClient {
 
 	/**
 	 * Fired when
-	 * {@link PlaybackControllerClient#setTASStateClient(com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate, boolean) PlaybackControllerClient#setTASStateClient}
-	 * is called
+	 * {@link PlaybackControllerClient#setTASStateClient(com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate, boolean)
+	 * PlaybackControllerClient#setTASStateClient} is called
 	 */
 	@FunctionalInterface
 	public interface EventControllerStateChange extends EventBase {
@@ -72,13 +72,13 @@ public interface EventPlaybackClient {
 		 */
 		public void onPlaybackTick(long index, TickContainer container);
 	}
-	
+
 	/**
 	 * Fired when a recording is cleared
 	 */
 	@FunctionalInterface
 	public interface EventRecordClear extends EventBase {
-		
+
 		/**
 		 * Fired when a recording is cleared
 		 */

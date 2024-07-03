@@ -12,9 +12,10 @@ import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualCameraAngleTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualKeyboardTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinMinecraft;
 import com.minecrafttas.tasmod.util.Ducks;
@@ -248,7 +249,7 @@ public class VirtualInput {
 		 * @see MixinMinecraft#playback_injectRunTickKeyboard(org.spongepowered.asm.mixin.injection.callback.CallbackInfo)
 		 */
 		public void nextKeyboardTick() {
-			nextKeyboard.deepCopyFrom((VirtualKeyboard) EventListenerRegistry.fireEvent(EventVirtualKeyboardTick.class, nextKeyboard));
+			nextKeyboard.deepCopyFrom((VirtualKeyboard) EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualKeyboardTick.class, nextKeyboard));
 			currentKeyboard.getVirtualEvents(nextKeyboard, keyboardEventQueue);
 			currentKeyboard.moveFrom(nextKeyboard);
 		}
@@ -408,7 +409,7 @@ public class VirtualInput {
 		 * @see MixinMinecraft#playback_injectRunTickMouse(org.spongepowered.asm.mixin.injection.callback.CallbackInfo)
 		 */
 		public void nextMouseTick() {
-			nextMouse.deepCopyFrom((VirtualMouse) EventListenerRegistry.fireEvent(EventVirtualMouseTick.class, nextMouse));
+			nextMouse.deepCopyFrom((VirtualMouse) EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualMouseTick.class, nextMouse));
 			currentMouse.getVirtualEvents(nextMouse, mouseEventQueue);
 			currentMouse.moveFrom(nextMouse);
 		}
@@ -608,7 +609,7 @@ public class VirtualInput {
 		 * @see MixinEntityRenderer#runUpdate(float)
 		 */
 		public void nextCameraTick() {
-			nextCameraAngle.deepCopyFrom((VirtualCameraAngle) EventListenerRegistry.fireEvent(EventVirtualCameraAngleTick.class, nextCameraAngle));
+			nextCameraAngle.deepCopyFrom((VirtualCameraAngle) EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualCameraAngleTick.class, nextCameraAngle));
 			cameraAngleInterpolationStates.clear();
 			nextCameraAngle.getStates(cameraAngleInterpolationStates);
 			currentCameraAngle.moveFrom(nextCameraAngle);

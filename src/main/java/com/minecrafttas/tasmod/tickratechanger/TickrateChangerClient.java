@@ -11,7 +11,8 @@ import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
-import com.minecrafttas.tasmod.events.EventClient.EventClientTickrateChange;
+import com.minecrafttas.tasmod.events.EventTickratechanger;
+import com.minecrafttas.tasmod.events.EventTickratechanger.EventClientTickrateChange;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
@@ -89,7 +90,7 @@ public class TickrateChangerClient implements ClientPacketHandler {
 			mc.timer.tickLength = Float.MAX_VALUE;
 		}
 		ticksPerSecond = tickrate;
-		EventListenerRegistry.fireEvent(EventClientTickrateChange.class, tickrate);
+		EventListenerRegistry.fireEvent(EventTickratechanger.EventClientTickrateChange.class, tickrate);
 		if (log)
 			log("Setting the client tickrate to " + ticksPerSecond);
 	}
