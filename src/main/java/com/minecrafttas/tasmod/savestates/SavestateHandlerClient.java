@@ -16,6 +16,7 @@ import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
@@ -121,9 +122,9 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 
 		PlaybackControllerClient container = TASmodClient.controller;
 		if (container.isRecording()) {
-			TASmodClient.serialiser.saveToFileV1(targetfile, container); // If the container is recording, store it entirely
+			PlaybackSerialiser2.saveToFile(targetfile, container, ""); // If the container is recording, store it entirely
 		} else if (container.isPlayingback()) {
-			TASmodClient.serialiser.saveToFileV1Until(targetfile, container, container.index()); // If the container is playing, store it until the current index
+			PlaybackSerialiser2.saveToFile(targetfile, container, "", container.index()); // If the container is playing, store it until the current index
 		}
 	}
 
@@ -135,7 +136,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 	 * @param nameOfSavestate coming from the server
 	 * @throws IOException
 	 */
-	public static void loadstate(String nameOfSavestate) throws IOException {
+	public static void loadstate(String nameOfSavestate) throws Exception {
 		LOGGER.debug(LoggerMarkers.Savestate, "Loading client savestate {}", nameOfSavestate);
 		if (nameOfSavestate.isEmpty()) {
 			LOGGER.error(LoggerMarkers.Savestate, "No recording savestate loaded since the name of savestate is empty");
@@ -150,7 +151,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		if (!container.isNothingPlaying()) { // If the file exists and the container is recording or playing, load the
 												// clientSavestate
 			if (targetfile.exists()) {
-//				TASmodClient.virtual.loadClientSavestate(TASmodClient.serialiser.fromEntireFileV1(targetfile)); TODO Move to PlaybackController
+				TASmodClient.controller.setInputs(PlaybackSerialiser2.loadFromFile(targetfile));
 			} else {
 				TASmodClient.controller.setTASStateClient(TASstate.NONE, false);
 				Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "Inputs could not be loaded for this savestate,"));

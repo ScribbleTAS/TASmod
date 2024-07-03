@@ -26,10 +26,10 @@ import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
-public abstract class SerialiserFlavorBase implements Registerable{
+public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected long currentLine = 1;
-	
+
 	/**
 	 * The current tick that is being serialised or deserialised
 	 */
@@ -39,7 +39,7 @@ public abstract class SerialiserFlavorBase implements Registerable{
 	 * Debug subtick field for error handling
 	 */
 	protected int currentSubtick = 0;
-	
+
 	protected TickContainer previousTickContainer = null;
 
 	protected String headerStart() {
@@ -111,10 +111,13 @@ public abstract class SerialiserFlavorBase implements Registerable{
 		});
 	}
 
-	public BigArrayList<String> serialise(BigArrayList<TickContainer> inputs) {
+	public BigArrayList<String> serialise(BigArrayList<TickContainer> inputs, long toTick) {
 		BigArrayList<String> out = new BigArrayList<>();
 
 		for (int i = 0; i < inputs.size(); i++) {
+			if (toTick == i) {
+				break;
+			}
 			currentTick = i;
 			TickContainer container = inputs.get(i);
 			serialiseContainer(out, container);
@@ -583,9 +586,9 @@ public abstract class SerialiserFlavorBase implements Registerable{
 		List<List<PlaybackFileCommand>> endlineFileCommands = new ArrayList<>();
 
 		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments, endlineFileCommands);
-		
+
 		pruneListEnd(endlineComments);
-		
+
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
 		VirtualCameraAngle cameraAngle = deserialiseCameraAngle(cameraAngleStrings);
@@ -717,14 +720,14 @@ public abstract class SerialiserFlavorBase implements Registerable{
 			if (matcher.find()) {
 				String cameraPitchString = matcher.group(1);
 				String cameraYawString = matcher.group(2);
-				
+
 				Float cameraPitch = null;
 				Float cameraYaw = null;
-				
-				if(!"null".equals(cameraPitchString))
+
+				if (!"null".equals(cameraPitchString))
 					cameraPitch = deserialiseRelativeFloat("camera pitch", cameraPitchString, previousPitch);
-				
-				if(!"null".equals(cameraYawString))
+
+				if (!"null".equals(cameraYawString))
 					cameraYaw = deserialiseRelativeFloat("camera yaw", cameraYawString, previousYaw);
 
 				out.updateFromState(cameraPitch, cameraYaw);
@@ -794,10 +797,10 @@ public abstract class SerialiserFlavorBase implements Registerable{
 	}
 
 	protected Float deserialiseRelativeFloat(String name, String floatstring, Float previous) {
-		if(floatstring == null) {
+		if (floatstring == null) {
 			return null;
 		}
-		
+
 		float out = 0;
 		if (floatstring.startsWith("~")) {
 			floatstring = floatstring.replace("~", "");
@@ -828,15 +831,15 @@ public abstract class SerialiserFlavorBase implements Registerable{
 				if (!tickMatcher.group(3).isEmpty()) {
 					serialisedCameraAngle.add(tickMatcher.group(3));
 				}
-				
+
 				List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
-				
+
 				String endlineComment = line.substring(tickMatcher.group(0).length());
 				commentsAtEnd.add(deserialiseEndlineComment(endlineComment, deserialisedFileCommands));
-				
+
 				if (deserialisedFileCommands.isEmpty())
 					deserialisedFileCommands = null;
-				
+
 				endlineFileCommands.add(deserialisedFileCommands);
 			}
 		}
@@ -920,28 +923,29 @@ public abstract class SerialiserFlavorBase implements Registerable{
 			list.add(element);
 		}
 	}
-	
+
 	/**
 	 * Empties the list if it only consists of null values
-	 * @param <T> The element of the list
+	 * 
+	 * @param <T>  The element of the list
 	 * @param list The list to prune
 	 */
-	protected <T> void pruneListEnd(List<T> list){
+	protected <T> void pruneListEnd(List<T> list) {
 		List<T> copy = new ArrayList<>(list);
-		for (int i = copy.size()-1; i >=0; i--) {
+		for (int i = copy.size() - 1; i >= 0; i--) {
 			T element = copy.get(i);
-			if(element != null)
+			if (element != null)
 				return;
-			list.remove(list.size()-1);
+			list.remove(list.size() - 1);
 		}
 	}
 
 	@Override
 	public abstract SerialiserFlavorBase clone();
-	
+
 	@Override
 	public boolean equals(Object obj) {
-		if(obj instanceof SerialiserFlavorBase) {
+		if (obj instanceof SerialiserFlavorBase) {
 			SerialiserFlavorBase flavor = (SerialiserFlavorBase) obj;
 			return this.getExtensionName().equals(flavor.getExtensionName());
 		}

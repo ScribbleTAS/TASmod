@@ -58,8 +58,6 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 	public static TickSyncClient ticksyncClient;
 	
-	public static PlaybackSerialiser serialiser = new PlaybackSerialiser();
-
 	public static final String tasdirectory = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles";
 
 	public static final String savestatedirectory = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "savestates";

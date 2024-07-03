@@ -446,7 +446,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
 		}
 		
-//		desyncMonitor.playMonitor(index);
 	}
 	// =====================================================================================================
 	// Methods to manipulate inputs
@@ -475,7 +474,6 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 		this.inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 		SerialiserFlavorBase.addAll(this.inputs, inputs);
-		index = 0;
 	}
 
 	public void setIndex(int index) throws IndexOutOfBoundsException {

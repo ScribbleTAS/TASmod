@@ -28,6 +28,10 @@ public class PlaybackSerialiser2 {
 
 	private static String defaultFlavor = "beta1";
 
+	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorname) throws PlaybackSaveException {
+		saveToFile(file, controller, flavorname, -1L);
+	}
+	
 	/**
 	 * Saves the {@link PlaybackControllerClient} to a file
 	 * 
@@ -36,14 +40,18 @@ public class PlaybackSerialiser2 {
 	 * @param flavor
 	 * @throws FileNotFoundException
 	 */
-	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorname) throws PlaybackSaveException {
+	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorname, long stopIndex) throws PlaybackSaveException {
 		if (controller == null) {
 			throw new PlaybackSaveException("Save to file failed. No controller specified");
 		}
-		saveToFile(file, controller.getInputs(), flavorname);
+		saveToFile(file, controller.getInputs(), flavorname, stopIndex);
 	}
 
 	public static void saveToFile(File file, BigArrayList<TickContainer> container, String flavorname) throws PlaybackSaveException {
+		saveToFile(file, container, flavorname, -1);
+	}
+	
+	public static void saveToFile(File file, BigArrayList<TickContainer> container, String flavorname, long stopIndex) throws PlaybackSaveException {
 		if (file == null) {
 			throw new PlaybackSaveException("Save to file failed. No file specified");
 		}
@@ -75,7 +83,7 @@ public class PlaybackSerialiser2 {
 			writerThread.addLine(line);
 		}
 
-		BigArrayList<String> tickLines = flavor.serialise(container);
+		BigArrayList<String> tickLines = flavor.serialise(container, stopIndex);
 		for (long i = 0; i < tickLines.size(); i++) {
 			writerThread.addLine(tickLines.get(i));
 		}
