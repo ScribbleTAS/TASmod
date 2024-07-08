@@ -98,11 +98,12 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		for (PlaybackMetadata metadata : metadataList) {
 			serialiseMetadataName(out, metadata.getExtensionName());
 			serialiseMetadataValue(out, metadata.getData());
+			out.add("");
 		}
 	}
 
 	protected void serialiseMetadataName(List<String> out, String name) {
-		out.add("### " + name);
+		out.add(createCenteredHeading(name, '-', 50));
 	}
 
 	protected void serialiseMetadataValue(List<String> out, LinkedHashMap<String, String> data) {
@@ -367,7 +368,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 		for (String headerLine : headerLines) {
 
-			Matcher nameMatcher = extract("^#{3} (.+)", headerLine); // If the line starts with ###, an optional space char after and then capture the name 
+			Matcher nameMatcher = extract("^-+ ([^-]+)", headerLine); // If the line starts with ###, an optional space char after and then capture the name 
 			Matcher valueMatcher = extract("^([^#].*?):\\s*(.+)", headerLine); // If the line doesn't start with a #, then the key of the metadata, then a : then any or no number of whitespace chars, then the value of the metadata
 
 			if (nameMatcher.find()) {
@@ -378,11 +379,11 @@ public abstract class SerialiserFlavorBase implements Registerable {
 					out.add(PlaybackMetadata.fromHashMap(metadataName, values));
 					values.clear();
 				}
-				metadataName = nameMatcher.group(1);
+				metadataName = nameMatcher.group(1).trim();
 				continue;
 
 			} else if (metadataName != null && valueMatcher.find()) {
-				values.put(valueMatcher.group(1), valueMatcher.group(2));
+				values.put(valueMatcher.group(1).trim(), valueMatcher.group(2).trim());
 			}
 		}
 

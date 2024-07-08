@@ -2,9 +2,9 @@ package com.minecrafttas.tasmod.tickratechanger;
 
 import java.nio.ByteBuffer;
 
-import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import org.apache.logging.log4j.Logger;
 
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.events.EventServer.EventPlayerJoinedServerSide;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerStop;
 import com.minecrafttas.mctcommon.networking.Client.Side;
@@ -14,7 +14,6 @@ import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventTickratechanger;
-import com.minecrafttas.tasmod.events.EventTickratechanger.EventServerTickrateChange;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.LoggerMarkers;

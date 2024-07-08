@@ -147,11 +147,12 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		serialiseMetadata(actual);
 
 		List<String> expected = new ArrayList<>();
-		expected.add("### Test1");
+		expected.add("---------------------- Test1 ---------------------");
 		expected.add("TestKey:This is a test");
-
-		expected.add("### Test2");
+		expected.add("");
+		expected.add("---------------------- Test2 ---------------------");
 		expected.add("TestKey:This is a second test");
+		expected.add("");
 
 		assertIterableEquals(expected, actual);
 		assertEquals(0, currentTick);
@@ -444,16 +445,18 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		TASmodAPIRegistry.PLAYBACK_METADATA.register(startPosition);
 		
 		List<String> lines = new ArrayList<>();
-		lines.add("### General");
+		lines.add("--- General");
 		lines.add("Author: Scribble");
 		lines.add("Title: 77 Buttons");
 		lines.add("Playing Time:00:00.0");
-		lines.add("### StartPosition");
+		lines.add("");
+		lines.add("--- StartPosition");
 		lines.add("x:1.0");
 		lines.add("y:2.0");
 		lines.add("z:3.0");
 		lines.add("pitch:4.0");
 		lines.add("yaw:5.0");
+		lines.add("");
 
 		deserialiseMetadata(lines);
 

@@ -36,9 +36,6 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWor
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTick;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
-import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualCameraAngleTick;
-import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualKeyboardTick;
-import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;

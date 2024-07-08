@@ -208,7 +208,7 @@ public class PlaybackSerialiserTest {
 		lines.add("TASFile");
 		lines.add("FileCommand-Extensions: tasmod_testFileExtension");
 		lines.add("Flavor: Test");
-		lines.add("### Test");
+		lines.add("----------- Test ----------");
 		lines.add("TestKey: Wat");
 		lines.add("##################################################");
 		lines.add("// This is a regular comment");

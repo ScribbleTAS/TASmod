@@ -13,9 +13,6 @@ import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
-import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualCameraAngleTick;
-import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualKeyboardTick;
-import com.minecrafttas.tasmod.events.EventVirtualInput.EventVirtualMouseTick;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKey;

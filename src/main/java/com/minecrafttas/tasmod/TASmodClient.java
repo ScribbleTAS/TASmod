@@ -27,7 +27,6 @@ import com.minecrafttas.tasmod.playback.filecommands.integrated.LabelFileCommand
 import com.minecrafttas.tasmod.playback.filecommands.integrated.OptionsFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.integrated.CreditsMetadataExtension;
 import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
-import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.integrated.Beta1Flavor;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodConfig;
