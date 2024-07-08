@@ -389,4 +389,8 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
     public List<Character> getCharList() {
         return ImmutableList.copyOf(charList);
     }
+
+	public boolean isEmpty() {
+		return super.isEmpty() && charList.isEmpty();
+	}
 }

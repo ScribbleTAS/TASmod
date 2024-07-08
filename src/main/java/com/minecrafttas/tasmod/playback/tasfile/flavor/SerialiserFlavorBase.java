@@ -21,6 +21,7 @@ import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.Playbac
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
+import com.minecrafttas.tasmod.virtual.Subtickable;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
@@ -90,6 +91,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		List<PlaybackFileCommandExtension> extensionList = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
 		extensionList.forEach(extension -> stringlist.add(extension.getExtensionName()));
 		out.add("FileCommand-Extensions: " + String.join(", ", stringlist));
+		out.add("");
 	}
 
 	protected void serialiseMetadata(List<String> out) {
@@ -122,14 +124,17 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			currentTick = i;
 			TickContainer container = inputs.get(i);
 			serialiseContainer(out, container);
+			previousTickContainer = container;
 		}
 		return out;
 	}
 
 	protected void serialiseContainer(BigArrayList<String> out, TickContainer container) {
+		currentLine = out.size()-1;
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
+		pruneListEndEmpty(serialisedCameraAngle);
 
 		PlaybackFileCommandContainer fileCommandsInline = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseInline(currentTick, container);
 		PlaybackFileCommandContainer fileCommandsEndline = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseEndline(currentTick, container);
@@ -163,8 +168,11 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
 		List<String> out = new ArrayList<>();
-		List<VirtualKeyboard> list = keyboard.getAll();
-		for (VirtualKeyboard subtick : list) {
+		
+		List<VirtualKeyboard> subticks = new ArrayList<>(keyboard.getAll());
+		pruneListEndEmptySubtickable(subticks);
+		
+		for (VirtualKeyboard subtick : subticks) {
 			out.add(subtick.toString2());
 		}
 		return out;
@@ -172,16 +180,30 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected List<String> serialiseMouse(VirtualMouse mouse) {
 		List<String> out = new ArrayList<>();
-		for (VirtualMouse subtick : mouse.getAll()) {
+		
+		List<VirtualMouse> subticks = new ArrayList<>(mouse.getAll());
+		pruneListEndEmptySubtickable(subticks);
+		
+		for (VirtualMouse subtick : subticks) {
 			out.add(subtick.toString2());
 		}
 		return out;
 	}
 
 	protected List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle) {
+		
+		VirtualCameraAngle previousCamera = null;
+		if(previousTickContainer != null) {
+			previousCamera = previousTickContainer.getCameraAngle();
+		}
+		
 		List<String> out = new ArrayList<>();
 		for (VirtualCameraAngle subtick : cameraAngle.getAll()) {
-			out.add(subtick.toString2());
+			
+			if(!subtick.equals(previousCamera))
+				out.add(subtick.toString2());
+			
+			previousCamera = subtick;
 		}
 		return out;
 	}
@@ -588,7 +610,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments, endlineFileCommands);
 
-		pruneListEnd(endlineComments);
+		pruneListEndNull(endlineComments);
 
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
@@ -819,9 +841,14 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd, List<List<PlaybackFileCommand>> endlineFileCommands) {
 
+		String previousCamera = null;
+		if(previousTickContainer != null) {
+			previousCamera = previousTickContainer.getCameraAngle().toString2();
+		}
+		
 		for (String line : lines) {
-
 			Matcher tickMatcher = extract("^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?", line);
+			
 			if (tickMatcher.find()) {
 				if (!tickMatcher.group(1).isEmpty()) {
 					serialisedKeyboard.add(tickMatcher.group(1));
@@ -829,8 +856,13 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				if (!tickMatcher.group(2).isEmpty()) {
 					serialisedMouse.add(tickMatcher.group(2));
 				}
+				
 				if (!tickMatcher.group(3).isEmpty()) {
 					serialisedCameraAngle.add(tickMatcher.group(3));
+					previousCamera = tickMatcher.group(3);
+				} else {
+					if(previousCamera!=null)
+						serialisedCameraAngle.add(previousCamera);
 				}
 
 				List<PlaybackFileCommand> deserialisedFileCommands = new ArrayList<>();
@@ -926,12 +958,12 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	/**
-	 * Empties the list if it only consists of null values
+	 * Empties the list starting from the back if the values are null
 	 * 
 	 * @param <T>  The element of the list
 	 * @param list The list to prune
 	 */
-	protected <T> void pruneListEnd(List<T> list) {
+	protected <T> void pruneListEndNull(List<T> list) {
 		List<T> copy = new ArrayList<>(list);
 		for (int i = copy.size() - 1; i >= 0; i--) {
 			T element = copy.get(i);
@@ -940,6 +972,39 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			list.remove(list.size() - 1);
 		}
 	}
+	
+	/**
+	 * Empties the list starting from the back if the values are empty
+	 * 
+	 * @param <T>  The element of the list
+	 * @param list The list to prune
+	 */
+	protected void pruneListEndEmpty(List<String> list) {
+		List<String> copy = new ArrayList<>(list);
+		for (int i = copy.size() - 1; i >= 0; i--) {
+			String element = copy.get(i);
+			if (!element.isEmpty())
+				return;
+			list.remove(list.size() - 1);
+		}
+	}
+	
+	/**
+	 * Empties the list starting from the back if the values are empty
+	 * 
+	 * @param <T>  The element of the list
+	 * @param list The list to prune
+	 */
+	protected <T extends Subtickable<T>> void pruneListEndEmptySubtickable(List<T> list) {
+		List<T> copy = new ArrayList<>(list);
+		for (int i = copy.size() - 1; i >= 0; i--) {
+			T element = copy.get(i);
+			if (!element.isEmpty())
+				return;
+			list.remove(list.size() - 1);
+		}
+	}
+
 
 	@Override
 	public abstract SerialiserFlavorBase clone();

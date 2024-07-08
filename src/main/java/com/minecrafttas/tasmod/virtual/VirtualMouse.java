@@ -352,4 +352,9 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	public int getCursorY() {
 		return cursorY;
 	}
+	
+	@Override
+	public boolean isEmpty() {
+		return super.isEmpty() && scrollWheel == 0 && cursorX == 0 && cursorY == 0;
+	}
 }

@@ -186,6 +186,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		
 		List<String> expected = new ArrayList<>();
 		expected.add("FileCommand-Extensions: tasmod_testFileCommand");
+		expected.add("");
 		
 		assertIterableEquals(expected, actual);
 	}

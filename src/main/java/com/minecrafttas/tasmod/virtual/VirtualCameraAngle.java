@@ -232,4 +232,9 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	public Float getYaw() {
 		return yaw;
 	}
+	
+	@Override
+	public boolean isEmpty() {
+		return super.isEmpty() && (pitch == null || pitch == 0) && (yaw == null || yaw == 0) ;
+	}
 }

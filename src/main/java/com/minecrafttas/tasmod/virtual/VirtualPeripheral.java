@@ -180,4 +180,12 @@ public abstract class VirtualPeripheral<T extends VirtualPeripheral<T>> extends 
 		this.subtickList.addAll(peripheral.subtickList);
 	}
 	
+	@Override
+	public boolean isEmpty() {
+		boolean flag = pressedKeys.isEmpty();
+		if(pressedKeys.size() == 1) {
+			flag = pressedKeys.contains(VirtualKey.ZERO.getKeycode()) || pressedKeys.contains(VirtualKey.MOUSEMOVED.getKeycode());
+		}
+		return super.isEmpty() && flag;
+	}
 }
