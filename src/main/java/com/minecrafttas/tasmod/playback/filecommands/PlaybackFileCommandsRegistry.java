@@ -64,7 +64,11 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 
 		return out;
 	}
-
+	
+	public List<PlaybackFileCommandExtension> getAll(){
+		return new ArrayList<>(REGISTRY.values());
+	}
+	
 	@Override
 	public void onRecordTick(long index, TickContainer container) {
 		enabledExtensions.forEach(extension -> {

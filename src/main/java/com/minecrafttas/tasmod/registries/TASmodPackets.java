@@ -6,6 +6,9 @@ import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.commands.CommandFolder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 
@@ -184,17 +187,25 @@ public enum TASmodPackets implements PacketID {
 	 * <p>SIDE: Both<br>
 	 * ARGS: <br>
 	 * <strong>Server->Client</strong> None<br>
-	 * <strong>Client->Server</strong> String The string of TASfilenames seperated with /
+	 * <strong>Client->Server</strong> String The string of TASfilenames seperated with |
 	 */
 	COMMAND_TASFILELIST,
 	/**
-	 * <p>Requests the list of SerialiserFlavors from the client for use in tab completions
+	 * <p>Requests the list of {@link SerialiserFlavorBase SerialiserFlavors} from the client for use in tab completions
 	 * <p>SIDE: Both<br>
 	 * ARGS: <br>
 	 * <strong>Server->Client</strong> None<br>
-	 * <strong>Client->Server</strong> String The string of flavors seperated with /
+	 * <strong>Client->Server</strong> String The string of flavors seperated with |
 	 */
 	COMMAND_FLAVORLIST,
+	/**
+	 * <p>Requests the list of {@link PlaybackFileCommandExtension PlaybackFileCommandExtensions} from the client for use in tab completions
+	 * <p>SIDE: Bith<br>
+	 * ARGS: <br>
+	 * <strong>Server->Client</strong> None<br>
+	 * <strong>Client->Server</strong> String The string of file command names, seperated with |
+	 */
+	COMMAND_FILECOMMANDLIST,
 	/**
 	 * <p>Sets the KillTheRNG seed
 	 * <p>SIDE: Both<br>

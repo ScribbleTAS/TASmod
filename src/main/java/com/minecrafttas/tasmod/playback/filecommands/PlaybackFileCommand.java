@@ -30,7 +30,7 @@ public class PlaybackFileCommand {
 	public String getName() {
 		return name;
 	}
-
+	
 	public String[] getArgs() {
 		return args;
 	}
@@ -94,6 +94,11 @@ public class PlaybackFileCommand {
 			else
 				onDisable();
 			this.enabled = enabled;
+		}
+		
+		@Override
+		public String toString() {
+			return getExtensionName();
 		}
 	}
 
