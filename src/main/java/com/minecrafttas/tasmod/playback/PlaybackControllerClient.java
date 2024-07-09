@@ -38,7 +38,7 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
@@ -73,7 +73,7 @@ import net.minecraft.util.text.event.ClickEvent;
  * Information about the author etc. get stored in the playback controller too
  * and will be printed out in chat when the player loads into a world <br>
  * Inputs are saved and loaded to/from file via the
- * {@linkplain PlaybackSerialiser2} TODO Update with new {@link PlaybackMetadata}
+ * {@linkplain PlaybackSerialiser} TODO Update with new {@link PlaybackMetadata}
  * 
  * @author Scribble
  *
@@ -776,7 +776,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				flavor = TASmodBufferBuilder.readString(buf);
 				
 				try {
-					PlaybackSerialiser2.saveToFile(new File(directory, name + ".mctas"), this, flavor);
+					PlaybackSerialiser.saveToFile(new File(directory, name + ".mctas"), this, flavor);
 				} catch (PlaybackSaveException e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
@@ -803,7 +803,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				flavor = TASmodBufferBuilder.readString(buf);
 				
 				try {
-					TASmodClient.controller.setInputs(PlaybackSerialiser2.loadFromFile(new File(directory, name + ".mctas"), flavor));
+					TASmodClient.controller.setInputs(PlaybackSerialiser.loadFromFile(new File(directory, name + ".mctas"), flavor));
 				} catch (PlaybackLoadException e) {
 					if (mc.world != null) {
 						TextComponentString textComponent =  new TextComponentString(e.getMessage());

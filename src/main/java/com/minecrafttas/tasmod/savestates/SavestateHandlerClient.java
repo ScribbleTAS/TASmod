@@ -18,7 +18,7 @@ import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
-import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
@@ -123,9 +123,9 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 
 		PlaybackControllerClient container = TASmodClient.controller;
 		if (container.isRecording()) {
-			PlaybackSerialiser2.saveToFile(targetfile, container, ""); // If the container is recording, store it entirely
+			PlaybackSerialiser.saveToFile(targetfile, container, ""); // If the container is recording, store it entirely
 		} else if (container.isPlayingback()) {
-			PlaybackSerialiser2.saveToFile(targetfile, container, "", container.index()); // If the container is playing, store it until the current index
+			PlaybackSerialiser.saveToFile(targetfile, container, "", container.index()); // If the container is playing, store it until the current index
 		}
 	}
 
@@ -164,7 +164,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		BigArrayList<TickContainer> savestateContainerList;
 
 		if (targetfile.exists()) {
-			savestateContainerList = PlaybackSerialiser2.loadFromFile(targetfile);
+			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile);
 		} else {
 			controller.setTASStateClient(TASstate.NONE, false);
 			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "Inputs could not be loaded for this savestate,"));

@@ -25,7 +25,7 @@ import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.Playbac
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
-import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser2;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
@@ -188,13 +188,13 @@ public class PlaybackSerialiserTest {
 		expected.add(new TickContainer(keyboard2, mouse2, angle2));
 		
 		try {
-			PlaybackSerialiser2.saveToFile(file, expected, "Test");
+			PlaybackSerialiser.saveToFile(file, expected, "Test");
 		} catch (PlaybackSaveException e) {
 			e.printStackTrace();
 		}
 		
 		try {
-			BigArrayList<TickContainer> actual = PlaybackSerialiser2.loadFromFile(file, testFlavor);
+			BigArrayList<TickContainer> actual = PlaybackSerialiser.loadFromFile(file, testFlavor);
 			assertBigArrayList(expected, actual);
 			assertEquals("testing", testMetadata.actual);
 		} catch (PlaybackLoadException | IOException e) {
@@ -227,7 +227,7 @@ public class PlaybackSerialiserTest {
 			e.printStackTrace();
 		}
 		
-		BigArrayList<TickContainer> actual = PlaybackSerialiser2.loadFromFile(file);
+		BigArrayList<TickContainer> actual = PlaybackSerialiser.loadFromFile(file);
 
 		BigArrayList<TickContainer> expected = new BigArrayList<>();
 		
@@ -309,7 +309,7 @@ public class PlaybackSerialiserTest {
 		}
 		
 		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
-			PlaybackSerialiser2.loadFromFile(file);
+			PlaybackSerialiser.loadFromFile(file);
 		});
 		
 		assertEquals("Couldn't find a flavorname in the file. TASfile is missing a flavor-extension or the file is broken", t.getMessage());
@@ -318,7 +318,7 @@ public class PlaybackSerialiserTest {
 	@Test
 	void testFlavorIsNull() {
 		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
-			PlaybackSerialiser2.loadFromFile(file, "NotAFlavor");
+			PlaybackSerialiser.loadFromFile(file, "NotAFlavor");
 		});
 		
 		assertEquals("Flavor name NotAFlavor doesn't exist.", t.getMessage());

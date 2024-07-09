@@ -100,6 +100,9 @@ public class Subtickable<T> {
 	}
 	
 	public boolean isEmpty() {
+		if(isParent()) {
+			return subtickList.isEmpty();
+		}
 		return true;
 	}
 }
