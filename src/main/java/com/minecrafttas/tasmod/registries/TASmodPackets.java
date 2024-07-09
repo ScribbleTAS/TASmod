@@ -160,6 +160,14 @@ public enum TASmodPackets implements PacketID {
 	 */
 	PLAYBACK_STATE,
 	/**
+	 * <p>Enables/Disables {@link PlaybackFileCommandExtension PlaybackFileCommandExtensions}
+	 * <p>SIDE: Client<br>
+	 * ARGS: <br>
+	 * String name Name of the {@link PlaybackFileCommandExtension}
+	 * boolean enable Whether the extensions should be enabled or disabled
+	 */
+	PLAYBACK_FILECOMMAND_ENABLE,
+	/**
 	 * <p>Opens a TASmod related folder on the file system
 	 * <p>The action describes which folder to open:
 	 * <ol start=0>

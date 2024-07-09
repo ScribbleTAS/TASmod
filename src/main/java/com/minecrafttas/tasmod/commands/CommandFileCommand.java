@@ -1,14 +1,22 @@
 package com.minecrafttas.tasmod.commands;
 
+import static com.minecrafttas.tasmod.registries.TASmodPackets.COMMAND_FILECOMMANDLIST;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FILECOMMAND_ENABLE;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
@@ -21,14 +29,15 @@ import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.Playbac
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 
-import static com.minecrafttas.tasmod.registries.TASmodPackets.*;
-
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 
@@ -51,32 +60,31 @@ public class CommandFileCommand extends CommandBase implements ClientPacketHandl
 		if (sender instanceof EntityPlayer) {
 			if (sender.canUseCommand(2, "fileCommand")) {
 
+				String senderName = null;
+
 				// Get the list of file commands from the server
-				List<String> names;
+				Map<String, Boolean> fileCommandNames;
 				try {
-					names = TASmod.tabCompletionUtils.getFileCommandList(getCommandSenderAsPlayer(sender).getName());
+					senderName = getCommandSenderAsPlayer(sender).getName();
+					fileCommandNames = getExtensions(senderName);
 				} catch (PlayerNotFoundException | InterruptedException | ExecutionException | TimeoutException e) {
 					sender.sendMessage(new TextComponentString(e.getMessage()));
 					return;
 				}
 
-				if (args.length == 0) {
-					sender.sendMessage(new TextComponentString(String.join(" ", names)));
-				}
-				if (args.length == 1) {
-					sender.sendMessage(new TextComponentString(TextFormatting.RED + "Please add a filecommand " + getUsage(sender)));
-				} else if (args.length == 1) {
-					String filename = args[0];
-					try {
-						TASmod.server.sendToAll(new TASmodBufferBuilder(PLAYBACK_LOAD).writeString(filename).writeString(""));
-					} catch (Exception e) {
-						e.printStackTrace();
+				if (args.length == 0) { // Displays all enabled and disabled filecommands
+					sender.sendMessage(new TextComponentString(String.join(" ", getColoredNames(fileCommandNames))));
+				} else if (args.length == 1) { // Toggles the filecommand
+
+					String name = args[0];
+					Boolean enable = fileCommandNames.get(name);
+
+					if (enable == null) {
+						throw new CommandException("The file command was not found: %s", name);
 					}
-				} else if (args.length == 2) {
-					String filename = args[0];
-					String flavorname = args[1];
+
 					try {
-						TASmod.server.sendToAll(new TASmodBufferBuilder(PLAYBACK_LOAD).writeString(filename).writeString(flavorname));
+						TASmod.server.sendTo(senderName, new TASmodBufferBuilder(PLAYBACK_FILECOMMAND_ENABLE).writeString(name).writeBoolean(!enable));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -87,18 +95,66 @@ public class CommandFileCommand extends CommandBase implements ClientPacketHandl
 		}
 	}
 
-	private List<PlaybackFileCommandExtension> getExtensions(String playername) throws InterruptedException, ExecutionException, TimeoutException {
-		List<PlaybackFileCommandExtension> out = new ArrayList<>();
+	@Override
+	public List<String> getTabCompletions(MinecraftServer minecraftServer, ICommandSender iCommandSender, String[] args, BlockPos blockPos) {
+		if (args.length == 1) {
+			List<String> names = null;
+			try {
+				names = new ArrayList<>(getExtensions(getCommandSenderAsPlayer(iCommandSender).getName()).keySet());
+			} catch (PlayerNotFoundException | InterruptedException | ExecutionException | TimeoutException e) {
+				e.printStackTrace();
+				return super.getTabCompletions(minecraftServer, iCommandSender, args, blockPos);
+			}
+			return getListOfStringsMatchingLastWord(args, names);
+		}
+		return super.getTabCompletions(minecraftServer, iCommandSender, args, blockPos);
+	}
+
+	private Map<String, Boolean> getExtensions(String playername) throws InterruptedException, ExecutionException, TimeoutException {
+		Map<String, Boolean> out = new LinkedHashMap<>();
 		fileCommandList = new CompletableFuture<>();
 
+		try {
+			TASmod.server.sendTo(playername, new TASmodBufferBuilder(COMMAND_FILECOMMANDLIST));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		List<String> commands = fileCommandList.get(2, TimeUnit.SECONDS);
-		
+
+		commands.forEach(element -> {
+
+			Pattern pattern = Pattern.compile("^E_");
+			Matcher matcher = pattern.matcher(element);
+			if (matcher.find()) {
+				element = matcher.replaceFirst("");
+				out.put(element, true);
+				return;
+			}
+
+			pattern = Pattern.compile("^D_");
+			matcher = pattern.matcher(element);
+			if (matcher.find()) {
+				element = matcher.replaceFirst("");
+				out.put(element, false);
+				return;
+			}
+		});
+
+		return out;
+	}
+
+	private List<String> getColoredNames(Map<String, Boolean> list) {
+		List<String> out = new ArrayList<>();
+		list.forEach((name, enabled) -> {
+			out.add(String.format("%s%s%s", enabled ? TextFormatting.GREEN : TextFormatting.RED, name, TextFormatting.RESET));
+		});
 		return out;
 	}
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new PacketID[] { COMMAND_FLAVORLIST };
+		return new PacketID[] { COMMAND_FILECOMMANDLIST, PLAYBACK_FILECOMMAND_ENABLE };
 	}
 
 	@Override
@@ -107,12 +163,14 @@ public class CommandFileCommand extends CommandBase implements ClientPacketHandl
 		switch (packet) {
 			case COMMAND_FILECOMMANDLIST:
 				String filecommandnames = TASmodBufferBuilder.readString(buf);
-				fileCommandList.complete(Arrays.asList(filecommandnames.split("|")));
+				fileCommandList.complete(Arrays.asList(filecommandnames.split("\\|")));
 				break;
 			default:
-				break;
+				throw new WrongSideException(packet, Side.SERVER);
 		}
 	}
+
+	// ========== Client
 
 	@Override
 	public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
@@ -121,6 +179,17 @@ public class CommandFileCommand extends CommandBase implements ClientPacketHandl
 			case COMMAND_FILECOMMANDLIST:
 				String filecommandnames = String.join("|", getFileCommandNames(TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.getAll()));
 				TASmodClient.client.send(new TASmodBufferBuilder(COMMAND_FILECOMMANDLIST).writeString(filecommandnames));
+				break;
+			case PLAYBACK_FILECOMMAND_ENABLE:
+				String filecommand = TASmodBufferBuilder.readString(buf);
+				boolean enable = TASmodBufferBuilder.readBoolean(buf);
+				boolean success = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled(filecommand, enable);
+
+				String msg = success ? String.format("%s%s file command: %s", TextFormatting.GREEN, enable ? "Enabled" : "Disabled", filecommand) : String.format("%sFailed to %s file command: %s", TextFormatting.RED, enable ? "enable" : "disable", filecommand);
+				Minecraft.getMinecraft().ingameGUI.addChatMessage(ChatType.CHAT, new TextComponentString(msg));
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -131,5 +200,5 @@ public class CommandFileCommand extends CommandBase implements ClientPacketHandl
 		});
 		return out;
 	}
-	
+
 }

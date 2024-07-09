@@ -1,6 +1,7 @@
 package com.minecrafttas.tasmod.commands;
 
-import static com.minecrafttas.tasmod.registries.TASmodPackets.*;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.COMMAND_FLAVORLIST;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.COMMAND_TASFILELIST;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -21,18 +22,15 @@ import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.text.TextFormatting;
 
 public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHandler {
 
 	private volatile CompletableFuture<List<String>> fileList = null;
 	private volatile CompletableFuture<List<String>> flavorList = null;
-	private volatile CompletableFuture<List<String>> fileCommandList = null;
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
@@ -47,15 +45,12 @@ public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHand
 		switch (packet) {
 			case COMMAND_TASFILELIST:
 				String filenames = TASmodBufferBuilder.readString(buf);
-				fileList.complete(Arrays.asList(filenames.split("|")));
+				fileList.complete(Arrays.asList(filenames.split("\\|")));
 				break;
 			case COMMAND_FLAVORLIST:
 				String flavornames = TASmodBufferBuilder.readString(buf);
-				flavorList.complete(Arrays.asList(flavornames.split("|")));
+				flavorList.complete(Arrays.asList(flavornames.split("\\|")));
 				break;
-			case COMMAND_FILECOMMANDLIST:
-				String filecommandnames = TASmodBufferBuilder.readString(buf);
-				fileCommandList.complete(Arrays.asList(filecommandnames.split("|")));
 			default:
 				break;
 		}
@@ -79,16 +74,6 @@ public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHand
 			TASmod.LOGGER.catching(e);
 		}
 		return flavorList.get(2, TimeUnit.SECONDS);
-	}
-
-	public List<String> getFileCommandList(String playername) throws InterruptedException, ExecutionException, TimeoutException {
-		fileCommandList = new CompletableFuture<>();
-		try {
-			TASmod.server.sendTo(playername, new TASmodBufferBuilder(COMMAND_FILECOMMANDLIST));
-		} catch (Exception e) {
-			TASmod.LOGGER.catching(e);
-		}
-		return fileCommandList.get(2, TimeUnit.SECONDS);
 	}
 
 	//======== CLIENT SIDE

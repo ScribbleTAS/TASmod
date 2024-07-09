@@ -13,6 +13,7 @@ import com.minecrafttas.mctcommon.events.EventServer.EventServerStop;
 import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
 import com.minecrafttas.mctcommon.networking.Server;
 import com.minecrafttas.tasmod.commands.CommandClearInputs;
+import com.minecrafttas.tasmod.commands.CommandFileCommand;
 import com.minecrafttas.tasmod.commands.CommandFolder;
 import com.minecrafttas.tasmod.commands.CommandFullPlay;
 import com.minecrafttas.tasmod.commands.CommandFullRecord;
@@ -74,6 +75,8 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
 	
 	public static final TabCompletionUtils tabCompletionUtils = new TabCompletionUtils();
 	
+	public static final CommandFileCommand commandFileCommand = new CommandFileCommand();
+	
 	@Override
 	public void onInitialize() {
 		
@@ -104,6 +107,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
 		PacketHandlerRegistry.register(playbackControllerServer);
 		PacketHandlerRegistry.register(startPositionMetadataExtension);
 		PacketHandlerRegistry.register(tabCompletionUtils);
+		PacketHandlerRegistry.register(commandFileCommand);
 	}
 	
 	@Override
@@ -125,6 +129,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
 		CommandRegistry.registerServerCommand(new CommandFullPlay(), server);
 		CommandRegistry.registerServerCommand(new CommandRestartAndPlay(), server);
 		CommandRegistry.registerServerCommand(new CommandPlayUntil(), server);
+		CommandRegistry.registerServerCommand(commandFileCommand, server);
 
 		// Save Loadstate Count
 		File savestateDirectory = new File(server.getDataDirectory() + File.separator + "saves" + File.separator + "savestates" + File.separator);
