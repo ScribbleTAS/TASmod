@@ -116,7 +116,7 @@ public class Configuration extends AbstractRegistry<com.minecrafttas.mctcommon.C
 	}
 
 	public String get(ConfigOptions configOption) {
-		return properties.getProperty(configOption.getConfigKey());
+		return properties.getProperty(configOption.getConfigKey(), configOption.getDefaultValue());
 	}
 
 	public int getInt(ConfigOptions configOption) {

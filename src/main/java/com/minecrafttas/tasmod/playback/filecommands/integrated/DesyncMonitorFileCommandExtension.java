@@ -42,7 +42,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 
 	@Override
 	public String getExtensionName() {
-		return "tasmod_desyncMonitoring@v1";
+		return "tasmod_desyncMonitor@v1";
 	}
 
 	@Override

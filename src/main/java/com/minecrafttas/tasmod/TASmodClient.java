@@ -309,6 +309,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(desyncMonitorFileCommandExtension);
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(optionsFileCommandExtension);
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(labelFileCommandExtension);
+		
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setConfig(config);
 	}
 	
 	private void loadConfig(Minecraft mc) {
@@ -319,5 +321,6 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		config = new Configuration("TASmod configuration", new File(configDir, "tasmod.cfg"));
 		config.register(TASmodConfig.values());
 		config.load();
+		config.save();
 	}
 }

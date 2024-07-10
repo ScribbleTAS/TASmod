@@ -4,7 +4,8 @@ import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
 
 public enum TASmodConfig implements ConfigOptions {
 	FileToOpen("fileToOpen", ""),
-	ServerConnection("serverConnection", "");
+	ServerConnection("serverConnection", ""),
+	EnabledFileCommands("enabledFileCommands", "tasmod_desyncMonitor@v1, tasmod_label@v1, tasmod_options@v1");
 
 	private String configKey;
 	private String defaultValue;
