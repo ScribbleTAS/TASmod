@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.minecrafttas.mctcommon.Configuration;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
+import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
@@ -18,7 +19,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 	private List<PlaybackFileCommandExtension> enabledExtensions = new ArrayList<>();
 	
 	private Configuration config = null;
-
+	
 	public PlaybackFileCommandsRegistry() {
 		super("FILECOMMAND_REGISTRY", new LinkedHashMap<>());
 	}
@@ -157,11 +158,17 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 	}
 	
 	private void loadConfig() {
+		if (config == null) {
+			return;
+		}
 		String enabled = config.get(TASmodConfig.EnabledFileCommands);
 		setEnabled(Arrays.asList(enabled.split(", ")));
 	}
 	
 	private void saveConfig() {
+		if (config == null) {
+			return;
+		}
 		List<String> nameList = new ArrayList<>(); 
 		
 		enabledExtensions.forEach(element ->{
