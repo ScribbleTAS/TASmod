@@ -19,7 +19,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
@@ -68,7 +68,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	@Test
 	void testSerialiseMetadata() {
 		
-		class MetadataTest implements PlaybackMetadataExtension {
+		class MetadataTest extends PlaybackMetadataExtension {
 
 			public String testValue;
 
@@ -101,7 +101,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		}
 		
-		class MetadataTest2 implements PlaybackMetadataExtension {
+		class MetadataTest2 extends PlaybackMetadataExtension {
 
 			public String testValue;
 
@@ -381,7 +381,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	@Test
 	void testDeserialiseMetadata() {
 		
-		class GeneralMetadata implements PlaybackMetadataExtension{
+		class GeneralMetadata extends PlaybackMetadataExtension{
 
 			PlaybackMetadata metadata = null;
 			
@@ -410,7 +410,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			
 		}
 		
-		class StartPositionMetadata implements PlaybackMetadataExtension {
+		class StartPositionMetadata extends PlaybackMetadataExtension {
 
 			PlaybackMetadata metadata = null;
 			

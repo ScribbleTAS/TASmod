@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.minecrafttas.mctcommon.Configuration;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
-import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;

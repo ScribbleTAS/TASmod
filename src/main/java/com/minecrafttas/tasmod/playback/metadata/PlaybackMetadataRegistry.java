@@ -7,6 +7,7 @@ import java.util.List;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
 
 /**
  * Registry for registering custom metadata that is stored in the TASFile.<br>
@@ -18,7 +19,7 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient;
  * 
  * @author Scribble
  */
-public class PlaybackMetadataRegistry extends AbstractRegistry<com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension> implements EventPlaybackClient.EventRecordClear{
+public class PlaybackMetadataRegistry extends AbstractRegistry<PlaybackMetadataExtension> implements EventPlaybackClient.EventRecordClear{
 
 	public PlaybackMetadataRegistry() {
 		super("METADATA_REGISTRY", new LinkedHashMap<>());
@@ -55,35 +56,5 @@ public class PlaybackMetadataRegistry extends AbstractRegistry<com.minecrafttas.
 		REGISTRY.forEach((key, extension) ->{
 			extension.onClear();
 		});
-	}
-
-	public static interface PlaybackMetadataExtension extends com.minecrafttas.mctcommon.registry.Registerable {
-		
-		/**
-		 * Currently unused.<br>
-		 * Maybe in the future, TASes have to be created with /create, then you can interactively set the values...<br>
-		 */
-		public void onCreate();
-
-		/**
-		 * Runs, when the TASfile is being stored to a file.<br>
-		 * Create a new {@link PlaybackMetadata} with <code>PlaybackMetadata metadata = new PlaybackMetadata(this);</code>.<br>
-		 * This will ensure, that the metadata is linked to this extension by using the {@link PlaybackMetadataExtension#getExtensionName()}.<br>
-		 * 
-		 * @return The {@link PlaybackMetadata} to be saved in the TASfile
-		 */
-		public PlaybackMetadata onStore();
-
-		/**
-		 * Runs when the TASfile is being loaded from a file<br>
-		 * 
-		 * @param metadata The metadata for this extension to read from
-		 */
-		public void onLoad(PlaybackMetadata metadata);
-		
-		/**
-		 * Runs when the PlaybackController is cleared
-		 */
-		public void onClear();
 	}
 }

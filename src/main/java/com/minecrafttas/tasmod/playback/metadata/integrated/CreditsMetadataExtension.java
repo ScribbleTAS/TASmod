@@ -6,7 +6,7 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateCh
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
@@ -20,7 +20,7 @@ import net.minecraft.util.text.TextFormatting;
  * Credits can be changed in the file and will be printed in chat, when the
  * player joins a world after /fullplay
  */
-public class CreditsMetadataExtension implements PlaybackMetadataExtension, EventPlaybackJoinedWorld, EventControllerStateChange {
+public class CreditsMetadataExtension extends PlaybackMetadataExtension implements EventPlaybackJoinedWorld, EventControllerStateChange {
 
 	/**
 	 * The title/category of the TAS (e.g. KillSquid - Any% Glitched)

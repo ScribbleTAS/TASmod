@@ -11,11 +11,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
 
 public class PlaybackMetadataTest {
 
-	class MetadataTest implements PlaybackMetadataExtension{
+	class MetadataTest extends PlaybackMetadataExtension{
 
 		@Override
 		public String getExtensionName() {

@@ -6,13 +6,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
+import com.minecrafttas.mctcommon.registry.Registerable;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
 
 /**
  * Stores a section of<br>
  * <br>
  */
 public class PlaybackMetadata {
+
 	private String extensionName;
 	private LinkedHashMap<String, String> data;
 	
@@ -99,5 +101,35 @@ public class PlaybackMetadata {
 	
 	public static PlaybackMetadata fromHashMap(String extensionName, LinkedHashMap<String, String> data) {
 		return new PlaybackMetadata(extensionName, new LinkedHashMap<>(data));
+	}
+	
+	public static abstract class PlaybackMetadataExtension implements com.minecrafttas.mctcommon.registry.Registerable {
+		
+		/**
+		 * Currently unused.<br>
+		 * Maybe in the future, TASes have to be created with /create, then you can interactively set the values...<br>
+		 */
+		public void onCreate() {};
+	
+		/**
+		 * Runs, when the TASfile is being stored to a file.<br>
+		 * Create a new {@link PlaybackMetadata} with <code>PlaybackMetadata metadata = new PlaybackMetadata(this);</code>.<br>
+		 * This will ensure, that the metadata is linked to this extension by using the {@link PlaybackMetadataExtension#getExtensionName()}.<br>
+		 * 
+		 * @return The {@link PlaybackMetadata} to be saved in the TASfile
+		 */
+		public abstract PlaybackMetadata onStore();
+	
+		/**
+		 * Runs when the TASfile is being loaded from a file<br>
+		 * 
+		 * @param metadata The metadata for this extension to read from
+		 */
+		public abstract void onLoad(PlaybackMetadata metadata);
+		
+		/**
+		 * Runs when the PlaybackController is cleared
+		 */
+		public abstract void onClear();
 	}
 }

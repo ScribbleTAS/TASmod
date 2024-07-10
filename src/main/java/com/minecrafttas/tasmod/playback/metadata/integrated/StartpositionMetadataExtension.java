@@ -14,7 +14,7 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateCh
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -31,7 +31,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
  * 
  * @author Scribble
  */
-public class StartpositionMetadataExtension implements PlaybackMetadataExtension, EventControllerStateChange, ServerPacketHandler {
+public class StartpositionMetadataExtension extends PlaybackMetadataExtension implements EventControllerStateChange, ServerPacketHandler {
 
 	/**
 	 * The startposition of the playback
