@@ -130,7 +130,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected void serialiseContainer(BigArrayList<String> out, TickContainer container) {
-		currentLine = out.size()-1;
+		currentLine = out.size() - 1;
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
 		List<String> serialisedCameraAngle = serialiseCameraAngle(container.getCameraAngle());
@@ -168,10 +168,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
 		List<String> out = new ArrayList<>();
-		
+
 		List<VirtualKeyboard> subticks = new ArrayList<>(keyboard.getAll());
 		pruneListEndEmptySubtickable(subticks);
-		
+
 		for (VirtualKeyboard subtick : subticks) {
 			out.add(subtick.toString2());
 		}
@@ -180,10 +180,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected List<String> serialiseMouse(VirtualMouse mouse) {
 		List<String> out = new ArrayList<>();
-		
+
 		List<VirtualMouse> subticks = new ArrayList<>(mouse.getAll());
 		pruneListEndEmptySubtickable(subticks);
-		
+
 		for (VirtualMouse subtick : subticks) {
 			out.add(subtick.toString2());
 		}
@@ -191,18 +191,18 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle) {
-		
+
 		VirtualCameraAngle previousCamera = null;
-		if(previousTickContainer != null) {
+		if (previousTickContainer != null) {
 			previousCamera = previousTickContainer.getCameraAngle();
 		}
-		
+
 		List<String> out = new ArrayList<>();
 		for (VirtualCameraAngle subtick : cameraAngle.getAll()) {
-			
-			if(!subtick.equals(previousCamera))
+
+			if (!subtick.equals(previousCamera))
 				out.add(subtick.toString2());
-			
+
 			previousCamera = subtick;
 		}
 		return out;
@@ -842,13 +842,13 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd, List<List<PlaybackFileCommand>> endlineFileCommands) {
 
 		String previousCamera = null;
-		if(previousTickContainer != null) {
+		if (previousTickContainer != null) {
 			previousCamera = previousTickContainer.getCameraAngle().toString2();
 		}
-		
+
 		for (String line : lines) {
 			Matcher tickMatcher = extract("^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?", line);
-			
+
 			if (tickMatcher.find()) {
 				if (!tickMatcher.group(1).isEmpty()) {
 					serialisedKeyboard.add(tickMatcher.group(1));
@@ -856,12 +856,12 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				if (!tickMatcher.group(2).isEmpty()) {
 					serialisedMouse.add(tickMatcher.group(2));
 				}
-				
+
 				if (!tickMatcher.group(3).isEmpty()) {
 					serialisedCameraAngle.add(tickMatcher.group(3));
 					previousCamera = tickMatcher.group(3);
 				} else {
-					if(previousCamera!=null)
+					if (previousCamera != null)
 						serialisedCameraAngle.add(previousCamera);
 				}
 
@@ -972,7 +972,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			list.remove(list.size() - 1);
 		}
 	}
-	
+
 	/**
 	 * Empties the list starting from the back if the values are empty
 	 * 
@@ -988,7 +988,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			list.remove(list.size() - 1);
 		}
 	}
-	
+
 	/**
 	 * Empties the list starting from the back if the values are empty
 	 * 
@@ -1004,7 +1004,6 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			list.remove(list.size() - 1);
 		}
 	}
-
 
 	@Override
 	public abstract SerialiserFlavorBase clone();

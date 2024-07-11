@@ -96,10 +96,10 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 
 		this.startPosition = new StartPosition(x, y, z, pitch, yaw);
 	}
-	
+
 	private double getDouble(String key, PlaybackMetadata metadata) {
 		String out = metadata.getValue(key);
-		if(out != null) {
+		if (out != null) {
 			try {
 				return Double.parseDouble(out);
 			} catch (NumberFormatException e) {
@@ -109,10 +109,10 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 			throw new PlaybackLoadException(String.format("Missing key %s in Start Position metadata", key));
 		}
 	}
-	
+
 	private float getFloat(String key, PlaybackMetadata metadata) {
 		String out = metadata.getValue(key);
-		if(out != null) {
+		if (out != null) {
 			try {
 				return Float.parseFloat(out);
 			} catch (NumberFormatException e) {
@@ -140,12 +140,7 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 				LOGGER.debug(LoggerMarkers.Playback, "Teleporting the player to the start location");
 				TASmodBufferBuilder packetBuilder = new TASmodBufferBuilder(TASmodPackets.PLAYBACK_TELEPORT);
 
-				packetBuilder
-				.writeDouble(startPosition.x)
-				.writeDouble(startPosition.y)
-				.writeDouble(startPosition.z)
-				.writeFloat(startPosition.pitch)
-				.writeFloat(startPosition.yaw);
+				packetBuilder.writeDouble(startPosition.x).writeDouble(startPosition.y).writeDouble(startPosition.z).writeFloat(startPosition.pitch).writeFloat(startPosition.yaw);
 
 				try {
 					TASmodClient.client.send(packetBuilder);

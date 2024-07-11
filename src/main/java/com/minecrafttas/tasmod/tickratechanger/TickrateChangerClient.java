@@ -207,7 +207,7 @@ public class TickrateChangerClient implements ClientPacketHandler {
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new TASmodPackets[] { TASmodPackets.TICKRATE_CHANGE, TASmodPackets.TICKRATE_ADVANCE, TASmodPackets.TICKRATE_ZERO, };
+		return new TASmodPackets[] { TASmodPackets.TICKRATE_CHANGE, TASmodPackets.TICKRATE_ADVANCE, TASmodPackets.TICKRATE_ZERO };
 	}
 
 	@Override
