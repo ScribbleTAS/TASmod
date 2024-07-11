@@ -16,7 +16,7 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	private boolean shouldRenderHud = true;
 
 	BigArrayList<PlaybackFileCommandContainer> hud = new BigArrayList<>();
-	
+
 	public OptionsFileCommandExtension() {
 		enabled = true;
 	}
@@ -40,13 +40,16 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 
 	@Override
 	public void onPlayback(long tick, TickContainer tickContainer) {
-		PlaybackFileCommandContainer containerInTick = hud.get(tick);
-		if(containerInTick == null) {
+		if (hud.size() <= tick) {
 			return;
 		}
-		
+		PlaybackFileCommandContainer containerInTick = hud.get(tick);
+		if (containerInTick == null) {
+			return;
+		}
+
 		PlaybackFileCommandLine line = containerInTick.get("hud");
-		if(line == null) {
+		if (line == null) {
 			return;
 		}
 
@@ -83,7 +86,7 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 		hud = new BigArrayList<>();
 		shouldRenderHud = true;
 	}
-	
+
 	public boolean shouldRenderHud() {
 		return shouldRenderHud;
 	}
