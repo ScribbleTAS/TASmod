@@ -44,7 +44,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	protected TickContainer previousTickContainer = null;
 
 	protected String headerStart() {
-		return createCenteredHeading("TASFile", '#', 50);
+		return createCenteredHeading("TASfile", '#', 50);
 	}
 
 	/**

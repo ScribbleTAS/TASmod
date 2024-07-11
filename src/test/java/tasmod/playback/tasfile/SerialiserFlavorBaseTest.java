@@ -59,7 +59,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 	@Test
 	void testSerialiseHeaderStart() {
-		assertEquals("##################### TASFile ####################", headerStart());
+		assertEquals("##################### TASfile ####################", headerStart());
 	}
 
 	/**

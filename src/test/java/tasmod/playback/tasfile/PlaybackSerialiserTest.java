@@ -205,7 +205,7 @@ public class PlaybackSerialiserTest {
 	@Test
 	void testDeserialiser() throws PlaybackLoadException, IOException {
 		List<String> lines = new ArrayList<>();
-		lines.add("TASFile");
+		lines.add("TASfile");
 		lines.add("FileCommand-Extensions: tasmod_testFileExtension");
 		lines.add("Flavor: Test");
 		lines.add("----------- Test ----------");

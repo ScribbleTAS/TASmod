@@ -10,7 +10,7 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
 
 /**
- * Registry for registering custom metadata that is stored in the TASFile.<br>
+ * Registry for registering custom metadata that is stored in the TASfile.<br>
  * <br>
  * The default metadata includes general information such as author name,
  * savestate/rerecord count and category.<br>
@@ -46,7 +46,7 @@ public class PlaybackMetadataRegistry extends AbstractRegistry<PlaybackMetadataE
 				
 				extension.onLoad(metadata);
 			} else {
-				TASmod.LOGGER.warn("The metadata extension {} was not found while loading the TASFile. Things might not be correctly loaded!", metadata.getExtensionName());
+				TASmod.LOGGER.warn("The metadata extension {} was not found while loading the TASfile. Things might not be correctly loaded!", metadata.getExtensionName());
 			}
 		}
 	}

@@ -56,7 +56,7 @@ public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHand
 		}
 	}
 
-	public List<String> getTASFileList(String playername) throws InterruptedException, ExecutionException, TimeoutException {
+	public List<String> getTASfileList(String playername) throws InterruptedException, ExecutionException, TimeoutException {
 		fileList = new CompletableFuture<>();
 		try {
 			TASmod.server.sendTo(playername, new TASmodBufferBuilder(COMMAND_TASFILELIST));

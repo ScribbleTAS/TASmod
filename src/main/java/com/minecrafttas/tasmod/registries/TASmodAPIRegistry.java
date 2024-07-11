@@ -8,7 +8,7 @@ import com.minecrafttas.tasmod.playback.tasfile.flavor.integrated.Beta1Flavor;
 
 public class TASmodAPIRegistry {
 	/**
-	 * Registry for registering custom metadata that is stored in the TASFile.<br>
+	 * Registry for registering custom metadata that is stored in the TASfile.<br>
 	 * <br>
 	 * The default metadata includes general information such as author name,
 	 * savestate/rerecord count and category.<br>
@@ -21,7 +21,7 @@ public class TASmodAPIRegistry {
 	 * Registry for registering custom behavior for each tick during recording and playback.<br>
 	 * <br>
 	 * File commands give the opportunity to run commands on each recorded tick and each played back tick.<br>
-	 * File commands also have access to the TASFile so that data can be stored and read in/from the TASFile.
+	 * File commands also have access to the TASfile so that data can be stored and read in/from the TASfile.
 	 * 
 	 */
 	public static final PlaybackFileCommandsRegistry PLAYBACK_FILE_COMMAND = new PlaybackFileCommandsRegistry();

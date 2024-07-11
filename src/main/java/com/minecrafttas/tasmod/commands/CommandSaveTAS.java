@@ -74,7 +74,7 @@ public class CommandSaveTAS extends CommandBase {
 				check = true;
 			}
 			try {
-				tab = TASmod.tabCompletionUtils.getTASFileList(getCommandSenderAsPlayer(sender).getName());
+				tab = TASmod.tabCompletionUtils.getTASfileList(getCommandSenderAsPlayer(sender).getName());
 			} catch (TimeoutException e) {
 				sender.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to fetch the file list after 2 seconds, something went wrong"));
 				TASmod.LOGGER.catching(e);
