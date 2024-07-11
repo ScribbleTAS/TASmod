@@ -78,6 +78,13 @@ public abstract class VirtualPeripheral<T extends VirtualPeripheral<T>> extends 
 		return out;
 	}
 
+	/**
+	 * Creates a new subtick by {@link #shallowClone() shallowCloning} this VirtualPeripheral.<br>
+	 * If {@link Subtickable#ignoreFirstUpdate} is true, no new subtick will be created.<br>
+	 */
+	public void createSubtick() {
+	}
+
 	@Override
 	public String toString() {
 		return String.join(",", getCurrentPresses());
@@ -136,42 +143,50 @@ public abstract class VirtualPeripheral<T extends VirtualPeripheral<T>> extends 
 	/**
 	 * Moves the data from another virtual peripheral into this peripheral without creating a new object.<br>
 	 * Deletes the data in the other peripheral.<br>
-	 * <strong>Ignores {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList}</strong>
+	 * <strong>Ignores {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList subtickList}</strong>
 	 * 
 	 * @param peripheral The peripheral to move from
 	 */
 	protected void moveFrom(T peripheral) {
-		if(peripheral == null)
+		if (peripheral == null)
 			return;
 		copyFrom(peripheral);
 		peripheral.subtickList.clear();
 		peripheral.resetFirstUpdate();
 	}
-	
+
 	/**
 	 * Copies the data from another virtual peripheral into this peripheral without creating a new object.<br>
 	 * Does not delete the data from the other peripehral.<br>
-	 * <strong>Ignores {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList}</strong>
+	 * <strong>Ignores the {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList subtickList}</strong>
 	 * 
 	 * @param peripheral The peripheral to copy from
 	 */
 	protected void copyFrom(T peripheral) {
-		if(peripheral == null)
+		if (peripheral == null)
 			return;
 		this.pressedKeys.clear();
 		this.pressedKeys.addAll(peripheral.pressedKeys);
 	}
-	
+
 	/**
-	 * Copies the data from another virtual peripheral similar to {@link #copyFrom(VirtualPeripheral)}, but including the {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList}
+	 * Copies the data from another virtual peripheral similar to {@link #copyFrom(VirtualPeripheral) copyFrom}, but including the {@link com.minecrafttas.tasmod.virtual.Subtickable.subtickList subtickList}
 	 * @param peripheral
 	 */
 	protected void deepCopyFrom(T peripheral) {
-		if(peripheral == null || !peripheral.isParent())
+		if (peripheral == null || !peripheral.isParent())
 			return;
 		copyFrom(peripheral);
 		this.subtickList.clear();
 		this.subtickList.addAll(peripheral.subtickList);
 	}
-	
+
+	@Override
+	public boolean isEmpty() {
+		boolean flag = pressedKeys.isEmpty();
+		if (pressedKeys.size() == 1) {
+			flag = pressedKeys.contains(VirtualKey.ZERO.getKeycode()) || pressedKeys.contains(VirtualKey.MOUSEMOVED.getKeycode());
+		}
+		return super.isEmpty() && flag;
+	}
 }

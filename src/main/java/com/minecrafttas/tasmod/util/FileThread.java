@@ -27,7 +27,7 @@ public class FileThread extends Thread {
 	
 	public void addLine(String line) {
 		synchronized (output) {
-			output.add(line);
+			output.add(line + "\n");
 		}
 	}
 	

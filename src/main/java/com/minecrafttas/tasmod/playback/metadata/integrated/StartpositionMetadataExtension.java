@@ -4,18 +4,19 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.nio.ByteBuffer;
 
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry.PlaybackMetadataExtension;
+import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.minecraft.client.Minecraft;
@@ -30,7 +31,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
  * 
  * @author Scribble
  */
-public class StartpositionMetadataExtension implements PlaybackMetadataExtension, EventControllerStateChange, ServerPacketHandler {
+public class StartpositionMetadataExtension extends PlaybackMetadataExtension implements EventControllerStateChange, ServerPacketHandler {
 
 	/**
 	 * The startposition of the playback
@@ -75,20 +76,46 @@ public class StartpositionMetadataExtension implements PlaybackMetadataExtension
 		metadata.setValue("x", Double.toString(startPosition.x));
 		metadata.setValue("y", Double.toString(startPosition.y));
 		metadata.setValue("z", Double.toString(startPosition.z));
-		metadata.setValue("pitch", Double.toString(startPosition.pitch));
-		metadata.setValue("yaw", Double.toString(startPosition.yaw));
+		metadata.setValue("pitch", Float.toString(startPosition.pitch));
+		metadata.setValue("yaw", Float.toString(startPosition.yaw));
 		return metadata;
 	}
 
 	@Override
 	public void onLoad(PlaybackMetadata metadata) {
-		double x = Double.parseDouble(metadata.getValue("x"));
-		double y = Double.parseDouble(metadata.getValue("y"));
-		double z = Double.parseDouble(metadata.getValue("z"));
-		float pitch = Float.parseFloat(metadata.getValue("pitch"));
-		float yaw = Float.parseFloat(metadata.getValue("yaw"));
+		double x = getDouble("x", metadata);
+		double y = getDouble("y", metadata);
+		double z = getDouble("z", metadata);
+		float pitch = getFloat("pitch", metadata);
+		float yaw = getFloat("yaw", metadata);
 
 		this.startPosition = new StartPosition(x, y, z, pitch, yaw);
+	}
+	
+	private double getDouble(String key, PlaybackMetadata metadata) {
+		String out = metadata.getValue(key);
+		if(out != null) {
+			try {
+				return Double.parseDouble(out);
+			} catch (NumberFormatException e) {
+				throw new PlaybackLoadException(e);
+			}
+		} else {
+			throw new PlaybackLoadException(String.format("Missing key %s in Start Position metadata", key));
+		}
+	}
+	
+	private float getFloat(String key, PlaybackMetadata metadata) {
+		String out = metadata.getValue(key);
+		if(out != null) {
+			try {
+				return Float.parseFloat(out);
+			} catch (NumberFormatException e) {
+				throw new PlaybackLoadException(e);
+			}
+		} else {
+			throw new PlaybackLoadException(String.format("Missing key %s in Start Position metadata", key));
+		}
 	}
 
 	@Override
@@ -127,7 +154,6 @@ public class StartpositionMetadataExtension implements PlaybackMetadataExtension
 				}
 			}
 		}
-
 	}
 
 	@Override

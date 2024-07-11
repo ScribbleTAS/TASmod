@@ -15,17 +15,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import com.minecrafttas.mctcommon.server.ByteBufferBuilder;
-import com.minecrafttas.mctcommon.server.Client;
-import com.minecrafttas.mctcommon.server.CompactPacketHandler;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.PacketHandlerRegistry;
-import com.minecrafttas.mctcommon.server.Server;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
+import com.minecrafttas.mctcommon.networking.ByteBufferBuilder;
+import com.minecrafttas.mctcommon.networking.Client;
+import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
+import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
+import com.minecrafttas.mctcommon.networking.Server;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 
 /**
  * An integration test for the {@link Server} class by setting up a connection.
@@ -85,6 +85,11 @@ class ServerTest {
 		@Override
 		public boolean shouldTrace() {
 			return false;
+		}
+
+		@Override
+		public String getExtensionName() {
+			return "TestPacketIds";
 		}
 
 	}

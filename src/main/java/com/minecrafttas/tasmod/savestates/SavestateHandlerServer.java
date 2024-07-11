@@ -15,25 +15,23 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Maps;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.events.EventServer.EventCompleteLoadstate;
-import com.minecrafttas.tasmod.events.EventServer.EventLoadstate;
-import com.minecrafttas.tasmod.events.EventServer.EventSavestate;
+import com.minecrafttas.tasmod.events.EventSavestate;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorAnvilChunkLoader;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorChunkLoader;
 import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateDeleteException;
@@ -197,7 +195,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		File currentfolder = new File(savestateDirectory, ".." + File.separator + worldname);
 		File targetfolder = getSavestateFile(indexToSave);
 		
-		EventListenerRegistry.fireEvent(EventSavestate.class, indexToSave, targetfolder, currentfolder);
+		EventListenerRegistry.fireEvent(EventSavestate.EventServerSavestate.class, indexToSave, targetfolder, currentfolder);
 
 		if (targetfolder.exists()) {
 			logger.warn(LoggerMarkers.Savestate, "WARNING! Overwriting the savestate with the index {}", indexToSave);
@@ -340,7 +338,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		File currentfolder = new File(savestateDirectory, ".." + File.separator + worldname);
 		File targetfolder = getSavestateFile(indexToLoad);
 
-		EventListenerRegistry.fireEvent(EventLoadstate.class, indexToLoad, targetfolder, currentfolder);
+		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstate.class, indexToLoad, targetfolder, currentfolder);
 		
 		/*
 		 * Prevents loading an InputSavestate when loading index 0 (Index 0 is the
@@ -419,7 +417,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		
 		TASmod.tickSchedulerServer.add(()->{
-			EventListenerRegistry.fireEvent(EventCompleteLoadstate.class);
+			EventListenerRegistry.fireEvent(EventSavestate.EventServerCompleteLoadstate.class);
 			onLoadstateComplete();
 			
 			// Unlock savestating

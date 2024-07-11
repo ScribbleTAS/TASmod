@@ -28,8 +28,8 @@ public class VirtualInputEventFiring {
 		};
 		EventCopy copy = (keyboard)-> {
 			VirtualKeyboard newkeyboard = new VirtualKeyboard();
-			newkeyboard.update(VirtualKey.A, true, 'a');
-			newkeyboard.update(VirtualKey.D, true, 'd');
+			newkeyboard.updateFromEvent(VirtualKey.A, true, 'a');
+			newkeyboard.updateFromEvent(VirtualKey.D, true, 'd');
 			keyboard.deepCopyFrom(newkeyboard);
 		};
 		EventListenerRegistry.register(clear, copy);
@@ -39,8 +39,8 @@ public class VirtualInputEventFiring {
 	void testClear() {
 		VirtualKeyboard keyboard = new VirtualKeyboard();
 		
-		keyboard.update(VirtualKey.W, true, 'w');
-		keyboard.update(VirtualKey.S, true, 's');
+		keyboard.updateFromEvent(VirtualKey.W, true, 'w');
+		keyboard.updateFromEvent(VirtualKey.S, true, 's');
 		
 		EventListenerRegistry.fireEvent(EventTest.class, keyboard);
 		
@@ -52,12 +52,12 @@ public class VirtualInputEventFiring {
 		
 		VirtualKeyboard actual = new VirtualKeyboard();
 		
-		actual.update(VirtualKey.W, true, 'w');
-		actual.update(VirtualKey.S, true, 's');
+		actual.updateFromEvent(VirtualKey.W, true, 'w');
+		actual.updateFromEvent(VirtualKey.S, true, 's');
 		
 		VirtualKeyboard expected = new VirtualKeyboard();
-		expected.update(VirtualKey.A, true, 'a');
-		expected.update(VirtualKey.D, true, 'd');
+		expected.updateFromEvent(VirtualKey.A, true, 'a');
+		expected.updateFromEvent(VirtualKey.D, true, 'd');
 		
 		EventListenerRegistry.fireEvent(EventCopy.class, actual);
 		

@@ -1,472 +1,263 @@
 package com.minecrafttas.tasmod.playback.tasfile;
 
-import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
-import com.minecrafttas.tasmod.playback.ControlByteHandler;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
-import com.minecrafttas.tasmod.util.FileThread;
-import com.minecrafttas.tasmod.util.LoggerMarkers;
-import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
-import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
-import com.minecrafttas.tasmod.virtual.VirtualMouse;
-import com.mojang.realmsclient.util.Pair;
-import org.apache.commons.io.FileUtils;
-
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import static com.minecrafttas.tasmod.TASmod.LOGGER;
+import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
+import com.minecrafttas.tasmod.util.FileThread;
 
 /**
- * Saves a given {@linkplain PlaybackControllerClient} to a file. Is also able to read an input container from a file. <br>
- * <br>
- * I plan to be backwards compatible so all the save functions have a V1 in their name by the time of writing this<br>
- * <br>
- * It also serializes the {@linkplain DesyncMonitoring} from the input container<br>
- * <br>
- * Side: Client
+ * Loads and stores the {@link PlaybackControllerClient} to/from a file.<br>
  * 
- * @author ScribbleLP
- *
+ * @author Scribble
  */
 public class PlaybackSerialiser {
-	
+
+	private static String defaultFlavor = "beta1";
+
 	/**
-	 * A list of sections to check for in the playback file
-	 * @author ScribbleLP
-	 *
+	 * Saves the {@link PlaybackControllerClient} to a file
+	 * 
+	 * @param file The file to save the serialised inputs to
+	 * @param controller The {@link PlaybackControllerClient} to use. Uses the {@link PlaybackControllerClient#getInputs() getInputs()} method, to extract the ticks.
+	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use for the tasfile
+	 * @throws PlaybackSaveException When a saving operation fails
 	 */
-	public enum SectionsV1{
-		TICKS("Ticks", ""),
-		KEYBOARD("Keyboard", "(\\|Keyboard:)"),
-		MOUSE("Mouse", "(\\|Mouse:)"),
-		CAMERA("Camera", "(\\|Camera:)");
-		
-		private String name;
-		private String regex;
-		
-		private SectionsV1(String nameIn, String regexIn) {
-			name=nameIn;
-			regex=regexIn;
-		}
-		
-		public String getName() {
-			return name;
-		}
-		
-		public String getRegex() {
-			return regex;
-		}
-		
-		public static String getRegexString() {
-			String out="";
-			for(SectionsV1 section : values()) {
-				if(!section.getRegex().isEmpty()) {
-					String seperator="|";
-					if(values().length-1==section.ordinal()) {
-						seperator="";
-					}
-					out=out.concat(section.getRegex()+seperator);
-				}
-			}
-			return out;
-		}
+	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorName) throws PlaybackSaveException {
+		saveToFile(file, controller, flavorName, -1L);
 	}
-	
+
 	/**
-	 * Saves all inputs of the input container
-	 * @param file Where to save the container
-	 * @param container The container to save
-	 * @throws IOException When the input container is empty
+	 * Saves the {@link PlaybackControllerClient} <i>partially</i> to a file
+	 * 
+	 * @param file The file to save the serialised inputs to
+	 * @param controller The {@link PlaybackControllerClient} to use. Uses the {@link PlaybackControllerClient#getInputs() getInputs()} method, to extract the ticks.
+	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use for the tasfile
+	 * @param stopIndex The index at which the serialiser stops. Use -1L to parse the entire file 
+	 * @throws PlaybackSaveException When a saving operation fails
 	 */
-	public void saveToFileV1(File file, PlaybackControllerClient container) throws IOException {
-		saveToFileV1Until(file, container, -1);
+	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorName, long stopIndex) throws PlaybackSaveException {
+		if (controller == null) {
+			throw new PlaybackSaveException("Save to file failed. No controller specified");
+		}
+		saveToFile(file, controller.getInputs(), flavorName, stopIndex);
 	}
-	
+
 	/**
-	 * Saves inputs up to a certain index of the input container
-	 * @param file Where to save the container
-	 * @param container The container to save
-	 * @param index index until the inputs get saved
-	 * @throws IOException When the input container is empty
+	 * Saves a BigArrayList of {@link TickContainer TickContainers} to a file
+	 * 
+	 * @param file The file to save the serialised inputs to
+	 * @param container The list of {@link TickContainer TickContainers} to use
+	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use for the tasfile
+	 * @throws PlaybackSaveException When a saving operation fails
 	 */
-	public void saveToFileV1Until(File file, PlaybackControllerClient container, int index) throws IOException{
-		LOGGER.debug(LoggerMarkers.Playback, "Saving playback controller to file {}", file);
-		if (container.size() == 0) {
-			throw new IOException("There are no inputs to save to a file");
-		}
-		FileThread fileThread = new FileThread(file, false);
-//		FileThread monitorThread= new FileThread(new File(file, "../"+file.getName().replace(".mctas", "")+".mon"), false);
-
-		fileThread.start();
-//		monitorThread.start();
-		
-//		fileThread.addLine("################################################# TASFile ###################################################\n"
-//				 + "#												Version:1													#\n"
-//				 + "#							This file was generated using the Minecraft TASMod								#\n"
-//				 + "#																											#\n"
-//				 + "#			Any errors while reading this file will be printed out in the console and the chat				#\n"
-//				 + "#																											#\n"
-//				 + "#------------------------------------------------ Header ---------------------------------------------------#\n"
-//				 + "#Author:" + container.getAuthors() + "\n"
-//				 + "#																											#\n"
-//				 + "#Title:" + container.getTitle() + "\n"
-//				 + "#																											#\n"
-//				 + "#Playing Time:" + container.getPlaytime() + "\n"
-//				 + "#																											#\n"
-//				 + "#Rerecords:"+container.getRerecords() + "\n"
-//				 + "#																											#\n"
-//				 + "#----------------------------------------------- Settings --------------------------------------------------#\n"
-//				 + "#StartPosition:"+container.getStartLocation()+"\n"
-//				 + "#																											#\n"
-//				 + "#StartSeed:" + container.getStartSeed() + "\n"
-//				 + "#############################################################################################################\n"
-//				 + "#Comments start with \"//\" at the start of the line, comments with # will not be saved\n");
-		
-		BigArrayList<TickInputContainer> ticks = container.getInputs();
-		Map<Integer, List<Pair<String, String[]>>> cbytes= container.getControlBytes();
-		Map<Integer, List<String>> comments = container.getComments();
-		
-		for (int i = 0; i < ticks.size(); i++) {
-			if(i==index) {
-				break;
-			}
-			
-			// Add comments
-			if(comments.containsKey(i)) {
-				List<String> multiLine=comments.get(i);
-				multiLine.forEach(comment -> {
-					fileThread.addLine("//"+comment+"\n");
-				});
-			}
-			
-			// Add controlbytes
-			if(cbytes.containsKey(i)) {
-				List<Pair<String, String[]>> cbytelist= cbytes.get(i);
-				String cbyteString= ControlByteHandler.toString(cbytelist);
-				if(!cbyteString.isEmpty()) {
-					fileThread.addLine(cbyteString);
-				}
-			}
-			
-			// Add a data line
-			TickInputContainer tickInput = ticks.get(i);
-			fileThread.addLine(tickInput.toString() + "~&\t\t\t\t//Monitoring:"+container.desyncMonitor.get(i)+"\n");
-		}
-		fileThread.close();
+	public static void saveToFile(File file, BigArrayList<TickContainer> container, String flavorName) throws PlaybackSaveException {
+		saveToFile(file, container, flavorName, -1);
 	}
 
-	public int getFileVersion(File file) throws IOException {
-		LOGGER.trace(LoggerMarkers.Playback, "Retrieving file version from {}", file);
-		List<String> lines = FileUtils.readLines(file, Charset.defaultCharset());
-		for (String line : lines) {
-			if (line.contains("Version")) {
-				String trimmed = line.replaceAll("#|\t", "");
-				int tick=0;
-				try {
-					tick=Integer.parseInt(trimmed.split(":")[1]);
-				} catch (NumberFormatException e) {
-					throw new IOException("Can't read the file version: "+trimmed);
-				}
-				return tick;
-			}
+	/**
+	 * Saves a BigArrayList of {@link TickContainer TickContainers} <i>partially</i> to a file
+	 * @param file The file to save the serialised inputs to
+	 * @param container The list of {@link TickContainer TickContainers} to use
+	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use for the tasfile
+	 * @param stopIndex The index at which the serialiser stops. Use -1L to parse the entire file 
+	 * @throws PlaybackSaveException When a saving operation fails
+	 */
+	public static void saveToFile(File file, BigArrayList<TickContainer> container, String flavorName, long stopIndex) throws PlaybackSaveException {
+		if (file == null) {
+			throw new PlaybackSaveException("Save to file failed. No file specified");
 		}
-		return 0;
-	}
 
-	public PlaybackControllerClient fromEntireFileV1(File file) throws IOException {
-		LOGGER.debug(LoggerMarkers.Playback, "Loading playback controller to file {}", file);
-		List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
-		
-		File monitorFile=new File(file, "../"+file.getName().replace(".mctas", "")+".mon");
-		
-		List<String> monitorLines=new ArrayList<>();
-		
-		// Read the legacy monitoring file system. Still reads the file but deletes it afterwards
-		if(monitorFile.exists()) {
-			monitorLines = FileUtils.readLines(monitorFile, StandardCharsets.UTF_8);
-			monitorFile.delete();
+		if (container == null) {
+			throw new PlaybackSaveException("Save to file failed. No tickcontainer list specified");
 		}
-		boolean oldmonfileLoaded=!monitorLines.isEmpty();
 
-		PlaybackControllerClient controller = new PlaybackControllerClient();
-
-		String author = "Insert author here";
-
-		String title = "Insert TAS category here";
-
-		String playtime = "00:00.0";
-
-		int rerecords = 0;
-		
-		// No default start location
-		String startLocation="";
-		
-		// Default the start seed to the current global ktrng seed. If KTRNG is not loaded, defaults to 0
-		long startSeed=TASmod.ktrngHandler.getGlobalSeedClient();
-
-		// Clear the current container before reading new data
-		controller.clear();
-
-		int linenumber = 0; //The current line number
-		
-		for (String line : lines) {
-			linenumber++;
-			int tickcount=(int) controller.getInputs().size();
-			// Read out header
-			if (line.startsWith("#")) {
-				// Read author tag
-				if (line.startsWith("#Author:")) {
-					author = line.split(":")[1];
-				// Read title tag
-				} else if (line.startsWith("#Title:")) {
-					title = line.split(":")[1];
-				// Read playtime
-				} else if (line.startsWith("#Playing Time:")) {
-					playtime = line.split("Playing Time:")[1];
-				// Read rerecords
-				} else if (line.startsWith("#Rerecords:")) {
-					rerecords = Integer.parseInt(line.split(":")[1]);
-				// Read start position
-				} else if (line.startsWith("#StartPosition:")) {
-					startLocation = line.replace("#StartPosition:", "");
-				// Read start seed
-				} else if (line.startsWith("#StartSeed:")) {
-					startSeed = Long.parseLong(line.replace("#StartSeed:", ""));
-				}
-			// Read control bytes
-			} else if (line.startsWith("$") && line.replace('$', ' ').trim().contains(" ")) {
-				String[] sections = line.replace('$', ' ').trim().split(" ", 2);
-				if (sections.length == 0)
-					continue;
-				String control = sections[0];
-				String[] params = sections[1].split(" ");
-				List<Pair<String, String[]>> cbytes = controller.getControlBytes().getOrDefault(tickcount, new ArrayList<>());
-				cbytes.add(Pair.of(control, params));
-				controller.getControlBytes().put(tickcount, cbytes);
-			//Read comments
-			} else if (line.startsWith("//")) {
-				List<String> commentList = controller.getComments().getOrDefault(tickcount, new ArrayList<>());
-				commentList.add(line.replace("//", ""));
-				controller.getComments().put(tickcount, commentList);
-			//Read data
-			} else {
-				
-				// Splitting the line into a data- and commentPart, the comment part will most likely contain the Monitoring
-				String dataPart=line;
-				String commentPart="";
-				if(line.contains("~&")) {
-					String[] splitComments=line.split("~&");
-					dataPart=splitComments[0];
-					commentPart=splitComments[1];
-				}
-				String[] sections = dataPart.split(SectionsV1.getRegexString());
-
-				if (sections.length != SectionsV1.values().length) {
-					throw new IOException("Error in line " + linenumber + ". Cannot read the line correctly");
-				}
-				
-				controller.getInputs().add(new TickInputContainer(readTicks(sections[0], linenumber), readKeyboard(sections[1], linenumber), readMouse(sections[2], linenumber), readSubtick(sections[3], linenumber)));
-			
-				if(!oldmonfileLoaded) {
-					String[] commentData = commentPart.split("Monitoring:");
-					if(commentData.length==2) {
-						monitorLines.add(commentData[1]);
-					}
-				}
-			}
+		if (flavorName == null || flavorName.isEmpty()) {
+			if (defaultFlavor == null || defaultFlavor.isEmpty())
+				throw new PlaybackSaveException("No default flavor specified... Please specify a flavor name first");
+			flavorName = defaultFlavor;
+		} else {
+			defaultFlavor = flavorName;
 		}
-//		controller.setAuthors(author);
-//		controller.setTitle(title);
-//		controller.setPlaytime(playtime);
-//		controller.setRerecords(rerecords);
-//		controller.setStartLocation(startLocation);
-//		controller.setStartSeed(startSeed);
-		if(!monitorLines.isEmpty()) {
-			controller.desyncMonitor = new DesyncMonitoring(controller, monitorLines);
-		}
-		
-		//If an old monitoring file is loaded, save the file immediately to not loose any data.
-		if(oldmonfileLoaded) {
-			saveToFileV1(file, controller);
-		}
-		
-		return controller;
-	}
 
-	private int readTicks(String section, int linenumber) throws IOException {
-		int ticks = 0;
+		FileThread writerThread;
 		try {
-			ticks = Integer.parseInt(section);
-		} catch (NumberFormatException e) {
-			throw new IOException(section + " is not a recognised number in line " + linenumber);
+			writerThread = new FileThread(file, false);
+		} catch (FileNotFoundException e) {
+			throw new PlaybackSaveException(e, "Trying to save the file %s, but the file can't be created", file.getName());
 		}
-		return ticks;
+		writerThread.start();
+
+		SerialiserFlavorBase flavor = TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
+
+		List<String> header = flavor.serialiseHeader();
+		for (String line : header) {
+			writerThread.addLine(line);
+		}
+
+		BigArrayList<String> tickLines = flavor.serialise(container, stopIndex);
+		for (long i = 0; i < tickLines.size(); i++) {
+			writerThread.addLine(tickLines.get(i));
+		}
+
+		writerThread.close();
 	}
-	
-	private VirtualKeyboard readKeyboard(String section, int linenumber) throws IOException {
-		VirtualKeyboard keyboard = new VirtualKeyboard();
 
-		// Remove the prefix
-		section = section.replace("Keyboard:", "");
-
-		// Split in keys and characters
-		String[] keys = section.split(";");
-
-		// If there is nothing, return the empty keyboard
-		if (keys.length == 0) {
-			return keyboard;
+	/**
+	 * Loads a BigArrayList of {@link TickContainer TickContainers} from a file.<br>
+	 * Tries to determine the {@link SerialiserFlavorBase flavor} by reading the header of the TASfile
+	 * 
+	 * @param file The file to load from
+	 * @return The loaded BigArrayList of {@link TickContainer TickContainers}
+	 * @throws PlaybackLoadException If the file contains errors
+	 * @throws IOException If the file could not be read
+	 */
+	public static BigArrayList<TickContainer> loadFromFile(File file) throws PlaybackLoadException, IOException {
+		if (file == null) {
+			throw new PlaybackLoadException("Load from file failed. No file specified");
+		}
+		if (!file.exists()) {
+			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
 		}
 
-		// Check if the keylist is empty
-		if (!keys[0].isEmpty()) {
+		SerialiserFlavorBase flavor = readFlavor(file);
 
-			// Split multiple keys
-			String[] splitKeys = keys[0].split(",");
+		return loadFromFile(file, flavor);
+	}
 
-			for (String key : splitKeys) {
+	/**
+	 * Loads a BigArrayList of {@link TickContainer TickContainers} from a file, with a specific flavor
+	 * 
+	 * @param file The file to load from
+	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use. If the detected flavor in the TASfile mismatches, a {@link PlaybackLoadException} is thrown
+	 * @return The loaded BigArrayList of {@link TickContainer TickContainers}
+	 * @throws PlaybackLoadException If the file contains errors
+	 * @throws IOException If the file could not be read
+	 */
+	public static BigArrayList<TickContainer> loadFromFile(File file, String flavorName) throws PlaybackLoadException, IOException {
+		
+		// If the flavor is null or empty, try to determine the flavor by reading the header
+		if (flavorName == null || flavorName.isEmpty()) {
+			return loadFromFile(file);
+		}
 
-//				VirtualKey vkey = null;
-//				// Check if the key is a keycode
-//				if (isNumeric(key)) {
-//					vkey = keyboard.get(Integer.parseInt(key));
-//				} else {
-//					vkey = keyboard.get(key);
-//				}
-//
-//				if (vkey == null) {
-//					throw new IOException(key + " is not a recognised keyboard key in line " + linenumber);
-//				}
-//
-//				vkey.setPressed(true);
+		// Try to get the flavor from the registry via its name
+		SerialiserFlavorBase flavor = TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
+
+		if (flavor == null) {
+			throw new PlaybackLoadException("Flavor name %s doesn't exist.", flavorName);
+		}
+
+		// Read the head of the TASfile to check if the flavors match
+		SerialiserFlavorBase flavorInFile = readFlavor(file);
+		if (!flavor.equals(flavorInFile)) {
+			throw new PlaybackLoadException("Detected flavor %s in the TASfile, which does not match the specified flavor: %s");
+		}
+
+		return loadFromFile(file, flavor);
+	}
+
+	/**
+	 * Loads a BigArrayList of {@link TickContainer TickContainers} from a file, with a specific flavor
+	 * 
+	 * @param file The file to load from
+	 * @param flavor The {@link SerialiserFlavorBase flavor} to use. If the detected flavor in the TASfile mismatches, a {@link PlaybackLoadException} is thrown
+	 * @return The loaded BigArrayList of {@link TickContainer TickContainers}
+	 * @throws PlaybackLoadException If the file contains errors
+	 * @throws IOException If the file could not be read
+	 */
+	public static BigArrayList<TickContainer> loadFromFile(File file, SerialiserFlavorBase flavor) throws PlaybackLoadException, IOException {
+		if (file == null) {
+			throw new PlaybackLoadException("Load from file failed. No file specified");
+		}
+
+		// Read file
+		BufferedReader reader = null;
+
+		try {
+			reader = new BufferedReader(new FileReader(file));
+		} catch (FileNotFoundException e) {
+			throw new PlaybackLoadException("Trying to load %s, but the file doesn't exist", file.getName());
+		}
+
+		BigArrayList<String> lines = new BigArrayList<>();
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			lines.add(line);
+		}
+		reader.close();
+
+		// Deserialise Header
+		List<String> headerLines = flavor.extractHeader(lines);
+		flavor.deserialiseHeader(headerLines);
+
+		// Deserialise main data
+		BigArrayList<TickContainer> deserialisedContainers = flavor.deserialise(lines, headerLines.size());
+
+		return deserialisedContainers;
+	}
+
+	/**
+	 * Searches in a list of lines if one of the {@link SerialiserFlavorBase flavors} matches
+	 * @param lines The lines to search through
+	 * @param flavorList The list of {@link SerialiserFlavorBase flavor} to check for
+	 * @return A copy of the {@link SerialiserFlavorBase flavor} that was found
+	 * @throws PlaybackLoadException If no {@link SerialiserFlavorBase flavor} was found
+	 */
+	public static SerialiserFlavorBase searchForFlavor(List<String> lines, List<SerialiserFlavorBase> flavorList) {
+		for (SerialiserFlavorBase flavor : flavorList) {
+			if (flavor.deserialiseFlavorName(lines)) {
+				return flavor.clone();
 			}
 		}
-		
-		char[] chars = {};
-		//Check if the characterlist is empty
-		if (keys.length == 2) {
-			chars = keys[1].replace("\\n", "\n").toCharArray(); //Replacing the "\n" in lines to the character \n
-		}
-		
-		for (char onechar : chars) {
-//			keyboard.addChar(onechar);
-		}
-		return keyboard;
+		throw new PlaybackLoadException("Couldn't find a flavorname in the file. TASfile is missing a flavor-extension or the file is broken");
 	}
 
-	private VirtualMouse readMouse(String section, int linenumber) throws IOException {
-		VirtualMouse mouse = new VirtualMouse();
-		
-		// Remove the prefix
-		section = section.replace("Mouse:", "");
-		
-		//Split into buttons and paths...
-		String buttons = section.split(";")[0];
-		String path = section.split(";")[1];
-		
-		//Check whether the button is empty
-		if(!buttons.isEmpty()) {
-			
-			//Splitting multiple buttons
-			String[] splitButtons=buttons.split(",");
-			for (String button : splitButtons) {
-				
-//				VirtualKey vkey = null;
-//				// Check if the key is a keycode
-//				if (isNumeric(button)) {
-//					vkey = mouse.get(Integer.parseInt(button));
-//				} else {
-//					vkey = mouse.get(button);
-//				}
-//				if (vkey == null) {
-//					throw new IOException(button + " is not a recognised mouse key in line " + linenumber);
-//				}
-//				mouse.get(button).setPressed(true);
+	/**
+	 * Reads the first 100 lines of the TASfile and checks for a flavorname in the file
+	 * @param file The file to search through
+	 * @return A copy of the {@link SerialiserFlavorBase flavor} that was found
+	 * @throws PlaybackLoadException If an error was found during reading
+	 * @throws IOException If the reading fails
+	 */
+	public static SerialiserFlavorBase readFlavor(File file) throws PlaybackLoadException, IOException {
+		// Read file
+		BufferedReader reader = null;
+
+		try {
+			reader = new BufferedReader(new FileReader(file));
+		} catch (FileNotFoundException e) {
+			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
+		}
+
+		List<String> lines = new ArrayList<>();
+		String line = null;
+
+		// Reads the first 100 lines
+		for (int i = 0; i < 100; i++) {
+
+			line = reader.readLine();
+
+			if (line != null) {
+				lines.add(line);
 			}
 		}
-//		mouse.setPath(readPath(path, linenumber, mouse));
+		reader.close();
 
-		return mouse;
-	}
+		SerialiserFlavorBase flavor = null;
 
-//	private List<PathNode> readPath(String section, int linenumber, VirtualMouse mouse) throws IOException {
-//		List<PathNode> path = new ArrayList<VirtualMouse.PathNode>();
-//
-//		section = section.replace("[", "").replace("]", "");
-//		String[] pathNodes = section.split("->");
-//
-//		for (String pathNode : pathNodes) {
-//			String[] split = pathNode.split(",");
-//
-//			int length=split.length;
-//			int scrollWheel = 0;
-//			int cursorX = 0;
-//			int cursorY = 0;
-//			try {
-//				scrollWheel = Integer.parseInt(split[length-3]);
-//				cursorX = Integer.parseInt(split[length-2]);
-//				cursorY = Integer.parseInt(split[length-1]);
-//			} catch (NumberFormatException e) {
-//				throw new IOException("'" + pathNode + "' couldn't be read in line " + linenumber+": Something is not a number");
-//			} catch (ArrayIndexOutOfBoundsException e) {
-//				throw new IOException("'" + pathNode + "' couldn't be read in line " + linenumber+": Something is missing or is too much");
-//			}
-//			PathNode node = mouse.new PathNode();
-//			for (int i=0; i<length-3; i++) {
-//				String key= split[i];
-//				node.get(key).setPressed(true);
-//			}
-//			node.scrollwheel = scrollWheel;
-//			node.cursorX = cursorX;
-//			node.cursorY = cursorY;
-//			path.add(node);
-//		}
-//		return path;
-//	}
-	
-	private VirtualCameraAngle readSubtick(String section, int linenumber) throws IOException {
-		section = section.replace("Camera:", "");
-		String[] split=section.split(";");
-		
-		float x=0F;
-		float y=0F;
-		
-		try {
-			x=Float.parseFloat(split[0]);
-			y=Float.parseFloat(split[1]);
-		} catch (NumberFormatException e){
-			throw new IOException(split[0]+" or/and "+split[1]+" are not float numbers in line "+ linenumber);
-		}
-		
-		return new VirtualCameraAngle(x, y);
-	}
-	
-	
-
-//	private String getStartLocation() {
-//		Minecraft mc = Minecraft.getMinecraft();
-//		String pos = mc.player.getPositionVector().toString();
-//		pos = pos.replace("(", "");
-//		pos = pos.replace(")", "");
-//		pos = pos.replace(" ", "");
-//		String pitch = Float.toString(mc.player.rotationPitch);
-//		String yaw = Float.toString(mc.player.rotationYaw);
-//		return pos + "," + yaw + "," + pitch;
-//	}
-	
-	private boolean isNumeric(String in){
-		try {
-			Integer.parseInt(in);
-		} catch (NumberFormatException e) {
-			return false;
-		}
-		return true;
+		flavor = searchForFlavor(lines, TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavors());
+		return flavor;
 	}
 }

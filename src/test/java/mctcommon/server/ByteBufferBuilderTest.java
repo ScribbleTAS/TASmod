@@ -10,10 +10,10 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import com.minecrafttas.mctcommon.server.ByteBufferBuilder;
-import com.minecrafttas.mctcommon.server.CompactPacketHandler;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.ByteBufferBuilder;
+import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 
 class ByteBufferBuilderTest {
 
@@ -57,6 +57,11 @@ class ByteBufferBuilderTest {
 		@Override
 		public boolean shouldTrace() {
 			return false;
+		}
+
+		@Override
+		public String getExtensionName() {
+			return "TestPackets";
 		}
 		
 	}

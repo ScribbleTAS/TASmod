@@ -2,20 +2,20 @@ package com.minecrafttas.tasmod.tickratechanger;
 
 import java.nio.ByteBuffer;
 
-import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import org.apache.logging.log4j.Logger;
 
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.events.EventServer.EventPlayerJoinedServerSide;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerStop;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.mctcommon.server.interfaces.ServerPacketHandler;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.events.EventServer.EventServerTickrateChange;
+import com.minecrafttas.tasmod.events.EventTickratechanger;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -128,7 +128,7 @@ public class TickrateChangerServer implements EventServerStop, EventPlayerJoined
 			}
 		}
 		ticksPerSecond = tickrate;
-		EventListenerRegistry.fireEvent(EventServerTickrateChange.class, tickrate);
+		EventListenerRegistry.fireEvent(EventTickratechanger.EventServerTickrateChange.class, tickrate);
 		if (log) {
 			log("Setting the server tickrate to " + ticksPerSecond);
 		}

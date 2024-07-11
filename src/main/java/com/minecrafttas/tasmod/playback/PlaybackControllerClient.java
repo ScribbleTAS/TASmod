@@ -1,54 +1,56 @@
 package com.minecrafttas.tasmod.playback;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_CLEAR_INPUTS;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_FULLPLAY;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_FULLRECORD;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_LOAD;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_PLAYUNTIL;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_SAVE;
-import static com.minecrafttas.tasmod.networking.TASmodPackets.PLAYBACK_STATE;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_CLEAR_INPUTS;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLPLAY;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLRECORD;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_LOAD;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_PLAYUNTIL;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_SAVE;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.lwjgl.opengl.Display;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
+import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
-import com.minecrafttas.mctcommon.server.ByteBufferBuilder;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.exception.PacketNotImplementedException;
-import com.minecrafttas.mctcommon.server.exception.WrongSideException;
-import com.minecrafttas.mctcommon.server.interfaces.ClientPacketHandler;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
-import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.mctcommon.networking.ByteBufferBuilder;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
+import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
+import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
+import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
-import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
+import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTick;
+import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
+import com.minecrafttas.tasmod.registries.TASmodConfig;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
+import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
-import com.mojang.realmsclient.util.Pair;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -56,6 +58,7 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.event.ClickEvent;
 
 /**
  * A controller where the inputs are stored.<br>
@@ -75,7 +78,7 @@ import net.minecraft.util.text.TextFormatting;
  * @author Scribble
  *
  */
-public class PlaybackControllerClient implements ClientPacketHandler, EventVirtualKeyboardTick, EventVirtualMouseTick, EventVirtualCameraAngleTick, EventClientTickPost {
+public class PlaybackControllerClient implements ClientPacketHandler, EventClientInit, EventVirtualInput.EventVirtualKeyboardTick, EventVirtualInput.EventVirtualMouseTick, EventVirtualInput.EventVirtualCameraAngleTick, EventClientTickPost {
 
 	/**
 	 * The current state of the controller.
@@ -83,14 +86,14 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	private TASstate state = TASstate.NONE;
 
 	/**
-	 * The state of the controller when the {@link #state} is paused
+	 * The {@link #state} that this controller will return to, after a pause
 	 */
-	private TASstate tempPause = TASstate.NONE;
+	private TASstate stateAfterPause = TASstate.NONE;
 
 	/**
 	 * The current index of the inputs
 	 */
-	private int index;
+	private long index;
 
 	private VirtualKeyboard keyboard = new VirtualKeyboard();
 
@@ -99,32 +102,13 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	private VirtualCameraAngle camera = new VirtualCameraAngle();
 
 	public final File directory = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles");
-
+	
 	/**
 	 * The place where all inputs get stored
 	 */
-	private BigArrayList<TickInputContainer> inputs = new BigArrayList<TickInputContainer>(directory + File.separator + "temp");
+	private BigArrayList<TickContainer> inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 
-	/**
-	 * A map of control bytes. Used to change settings during playback via the
-	 * playback file.
-	 * <p>
-	 * A full list of changes can be found in {@link ControlByteHandler}
-	 * <p>
-	 * The values are as follows:
-	 * <p>
-	 * <code>Map(int playbackLine, List(Pair(String controlCommand, String[] arguments))</code>"
-	 */
-	private Map<Integer, List<Pair<String, String[]>>> controlBytes = new HashMap<Integer, List<Pair<String, String[]>>>(); // TODO Replace with TASFile extension
-
-	/**
-	 * The comments in the file, used to store them again later
-	 */
-	private Map<Integer, List<String>> comments = new HashMap<>(); // TODO Replace with TASFile extension
-
-	public DesyncMonitoring desyncMonitor = new DesyncMonitoring(this); // TODO Replace with TASFile extension
-
-	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
+//	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 
 	// =====================================================================================================
 
@@ -166,8 +150,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	 */
 	public String setTASStateClient(TASstate stateIn, boolean verbose) {
 		EventListenerRegistry.fireEvent(EventControllerStateChange.class, stateIn, state);
-		ControlByteHandler.reset(); // FIXME Controlbytes are resetting when loading a world, due to "Paused" state
-									// being active during loading... Fix Paused state shenanigans?
+		
 		if (state == stateIn) {
 			switch (stateIn) {
 				case PLAYBACK:
@@ -204,7 +187,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 				case PAUSED:
 					LOGGER.debug(LoggerMarkers.Playback, "Pausing a recording");
 					state = TASstate.PAUSED;
-					tempPause = TASstate.RECORDING;
+					stateAfterPause = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Pausing a recording" : "";
 				case NONE:
 					stopRecording();
@@ -220,7 +203,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 				case PAUSED:
 					LOGGER.debug(LoggerMarkers.Playback, "Pausing a playback");
 					state = TASstate.PAUSED;
-					tempPause = TASstate.PLAYBACK;
+					stateAfterPause = TASstate.PLAYBACK;
 					TASmodClient.virtual.clear();
 					return verbose ? TextFormatting.GREEN + "Pausing a playback" : "";
 				case NONE:
@@ -233,20 +216,20 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 				case PLAYBACK:
 					LOGGER.debug(LoggerMarkers.Playback, "Resuming a playback");
 					state = TASstate.PLAYBACK;
-					tempPause = TASstate.NONE;
+					stateAfterPause = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Resuming a playback" : "";
 				case RECORDING:
 					LOGGER.debug(LoggerMarkers.Playback, "Resuming a recording");
 					state = TASstate.RECORDING;
-					tempPause = TASstate.NONE;
+					stateAfterPause = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Resuming a recording" : "";
 				case PAUSED:
 					return TextFormatting.RED + "Please report this message to the mod author, because you should never be able to see this (Error: Paused)";
 				case NONE:
 					LOGGER.debug(LoggerMarkers.Playback, "Aborting pausing");
 					state = TASstate.NONE;
-					TASstate statey = tempPause;
-					tempPause = TASstate.NONE;
+					TASstate statey = stateAfterPause;
+					stateAfterPause = TASstate.NONE;
 					return TextFormatting.GREEN + "Aborting a " + statey.toString().toLowerCase() + " that was paused";
 			}
 		}
@@ -255,9 +238,13 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 
 	private void startRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
-		if (this.inputs.isEmpty()) {
-			inputs.add(new TickInputContainer(index));
-			desyncMonitor.recordNull(index);
+		if(this.inputs.isEmpty()) {
+			VirtualCameraAngleInput CAMERA_ANGLE = TASmodClient.virtual.CAMERA_ANGLE;
+			Float pitch = CAMERA_ANGLE.getCurrentPitch();
+			Float yaw = CAMERA_ANGLE.getCurrentYaw();
+			this.camera.set(pitch, yaw);
+			
+			inputs.add(new TickContainer());
 		}
 	}
 
@@ -270,7 +257,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
 		Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
 		index = 0;
-		TASmod.ktrngHandler.setInitialSeed(startSeed);
+//		TASmod.ktrngHandler.setInitialSeed(startSeed);
 	}
 
 	private void stopPlayback() {
@@ -288,7 +275,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		if (state != TASstate.PAUSED) {
 			setTASStateClient(TASstate.PAUSED);
 		} else {
-			setTASStateClient(tempPause);
+			setTASStateClient(stateAfterPause);
 		}
 		return state;
 	}
@@ -306,7 +293,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 			}
 		} else {
 			if (state == TASstate.PAUSED) {
-				setTASStateClient(tempPause, false);
+				setTASStateClient(stateAfterPause, false);
 			}
 		}
 	}
@@ -332,6 +319,10 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	 */
 	public TASstate getState() {
 		return state;
+	}
+	
+	public TASstate getStateAfterPause() {
+		return stateAfterPause;
 	}
 
 	// =====================================================================================================
@@ -390,8 +381,8 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		EntityPlayerSP player = mc.player;
 
 		if (player != null && player.addedToChunk) {
-			if (isPaused() && tempPause != TASstate.NONE) {
-				setTASState(tempPause); // The recording is paused in LoadWorldEvents#startLaunchServer
+			if (isPaused() && stateAfterPause != TASstate.NONE) {
+				setTASState(stateAfterPause); // The recording is paused in LoadWorldEvents#startLaunchServer
 				pause(false);
 				EventListenerRegistry.fireEvent(EventPlaybackJoinedWorld.class, state);
 			}
@@ -407,15 +398,17 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 
 	private void recordNextTick() {
 		index++;
+		TickContainer container = new TickContainer(keyboard.clone(), mouse.clone(), camera.clone());
 		if (inputs.size() <= index) {
 			if (inputs.size() < index) {
 				LOGGER.warn("Index is {} inputs bigger than the container!", index - inputs.size());
 			}
-			inputs.add(new TickInputContainer(index, keyboard.clone(), mouse.clone(), camera.clone()));
+			inputs.add(container);
 		} else {
-			inputs.set(index, new TickInputContainer(index, keyboard.clone(), mouse.clone(), camera.clone()));
+			inputs.set(index, container);
 		}
-		desyncMonitor.recordMonitor(index); // Capturing monitor values
+		
+		EventListenerRegistry.fireEvent(EventRecordTick.class, index, container);
 	}
 
 	private void playbackNextTick() {
@@ -448,14 +441,13 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		}
 		/* Continue condition */
 		else {
-			TickInputContainer tickcontainer = inputs.get(index); // Loads the new inputs from the container
-			this.keyboard = tickcontainer.getKeyboard().clone();
-			this.mouse = tickcontainer.getMouse().clone();
-			this.camera = tickcontainer.getCameraAngle().clone();
-			// check for control bytes
-			ControlByteHandler.readCotrolByte(controlBytes.get(index));
+			TickContainer container = inputs.get(index); // Loads the new inputs from the container
+			this.keyboard = container.getKeyboard().clone();
+			this.mouse = container.getMouse().clone();
+			this.camera = container.getCameraAngle().clone();
+			EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
 		}
-		desyncMonitor.playMonitor(index);
+		
 	}
 	// =====================================================================================================
 	// Methods to manipulate inputs
@@ -468,27 +460,34 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		return inputs.isEmpty();
 	}
 
-	public int index() {
+	public long index() {
 		return index;
 	}
 
-	public BigArrayList<TickInputContainer> getInputs() {
+	public BigArrayList<TickContainer> getInputs() {
 		return inputs;
 	}
-
-	public Map<Integer, List<Pair<String, String[]>>> getControlBytes() { // TODO Replace with TASFile extension
-		return controlBytes;
+	
+	public void setInputs(BigArrayList<TickContainer> inputs) {
+		this.setInputs(inputs, 0);
+	}
+	
+	public void setInputs(BigArrayList<TickContainer> inputs, long index) {
+		try {
+			this.inputs.clearMemory();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		this.inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
+		SerialiserFlavorBase.addAll(this.inputs, inputs);
+		setIndex(index);
 	}
 
-	public Map<Integer, List<String>> getComments() { // TODO Replace with TASFile extension
-		return comments;
-	}
-
-	public void setIndex(int index) throws IndexOutOfBoundsException {
+	public void setIndex(long index) throws IndexOutOfBoundsException {
 		if (index <= size()) {
 			this.index = index;
 			if (state == TASstate.PLAYBACK) {
-				TickInputContainer tickcontainer = inputs.get(index);
+				TickContainer tickcontainer = inputs.get(index);
 				this.keyboard = tickcontainer.getKeyboard();
 				this.mouse = tickcontainer.getMouse();
 				this.camera = tickcontainer.getCameraAngle();
@@ -498,8 +497,8 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		}
 	}
 
-	public TickInputContainer get(int index) {
-		TickInputContainer tickcontainer = null;
+	public TickContainer get(long index) {
+		TickContainer tickcontainer = null;
 		try {
 			tickcontainer = inputs.get(index);
 		} catch (IndexOutOfBoundsException e) {
@@ -509,20 +508,22 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	}
 
 	/**
-	 * @return The {@link TickInputContainer} at the current index
+	 * @return The {@link TickContainer} at the current index
 	 */
-	public TickInputContainer get() {
+	public TickContainer get() {
 		return get(index);
 	}
 
 	public void clear() {
-		LOGGER.debug(LoggerMarkers.Playback, "Clearing playback controller");
-		inputs = new BigArrayList<TickInputContainer>(directory + File.separator + "temp");
-		controlBytes.clear();
-		comments.clear();
+		LOGGER.info(LoggerMarkers.Playback, "Clearing playback controller");
+		EventListenerRegistry.fireEvent(EventPlaybackClient.EventRecordClear.class);
+		try {
+			inputs.clearMemory();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
 		index = 0;
-		desyncMonitor.clear();
-		PlaybackMetadataRegistry.handleOnClear();
 	}
 
 	/**
@@ -540,21 +541,15 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		return out;
 	}
 
-	public void fixTicks() { // TODO Remove and use Serializer to list ticks
-		for (int i = 0; i < inputs.size(); i++) {
-			inputs.get(i).setTick(i + 1);
-		}
-	}
-
 	// ==============================================================
 
 	/**
 	 * Clears {@link #keyboard} and {@link #mouse}
 	 */
 	public void unpressContainer() {
-//		LOGGER.trace(LoggerMarkers.Playback, "Unpressing container");
-//		keyboard.clear();
-//		mouse.clear();
+		LOGGER.trace(LoggerMarkers.Playback, "Unpressing container");
+		keyboard.clear();
+		mouse.clear();
 	}
 
 	// ==============================================================
@@ -571,35 +566,35 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	 * @author Scribble
 	 *
 	 */
-	public static class TickInputContainer implements Serializable {
-
-		private static final long serialVersionUID = -3420565284438152474L;
-
-		private int tick;
+	public static class TickContainer implements Serializable {
 
 		private VirtualKeyboard keyboard;
 
 		private VirtualMouse mouse;
 
-		private VirtualCameraAngle subticks;
+		private VirtualCameraAngle cameraAngle;
+		
+		private CommentContainer comments;
 
-		public TickInputContainer(int tick, VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
-			this.tick = tick;
+		public TickContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
+			this(keyboard, mouse, subticks, new CommentContainer());
+		}
+		
+		public TickContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle camera, CommentContainer comments) {
 			this.keyboard = keyboard;
 			this.mouse = mouse;
-			this.subticks = subticks;
+			this.cameraAngle = camera;
+			this.comments = comments;
 		}
 
-		public TickInputContainer(int tick) {
-			this.tick = tick;
-			this.keyboard = new VirtualKeyboard();
-			this.mouse = new VirtualMouse();
-			this.subticks = new VirtualCameraAngle();
+		public TickContainer() {
+			this(new VirtualKeyboard(), new VirtualMouse(), new VirtualCameraAngle());
 		}
 
 		@Override
 		public String toString() {
-			return tick + "|" + keyboard.toString() + "|" + mouse.toString() + "|" + subticks.toString();
+			String.join("\n// ", comments.inlineComments);
+			return keyboard.toString() + "|" + mouse.toString() + "|" + cameraAngle.toString() + "\t\t// " + comments.endlineComments;
 		}
 
 		public VirtualKeyboard getKeyboard() {
@@ -611,20 +606,103 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 		}
 
 		public VirtualCameraAngle getCameraAngle() {
-			return subticks;
+			return cameraAngle;
 		}
 
-		public int getTick() {
-			return tick;
+		public CommentContainer getComments() {
+			return comments;
 		}
-
-		public void setTick(int tick) {
-			this.tick = tick;
+		
+		@Override
+		public TickContainer clone() {
+			return new TickContainer(keyboard, mouse, cameraAngle);
 		}
 
 		@Override
-		public TickInputContainer clone() {
-			return new TickInputContainer(tick, keyboard, mouse, subticks);
+		public boolean equals(Object other) {
+			if (other instanceof TickContainer) {
+				TickContainer container = (TickContainer) other;
+				return keyboard.equals(container.keyboard) && mouse.equals(container.mouse) && cameraAngle.equals(container.cameraAngle) && comments.equals(container.comments);
+			}
+			return super.equals(other);
+		}
+	}
+	
+	public static class CommentContainer implements Serializable{
+		
+		/**
+		 * List of all inline comments in a tick.<br>
+		 * These comments take the form:
+		 * 
+		 * <pre>
+		 * // This is an inline comment
+		 * // This is a second inline comment
+		 * 1|W;w|;0;0;0|0.0;0.0
+		 * 	1|||1.0;1.0
+		 * </pre>
+		 * 
+		 * Inline comments are supposed to describe the tick as a whole and therefore
+		 * can not be attached to subticks.<br>
+		 * like so:
+		 * 
+		 * <pre>
+		 * 1|W;w|;0;0;0|0.0;0.0
+		 * // This is not allowed. This comment won't be saved
+		 * 	1|||1.0;1.0
+		 * </pre>
+		 */
+		private List<String> inlineComments;
+		
+		/**
+		 * List of all endline comments.<br>
+		 * These comments take the form:
+		 * 
+		 * <pre>
+		 * 1|W;w|;0;0;0|0.0;0.0		// This is an endline comment
+		 * 	1|||1.0;1.0		// This is a second endline comment
+		 * </pre>
+		 * 
+		 * Endline comments are supposed to describe individual subticks.<br>
+		 */
+		private List<String> endlineComments;
+		
+		public CommentContainer() {
+			this(new ArrayList<>(), new ArrayList<>());
+		}
+		
+		public CommentContainer(List<String> inlineComments, List<String> endlineComments) {
+			this.inlineComments=inlineComments;
+			this.endlineComments=endlineComments;
+		}
+		
+		public void addInlineComment(String inlineComment) {
+			inlineComments.add(inlineComment);
+		}
+		
+		public void addEndlineComment(String endlineComment) {
+			endlineComments.add(endlineComment);
+		}
+		
+		public List<String> getInlineComments() {
+			return inlineComments;
+		}
+
+		public List<String> getEndlineComments() {
+			return endlineComments;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if(obj instanceof CommentContainer) {
+				CommentContainer other = (CommentContainer) obj;
+				return inlineComments.equals(other.inlineComments) && endlineComments.equals(other.endlineComments);
+			}
+			return super.equals(obj);
+		}
+		
+		@Override
+		public String toString() {
+			return inlineComments.toString()+"\n\n"+endlineComments.toString();
 		}
 	}
 
@@ -688,38 +766,57 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 	public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
 		TASmodPackets packet = (TASmodPackets) id;
 		String name = null;
+		String flavor = null;
 		Minecraft mc = Minecraft.getMinecraft();
 
 		switch (packet) {
 
 			case PLAYBACK_SAVE:
 				name = TASmodBufferBuilder.readString(buf);
-//				try {
-//					TASmodClient.virtual.saveInputs(name); TODO Move to PlaybackController
-//				} catch (IOException e) {
-//					if (mc.world != null)
-//						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
-//					else
-//						e.printStackTrace();
-//					return;
-//				}
-				if (mc.world != null)
-					mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.GREEN + "Saved inputs to " + name + ".mctas"));
+				flavor = TASmodBufferBuilder.readString(buf);
+				
+				try {
+					PlaybackSerialiser.saveToFile(new File(directory, name + ".mctas"), this, flavor);
+				} catch (PlaybackSaveException e) {
+					if (mc.world != null)
+						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
+					LOGGER.catching(e);
+					return;
+				} catch (Exception e) {
+					if (mc.world != null)
+						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Saving failed, something went very wrong"));
+					LOGGER.catching(e);
+					return;
+				}
+				
+				if (mc.world != null) {
+					TextComponentString confirm = new TextComponentString(TextFormatting.GREEN + "Saved inputs to " + name + ".mctas" + TextFormatting.RESET + " [" + TextFormatting.YELLOW + "Open folder" + TextFormatting.RESET + "]");
+					confirm.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/folder tasfiles"));
+					mc.ingameGUI.getChatGUI().printChatMessage(confirm);
+				}
 				else
 					LOGGER.debug(LoggerMarkers.Playback, "Saved inputs to " + name + ".mctas");
 				break;
 
 			case PLAYBACK_LOAD:
 				name = TASmodBufferBuilder.readString(buf);
-//				try {
-//					TASmodClient.virtual.loadInputs(name); TODO Move to PlaybackController
-//				} catch (IOException e) {
-//					if (mc.world != null)
-//						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
-//					else
-//						e.printStackTrace();
-//					return;
-//				}
+				flavor = TASmodBufferBuilder.readString(buf);
+				
+				try {
+					TASmodClient.controller.setInputs(PlaybackSerialiser.loadFromFile(new File(directory, name + ".mctas"), flavor));
+				} catch (PlaybackLoadException e) {
+					if (mc.world != null) {
+						TextComponentString textComponent =  new TextComponentString(e.getMessage());
+						mc.ingameGUI.getChatGUI().printChatMessage(textComponent);
+					}
+					LOGGER.catching(e);
+					return;
+				} catch (Exception e) {
+					if (mc.world != null) 
+						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Loading failed, something went very wrong"));
+					LOGGER.catching(e);
+				}
+				
 				if (mc.world != null)
 					mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.GREEN + "Loaded inputs from " + name + ".mctas"));
 				else
@@ -763,7 +860,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 					e.printStackTrace();
 				}
 				Minecraft.getMinecraft().addScheduledTask(() -> {
-					TASmodClient.config.set(ConfigOptions.FileToOpen, finalname);
+					TASmodClient.config.set(TASmodConfig.FileToOpen, finalname);
 					System.exit(0);
 				});
 				break;
@@ -808,6 +905,20 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventVirtu
 
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.CLIENT);
+		}
+	}
+
+	/**
+	 * Runs on client initialization, used for loading the TASfile after /restartandplay
+	 */
+	@Override
+	public void onClientInit(Minecraft mc) {
+		// Execute /restartandplay. Load the file to start from the config. If it exists load the playback file on start.
+		String fileOnStart = TASmodClient.config.get(TASmodConfig.FileToOpen);
+		if (fileOnStart.isEmpty()) {
+			fileOnStart = null;
+		} else {
+			TASmodClient.config.reset(TASmodConfig.FileToOpen);
 		}
 	}
 }

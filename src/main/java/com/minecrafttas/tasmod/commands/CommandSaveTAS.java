@@ -1,16 +1,13 @@
 package com.minecrafttas.tasmod.commands;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import com.google.common.collect.ImmutableList;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -31,7 +28,7 @@ public class CommandSaveTAS extends CommandBase {
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "/save <filename>";
+		return "/save <filename> [flavor]";
 	}
 
 	@Override
@@ -41,22 +38,23 @@ public class CommandSaveTAS extends CommandBase {
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		sender.sendMessage(new TextComponentString(TextFormatting.RED + "This feature does not work at the moment!"));
+
 		if (sender instanceof EntityPlayer) {
 			if (sender.canUseCommand(2, "save")) {
 				if (args.length < 1) {
-					sender.sendMessage(new TextComponentString(TextFormatting.RED + "Please add a filename, " + getUsage(sender)));
-				} else {
-					String name = "";
-					String spacer = " ";
-					for (int i = 0; i < args.length; i++) {
-						if (i == args.length - 1) {
-							spacer = "";
-						}
-						name = name.concat(args[i] + spacer);
-					}
+					sender.sendMessage(new TextComponentString(TextFormatting.RED + "Command must contain a filename " + getUsage(sender)));
+				} else if (args.length == 1) {
+					String filename = args[0];
 					try {
-						TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.PLAYBACK_SAVE).writeString(name));
+						TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.PLAYBACK_SAVE).writeString(filename).writeString(""));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else if (args.length == 2) {
+					String filename = args[0];
+					String flavorname = args[1];
+					try {
+						TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.PLAYBACK_SAVE).writeString(filename).writeString(flavorname));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -69,36 +67,46 @@ public class CommandSaveTAS extends CommandBase {
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
-		List<String> tab;
+		List<String> tab = null;
 		if (args.length == 1) {
 			if (!check) {
 				sender.sendMessage(new TextComponentString(TextFormatting.BOLD + "" + TextFormatting.RED + "WARNING!" + TextFormatting.RESET + TextFormatting.RED + " Existing filenames will be overwritten! /fail to abort the recording if you accidentally started one"));
 				check = true;
 			}
-			tab = getFilenames();
+			try {
+				tab = TASmod.tabCompletionUtils.getTASfileList(getCommandSenderAsPlayer(sender).getName());
+			} catch (TimeoutException e) {
+				sender.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to fetch the file list after 2 seconds, something went wrong"));
+				TASmod.LOGGER.catching(e);
+				return super.getTabCompletions(server, sender, args, targetPos);
+			} catch (Exception e) {
+				sender.sendMessage(new TextComponentString(TextFormatting.RED + "Something went wrong with Tab Completions"));
+				TASmod.LOGGER.catching(e);
+				return super.getTabCompletions(server, sender, args, targetPos);
+			}
+
 			if (tab.isEmpty()) {
 				sender.sendMessage(new TextComponentString(TextFormatting.RED + "No files in directory"));
 				return super.getTabCompletions(server, sender, args, targetPos);
 			}
 			return getListOfStringsMatchingLastWord(args, tab);
+			
+		} else if (args.length == 2) {
+			try {
+				tab = TASmod.tabCompletionUtils.getFlavorList(getCommandSenderAsPlayer(sender).getName());
+			} catch (TimeoutException e) {
+				sender.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to fetch the flavor list after 2 seconds, something went wrong"));
+				TASmod.LOGGER.catching(e);
+				return super.getTabCompletions(server, sender, args, targetPos);
+			} catch (Exception e) {
+				sender.sendMessage(new TextComponentString(TextFormatting.RED + "Something went wrong with Tab Completions"));
+				TASmod.LOGGER.catching(e);
+				return super.getTabCompletions(server, sender, args, targetPos);
+			}
+			return getListOfStringsMatchingLastWord(args, tab);
+			
 		} else
 			return super.getTabCompletions(server, sender, args, targetPos);
-	}
-
-	public List<String> getFilenames() {
-		List<String> tab = new ArrayList<String>();
-		File folder = new File(Minecraft.getMinecraft().mcDataDir, "saves" + File.separator + "tasfiles");
-		
-		File[] listOfFiles = folder.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().endsWith(".mctas");
-			}
-		});
-		for (int i = 0; i < listOfFiles.length; i++) {
-			tab.add(listOfFiles[i].getName().replaceAll("\\.mctas", ""));
-		}
-		return tab;
 	}
 
 	@Override

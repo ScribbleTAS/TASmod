@@ -38,7 +38,7 @@ public class VirtualKeybindings {
 	/**
 	 * The standard cooldown for a keybinding in milliseconds
 	 */
-	private static final long cooldown = 50*5;
+	private static final long cooldown = 50 * 5;
 	/**
 	 * Stores the start time of a keybinding, used for cooldown calculation
 	 */
@@ -52,7 +52,6 @@ public class VirtualKeybindings {
 	 */
 	public static boolean focused = false;
 
-
 	/**
 	 * Checks whether the keycode is pressed, regardless of any gui screens
 	 * 
@@ -65,10 +64,10 @@ public class VirtualKeybindings {
 
 		boolean down = false;
 
-		if(mc.currentScreen instanceof GuiControls) {
+		if (mc.currentScreen instanceof GuiControls) {
 			return false;
 		}
-		
+
 		if (isKeyCodeAlwaysBlocked(keycode)) {
 			down = keycode >= 0 ? Keyboard.isKeyDown(keycode) : Mouse.isButtonDown(keycode + 100);
 		} else {

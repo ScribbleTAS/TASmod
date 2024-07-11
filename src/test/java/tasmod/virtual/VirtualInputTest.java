@@ -12,9 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualCameraAngleTick;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualKeyboardTick;
-import com.minecrafttas.tasmod.events.EventClient.EventVirtualMouseTick;
+import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualKey;
@@ -27,9 +25,9 @@ class VirtualInputTest {
 	
 	@BeforeAll
 	static void beforeAll() {
-		EventVirtualKeyboardTick kb = (keyboard)->null;
-		EventVirtualMouseTick ms = (mouse)->null;
-		EventVirtualCameraAngleTick cmra = (cameraangle)->null;
+		EventVirtualInput.EventVirtualKeyboardTick kb = (keyboard)->null;
+		EventVirtualInput.EventVirtualMouseTick ms = (mouse)->null;
+		EventVirtualInput.EventVirtualCameraAngleTick cmra = (cameraangle)->null;
 		EventListenerRegistry.register(kb, ms, cmra);
 	}
 	
@@ -54,9 +52,9 @@ class VirtualInputTest {
 		VirtualMouse preloadedMouse = new VirtualMouse();
 		VirtualCameraAngle preloadedCameraAngle = new VirtualCameraAngle(0f, 0f);
 		
-		preloadedKeyboard.update(VirtualKey.W.getKeycode(), true, 'w');
-		preloadedMouse.update(VirtualKey.LC.getKeycode(), true, 15, 0, 0);
-		preloadedCameraAngle.update(1f, 2f);
+		preloadedKeyboard.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
+		preloadedMouse.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 0, 0);
+		preloadedCameraAngle.updateFromEvent(1f, 2f);
 		
 		VirtualInput input = new VirtualInput(LOGGER, preloadedKeyboard, preloadedMouse, preloadedCameraAngle);
 		
@@ -87,9 +85,9 @@ class VirtualInputTest {
 		VirtualMouse preloadedMouse = new VirtualMouse();
 		VirtualCameraAngle preloadedCameraAngle = new VirtualCameraAngle(0f, 0f);
 		
-		preloadedKeyboard.update(VirtualKey.W.getKeycode(), true, 'w');
-		preloadedMouse.update(VirtualKey.LC.getKeycode(), true, 15, 0, 0);
-		preloadedCameraAngle.update(1f, 2f);
+		preloadedKeyboard.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
+		preloadedMouse.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 0, 0);
+		preloadedCameraAngle.updateFromEvent(1f, 2f);
 		
 		
 		VirtualInput virtual = new VirtualInput(LOGGER, preloadedKeyboard, preloadedMouse, preloadedCameraAngle);
@@ -162,7 +160,7 @@ class VirtualInputTest {
 	void testKeyboardRemovePresses() {
 		VirtualKeyboard preloadedKeyboard = new VirtualKeyboard();
 		
-		preloadedKeyboard.update(VirtualKey.W.getKeycode(), true, 'w');
+		preloadedKeyboard.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
 		VirtualInput virtual = new VirtualInput(LOGGER, preloadedKeyboard, new VirtualMouse(), new VirtualCameraAngle());
 		
 		virtual.KEYBOARD.updateNextKeyboard(VirtualKey.W.getKeycode(), false, Character.MIN_VALUE);
@@ -230,7 +228,7 @@ class VirtualInputTest {
 	@Test
 	void testMouseRemovePresses() {
 		VirtualMouse preloadedMouse = new VirtualMouse();
-		preloadedMouse.update(VirtualKey.LC.getKeycode(), true, 15, 10, 20);
+		preloadedMouse.updateFromEvent(VirtualKey.LC.getKeycode(), true, 15, 10, 20);
 		
 		// Load preloaded mouse
 		VirtualInput virtual = new VirtualInput(LOGGER, new VirtualKeyboard(), preloadedMouse, new VirtualCameraAngle());

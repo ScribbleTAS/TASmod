@@ -2,8 +2,7 @@ package com.minecrafttas.tasmod.handlers;
 
 import com.minecrafttas.mctcommon.events.EventClient.EventCamera;
 import com.minecrafttas.tasmod.TASmodClient;
-import com.minecrafttas.tasmod.playback.ControlByteHandler;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickInputContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.math.MathHelper;
@@ -22,8 +21,8 @@ public class InterpolationHandler implements EventCamera {
 
 	@Override
 	public CameraData onCameraEvent(CameraData dataIn) {
-		if (TASmodClient.controller.isPlayingback() && ControlByteHandler.shouldInterpolate) {
-			TickInputContainer input = TASmodClient.controller.get();
+		if (TASmodClient.controller.isPlayingback() /*&& ControlByteHandler.shouldInterpolate*/) {
+			TickContainer input = TASmodClient.controller.get();
 			if (input == null)
 				return dataIn;
 			float nextPitch = input.getCameraAngle().getPitch();

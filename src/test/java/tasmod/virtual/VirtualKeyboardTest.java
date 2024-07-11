@@ -146,8 +146,8 @@ class VirtualKeyboardTest {
     void testToStringSubticks(){
         VirtualKeyboard actual = new VirtualKeyboard();
 
-        actual.update(VirtualKey.W.getKeycode(), true, 'w');
-        actual.update(VirtualKey.S.getKeycode(), true, 's');
+        actual.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
+        actual.updateFromEvent(VirtualKey.S.getKeycode(), true, 's');
 
         assertEquals("W;w\nW,S;s", actual.toString());
     }
@@ -225,8 +225,8 @@ class VirtualKeyboardTest {
 	@Test
 	void testDeepClone() {
 		VirtualKeyboard expected = new VirtualKeyboard();
-		expected.update(VirtualKey.W, true, 'w');
-		expected.update(VirtualKey.S, true, 's');
+		expected.updateFromEvent(VirtualKey.W, true, 'w');
+		expected.updateFromEvent(VirtualKey.S, true, 's');
 
 		VirtualKeyboard actual = expected.clone();
 
@@ -242,13 +242,13 @@ class VirtualKeyboardTest {
     	VirtualKeyboard moveFrom = new VirtualKeyboard();
     	VirtualKeyboard actual = new VirtualKeyboard();
     	
-    	moveFrom.update(VirtualKey.W.getKeycode(), true, 'w');
-    	moveFrom.update(VirtualKey.A.getKeycode(), true, 'a');
+    	moveFrom.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
+    	moveFrom.updateFromEvent(VirtualKey.A.getKeycode(), true, 'a');
     	
     	VirtualKeyboard expected = moveFrom.clone();
     	
-    	actual.update(VirtualKey.S.getKeycode(), true, 's');
-    	actual.update(VirtualKey.D.getKeycode(), true, 'd');
+    	actual.updateFromEvent(VirtualKey.S.getKeycode(), true, 's');
+    	actual.updateFromEvent(VirtualKey.D.getKeycode(), true, 'd');
 
     	actual.moveFrom(null);
         actual.moveFrom(moveFrom);
@@ -268,13 +268,13 @@ class VirtualKeyboardTest {
     	VirtualKeyboard copyFrom = new VirtualKeyboard();
     	VirtualKeyboard actual = new VirtualKeyboard();
     	
-    	copyFrom.update(VirtualKey.W.getKeycode(), true, 'w');
-    	copyFrom.update(VirtualKey.A.getKeycode(), true, 'a');
+    	copyFrom.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
+    	copyFrom.updateFromEvent(VirtualKey.A.getKeycode(), true, 'a');
     	
     	VirtualKeyboard expected = copyFrom.clone();
     	
-    	actual.update(VirtualKey.S.getKeycode(), true, 's');
-    	actual.update(VirtualKey.D.getKeycode(), true, 'd');
+    	actual.updateFromEvent(VirtualKey.S.getKeycode(), true, 's');
+    	actual.updateFromEvent(VirtualKey.D.getKeycode(), true, 'd');
 
     	actual.copyFrom(null);
         actual.copyFrom(copyFrom);
@@ -292,8 +292,8 @@ class VirtualKeyboardTest {
     @Test
     void testUpdate(){
         VirtualKeyboard actual = new VirtualKeyboard();
-        actual.update(VirtualKey.W.getKeycode(), true, 'w');
-        actual.update(VirtualKey.A.getKeycode(), true, 'A');
+        actual.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
+        actual.updateFromEvent(VirtualKey.A.getKeycode(), true, 'A');
 
         List<VirtualKeyboard> expected = new ArrayList<>();
         expected.add(new VirtualKeyboard(new HashSet<Integer>(Arrays.asList(VirtualKey.W.getKeycode())), Arrays.asList('w')));
@@ -309,7 +309,7 @@ class VirtualKeyboardTest {
     void testUpdateOnSubtick() {
     	VirtualKeyboard actual = new VirtualKeyboard(new LinkedHashSet<>(), new ArrayList<>(), null, false);
     	
-    	actual.update(VirtualKey.W.getKeycode(), true, 'w');
+    	actual.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
     }
 
     /**
@@ -334,7 +334,7 @@ class VirtualKeyboardTest {
     	VirtualKeyboard unpressed = new VirtualKeyboard();
     	
     	VirtualKeyboard pressed = new VirtualKeyboard();
-    	pressed.update(VirtualKey.W.getKeycode(), true, 'w');
+    	pressed.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
     	
     	// Load actual with the events
     	Queue<VirtualKeyboardEvent> actual = new ConcurrentLinkedQueue<>();
@@ -354,7 +354,7 @@ class VirtualKeyboardTest {
     	VirtualKeyboard unpressed = new VirtualKeyboard();
     	
     	VirtualKeyboard pressed = new VirtualKeyboard();
-    	pressed.update(VirtualKey.W.getKeycode(), true, 'w');
+    	pressed.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
     	
     	// Load actual with the events
     	Queue<VirtualKeyboardEvent> actual = new ConcurrentLinkedQueue<>();
@@ -372,9 +372,9 @@ class VirtualKeyboardTest {
     @Test
     void testClear(){
     	VirtualKeyboard pressed = new VirtualKeyboard();
-    	pressed.update(VirtualKey.W.getKeycode(), true, 'w');
-    	pressed.update(VirtualKey.S.getKeycode(), true, 's');
-    	pressed.update(VirtualKey.A.getKeycode(), true, 'a');
+    	pressed.updateFromEvent(VirtualKey.W.getKeycode(), true, 'w');
+    	pressed.updateFromEvent(VirtualKey.S.getKeycode(), true, 's');
+    	pressed.updateFromEvent(VirtualKey.A.getKeycode(), true, 'a');
     	
     	pressed.clear();
     	
@@ -408,9 +408,9 @@ class VirtualKeyboardTest {
         int keycode = VirtualKey.BACK.getKeycode();
 
         // Update the keyboard multiple times with the same value
-        testKb.update(keycode, true, Character.MIN_VALUE, true);
-        testKb.update(keycode, true, Character.MIN_VALUE, true);
-        testKb.update(keycode, true, Character.MIN_VALUE, true);
+        testKb.updateFromEvent(keycode, true, Character.MIN_VALUE, true);
+        testKb.updateFromEvent(keycode, true, Character.MIN_VALUE, true);
+        testKb.updateFromEvent(keycode, true, Character.MIN_VALUE, true);
 
         Queue<VirtualKeyboardEvent> actual = new ConcurrentLinkedQueue<>();
         // Fill "actual" with VirtualKeyboardEvents
@@ -434,9 +434,9 @@ class VirtualKeyboardTest {
 
         int keycode = VirtualKey.BACK.getKeycode();
         // Update the keyboard multiple times with the same value.
-        testKb.update(keycode, true, Character.MIN_VALUE, false);
-        testKb.update(keycode, true, Character.MIN_VALUE, false);
-        testKb.update(keycode, true, Character.MIN_VALUE, false);
+        testKb.updateFromEvent(keycode, true, Character.MIN_VALUE, false);
+        testKb.updateFromEvent(keycode, true, Character.MIN_VALUE, false);
+        testKb.updateFromEvent(keycode, true, Character.MIN_VALUE, false);
 
         Queue<VirtualKeyboardEvent> actual = new ConcurrentLinkedQueue<>();
         // Fill "actual" with VirtualKeyboardEvents

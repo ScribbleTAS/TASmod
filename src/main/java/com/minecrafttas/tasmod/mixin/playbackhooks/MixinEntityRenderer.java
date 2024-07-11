@@ -47,7 +47,7 @@ public class MixinEntityRenderer implements SubtickDuck {
 
 	/**
 	 * Injects into the vanilla camera updating cycle, runs every frame.
-	 * Updates {@link com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput#nextCameraAngle}
+	 * Updates {@link com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput#nextCameraAngle VirtualCameraAngleInput#nextCameraAngle}
 	 * @param partialTicks The partial ticks of the timer, unused
 	 * @param nanoTime The nanoTime, unused
 	 * @param ci CBI

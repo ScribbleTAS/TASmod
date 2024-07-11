@@ -17,9 +17,8 @@ import com.minecrafttas.mctcommon.events.EventClient.EventClientTick;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventDrawHotbar;
-import com.minecrafttas.tasmod.monitoring.DesyncMonitoring;
-import com.minecrafttas.tasmod.playback.ControlByteHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
 import com.mojang.realmsclient.gui.ChatFormatting;
 
 import net.minecraft.client.Minecraft;
@@ -373,7 +372,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
 			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 				if (Minecraft.getMinecraft().currentScreen == this) return "Desync";
-				DesyncMonitoring dMonitor=TASmodClient.controller.desyncMonitor;
+				DesyncMonitorFileCommandExtension dMonitor=TASmodClient.desyncMonitorFileCommandExtension;
 				return dMonitor.getStatus(Minecraft.getMinecraft().player);
 			}));
 			
@@ -382,7 +381,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
 			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 				if (Minecraft.getMinecraft().currentScreen == this) return "Desync Motion";
-				DesyncMonitoring dMonitor=TASmodClient.controller.desyncMonitor;
+				DesyncMonitorFileCommandExtension dMonitor=TASmodClient.desyncMonitorFileCommandExtension;
 				return dMonitor.getMotion();
 			}));
 			
@@ -391,26 +390,16 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
 			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 				if (Minecraft.getMinecraft().currentScreen == this) return "Desync Position";
-				DesyncMonitoring dMonitor=TASmodClient.controller.desyncMonitor;
+				DesyncMonitorFileCommandExtension dMonitor=TASmodClient.desyncMonitorFileCommandExtension;
 				return dMonitor.getPos();
 			}));
-			
-			y += 14;
-			title = "ktrng_desync";
-			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
-			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-				if (Minecraft.getMinecraft().currentScreen == this) return "Desync KTRNG";
-				DesyncMonitoring dMonitor=TASmodClient.controller.desyncMonitor;
-				return dMonitor.getSeed();
-			}));
-
 			
 			y = height - 28;
 			title = "playback_index";
 			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y, true);
 			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 				if (Minecraft.getMinecraft().currentScreen == this) return "PlaybackIndex";
-				return Integer.toString(TASmodClient.controller.index());
+				return Long.toString(TASmodClient.controller.index());
 			}));
 			
 			y = height - 14;
@@ -433,10 +422,11 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 	@Override
 	public void onDrawHotbar() {
 		// render custom info box if control byte is set
-		if (!ControlByteHandler.hideInfoBox && TASmodClient.controller.isPlayingback())
-			drawRectWithText(ControlByteHandler.text, 10, 10, true);
+		String text = TASmodClient.labelFileCommandExtension.getLabelText();
+		if (!text.isEmpty() && TASmodClient.controller.isPlayingback())
+			drawRectWithText(text, 10, 10, true);
 		// skip rendering of control byte is set
-		if (!ControlByteHandler.shouldRenderHud && TASmodClient.controller.isPlayingback())
+		if (!TASmodClient.optionsFileCommandExtension.shouldRenderHud() && TASmodClient.controller.isPlayingback())
 			return;
 		int xpos=40;
 		int ypos=190;

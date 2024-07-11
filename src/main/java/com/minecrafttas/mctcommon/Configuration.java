@@ -5,40 +5,76 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.InvalidPropertiesFormatException;
-import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Properties;
 
+import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
+import com.minecrafttas.mctcommon.registry.AbstractRegistry;
+import com.minecrafttas.mctcommon.registry.Registerable;
 
 /**
  * A <i>very</i> simple configuration class
+ * 
  * @author Scribble
- *
  */
 
-public class Configuration {
-	
+public class Configuration extends AbstractRegistry<ConfigOptions> {
+
 	private File file;
-	
+
 	private Properties properties;
 
 	private String comment;
-	
+
 	public Configuration(String comment, File configFile) {
+		super("Configuration", new LinkedHashMap<>());
+
 		file = configFile;
 		this.comment = comment;
+	}
+
+	protected final List<ConfigOptions> configRegistry = new ArrayList<>();
+	
+	@Override
+	public void register(ConfigOptions registryObject) {
+		if(registryObject == null) {
+			return;
+		}
 		
-		if(file.exists()) {
-			properties = load();
+		if(configRegistry.contains(registryObject)) {
+			return;
 		}
-		if(properties == null || !file.exists()) {
-			properties = generateDefault();
-			save();
-		}
+		
+		configRegistry.add(registryObject);
 	}
 	
-	public Properties load() {
+	@Override
+	public void unregister(ConfigOptions registryObject) {
+		if (registryObject == null) {
+			return;
+		}
+
+		if (!configRegistry.contains(registryObject)) {
+			return;
+		}
+		
+		configRegistry.remove(registryObject);
+	}
+
+	public void load() {
+		if (file.exists()) {
+			properties = loadInner();
+		}
+		if (properties == null || !file.exists()) {
+			properties = generateDefault();
+			save();
+		}		
+	}
+	
+	private Properties loadInner() {
 		FileInputStream fis;
 		Properties newProp = new Properties();
 		try {
@@ -57,11 +93,11 @@ public class Configuration {
 		}
 		return newProp;
 	}
-	
+
 	public void save() {
 		save(file);
 	}
-	
+
 	public void save(File file) {
 		try {
 			FileOutputStream fos = new FileOutputStream(file);
@@ -71,73 +107,62 @@ public class Configuration {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public Properties generateDefault() {
 		Properties newProperties = new Properties();
-		newProperties.putAll(ConfigOptions.getDefaultValues());
+		configRegistry.forEach((configOption)->{
+			newProperties.put(configOption.getConfigKey(), configOption.getDefaultValue());
+		});
 		return newProperties;
 	}
-	
+
 	public String get(ConfigOptions configOption) {
-		return properties.getProperty(configOption.configKey);
+		return properties.getProperty(configOption.getConfigKey(), configOption.getDefaultValue());
 	}
-	
+
 	public int getInt(ConfigOptions configOption) {
 		return Integer.parseInt(get(configOption));
 	}
-	
+
 	public boolean getBoolean(ConfigOptions configOption) {
 		return Boolean.parseBoolean(get(configOption));
 	}
-	
+
 	public boolean has(ConfigOptions configOption) {
-		return properties.contains(configOption.configKey);
+		return properties.contains(configOption.getConfigKey());
 	}
-	
+
 	public void set(ConfigOptions configOption, String value) {
-		properties.setProperty(configOption.configKey, value);
+		if(properties == null) {
+			throw new NullPointerException("Config needs to be loaded first, before trying to set a value");
+		}
+		properties.setProperty(configOption.getConfigKey(), value);
 		save();
 	}
-	
+
 	public void set(ConfigOptions configOption, int value) {
 		String val = Integer.toString(value);
 		set(configOption, val);
 	}
-	
+
 	public void set(ConfigOptions configOption, boolean value) {
 		String val = Boolean.toString(value);
 		set(configOption, val);
 	}
-	
+
 	public void reset(ConfigOptions configOption) {
-		set(configOption, configOption.defaultValue);
+		set(configOption, configOption.getDefaultValue());
 	}
-	
+
 	public void delete(ConfigOptions configOption) {
 		properties.remove(configOption);
 		save();
 	}
-	
-	public static enum ConfigOptions{
-		FileToOpen("fileToOpen", ""),
-		ServerConnection("serverConnection", "");
-		
-		private String configKey;
-		private String defaultValue;
-		
-		private ConfigOptions(String configKey, String defaultValue) {
-			this.configKey = configKey;
-			this.defaultValue = defaultValue;
-		}
-		
-		public static Map<String, String> getDefaultValues() {
-			Map<String, String> out = new HashMap<>();
-			for (ConfigOptions configthing : values()) {
-				if(configthing.defaultValue!=null) {
-					out.put(configthing.configKey, configthing.defaultValue);
-				}
-			}
-			return out;
-		}
+
+	public interface ConfigOptions extends Registerable {
+
+		public String getDefaultValue();
+
+		public String getConfigKey();
 	}
 }

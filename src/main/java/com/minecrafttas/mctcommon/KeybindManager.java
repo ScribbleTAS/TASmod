@@ -23,10 +23,10 @@ public class KeybindManager implements EventClientGameLoop {
 
 	public static class Keybind {
 
-		private KeyBinding keyBinding;
-		private String category;
-		private Runnable onKeyDown;
-		private IsKeyDownFunc isKeyDownFunc;
+		public final KeyBinding vanillaKeyBinding;
+		private final String category;
+		private final Runnable onKeyDown;
+		private final IsKeyDownFunc isKeyDownFunc;
 
 		/**
 		 * Initialize keybind
@@ -49,12 +49,16 @@ public class KeybindManager implements EventClientGameLoop {
 		 * @param onKeyDown  Will be run when the keybind is pressed
 		 */
 		public Keybind(String name, String category, int defaultKey, Runnable onKeyDown, IsKeyDownFunc func) {
-			this.keyBinding = new KeyBinding(name, defaultKey, category);
+			this.vanillaKeyBinding = new KeyBinding(name, defaultKey, category);
 			this.category = category;
 			this.onKeyDown = onKeyDown;
 			this.isKeyDownFunc = func;
 		}
 
+		@Override
+		public String toString() {
+			return this.vanillaKeyBinding.getKeyDescription();
+		}
 	}
 
 	private List<Keybind> keybindings;
@@ -77,7 +81,7 @@ public class KeybindManager implements EventClientGameLoop {
 	public void onRunClientGameLoop(Minecraft mc) {
 		for (Keybind keybind : this.keybindings){
 			IsKeyDownFunc keyDown = keybind.isKeyDownFunc != null ? keybind.isKeyDownFunc : defaultFunction;
-			if(keyDown.isKeyDown(keybind.keyBinding)){
+			if(keyDown.isKeyDown(keybind.vanillaKeyBinding)){
 				keybind.onKeyDown.run();
 			}
 		}
@@ -89,9 +93,9 @@ public class KeybindManager implements EventClientGameLoop {
 	 * 
 	 * @param keybind Keybind to register
 	 */
-	public KeyBinding registerKeybind(Keybind keybind) {
+	public void registerKeybind(Keybind keybind) {
 		this.keybindings.add(keybind);
-		KeyBinding keyBinding = keybind.keyBinding;
+		KeyBinding keyBinding = keybind.vanillaKeyBinding;
 
 		// add category
 		GameSettings options = Minecraft.getMinecraft().gameSettings;
@@ -100,9 +104,8 @@ public class KeybindManager implements EventClientGameLoop {
 
 		// add keybinding
 		options.keyBindings = ArrayUtils.add(options.keyBindings, keyBinding);
-		return keyBinding;
 	}
-
+	
 	@FunctionalInterface
 	public static interface IsKeyDownFunc {
 

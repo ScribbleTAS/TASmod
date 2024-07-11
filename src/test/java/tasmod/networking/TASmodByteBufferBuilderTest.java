@@ -10,9 +10,9 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import com.minecrafttas.mctcommon.server.CompactPacketHandler;
-import com.minecrafttas.mctcommon.server.Client.Side;
-import com.minecrafttas.mctcommon.server.interfaces.PacketID;
+import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
+import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -56,6 +56,11 @@ class TASmodByteBufferBuilderTest {
 		@Override
 		public boolean shouldTrace() {
 			return false;
+		}
+
+		@Override
+		public String getExtensionName() {
+			return "TestPacketIds";
 		}
 		
 	}

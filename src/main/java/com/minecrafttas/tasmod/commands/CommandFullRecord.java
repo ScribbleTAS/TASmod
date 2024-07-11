@@ -2,8 +2,8 @@ package com.minecrafttas.tasmod.commands;
 
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.networking.TASmodPackets;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 
@@ -28,7 +28,6 @@ public class CommandFullRecord extends CommandBase {
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		sender.sendMessage(new TextComponentString(TextFormatting.RED+"This feature doesn't work at the moment!"));
 		try {
 			TASmod.savestateHandlerServer.saveState(0, false);
 		} catch (SavestateException e) {

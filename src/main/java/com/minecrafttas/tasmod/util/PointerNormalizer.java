@@ -38,7 +38,7 @@ public class PointerNormalizer {
 
 		if (mc.currentScreen instanceof GuiContainer) {
 			out = (int) (pointerY - (scaled.getScaledHeight() / 2D));
-		} else if (mc.currentScreen instanceof GuiWorldSelection|| mc.currentScreen instanceof GuiMultiplayer) {
+		} else if (mc.currentScreen instanceof GuiWorldSelection || mc.currentScreen instanceof GuiMultiplayer) {
 			// TODO Figure out what to do here
 		} else {
 			out = (int) (pointerY - (scaled.getScaledHeight() / 4 + 72 + -16));
@@ -113,33 +113,33 @@ public class PointerNormalizer {
 	 * hours.
 	 */
 
-//	private double getNormalizedXOld(double pointerX) {
-//		Minecraft mc = Minecraft.getMinecraft();
-//		ScaledResolution scaled = new ScaledResolution(mc);
-//		return (double) pointerX / (double) mc.displayWidth / (4D / (double) scaled.getScaleFactor());
-//	}
-//
-//	public static double getNormalizedYOld(int pointerY) {
-//		Minecraft mc = Minecraft.getMinecraft();
-//		ScaledResolution scaled = new ScaledResolution(mc);
-//		double out = (double) pointerY / (double) mc.displayHeight / (4D / (double) scaled.getScaleFactor());
-//		return out;
-//	}
-//
-//	public static int getCoordsXOld(double normalizedX) {
-//		Minecraft mc = Minecraft.getMinecraft();
-//		ScaledResolution scaled = new ScaledResolution(mc);
-//		double guiScaled = normalizedX * (double) mc.displayWidth * (4D / (double) scaled.getScaleFactor());
-//		int out = (int) Math.round(guiScaled);
-//		return out;
-//	}
-//
-//	public static int getCoordsYOld(double normalizedY) {
-//		Minecraft mc = Minecraft.getMinecraft();
-//		ScaledResolution scaled = new ScaledResolution(mc);
-//		double guiScaled = normalizedY * (double) mc.displayHeight * (4D / (double) scaled.getScaleFactor());
-//		int out = (int) Math.round(guiScaled);
-//		return out;
-//	}
+	//	private double getNormalizedXOld(double pointerX) {
+	//		Minecraft mc = Minecraft.getMinecraft();
+	//		ScaledResolution scaled = new ScaledResolution(mc);
+	//		return (double) pointerX / (double) mc.displayWidth / (4D / (double) scaled.getScaleFactor());
+	//	}
+	//
+	//	public static double getNormalizedYOld(int pointerY) {
+	//		Minecraft mc = Minecraft.getMinecraft();
+	//		ScaledResolution scaled = new ScaledResolution(mc);
+	//		double out = (double) pointerY / (double) mc.displayHeight / (4D / (double) scaled.getScaleFactor());
+	//		return out;
+	//	}
+	//
+	//	public static int getCoordsXOld(double normalizedX) {
+	//		Minecraft mc = Minecraft.getMinecraft();
+	//		ScaledResolution scaled = new ScaledResolution(mc);
+	//		double guiScaled = normalizedX * (double) mc.displayWidth * (4D / (double) scaled.getScaleFactor());
+	//		int out = (int) Math.round(guiScaled);
+	//		return out;
+	//	}
+	//
+	//	public static int getCoordsYOld(double normalizedY) {
+	//		Minecraft mc = Minecraft.getMinecraft();
+	//		ScaledResolution scaled = new ScaledResolution(mc);
+	//		double guiScaled = normalizedY * (double) mc.displayHeight * (4D / (double) scaled.getScaleFactor());
+	//		int out = (int) Math.round(guiScaled);
+	//		return out;
+	//	}
 
 }
