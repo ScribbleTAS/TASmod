@@ -73,11 +73,16 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 	@Override
 	public PlaybackMetadata onStore() {
 		PlaybackMetadata metadata = new PlaybackMetadata(this);
-		metadata.setValue("x", Double.toString(startPosition.x));
-		metadata.setValue("y", Double.toString(startPosition.y));
-		metadata.setValue("z", Double.toString(startPosition.z));
-		metadata.setValue("pitch", Float.toString(startPosition.pitch));
-		metadata.setValue("yaw", Float.toString(startPosition.yaw));
+
+		StartPosition startPositionToStore = new StartPosition(0, 0, 0, 0, 0);
+		if (this.startPosition != null) {
+			startPositionToStore = startPosition;
+		}
+		metadata.setValue("x", Double.toString(startPositionToStore.x));
+		metadata.setValue("y", Double.toString(startPositionToStore.y));
+		metadata.setValue("z", Double.toString(startPositionToStore.z));
+		metadata.setValue("pitch", Float.toString(startPositionToStore.pitch));
+		metadata.setValue("yaw", Float.toString(startPositionToStore.yaw));
 		return metadata;
 	}
 
@@ -128,15 +133,10 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 		Minecraft mc = Minecraft.getMinecraft();
 
 		if (mc.player != null) {
-			EntityPlayerSP player = mc.player;
+			if (oldstate == TASstate.NONE && newstate == TASstate.RECORDING && startPosition == null) { // If a recording is started, the player is in a world and startposition is uninitialized
+				updateStartPosition();
 
-			if (oldstate == TASstate.NONE && newstate == TASstate.RECORDING && startPosition == null) { // If a recording is started, the player is in a world and startposition is
-																										// uninitialized
-				LOGGER.debug(LoggerMarkers.Playback, "Setting start location");
-				startPosition = new StartPosition(player.posX, player.posY, player.posZ, player.rotationPitch, player.rotationYaw);
-			}
-
-			if (oldstate == TASstate.NONE && newstate == TASstate.PLAYBACK && startPosition != null) {
+			} else if (oldstate == TASstate.NONE && newstate == TASstate.PLAYBACK && startPosition != null) {
 				LOGGER.debug(LoggerMarkers.Playback, "Teleporting the player to the start location");
 				TASmodBufferBuilder packetBuilder = new TASmodBufferBuilder(TASmodPackets.PLAYBACK_TELEPORT);
 
@@ -154,6 +154,17 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 				}
 			}
 		}
+	}
+
+	public void updateStartPosition() {
+		LOGGER.debug(LoggerMarkers.Playback, "Setting start location");
+		Minecraft mc = Minecraft.getMinecraft();
+		EntityPlayerSP player = mc.player;
+		if (player != null)
+			startPosition = new StartPosition(player.posX, player.posY, player.posZ, player.rotationPitch, player.rotationYaw);
+		else
+			LOGGER.warn("Start position not set, the player was null! This will make problems when storing inputs!");
+
 	}
 
 	@Override

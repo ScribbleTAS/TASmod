@@ -843,6 +843,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 				// Schedule code to be executed on the next tick
 				TASmodClient.tickSchedulerClient.add(() -> {
+					TASmodClient.startpositionMetadataExtension.updateStartPosition();
 					if (mc.world != null) { // Exit the server if you are in one
 						mc.world.sendQuittingDisconnectingPacket();
 						mc.loadWorld((WorldClient) null);
