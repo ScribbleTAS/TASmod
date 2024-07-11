@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
 
+import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.mctcommon.registry.Registerable;
 
@@ -20,7 +21,7 @@ import com.minecrafttas.mctcommon.registry.Registerable;
  * @author Scribble
  */
 
-public class Configuration extends AbstractRegistry<com.minecrafttas.mctcommon.Configuration.ConfigOptions> {
+public class Configuration extends AbstractRegistry<ConfigOptions> {
 
 	private File file;
 

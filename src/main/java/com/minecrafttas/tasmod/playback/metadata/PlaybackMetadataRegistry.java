@@ -15,11 +15,11 @@ import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetada
  * The default metadata includes general information such as author name,
  * savestate/rerecord count and category.<br>
  * <br>
- * Any custom class has to implement PlaybackMetadataExtension
+ * Any custom class has to extend PlaybackMetadataExtension
  * 
  * @author Scribble
  */
-public class PlaybackMetadataRegistry extends AbstractRegistry<PlaybackMetadataExtension> implements EventPlaybackClient.EventRecordClear{
+public class PlaybackMetadataRegistry extends AbstractRegistry<PlaybackMetadataExtension> implements EventPlaybackClient.EventRecordClear {
 
 	public PlaybackMetadataRegistry() {
 		super("METADATA_REGISTRY", new LinkedHashMap<>());

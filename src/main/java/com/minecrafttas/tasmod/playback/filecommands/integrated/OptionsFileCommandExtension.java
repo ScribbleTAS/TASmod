@@ -40,7 +40,7 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 
 	@Override
 	public void onPlayback(long tick, TickContainer tickContainer) {
-		PlaybackFileCommandContainer containerInTick = hud.get(tick-1);
+		PlaybackFileCommandContainer containerInTick = hud.get(tick);
 		if(containerInTick == null) {
 			return;
 		}
@@ -81,6 +81,7 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 		}
 
 		hud = new BigArrayList<>();
+		shouldRenderHud = true;
 	}
 	
 	public boolean shouldRenderHud() {

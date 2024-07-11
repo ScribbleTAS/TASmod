@@ -98,9 +98,9 @@ public class Subtickable<T> {
 	protected void resetFirstUpdate() {
 		ignoreFirstUpdate = true;
 	}
-	
+
 	public boolean isEmpty() {
-		if(isParent()) {
+		if (isParent()) {
 			return subtickList.isEmpty();
 		}
 		return true;

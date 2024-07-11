@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.minecrafttas.tasmod.TASmod;
 
-public abstract class AbstractRegistry<V extends com.minecrafttas.mctcommon.registry.Registerable> {
+public abstract class AbstractRegistry<V extends Registerable> {
 	protected final Map<String, V> REGISTRY;
 	protected final String name;
 

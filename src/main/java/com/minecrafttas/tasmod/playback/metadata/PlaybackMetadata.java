@@ -7,7 +7,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.minecrafttas.mctcommon.registry.Registerable;
-import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
 
 /**
  * Stores a section of<br>
@@ -103,7 +102,7 @@ public class PlaybackMetadata {
 		return new PlaybackMetadata(extensionName, new LinkedHashMap<>(data));
 	}
 	
-	public static abstract class PlaybackMetadataExtension implements com.minecrafttas.mctcommon.registry.Registerable {
+	public static abstract class PlaybackMetadataExtension implements Registerable {
 		
 		/**
 		 * Currently unused.<br>

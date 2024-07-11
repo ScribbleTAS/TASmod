@@ -72,42 +72,42 @@ import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
  */
 public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implements Serializable {
 
-    /**
-     * The list of characters that were pressed on this keyboard.
-     */
-    private final List<Character> charList;
+	/**
+	 * The list of characters that were pressed on this keyboard.
+	 */
+	private final List<Character> charList;
 
-    /**
-     * A queue of characters used in {@link #getDifference(VirtualKeyboard, Queue)}.<br>
-     * Used for distributing characters to {@link VirtualKeyboardEvent}s in an order.
-     */
-    private final ConcurrentLinkedQueue<Character> charQueue = new ConcurrentLinkedQueue<>();
-    
-    /**
-     * Creates an empty parent keyboard with all keys unpressed
-     */
-    public VirtualKeyboard() {
-        this(new LinkedHashSet<>(), new ArrayList<>(), new ArrayList<>(), true);
-    }
+	/**
+	 * A queue of characters used in {@link #getDifference(VirtualKeyboard, Queue)}.<br>
+	 * Used for distributing characters to {@link VirtualKeyboardEvent}s in an order.
+	 */
+	private final ConcurrentLinkedQueue<Character> charQueue = new ConcurrentLinkedQueue<>();
 
-    /**
-     * Creates a subtick keyboard with {@link VirtualPeripheral#subtickList} uninitialized
-     * @param pressedKeys The new list of pressed keycodes for this subtickKeyboard
-     * @param charList A list of characters for this subtickKeyboard
-     */
-    public VirtualKeyboard(Set<Integer> pressedKeys, List<Character> charList){
-        this(pressedKeys, charList, null, false);
-    }
+	/**
+	 * Creates an empty parent keyboard with all keys unpressed
+	 */
+	public VirtualKeyboard() {
+		this(new LinkedHashSet<>(), new ArrayList<>(), new ArrayList<>(), true);
+	}
 
-    /**
-     * Creates a keyboard from existing variables
-     * @param pressedKeys The existing list of pressed keycodes
-     * @param charList The existing list of characters
-     */
+	/**
+	 * Creates a subtick keyboard with {@link VirtualPeripheral#subtickList} uninitialized
+	 * @param pressedKeys The new list of pressed keycodes for this subtickKeyboard
+	 * @param charList A list of characters for this subtickKeyboard
+	 */
+	public VirtualKeyboard(Set<Integer> pressedKeys, List<Character> charList) {
+		this(pressedKeys, charList, null, false);
+	}
+
+	/**
+	 * Creates a keyboard from existing variables
+	 * @param pressedKeys The existing list of pressed keycodes
+	 * @param charList The existing list of characters
+	 */
 	public VirtualKeyboard(Set<Integer> pressedKeys, List<Character> charList, boolean ignoreFirstUpdate) {
 		this(pressedKeys, charList, null, ignoreFirstUpdate);
 	}
-	
+
 	/**
 	 * Creates a keyboard from existing variables
 	 * @param pressedKeys The existing list of {@link VirtualPeripheral#pressedKeys}
@@ -115,81 +115,81 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 	 * @param subtickList {@link VirtualPeripheral#subtickList}
 	 * @param ignoreFirstUpdate The {@link VirtualPeripheral#ignoreFirstUpdate}
 	 */
-    public VirtualKeyboard(Set<Integer> pressedKeys, List<Character> charList, List<VirtualKeyboard> subtickList, boolean ignoreFirstUpdate) {
-        super(pressedKeys, subtickList, ignoreFirstUpdate);
-        this.charList = charList;
-    }
-    
-    /**
-     * Updates the keyboard from an event, adds a new subtick to this keyboard.<br>
-     * <br>
-     * An event updates one key at a time.
-     * @param keycode The keycode of this key
-     * @param keystate The keystate of this key, true for pressed
-     * @param keycharacter The character that is associated with that key. Can change between keyboards or whenever shift is held in combination.
-     */
-    public void updateFromEvent(int keycode, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
-    	createSubtick();
-    	charList.clear();
+	public VirtualKeyboard(Set<Integer> pressedKeys, List<Character> charList, List<VirtualKeyboard> subtickList, boolean ignoreFirstUpdate) {
+		super(pressedKeys, subtickList, ignoreFirstUpdate);
+		this.charList = charList;
+	}
+
+	/**
+	 * Updates the keyboard from an event, adds a new subtick to this keyboard.<br>
+	 * <br>
+	 * An event updates one key at a time.
+	 * @param keycode The keycode of this key
+	 * @param keystate The keystate of this key, true for pressed
+	 * @param keycharacter The character that is associated with that key. Can change between keyboards or whenever shift is held in combination.
+	 */
+	public void updateFromEvent(int keycode, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
+		createSubtick();
+		charList.clear();
 		if (keystate) {
 			addChar(keycharacter, repeatEventsEnabled);
 		}
-    	setPressed(keycode, keystate);
-    }
-
-    public void updateFromEvent(int keycode, boolean keystate, char keycharacter) {
-    	updateFromEvent(keycode, keystate, keycharacter, false);
-    }
-    
-    public void updateFromEvent(VirtualKey key, boolean keystate, char keycharacter) {
-    	updateFromEvent(key.getKeycode(), keystate, keycharacter);
-    }
-    
-    public void updateFromEvent(VirtualKey key, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
-    	updateFromEvent(key.getKeycode(), keystate, keycharacter, false);
-    }
-
-    /**
-     * Updates this keyboard from a state, and adds a new subtick.<br>
-     * <br>
-     * The difference to {@link #updateFromEvent(int, boolean, char)} is,<br>
-     * that a state may update multiple pressed keys and chars at once.<br>
-     * <br>
-     * While update fromEvent is used when the player inputs something on the keyboard,<br>
-     * updateFromState is used when creating a VirtualKeyboard by deserialising the TASfile,<br>
-     * as the inputs in the TASfile are stored in states.
-     * 
-     * @param keycodes An array of keycodes, that replaces {@link Subtickable#pressedKeys}
-     * @param chars An array of characters, that replaces {@link #charList}
-     * @see SerialiserFlavorBase#deserialiseKeyboard 
-     */
-    public void updateFromState(int[] keycodes, char[] chars) {
-    	createSubtick();
-    	
-    	this.pressedKeys.clear();
-    	for(int i : keycodes) {
-    		this.pressedKeys.add(i);
-    	}
-    	
-    	this.charList.clear();
-    	for(char c : chars) {
-    		this.charList.add(c);
-    	}
-    }
-    
-    @Override
-	public void createSubtick() {
-		if(isParent() && !ignoreFirstUpdate()) {
-    		addSubtick(shallowClone());
-    	}
+		setPressed(keycode, keystate);
 	}
-    
-    @Override
-    public void setPressed(int keycode, boolean keystate) {
-        if (keycode >= 0) {    // Keyboard keys always have a keycode larger or equal than 0
-            super.setPressed(keycode, keystate);
-        }
-    }
+
+	public void updateFromEvent(int keycode, boolean keystate, char keycharacter) {
+		updateFromEvent(keycode, keystate, keycharacter, false);
+	}
+
+	public void updateFromEvent(VirtualKey key, boolean keystate, char keycharacter) {
+		updateFromEvent(key.getKeycode(), keystate, keycharacter);
+	}
+
+	public void updateFromEvent(VirtualKey key, boolean keystate, char keycharacter, boolean repeatEventsEnabled) {
+		updateFromEvent(key.getKeycode(), keystate, keycharacter, false);
+	}
+
+	/**
+	 * Updates this keyboard from a state, and adds a new subtick.<br>
+	 * <br>
+	 * The difference to {@link #updateFromEvent(int, boolean, char)} is,<br>
+	 * that a state may update multiple pressed keys and chars at once.<br>
+	 * <br>
+	 * While update fromEvent is used when the player inputs something on the keyboard,<br>
+	 * updateFromState is used when creating a VirtualKeyboard by deserialising the TASfile,<br>
+	 * as the inputs in the TASfile are stored in states.
+	 * 
+	 * @param keycodes An array of keycodes, that replaces {@link Subtickable#pressedKeys}
+	 * @param chars An array of characters, that replaces {@link #charList}
+	 * @see SerialiserFlavorBase#deserialiseKeyboard 
+	 */
+	public void updateFromState(int[] keycodes, char[] chars) {
+		createSubtick();
+
+		this.pressedKeys.clear();
+		for (int i : keycodes) {
+			this.pressedKeys.add(i);
+		}
+
+		this.charList.clear();
+		for (char c : chars) {
+			this.charList.add(c);
+		}
+	}
+
+	@Override
+	public void createSubtick() {
+		if (isParent() && !ignoreFirstUpdate()) {
+			addSubtick(shallowClone());
+		}
+	}
+
+	@Override
+	public void setPressed(int keycode, boolean keystate) {
+		if (keycode >= 0) { // Keyboard keys always have a keycode larger or equal than 0
+			super.setPressed(keycode, keystate);
+		}
+	}
 
 	/**
 	 * Calculates a list of {@link VirtualKeyboardEvent}s to the next peripheral,
@@ -205,7 +205,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 	public void getVirtualEvents(VirtualKeyboard nextKeyboard, Queue<VirtualKeyboardEvent> reference) {
 		if (isParent()) {
 			VirtualKeyboard currentSubtick = this;
-			for(VirtualKeyboard subtick : nextKeyboard.getAll()) {
+			for (VirtualKeyboard subtick : nextKeyboard.getAll()) {
 				currentSubtick.getDifference(subtick, reference);
 				currentSubtick = subtick;
 			}
@@ -222,10 +222,10 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 	 *                     be the one from tick 16
 	 * @param reference    The queue to fill. Passed in by reference.
 	 */
-    public void getDifference(VirtualKeyboard nextKeyboard, Queue<VirtualKeyboardEvent> reference) {
-        charQueue.addAll(nextKeyboard.charList);
+	public void getDifference(VirtualKeyboard nextKeyboard, Queue<VirtualKeyboardEvent> reference) {
+		charQueue.addAll(nextKeyboard.charList);
 
-        /* Calculate symmetric difference of keycodes */
+		/* Calculate symmetric difference of keycodes */
 
 		/*
 		    Calculate unpressed keys
@@ -234,11 +234,11 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 		    -------------
 		            A     <- unpressed
 		 */
-        for(int key : pressedKeys) {
-            if (!nextKeyboard.getPressedKeys().contains(key)) {
-            	reference.add(new VirtualKeyboardEvent(key, false, Character.MIN_VALUE));
-            }
-        }
+		for (int key : pressedKeys) {
+			if (!nextKeyboard.getPressedKeys().contains(key)) {
+				reference.add(new VirtualKeyboardEvent(key, false, Character.MIN_VALUE));
+			}
+		}
 
 		/*
 		 	Calculate pressed keys
@@ -247,13 +247,13 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 		 	-------------
 		 	            D <- pressed
 		 */
-        int lastKey = 0;
-        for(int key : nextKeyboard.getPressedKeys()) {
-        	lastKey = key;
-            if (!this.pressedKeys.contains(key)) {
-            	reference.add(new VirtualKeyboardEvent(key, true, getOrMinChar(charQueue.poll())));
-            }
-        }
+		int lastKey = 0;
+		for (int key : nextKeyboard.getPressedKeys()) {
+			lastKey = key;
+			if (!this.pressedKeys.contains(key)) {
+				reference.add(new VirtualKeyboardEvent(key, true, getOrMinChar(charQueue.poll())));
+			}
+		}
 
 		/*
 			Add the rest of the characters as keyboard events.
@@ -271,36 +271,36 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 			So, to get the repeat events working, one needs a pressed key and any character.
 			
 		 */
-        while (!charQueue.isEmpty()) {
-        	reference.add(new VirtualKeyboardEvent(lastKey, true, getOrMinChar(charQueue.poll())));
-        }
+		while (!charQueue.isEmpty()) {
+			reference.add(new VirtualKeyboardEvent(lastKey, true, getOrMinChar(charQueue.poll())));
+		}
 
-    }
-    
-    private char getOrMinChar(Character charr){
-        if(charr==null){
-            charr = Character.MIN_VALUE;
-        }
-        return charr;
-    }
+	}
 
-    /**
-     * Add a character to the {@link #charList}<br>
-     * Null characters will be discarded;
-     * @param character The character to add
-     */
-    public void addChar(char character, boolean repeatEventsEnabled) {
-        if(character != Character.MIN_VALUE || repeatEventsEnabled) {
-        	charList.add(character);
-        }
-    }
+	private char getOrMinChar(Character charr) {
+		if (charr == null) {
+			charr = Character.MIN_VALUE;
+		}
+		return charr;
+	}
 
-    @Override
-    public void clear(){
-    	super.clear();
-        charList.clear();
-    }
-    
+	/**
+	 * Add a character to the {@link #charList}<br>
+	 * Null characters will be discarded;
+	 * @param character The character to add
+	 */
+	public void addChar(char character, boolean repeatEventsEnabled) {
+		if (character != Character.MIN_VALUE || repeatEventsEnabled) {
+			charList.add(character);
+		}
+	}
+
+	@Override
+	public void clear() {
+		super.clear();
+		charList.clear();
+	}
+
 	@Override
 	public String toString() {
 		if (isParent()) {
@@ -310,7 +310,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 		}
 	}
 
-	public String toString2(){
+	public String toString2() {
 		return String.format("%s;%s", super.toString(), charListToString(charList));
 	}
 
@@ -328,67 +328,67 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 	 * Clones this VirtualKeyboard <strong>without</strong> subticks.
 	 */
 	public VirtualKeyboard shallowClone() {
-        return new VirtualKeyboard(new HashSet<>(this.pressedKeys), new ArrayList<>(this.charList), isIgnoreFirstUpdate());
-    }
-	
+		return new VirtualKeyboard(new HashSet<>(this.pressedKeys), new ArrayList<>(this.charList), isIgnoreFirstUpdate());
+	}
+
 	@Override
-	public VirtualKeyboard clone(){
+	public VirtualKeyboard clone() {
 		return new VirtualKeyboard(new HashSet<>(this.pressedKeys), new ArrayList<>(this.charList), new ArrayList<>(subtickList), isIgnoreFirstUpdate());
 	}
-    
-    @Override
-    public void moveFrom(VirtualKeyboard keyboard) {
-    	if(keyboard == null)
-    		return;
-    	super.moveFrom(keyboard);
-    	charList.clear();
-    	charList.addAll(keyboard.charList);
-    	keyboard.charList.clear();
-    }
-    
-    @Override
+
+	@Override
+	public void moveFrom(VirtualKeyboard keyboard) {
+		if (keyboard == null)
+			return;
+		super.moveFrom(keyboard);
+		charList.clear();
+		charList.addAll(keyboard.charList);
+		keyboard.charList.clear();
+	}
+
+	@Override
 	public void copyFrom(VirtualKeyboard keyboard) {
-    	if(keyboard == null)
-    		return;
-    	super.copyFrom(keyboard);
-    	charList.clear();
-    	charList.addAll(keyboard.charList);
-    }
-    
-    @Override
-    public void deepCopyFrom(VirtualKeyboard keyboard) {
-    	if(keyboard == null)
-    		return;
-    	super.deepCopyFrom(keyboard);
-    	charList.clear();
-    	charList.addAll(keyboard.charList);
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-    	if(obj instanceof VirtualKeyboard) {
-    		VirtualKeyboard keyboard = (VirtualKeyboard) obj;
-    		
-    		if(charList.size() != keyboard.charList.size()) {
-    			return false;
-    		}
-    		
-    		for (int i = 0; i < charList.size(); i++) {
-				if(charList.get(i)!=keyboard.charList.get(i)) {
+		if (keyboard == null)
+			return;
+		super.copyFrom(keyboard);
+		charList.clear();
+		charList.addAll(keyboard.charList);
+	}
+
+	@Override
+	public void deepCopyFrom(VirtualKeyboard keyboard) {
+		if (keyboard == null)
+			return;
+		super.deepCopyFrom(keyboard);
+		charList.clear();
+		charList.addAll(keyboard.charList);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof VirtualKeyboard) {
+			VirtualKeyboard keyboard = (VirtualKeyboard) obj;
+
+			if (charList.size() != keyboard.charList.size()) {
+				return false;
+			}
+
+			for (int i = 0; i < charList.size(); i++) {
+				if (charList.get(i) != keyboard.charList.get(i)) {
 					return false;
 				}
 			}
-    		return super.equals(obj);
-    	}
-    	return super.equals(obj);
-    }
-    
-    /**
-     * @return An immutable {@link #charList}
-     */
-    public List<Character> getCharList() {
-        return ImmutableList.copyOf(charList);
-    }
+			return super.equals(obj);
+		}
+		return super.equals(obj);
+	}
+
+	/**
+	 * @return An immutable {@link #charList}
+	 */
+	public List<Character> getCharList() {
+		return ImmutableList.copyOf(charList);
+	}
 
 	public boolean isEmpty() {
 		return super.isEmpty() && charList.isEmpty();

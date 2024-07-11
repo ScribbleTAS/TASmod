@@ -62,6 +62,7 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 		}
 
 		label = new BigArrayList<>();
+		labelText = "";
 	}
 
 	public String getLabelText() {

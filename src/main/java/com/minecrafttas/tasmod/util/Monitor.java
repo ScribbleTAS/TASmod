@@ -3,10 +3,9 @@ package com.minecrafttas.tasmod.util;
 import java.lang.reflect.Field;
 
 public class Monitor {
-	
-	
+
 	private static long cooldown;
-	
+
 	public static void printFields(Object monitoredObject) {
 
 		if (monitoredObject == null) {
@@ -37,17 +36,17 @@ public class Monitor {
 		out = out.concat("------------------------");
 		System.out.println(out);
 	}
-	
+
 	public static boolean shouldPrint(long cooldownTime) {
-		if(cooldown<=0)	{
-			cooldown=cooldownTime;
+		if (cooldown <= 0) {
+			cooldown = cooldownTime;
 			return true;
 		} else {
 			cooldown--;
 			return false;
 		}
 	}
-	
+
 	public static Object accessField(Object objectToAccess, String fieldname) {
 		Field field = null;
 		try {
@@ -56,13 +55,13 @@ public class Monitor {
 			e.printStackTrace();
 		}
 		field.setAccessible(true);
-		Object out=null;
+		Object out = null;
 		try {
-			out=field.get(objectToAccess);
+			out = field.get(objectToAccess);
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
 		return out;
 	}
-	
+
 }

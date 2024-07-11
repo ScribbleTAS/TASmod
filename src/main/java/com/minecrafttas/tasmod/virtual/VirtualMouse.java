@@ -1,11 +1,16 @@
 package com.minecrafttas.tasmod.virtual;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
-
-import java.io.Serializable;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Stores the mouse specific values in a given timeframe<br>
@@ -38,7 +43,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	/**
 	 * Creates a mouse with no buttons pressed and no data
 	 */
-	public VirtualMouse(){
+	public VirtualMouse() {
 		this(new LinkedHashSet<>(), 0, 0, 0, new ArrayList<>(), true);
 	}
 
@@ -84,16 +89,16 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 		this.cursorY = cursorY;
 	}
 
-    /**
-     * Updates the mouse, adds a new subtick to this mouse<br>
-     * <br>
-     * An event updates one key at a time.
-     * @param keycode The keycode of this button
-     * @param keystate The keystate of this button, true for pressed
-     * @param scrollwheel The scroll wheel for this mouse
-     * @param cursorX The pointer location in the x axis
-     * @param cursorY The pointer location in the y axis
-     */
+	/**
+	 * Updates the mouse, adds a new subtick to this mouse<br>
+	 * <br>
+	 * An event updates one key at a time.
+	 * @param keycode The keycode of this button
+	 * @param keystate The keystate of this button, true for pressed
+	 * @param scrollwheel The scroll wheel for this mouse
+	 * @param cursorX The pointer location in the x axis
+	 * @param cursorY The pointer location in the y axis
+	 */
 	public void updateFromEvent(int keycode, boolean keystate, int scrollwheel, int cursorX, int cursorY) {
 		createSubtick();
 		setPressed(keycode, keystate);
@@ -101,14 +106,14 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 		this.cursorX = cursorX;
 		this.cursorY = cursorY;
 	}
-	
+
 	/**
 	 * Updates the mouse, adds a new subtick to this mouse<br>
-     * <br>
-     * An event updates one key at a time.
+	 * <br>
+	 * An event updates one key at a time.
 	 * 
-	 * @param key         The key
-	 * @param keystate    The keystate of this button, true for pressed
+	 * @param key The key
+	 * @param keystate The keystate of this button, true for pressed
 	 * @param scrollwheel The scroll wheel for this mouse
 	 * @param cursorX The pointer location in the x axis
 	 * @param cursorY The pointer location in the y axis
@@ -116,31 +121,31 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	public void updateFromEvent(VirtualKey key, boolean keystate, int scrollwheel, int cursorX, int cursorY) {
 		updateFromEvent(key.getKeycode(), keystate, scrollwheel, cursorX, cursorY);
 	}
-	
-    /**
-     * Updates this mouse from a state, and adds a new subtick.<br>
-     * <br>
-     * The difference to {@link #updateFromEvent(int, boolean, int, Integer, Integer) updateFromEvent} is,<br>
-     * that a state may update multiple pressed keys at once.<br>
-     * <br>
-     * While update fromEvent is used when the player inputs something on the mouse,<br>
-     * updateFromState is used when creating a VirtualMouse by deserialising the TASfile,<br>
-     * as the inputs in the TASfile are stored in states.
-     * 
-     * @param keycodes An array of keycodes, that replaces {@link Subtickable#pressedKeys pressedKeys}
-     * @param scrollwheel The scroll wheel of this mouse state
-     * @param cursorX The pointer location in the x axis
+
+	/**
+	 * Updates this mouse from a state, and adds a new subtick.<br>
+	 * <br>
+	 * The difference to {@link #updateFromEvent(int, boolean, int, Integer, Integer) updateFromEvent} is,<br>
+	 * that a state may update multiple pressed keys at once.<br>
+	 * <br>
+	 * While update fromEvent is used when the player inputs something on the mouse,<br>
+	 * updateFromState is used when creating a VirtualMouse by deserialising the TASfile,<br>
+	 * as the inputs in the TASfile are stored in states.
+	 * 
+	 * @param keycodes An array of keycodes, that replaces {@link Subtickable#pressedKeys pressedKeys}
+	 * @param scrollwheel The scroll wheel of this mouse state
+	 * @param cursorX The pointer location in the x axis
 	 * @param cursorY The pointer location in the y axis
-     * @see SerialiserFlavorBase#deserialiseMouse 
-     */
+	 * @see SerialiserFlavorBase#deserialiseMouse 
+	 */
 	public void updateFromState(int[] keycodes, int scrollwheel, int cursorX, int cursorY) {
 		createSubtick();
-		
+
 		this.pressedKeys.clear();
-		for(int i: keycodes) {
+		for (int i : keycodes) {
 			this.pressedKeys.add(i);
 		}
-		
+
 		this.scrollWheel = scrollwheel;
 		this.cursorX = cursorX;
 		this.cursorY = cursorY;
@@ -152,10 +157,10 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 			addSubtick(shallowClone());
 		}
 	}
-	
+
 	@Override
 	public void setPressed(int keycode, boolean keystate) {
-		if (keycode < 0) {	// Mouse buttons always have a keycode smaller than 0
+		if (keycode < 0) { // Mouse buttons always have a keycode smaller than 0
 			super.setPressed(keycode, keystate);
 		}
 	}
@@ -175,7 +180,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	public void getVirtualEvents(VirtualMouse nextMouse, Queue<VirtualMouseEvent> reference) {
 		if (isParent()) {
 			VirtualMouse currentSubtick = this;
-			for(VirtualMouse subtick : nextMouse.getAll()) {
+			for (VirtualMouse subtick : nextMouse.getAll()) {
 				currentSubtick.getDifference(subtick, reference);
 				currentSubtick = subtick;
 			}
@@ -193,12 +198,12 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	 * @param reference The queue to fill. Passed in by reference.
 	 */
 	public void getDifference(VirtualMouse nextMouse, Queue<VirtualMouseEvent> reference) {
-		
+
 		/*
 		 * Checks if pressedKeys are the same...
 		 */
-		if(pressedKeys.equals(nextMouse.pressedKeys)){
-			
+		if (pressedKeys.equals(nextMouse.pressedKeys)) {
+
 			/*
 			 * ...but scrollWheel, cursorX or cursorY are different.
 			 * Without this, the scrollWheel would only work if a mouse button is pressed at the same time. 
@@ -207,7 +212,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 			 * Otherwise, repeated usage of the scrollWheel will result in #equals being true,
 			 * which doesn't trigger the if clause like it should.
 			 */
-			if(!equals(nextMouse) || scrollWheel != 0) {
+			if (!equals(nextMouse) || scrollWheel != 0) {
 				reference.add(new VirtualMouseEvent(VirtualKey.MOUSEMOVED.getKeycode(), false, nextMouse.scrollWheel, nextMouse.cursorX, nextMouse.cursorY));
 			}
 			return;
@@ -218,21 +223,22 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 
 		/* Calculate symmetric difference of keycodes */
 
-        /*
-            Calculate unpressed keys
-            this: LC RC
-            next: LC    MC
-            -------------
-                     RC     <- unpressed
-         */
-		for(int keycode : pressedKeys) {
+		/*
+		    Calculate unpressed keys
+		    this: LC RC
+		    next: LC    MC
+		    -------------
+		             RC     <- unpressed
+		 */
+		for (int keycode : pressedKeys) {
 			if (!nextMouse.getPressedKeys().contains(keycode)) {
 				reference.add(new VirtualMouseEvent(keycode, false, scrollWheelCopy, cursorXCopy, cursorYCopy));
 				scrollWheelCopy = 0;
 				cursorXCopy = 0;
 				cursorYCopy = 0;
 			}
-		};
+		}
+		;
 
 		/*
 		 	Calculate pressed keys
@@ -241,11 +247,12 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 		 	-------------
 		 	            MC <- pressed
 		 */
-		for(int keycode : nextMouse.getPressedKeys()) {
+		for (int keycode : nextMouse.getPressedKeys()) {
 			if (!this.pressedKeys.contains(keycode)) {
 				reference.add(new VirtualMouseEvent(keycode, true, scrollWheelCopy, cursorXCopy, cursorYCopy));
 			}
-		};
+		}
+		;
 	}
 
 	@Override
@@ -253,7 +260,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 		super.clear();
 		clearMouseData();
 	}
-	
+
 	/**
 	 * Resets mouse specific data to it's defaults
 	 */
@@ -262,8 +269,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 		cursorX = 0;
 		cursorY = 0;
 	}
-	
-	
+
 	@Override
 	public String toString() {
 		if (isParent()) {
@@ -272,8 +278,8 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 			return toString2();
 		}
 	}
-	
-	public String toString2(){
+
+	public String toString2() {
 		return String.format("%s;%s,%s,%s", super.toString(), scrollWheel, cursorX, cursorY);
 	}
 
@@ -283,7 +289,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	public VirtualMouse shallowClone() {
 		return new VirtualMouse(new HashSet<>(this.pressedKeys), scrollWheel, cursorX, cursorY, null, ignoreFirstUpdate());
 	}
-	
+
 	@Override
 	public VirtualMouse clone() {
 		return new VirtualMouse(new HashSet<>(this.pressedKeys), scrollWheel, cursorX, cursorY, new ArrayList<>(subtickList), isIgnoreFirstUpdate());
@@ -291,68 +297,65 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 
 	@Override
 	public void moveFrom(VirtualMouse mouse) {
-		if(mouse==null)
+		if (mouse == null)
 			return;
 		super.moveFrom(mouse);
 		this.scrollWheel = mouse.scrollWheel;
 		this.cursorX = mouse.cursorX;
 		this.cursorY = mouse.cursorY;
-		mouse.scrollWheel=0;
+		mouse.scrollWheel = 0;
 	}
-	
+
 	@Override
 	public void copyFrom(VirtualMouse mouse) {
-		if(mouse==null)
+		if (mouse == null)
 			return;
 		super.copyFrom(mouse);
 		this.scrollWheel = mouse.scrollWheel;
 		this.cursorX = mouse.cursorX;
 		this.cursorY = mouse.cursorY;
 	}
-	
+
 	@Override
 	public void deepCopyFrom(VirtualMouse mouse) {
-		if(mouse==null)
+		if (mouse == null)
 			return;
 		super.deepCopyFrom(mouse);
 		this.scrollWheel = mouse.scrollWheel;
 		this.cursorX = mouse.cursorX;
 		this.cursorY = mouse.cursorY;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof VirtualMouse) {
 			VirtualMouse mouse = (VirtualMouse) obj;
-			return super.equals(obj) && 
-					scrollWheel == mouse.scrollWheel &&
-					cursorX == mouse.cursorX &&
-					cursorY == mouse.cursorY;
+			return super.equals(obj) && scrollWheel == mouse.scrollWheel && cursorX == mouse.cursorX && cursorY == mouse.cursorY;
 		}
 		return super.equals(obj);
 	}
-	
+
 	/**
 	 * @return {@link #scrollWheel}
 	 */
 	public int getScrollWheel() {
 		return scrollWheel;
 	}
-	
+
 	/**
 	 * @return {@link #cursorX}
 	 */
 	public int getCursorX() {
 		return cursorX;
 	}
-	
+
 	/**
 	 * @return {@link #cursorY}
 	 */
 	public int getCursorY() {
 		return cursorY;
 	}
-	
+
 	@Override
 	public boolean isEmpty() {
 		return super.isEmpty() && scrollWheel == 0 && cursorX == 0 && cursorY == 0;

@@ -50,6 +50,6 @@ public class PlaybackLoadException extends RuntimeException {
 	
 	@Override
 	public void printStackTrace() {
-		TASmod.LOGGER.catching(this);;
+		TASmod.LOGGER.catching(this);
 	}
 }

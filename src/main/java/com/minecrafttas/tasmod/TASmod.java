@@ -45,60 +45,58 @@ import net.minecraft.server.MinecraftServer;
  * ModContainer for TASmod
  * 
  * @author Scribble
- *
  */
-public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
+public class TASmod implements ModInitializer, EventServerInit, EventServerStop {
 
 	private static MinecraftServer serverInstance;
-	
+
 	public static final Logger LOGGER = LogManager.getLogger("TASmod");
-	
-	public static PlaybackControllerServer playbackControllerServer=new PlaybackControllerServer();;
-	
+
+	public static PlaybackControllerServer playbackControllerServer = new PlaybackControllerServer();;
+
 	public static SavestateHandlerServer savestateHandlerServer;
-	
+
 	public static KillTheRNGHandler ktrngHandler;
-	
+
 	public static TickrateChangerServer tickratechanger;
-	
+
 	public static TickSyncServer ticksyncServer;
-	
+
 	public static final Scheduler tickSchedulerServer = new Scheduler();
-	
+
 	public static Server server;
 
 	public static final int networkingport = 8999;
 
 	public static final boolean isDevEnvironment = FabricLoaderImpl.INSTANCE.isDevelopmentEnvironment();
-	
+
 	public static final StartpositionMetadataExtension startPositionMetadataExtension = new StartpositionMetadataExtension();
-	
+
 	public static final TabCompletionUtils tabCompletionUtils = new TabCompletionUtils();
-	
+
 	public static final CommandFileCommand commandFileCommand = new CommandFileCommand();
-	
+
 	@Override
 	public void onInitialize() {
-		
+
 		LOGGER.info("Initializing TASmod");
-		
-		
+
 		// Start ticksync
 		ticksyncServer = new TickSyncServer();
-		
+
 		// Initilize KillTheRNG
 		LOGGER.info("Testing connection with KillTheRNG");
-		ktrngHandler=new KillTheRNGHandler(FabricLoaderImpl.INSTANCE.isModLoaded("killtherng"));
-		
+		ktrngHandler = new KillTheRNGHandler(FabricLoaderImpl.INSTANCE.isModLoaded("killtherng"));
+
 		// Initialize TickrateChanger
 		tickratechanger = new TickrateChangerServer(LOGGER);
-		
+
 		// Register event listeners
 		EventListenerRegistry.register(this);
 		EventListenerRegistry.register(ticksyncServer);
 		EventListenerRegistry.register(tickratechanger);
 		EventListenerRegistry.register(ktrngHandler);
-		
+
 		// Register packet handlers
 		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers");
 		PacketHandlerRegistry.register(ticksyncServer);
@@ -109,14 +107,14 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
 		PacketHandlerRegistry.register(tabCompletionUtils);
 		PacketHandlerRegistry.register(commandFileCommand);
 	}
-	
+
 	@Override
 	public void onServerInit(MinecraftServer server) {
 		LOGGER.info("Initializing server");
 		serverInstance = server;
-		
+
 		// Command handling
-		
+
 		CommandRegistry.registerServerCommand(new CommandTickrate(), server);
 		CommandRegistry.registerServerCommand(new CommandRecord(), server);
 		CommandRegistry.registerServerCommand(new CommandPlay(), server);
@@ -141,10 +139,10 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
 
 		savestateHandlerServer = new SavestateHandlerServer(server, LOGGER);
 		PacketHandlerRegistry.register(savestateHandlerServer);
-		
-		if(!server.isDedicatedServer()) {
-			TASmod.tickratechanger.ticksPerSecond=0F;
-			TASmod.tickratechanger.tickrateSaved=20F;
+
+		if (!server.isDedicatedServer()) {
+			TASmod.tickratechanger.ticksPerSecond = 0F;
+			TASmod.tickratechanger.tickrateSaved = 20F;
 		} else {
 			// Starting custom server instance
 			try {
@@ -154,26 +152,27 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop{
 			}
 		}
 	}
-	
+
 	@Override
 	public void onServerStop(MinecraftServer mcserver) {
-		serverInstance=null;
-		
-		if(mcserver.isDedicatedServer()) {
+		serverInstance = null;
+
+		if (mcserver.isDedicatedServer()) {
 			try {
-				if (server != null) server.close();
+				if (server != null)
+					server.close();
 			} catch (IOException e) {
 				LOGGER.error("Unable to close TASmod server: {}", e);
 				e.printStackTrace();
 			}
 		}
-		
-		if(savestateHandlerServer != null) {
-			PacketHandlerRegistry.unregister(savestateHandlerServer);	// Unregistering the savestatehandler, as a new instance is registered in onServerStart()
+
+		if (savestateHandlerServer != null) {
+			PacketHandlerRegistry.unregister(savestateHandlerServer); // Unregistering the savestatehandler, as a new instance is registered in onServerStart()
 			savestateHandlerServer = null;
 		}
 	}
-	
+
 	public static MinecraftServer getServerInstance() {
 		return serverInstance;
 	}

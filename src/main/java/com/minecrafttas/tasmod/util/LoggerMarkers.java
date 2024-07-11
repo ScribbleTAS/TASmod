@@ -25,18 +25,18 @@ import org.apache.logging.log4j.MarkerManager;
  *
  */
 public class LoggerMarkers {
-	
+
 	public static final Marker Event = MarkerManager.getMarker("Event");
-	
+
 	public static final Marker Savestate = MarkerManager.getMarker("Savestate");
-	
+
 	public static final Marker Networking = MarkerManager.getMarker("Networking");
-	
+
 	public static final Marker Tickrate = MarkerManager.getMarker("Tickrate");
 
 	public static final Marker Playback = MarkerManager.getMarker("Playback");
-	
+
 	public static final Marker Keyboard = MarkerManager.getMarker("Keyboard");
-	
+
 	public static final Marker Mouse = MarkerManager.getMarker("Mouse");
 }

@@ -16,7 +16,6 @@ import net.minecraft.client.Minecraft;
  * Handles logic during a loading screen to transition between states.
  * 
  * @author Scribble
- *
  */
 public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventClientGameLoop, EventDoneLoadingWorld {
 

@@ -108,7 +108,7 @@ public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHand
 			}
 		});
 		for (int i = 0; i < listOfFiles.length; i++) {
-			tab.add(listOfFiles[i].getName().replaceAll("\\.mctas", ""));
+			tab.add(listOfFiles[i].getName().replaceFirst("\\.mctas$", ""));
 		}
 		return tab;
 	}
