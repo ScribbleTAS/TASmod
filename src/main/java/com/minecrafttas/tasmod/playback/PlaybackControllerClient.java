@@ -102,7 +102,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	private VirtualCameraAngle camera = new VirtualCameraAngle();
 
 	public final File directory = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles");
-	
+
 	/**
 	 * The place where all inputs get stored
 	 */
@@ -150,7 +150,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	 */
 	public String setTASStateClient(TASstate stateIn, boolean verbose) {
 		EventListenerRegistry.fireEvent(EventControllerStateChange.class, stateIn, state);
-		
+
 		if (state == stateIn) {
 			switch (stateIn) {
 				case PLAYBACK:
@@ -238,12 +238,12 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 	private void startRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
-		if(this.inputs.isEmpty()) {
+		if (this.inputs.isEmpty()) {
 			VirtualCameraAngleInput CAMERA_ANGLE = TASmodClient.virtual.CAMERA_ANGLE;
 			Float pitch = CAMERA_ANGLE.getCurrentPitch();
 			Float yaw = CAMERA_ANGLE.getCurrentYaw();
 			this.camera.set(pitch, yaw);
-			
+
 			inputs.add(new TickContainer());
 		}
 	}
@@ -320,7 +320,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	public TASstate getState() {
 		return state;
 	}
-	
+
 	public TASstate getStateAfterPause() {
 		return stateAfterPause;
 	}
@@ -407,7 +407,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		} else {
 			inputs.set(index, container);
 		}
-		
+
 		EventListenerRegistry.fireEvent(EventRecordTick.class, index, container);
 	}
 
@@ -447,7 +447,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			this.camera = container.getCameraAngle().clone();
 			EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
 		}
-		
+
 	}
 	// =====================================================================================================
 	// Methods to manipulate inputs
@@ -467,11 +467,11 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	public BigArrayList<TickContainer> getInputs() {
 		return inputs;
 	}
-	
+
 	public void setInputs(BigArrayList<TickContainer> inputs) {
 		this.setInputs(inputs, 0);
 	}
-	
+
 	public void setInputs(BigArrayList<TickContainer> inputs, long index) {
 		try {
 			this.inputs.clearMemory();
@@ -573,13 +573,13 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		private VirtualMouse mouse;
 
 		private VirtualCameraAngle cameraAngle;
-		
+
 		private CommentContainer comments;
 
 		public TickContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
 			this(keyboard, mouse, subticks, new CommentContainer());
 		}
-		
+
 		public TickContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle camera, CommentContainer comments) {
 			this.keyboard = keyboard;
 			this.mouse = mouse;
@@ -612,7 +612,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		public CommentContainer getComments() {
 			return comments;
 		}
-		
+
 		@Override
 		public TickContainer clone() {
 			return new TickContainer(keyboard, mouse, cameraAngle);
@@ -627,9 +627,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			return super.equals(other);
 		}
 	}
-	
-	public static class CommentContainer implements Serializable{
-		
+
+	public static class CommentContainer implements Serializable {
+
 		/**
 		 * List of all inline comments in a tick.<br>
 		 * These comments take the form:
@@ -652,7 +652,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		 * </pre>
 		 */
 		private List<String> inlineComments;
-		
+
 		/**
 		 * List of all endline comments.<br>
 		 * These comments take the form:
@@ -665,24 +665,24 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		 * Endline comments are supposed to describe individual subticks.<br>
 		 */
 		private List<String> endlineComments;
-		
+
 		public CommentContainer() {
 			this(new ArrayList<>(), new ArrayList<>());
 		}
-		
+
 		public CommentContainer(List<String> inlineComments, List<String> endlineComments) {
-			this.inlineComments=inlineComments;
-			this.endlineComments=endlineComments;
+			this.inlineComments = inlineComments;
+			this.endlineComments = endlineComments;
 		}
-		
+
 		public void addInlineComment(String inlineComment) {
 			inlineComments.add(inlineComment);
 		}
-		
+
 		public void addEndlineComment(String endlineComment) {
 			endlineComments.add(endlineComment);
 		}
-		
+
 		public List<String> getInlineComments() {
 			return inlineComments;
 		}
@@ -690,19 +690,19 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		public List<String> getEndlineComments() {
 			return endlineComments;
 		}
-		
+
 		@Override
 		public boolean equals(Object obj) {
-			if(obj instanceof CommentContainer) {
+			if (obj instanceof CommentContainer) {
 				CommentContainer other = (CommentContainer) obj;
 				return inlineComments.equals(other.inlineComments) && endlineComments.equals(other.endlineComments);
 			}
 			return super.equals(obj);
 		}
-		
+
 		@Override
 		public String toString() {
-			return inlineComments.toString()+"\n\n"+endlineComments.toString();
+			return inlineComments.toString() + "\n\n" + endlineComments.toString();
 		}
 	}
 
@@ -749,17 +749,19 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new TASmodPackets[] { 
-				PLAYBACK_SAVE, 
-				PLAYBACK_LOAD, 
-				PLAYBACK_FULLPLAY, 
-				PLAYBACK_FULLRECORD, 
-				PLAYBACK_RESTARTANDPLAY, 
-				PLAYBACK_PLAYUNTIL, 
-				PLAYBACK_CLEAR_INPUTS, 
-				PLAYBACK_STATE 
-				
+		//@formatter:off
+		return new TASmodPackets[] {
+				PLAYBACK_SAVE,
+				PLAYBACK_LOAD,
+				PLAYBACK_FULLPLAY,
+				PLAYBACK_FULLRECORD,
+				PLAYBACK_RESTARTANDPLAY,
+				PLAYBACK_PLAYUNTIL,
+				PLAYBACK_CLEAR_INPUTS,
+				PLAYBACK_STATE
+
 		};
+		//@formatter:on
 	}
 
 	@Override
@@ -774,7 +776,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			case PLAYBACK_SAVE:
 				name = TASmodBufferBuilder.readString(buf);
 				flavor = TASmodBufferBuilder.readString(buf);
-				
+
 				try {
 					PlaybackSerialiser.saveToFile(new File(directory, name + ".mctas"), this, flavor);
 				} catch (PlaybackSaveException e) {
@@ -788,35 +790,34 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 					LOGGER.catching(e);
 					return;
 				}
-				
+
 				if (mc.world != null) {
 					TextComponentString confirm = new TextComponentString(TextFormatting.GREEN + "Saved inputs to " + name + ".mctas" + TextFormatting.RESET + " [" + TextFormatting.YELLOW + "Open folder" + TextFormatting.RESET + "]");
 					confirm.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/folder tasfiles"));
 					mc.ingameGUI.getChatGUI().printChatMessage(confirm);
-				}
-				else
+				} else
 					LOGGER.debug(LoggerMarkers.Playback, "Saved inputs to " + name + ".mctas");
 				break;
 
 			case PLAYBACK_LOAD:
 				name = TASmodBufferBuilder.readString(buf);
 				flavor = TASmodBufferBuilder.readString(buf);
-				
+
 				try {
 					TASmodClient.controller.setInputs(PlaybackSerialiser.loadFromFile(new File(directory, name + ".mctas"), flavor));
 				} catch (PlaybackLoadException e) {
 					if (mc.world != null) {
-						TextComponentString textComponent =  new TextComponentString(e.getMessage());
+						TextComponentString textComponent = new TextComponentString(e.getMessage());
 						mc.ingameGUI.getChatGUI().printChatMessage(textComponent);
 					}
 					LOGGER.catching(e);
 					return;
 				} catch (Exception e) {
-					if (mc.world != null) 
+					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Loading failed, something went very wrong"));
 					LOGGER.catching(e);
 				}
-				
+
 				if (mc.world != null)
 					mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.GREEN + "Loaded inputs from " + name + ".mctas"));
 				else
@@ -843,6 +844,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 				// Schedule code to be executed on the next tick
 				TASmodClient.tickSchedulerClient.add(() -> {
+					TASmodClient.startpositionMetadataExtension.updateStartPosition();
 					if (mc.world != null) { // Exit the server if you are in one
 						mc.world.sendQuittingDisconnectingPacket();
 						mc.loadWorld((WorldClient) null);

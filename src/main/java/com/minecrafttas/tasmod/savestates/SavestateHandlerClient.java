@@ -148,14 +148,14 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		savestateDirectory.mkdir();
 
 		PlaybackControllerClient controller = TASmodClient.controller;
-		
+
 		TASstate state = controller.getState();
-		
+
 		if (state == TASstate.NONE) {
 			return;
 		}
-		
-		if(state == TASstate.PAUSED) {
+
+		if (state == TASstate.PAUSED) {
 			state = controller.getStateAfterPause();
 		}
 
@@ -192,14 +192,14 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		 * 
 		 * */
 		if (state == TASstate.RECORDING) {
-			long index = savestateContainerList.size()-1;
-			
+			long index = savestateContainerList.size() - 1;
+
 			preload(savestateContainerList, index);
 			controller.setInputs(savestateContainerList, index);
 
-		/*
-		 * When loading a savestate during a playback 2 different scenarios can happen.
-		 * */
+			/*
+			 * When loading a savestate during a playback 2 different scenarios can happen.
+			 * */
 		} else if (state == TASstate.PLAYBACK) {
 
 			/*
@@ -226,7 +226,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 			 * */
 			if (controller.size() >= savestateContainerList.size()) {
 				long index = savestateContainerList.size();
-			
+
 				preload(controller.getInputs(), index);
 				controller.setIndex(index);
 			}
@@ -238,14 +238,14 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 			 * In that case we just apply the playback just like in the recording
 			 * */
 			else {
-				long index = savestateContainerList.size()-1;
-				
+				long index = savestateContainerList.size() - 1;
+
 				preload(savestateContainerList, index);
 				controller.setInputs(savestateContainerList, index);
 			}
 		}
 	}
-	
+
 	private static void preload(BigArrayList<TickContainer> containerList, long index) {
 		TickContainer containerToPreload = containerList.get(index);
 		TASmodClient.virtual.preloadInput(containerToPreload.getKeyboard(), containerToPreload.getMouse(), containerToPreload.getCameraAngle());
@@ -317,7 +317,15 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new TASmodPackets[] { TASmodPackets.SAVESTATE_SAVE, TASmodPackets.SAVESTATE_LOAD, TASmodPackets.SAVESTATE_PLAYER, TASmodPackets.SAVESTATE_REQUEST_MOTION, TASmodPackets.SAVESTATE_SCREEN, TASmodPackets.SAVESTATE_UNLOAD_CHUNKS };
+		return new TASmodPackets[] {
+				//@formatter:off
+				TASmodPackets.SAVESTATE_SAVE,
+				TASmodPackets.SAVESTATE_LOAD,
+				TASmodPackets.SAVESTATE_PLAYER,
+				TASmodPackets.SAVESTATE_REQUEST_MOTION,
+				TASmodPackets.SAVESTATE_SCREEN,
+				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS };
+				//@formatter:on
 	}
 
 	@Override
@@ -371,7 +379,8 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 					if (!(Minecraft.getMinecraft().currentScreen instanceof GuiSavestateSavingScreen)) {
 						Minecraft.getMinecraft().displayGuiScreen(new GuiSavestateSavingScreen());
 					}
-					TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_REQUEST_MOTION).writeMotionData(new MotionData(player.motionX, player.motionY, player.motionZ, player.moveForward, player.moveVertical, player.moveStrafing, player.isSprinting(), player.jumpMovementFactor)));
+					MotionData motionData = new MotionData(player.motionX, player.motionY, player.motionZ, player.moveForward, player.moveVertical, player.moveStrafing, player.isSprinting(), player.jumpMovementFactor);
+					TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_REQUEST_MOTION).writeMotionData(motionData));
 				}
 				break;
 			case SAVESTATE_SCREEN:

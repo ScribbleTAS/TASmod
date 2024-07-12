@@ -36,7 +36,7 @@ class ServerTest {
 
 	// The time to live for how long the tests should wait for the asynchronous server
 	private static int ttl = 1;
-	
+
 	private enum TestPacketIDs implements PacketID {
 		TEST_INTERFACE_INT,
 		TEST_INTERFACE_STRING,
@@ -44,7 +44,7 @@ class ServerTest {
 			result = ByteBufferBuilder.readInt(buf);
 			ServerTest.side = Side.CLIENT;
 			latch.countDown();
-		}), 
+		}),
 		TEST_LAMBDA_SERVER(Side.SERVER, (buf, clientID) -> {
 			result = ByteBufferBuilder.readInt(buf);
 			ServerTest.side = Side.SERVER;
@@ -107,18 +107,18 @@ class ServerTest {
 		public void onServerPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
 			TestPacketIDs packet = (TestPacketIDs) id;
 			switch (packet) {
-			case TEST_INTERFACE_INT:
-				result = ByteBufferBuilder.readInt(buf);
-				side = Side.SERVER;
-				latch.countDown();
-				break;
-			case TEST_INTERFACE_STRING:
-				result2 = ByteBufferBuilder.readString(buf);
-				side = Side.SERVER;
-				latch.countDown();
-				break;
-			default:
-				throw new PacketNotImplementedException(id, this.getClass(), Side.SERVER);
+				case TEST_INTERFACE_INT:
+					result = ByteBufferBuilder.readInt(buf);
+					side = Side.SERVER;
+					latch.countDown();
+					break;
+				case TEST_INTERFACE_STRING:
+					result2 = ByteBufferBuilder.readString(buf);
+					side = Side.SERVER;
+					latch.countDown();
+					break;
+				default:
+					throw new PacketNotImplementedException(id, this.getClass(), Side.SERVER);
 			}
 		}
 
@@ -126,13 +126,13 @@ class ServerTest {
 		public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
 			TestPacketIDs packet = (TestPacketIDs) id;
 			switch (packet) {
-			case TEST_INTERFACE_INT:
-				result = ByteBufferBuilder.readInt(buf);
-				side = Side.CLIENT;
-				latch.countDown();
-				break;
-			default:
-				throw new PacketNotImplementedException(id, this.getClass(), Side.CLIENT);
+				case TEST_INTERFACE_INT:
+					result = ByteBufferBuilder.readInt(buf);
+					side = Side.CLIENT;
+					latch.countDown();
+					break;
+				default:
+					throw new PacketNotImplementedException(id, this.getClass(), Side.CLIENT);
 			}
 		}
 
@@ -225,7 +225,7 @@ class ServerTest {
 		assertEquals(2, result);
 		assertEquals(Client.Side.CLIENT, side);
 	}
-	
+
 	/**
 	 * Test sending an int packet to {@link TestingClass#onClientPacket(PacketID, ByteBuffer, UUID)} to only one client
 	 */
@@ -246,7 +246,7 @@ class ServerTest {
 		assertEquals(3, result);
 		assertEquals(Client.Side.CLIENT, side);
 	}
-	
+
 	/**
 	 * Test sending an string packet to {@link TestingClass#onClientPacket(PacketID, ByteBuffer, UUID)} to only one client
 	 */
@@ -267,9 +267,9 @@ class ServerTest {
 		assertEquals("TEST", result2);
 		assertEquals(Client.Side.SERVER, side);
 	}
-	
+
 	// ============================ Lambda
-	
+
 	/**
 	 * Test sending an int packet to {@link TestPacketIDs#TEST_LAMBDA_SERVER}
 	 */
@@ -290,7 +290,7 @@ class ServerTest {
 		assertEquals(4, result);
 		assertEquals(Client.Side.SERVER, side);
 	}
-	
+
 	/**
 	 * Test sending an int packet to {@link TestPacketIDs#TEST_LAMBDA_CLIENT} to all clients
 	 */
@@ -311,7 +311,7 @@ class ServerTest {
 		assertEquals(5, result);
 		assertEquals(Client.Side.CLIENT, side);
 	}
-	
+
 	/**
 	 * Test sending an int packet to {@link TestPacketIDs#TEST_LAMBDA_CLIENT} to one client
 	 */

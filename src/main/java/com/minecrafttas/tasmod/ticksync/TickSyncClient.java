@@ -21,18 +21,17 @@ import net.minecraft.client.Minecraft;
  *
  * @author Pancake
  */
-public class TickSyncClient implements ClientPacketHandler, EventClientTickPost{
+public class TickSyncClient implements ClientPacketHandler, EventClientTickPost {
 
 	public static final AtomicBoolean shouldTick = new AtomicBoolean(true);
-	
+
 	private boolean enabled = false;
-	
+
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new TASmodPackets[] {TASmodPackets.TICKSYNC};
+		return new TASmodPackets[] { TASmodPackets.TICKSYNC };
 	}
 
-	
 	/**
 	 * Handles incoming tick packets from the server to the client
 	 * This will simply tick the client as long as the tick is correct
@@ -45,7 +44,6 @@ public class TickSyncClient implements ClientPacketHandler, EventClientTickPost{
 		shouldTick.set(true);
 	}
 
-
 	/**
 	 * Called after a client tick. This will send a packet
 	 * to the server making it tick
@@ -57,18 +55,18 @@ public class TickSyncClient implements ClientPacketHandler, EventClientTickPost{
 		if (TASmodClient.client == null || TASmodClient.client.isClosed() || !enabled) {
 			return;
 		}
-		
+
 		try {
 			TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.TICKSYNC));
 		} catch (Exception e) {
 			LOGGER.error("Unable to send packet to server:", e);
 		}
 	}
-	
+
 	public boolean isEnabled() {
 		return enabled;
 	}
-	
+
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}

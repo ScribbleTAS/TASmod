@@ -180,13 +180,13 @@ public enum TASmodPackets implements PacketID {
 	OPEN_FOLDER(Side.CLIENT, (buf, clientID) -> {
 		short action = buf.getShort();
 		switch (action) {
-		case 0:
-			CommandFolder.openSavestates();
-			break;
-		case 1:
-			CommandFolder.openTASFolder();
-		default:
-			break;
+			case 0:
+				CommandFolder.openSavestates();
+				break;
+			case 1:
+				CommandFolder.openTASFolder();
+			default:
+				break;
 		}
 	}),
 	/**
@@ -231,24 +231,24 @@ public enum TASmodPackets implements PacketID {
 	private Side side;
 	private CompactPacketHandler lambda;
 	private boolean shouldTrace = true;
-	
+
 	private TASmodPackets() {
 	}
-	
+
 	private TASmodPackets(boolean shouldTrace) {
 		this.shouldTrace = shouldTrace;
 	}
-	
+
 	private TASmodPackets(Side side, CompactPacketHandler lambda) {
 		this(side, lambda, true);
 	}
-	
+
 	private TASmodPackets(Side side, CompactPacketHandler lambda, boolean shouldTrace) {
 		this.side = side;
 		this.lambda = lambda;
 		this.shouldTrace = shouldTrace;
 	}
-	
+
 	@Override
 	public int getID() {
 		return this.ordinal();
@@ -268,7 +268,7 @@ public enum TASmodPackets implements PacketID {
 	public String getName() {
 		return this.name();
 	}
-	
+
 	@Override
 	public boolean shouldTrace() {
 		return shouldTrace;

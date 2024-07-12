@@ -38,7 +38,10 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 
 	@Override
 	public void onPlayback(long tick, TickContainer tickContainer) {
-		PlaybackFileCommandContainer containerInTick = label.get(tick - 1);
+		if (label.size() <= tick) {
+			return;
+		}
+		PlaybackFileCommandContainer containerInTick = label.get(tick);
 		if (containerInTick == null) {
 			return;
 		}

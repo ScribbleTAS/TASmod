@@ -34,9 +34,6 @@ public class PlaybackMetadata {
 	}
 
 	public void setValue(String key, String value) {
-		if (key.contains(SEPERATOR)) {
-			throw new IllegalArgumentException(String.format("%sKeyname %s can't contain %s", extensionName != null ? extensionName + ": " : "", key, SEPERATOR));
-		}
 		data.put(key, value);
 	}
 
