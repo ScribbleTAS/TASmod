@@ -20,7 +20,6 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
@@ -320,8 +319,6 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 				//@formatter:off
 				TASmodPackets.SAVESTATE_SAVE,
 				TASmodPackets.SAVESTATE_LOAD,
-				TASmodPackets.SAVESTATE_PLAYER,
-				TASmodPackets.SAVESTATE_REQUEST_MOTION,
 				TASmodPackets.SAVESTATE_SCREEN,
 				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS };
 				//@formatter:on
@@ -352,34 +349,6 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 					SavestateHandlerClient.loadstate(name);
 				} catch (IOException e) {
 					e.printStackTrace();
-				}
-				break;
-			case SAVESTATE_PLAYER:
-				NBTTagCompound compound;
-				try {
-					compound = TASmodBufferBuilder.readNBTTagCompound(buf);
-				} catch (IOException e) {
-					e.printStackTrace();
-					return;
-				}
-				/*
-				 * Fair warning: Do NOT read the buffer inside an addScheduledTask. Read it
-				 * before that. The buffer will have the wrong limit, when the task is executed.
-				 * This is probably due to the buffers being reused.
-				 */
-				Minecraft.getMinecraft().addScheduledTask(() -> {
-					SavestateHandlerClient.loadPlayer(compound);
-				});
-				break;
-
-			case SAVESTATE_REQUEST_MOTION:
-				EntityPlayerSP player = Minecraft.getMinecraft().player;
-				if (player != null) {
-					if (!(Minecraft.getMinecraft().currentScreen instanceof GuiSavestateSavingScreen)) {
-						Minecraft.getMinecraft().displayGuiScreen(new GuiSavestateSavingScreen());
-					}
-					MotionData motionData = new MotionData(player.motionX, player.motionY, player.motionZ, player.moveForward, player.moveVertical, player.moveStrafing, player.isSprinting(), player.jumpMovementFactor);
-					TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_REQUEST_MOTION).writeMotionData(motionData));
 				}
 				break;
 			case SAVESTATE_SCREEN:

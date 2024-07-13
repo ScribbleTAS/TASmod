@@ -63,6 +63,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 	public static TickSyncServer ticksyncServer;
 
 	public static final Scheduler tickSchedulerServer = new Scheduler();
+	public static final Scheduler gameLoopSchedulerServer = new Scheduler();
 
 	public static Server server;
 
@@ -139,6 +140,9 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 		savestateHandlerServer = new SavestateHandlerServer(server, LOGGER);
 		PacketHandlerRegistry.register(savestateHandlerServer);
+		PacketHandlerRegistry.register(savestateHandlerServer.getPlayerHandler());
+
+		EventListenerRegistry.register(savestateHandlerServer.getPlayerHandler());
 
 		if (!server.isDedicatedServer()) {
 			TASmod.tickratechanger.ticksPerSecond = 0F;
@@ -169,6 +173,9 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 		if (savestateHandlerServer != null) {
 			PacketHandlerRegistry.unregister(savestateHandlerServer); // Unregistering the savestatehandler, as a new instance is registered in onServerStart()
+			PacketHandlerRegistry.unregister(savestateHandlerServer.getPlayerHandler());
+
+			EventListenerRegistry.unregister(savestateHandlerServer.getPlayerHandler());
 			savestateHandlerServer = null;
 		}
 	}
