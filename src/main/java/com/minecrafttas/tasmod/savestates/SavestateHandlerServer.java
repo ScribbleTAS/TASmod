@@ -801,6 +801,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	/**
 	 * Contains player related classes
 	 */
+	@Deprecated
 	public static class PlayerHandler {
 
 		public static class MotionData {
@@ -959,6 +960,29 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_REQUEST_MOTION));
 			} catch (Exception e) {
 				e.printStackTrace();
+			}
+
+			int i = 1;
+			while (PlayerHandler.motion.size() != TASmod.getServerInstance().getPlayerList().getCurrentPlayerCount()) {
+				i++;
+				try {
+					Thread.sleep(30);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				if (i % 30 == 1) {
+					LOGGER.debug(LoggerMarkers.Savestate, "Resending motion packet");
+					try {
+						// request client motion
+						TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_REQUEST_MOTION));
+					} catch (Exception e) {
+						LOGGER.error("Unable to send packet to all clients:", e);
+					}
+				}
+				if (i == 1000) {
+					LOGGER.warn(LoggerMarkers.Savestate, "Client motion timed out!");
+					break;
+				}
 			}
 		}
 

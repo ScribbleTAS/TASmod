@@ -175,7 +175,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 
 		/*
 		 * Imagine a recording that is 20 tick long with VV showing the current index of the controller:
-		 * 					   VV
+		 *                     VV
 		 *  0                  20
 		 * <====================>
 		 * 
@@ -186,7 +186,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		 * 
 		 * We expect to resume the recording at the 10th tick.
 		 * Therefore when loading a client savestate during a recording we set the index to size-1 and preload the inputs at the same index.
-		 * 			 VV
+		 *           VV
 		 * 0         10
 		 * <==========> 
 		 * 
@@ -194,7 +194,6 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		if (state == TASstate.RECORDING) {
 			long index = savestateContainerList.size() - 1;
 
-			preload(savestateContainerList, index);
 			controller.setInputs(savestateContainerList, index);
 
 			/*
@@ -207,7 +206,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 			 * The loadstated file is SMALLER than the total inputs in the controller:
 			 * 
 			 * The recording is 20 ticks long, with VV being the index where the playback is currently at.
-			 * 				 VV
+			 *               VV
 			 *  0            13    20
 			 * <====================>
 			 * 
@@ -220,7 +219,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 			 * If we were to replace the controller, everything above tick 10 would be lost.
 			 * So we only set the index to 10, preload and preload the inputs.
 			 * 
-			 * 			  VV
+			 *            VV
 			 *  0         10       20
 			 * <====================>
 			 * */
@@ -402,7 +401,5 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.CLIENT);
 		}
-
 	}
-
 }
