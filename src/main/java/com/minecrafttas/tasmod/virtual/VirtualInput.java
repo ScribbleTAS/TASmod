@@ -148,6 +148,22 @@ public class VirtualInput {
 		Minecraft.getMinecraft().runTickMouse();
 	}
 
+	public List<String> getCurrentMousePresses() {
+		return MOUSE.currentMouse.getCurrentPresses();
+	}
+
+	public List<String> getNextMousePresses() {
+		return MOUSE.nextMouse.getCurrentPresses();
+	}
+
+	public List<String> getCurrentKeyboardPresses() {
+		return KEYBOARD.currentKeyboard.getCurrentPresses();
+	}
+
+	public List<String> getNextKeyboardPresses() {
+		return KEYBOARD.nextKeyboard.getCurrentPresses();
+	}
+
 	/**
 	 * Subclass of {@link VirtualInput} handling keyboard logic.<br>
 	 * <br>

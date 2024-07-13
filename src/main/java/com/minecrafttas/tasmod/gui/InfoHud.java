@@ -11,6 +11,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 
 import com.minecrafttas.mctcommon.events.EventClient.EventClientTick;
@@ -476,26 +477,26 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 	}
 	
 	private String keystrokes() {
-//		if (Display.isActive()) { //TODO Update
-//			String out1 = ""+ChatFormatting.WHITE;
-//			for (String mouse : TASmodClient.virtual.getCurrentMousePresses()) {
-//				out1 = out1.concat(mouse + " ");
-//			}
-//			out1=out1.concat(""+ChatFormatting.GREEN);
-//			for (String mouse : TASmodClient.virtual.getNextMousePresses()) {
-//				out1 = out1.concat(mouse + " ");
-//			}
-//			
-//			String out2 = ""+ChatFormatting.WHITE;
-//			for (String key : TASmodClient.virtual.getCurrentKeyboardPresses()) {
-//				out2 = out2.concat(key + " ");
-//			}
-//			out2=out2.concat(""+ChatFormatting.GREEN);
-//			for (String key : TASmodClient.virtual.getNextKeyboardPresses()) {
-//				out2 = out2.concat(key + " ");
-//			}
-//			return out1+out2;
-//		}
+		if (Display.isActive()) {
+			String out1 = "" + ChatFormatting.WHITE;
+			for (String mouse : TASmodClient.virtual.getCurrentMousePresses()) {
+				out1 = out1.concat(mouse + " ");
+			}
+			out1 = out1.concat("" + ChatFormatting.GREEN);
+			for (String mouse : TASmodClient.virtual.getNextMousePresses()) {
+				out1 = out1.concat(mouse + " ");
+			}
+
+			String out2 = "" + ChatFormatting.WHITE;
+			for (String key : TASmodClient.virtual.getCurrentKeyboardPresses()) {
+				out2 = out2.concat(key + " ");
+			}
+			out2 = out2.concat("" + ChatFormatting.GREEN);
+			for (String key : TASmodClient.virtual.getNextKeyboardPresses()) {
+				out2 = out2.concat(key + " ");
+			}
+			return out1 + out2;
+		}
 		return "";
 	}
 	
