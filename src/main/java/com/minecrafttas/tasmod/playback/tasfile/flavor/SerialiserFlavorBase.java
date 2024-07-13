@@ -122,7 +122,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				break;
 			}
 			currentTick = i;
-			TickContainer container = inputs.get(i);
+			TickContainer container = inputs.get(i).clone();
 			serialiseContainer(out, container);
 			previousTickContainer = container;
 		}
