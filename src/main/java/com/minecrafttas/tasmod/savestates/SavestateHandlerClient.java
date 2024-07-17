@@ -327,38 +327,46 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 	@Override
 	public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
 		TASmodPackets packet = (TASmodPackets) id;
-		String name = null;
 		Minecraft mc = Minecraft.getMinecraft();
 
 		switch (packet) {
 			case SAVESTATE_SAVE:
-				// Create client savestate
-				name = TASmodBufferBuilder.readString(buf);
-				try {
-					SavestateHandlerClient.savestate(name);
-				} catch (SavestateException e) {
-					LOGGER.error(e.getMessage());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				String savestateName = TASmodBufferBuilder.readString(buf);
+				Minecraft.getMinecraft().addScheduledTask(() -> {
+
+					// Create client savestate
+					try {
+						SavestateHandlerClient.savestate(savestateName);
+					} catch (SavestateException e) {
+						LOGGER.error(e.getMessage());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				});
 				break;
 			case SAVESTATE_LOAD:
 				// Load client savestate
-				name = TASmodBufferBuilder.readString(buf);
-				try {
-					SavestateHandlerClient.loadstate(name);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				String loadstateName = TASmodBufferBuilder.readString(buf);
+				Minecraft.getMinecraft().addScheduledTask(() -> {
+					try {
+						SavestateHandlerClient.loadstate(loadstateName);
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				});
 				break;
 			case SAVESTATE_SCREEN:
 				// Open/Close Savestate screen
 				boolean open = TASmodBufferBuilder.readBoolean(buf);
-				if (open) {
-					mc.displayGuiScreen(new GuiSavestateSavingScreen());
-				} else {
-					mc.displayGuiScreen(null);
-				}
+				Minecraft.getMinecraft().addScheduledTask(() -> {
+					if (open) {
+						mc.displayGuiScreen(new GuiSavestateSavingScreen());
+					} else {
+						mc.displayGuiScreen(null);
+					}
+				});
 				break;
 
 			case SAVESTATE_UNLOAD_CHUNKS:

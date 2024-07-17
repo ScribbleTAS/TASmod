@@ -193,9 +193,6 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	protected List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle) {
 
 		VirtualCameraAngle previousCamera = null;
-		if (previousTickContainer != null) {
-			previousCamera = previousTickContainer.getCameraAngle();
-		}
 
 		List<String> out = new ArrayList<>();
 		for (VirtualCameraAngle subtick : cameraAngle.getAll()) {
