@@ -43,6 +43,11 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected TickContainer previousTickContainer = null;
 
+	/**
+	 * If true, process extension data like {@link PlaybackMetadata PlaybackMetadata} and {@link PlaybackFileCommand PlaybackFileCommands}
+	 */
+	protected boolean processExtensions = true;
+
 	protected String headerStart() {
 		return createCenteredHeading("TASfile", '#', 50);
 	}
@@ -89,12 +94,17 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	protected void serialiseFileCommandNames(List<String> out) {
 		List<String> stringlist = new ArrayList<>();
 		List<PlaybackFileCommandExtension> extensionList = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
-		extensionList.forEach(extension -> stringlist.add(extension.getExtensionName()));
+		if (processExtensions) {
+			extensionList.forEach(extension -> stringlist.add(extension.getExtensionName()));
+		}
 		out.add("FileCommand-Extensions: " + String.join(", ", stringlist));
 		out.add("");
 	}
 
 	protected void serialiseMetadata(List<String> out) {
+		if (!processExtensions)
+			return;
+
 		List<PlaybackMetadata> metadataList = TASmodAPIRegistry.PLAYBACK_METADATA.handleOnStore();
 
 		for (PlaybackMetadata metadata : metadataList) {
@@ -152,6 +162,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected String serialiseFileCommand(PlaybackFileCommand fileCommand) {
+		if (!processExtensions)
+			return "";
 		return String.format("$%s(%s);", fileCommand.getName(), String.join(", ", fileCommand.getArgs()));
 	}
 
@@ -365,10 +377,17 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected void deserialiseFileCommandNames(List<String> headerLines) {
+		if (!processExtensions) // Stops FileCommandProcessing
+			return;
+
 		for (String line : headerLines) {
 			Matcher matcher = extract("FileCommand-Extensions: ?(.*)", line);
 
 			if (matcher.find()) {
+
+				if (!processExtensions)
+					return;
+
 				String extensionStrings = matcher.group(1);
 				String[] extensionNames = extensionStrings.split(", ?");
 
@@ -380,6 +399,9 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected void deserialiseMetadata(List<String> headerLines) {
+		if (!processExtensions)
+			return;
+
 		List<PlaybackMetadata> out = new ArrayList<>();
 
 		String metadataName = null;
@@ -616,8 +638,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 		TickContainer deserialisedContainer = new TickContainer(keyboard, mouse, cameraAngle, comments);
 
-		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
-		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
+		if (processExtensions) {
+			TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
+			TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
+		}
 
 		previousTickContainer = deserialisedContainer;
 
@@ -661,11 +685,15 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected String deserialiseFileCommands(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+
 		Matcher matcher = extract("\\$(.+?)\\((.*?)\\);", comment);
 		while (matcher.find()) {
 			String name = matcher.group(1);
 			String[] args = matcher.group(2).split(", ?");
-			deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
+
+			if (processExtensions)
+				deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
+
 			comment = matcher.replaceFirst("");
 			matcher.reset(comment);
 		}
@@ -1012,5 +1040,9 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			return this.getExtensionName().equals(flavor.getExtensionName());
 		}
 		return super.equals(obj);
+	}
+
+	public void setProcessExtensions(boolean processExtensions) {
+		this.processExtensions = processExtensions;
 	}
 }

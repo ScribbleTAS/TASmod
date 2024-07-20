@@ -124,6 +124,10 @@ public class PlaybackSerialiser {
 	 * @throws IOException If the file could not be read
 	 */
 	public static BigArrayList<TickContainer> loadFromFile(File file) throws PlaybackLoadException, IOException {
+		return loadFromFile(file, true);
+	}
+
+	public static BigArrayList<TickContainer> loadFromFile(File file, boolean processExtensions) throws PlaybackLoadException, IOException {
 		if (file == null) {
 			throw new PlaybackLoadException("Load from file failed. No file specified");
 		}
@@ -132,6 +136,8 @@ public class PlaybackSerialiser {
 		}
 
 		SerialiserFlavorBase flavor = readFlavor(file);
+
+		flavor.setProcessExtensions(processExtensions);
 
 		return loadFromFile(file, flavor);
 	}
@@ -146,7 +152,11 @@ public class PlaybackSerialiser {
 	 * @throws IOException If the file could not be read
 	 */
 	public static BigArrayList<TickContainer> loadFromFile(File file, String flavorName) throws PlaybackLoadException, IOException {
-		
+		return loadFromFile(file, flavorName, true);
+	}
+
+	public static BigArrayList<TickContainer> loadFromFile(File file, String flavorName, boolean processExtensions) throws PlaybackLoadException, IOException {
+
 		// If the flavor is null or empty, try to determine the flavor by reading the header
 		if (flavorName == null || flavorName.isEmpty()) {
 			return loadFromFile(file);
@@ -164,6 +174,8 @@ public class PlaybackSerialiser {
 		if (!flavor.equals(flavorInFile)) {
 			throw new PlaybackLoadException("Detected flavor %s in the TASfile, which does not match the specified flavor: %s");
 		}
+
+		flavor.setProcessExtensions(processExtensions);
 
 		return loadFromFile(file, flavor);
 	}
