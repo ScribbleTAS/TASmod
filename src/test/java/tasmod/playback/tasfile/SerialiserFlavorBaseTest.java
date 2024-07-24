@@ -858,30 +858,30 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		expected.updateFromEvent(VirtualKey.MC, true, 15, 25, 34);
 
 		assertEquals(expected, actual);
-		
-		currentTick=29;
+
+		currentTick = 29;
 		List<String> tick2 = new ArrayList<>();
 		tick2.add(";0,0,0");
 		tick2.add("LC;0,12,35");
 		tick2.add("LC,MC;15,25");
-		
-		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+
+		Throwable t = assertThrows(PlaybackLoadException.class, () -> {
 			deserialiseMouse(tick2);
 		});
-		
-		assertEquals("Line 1, Tick 29, Subtick 2: Mouse functions do not have the correct length", t.getMessage());
-		
-		currentTick=30;
+
+		assertEquals("Line 1, Tick 29, Subtick 2: Mouse can't be read. Probably a missing comma: LC,MC;15,25", t.getMessage());
+
+		currentTick = 30;
 		List<String> tick3 = new ArrayList<>();
 		tick3.add(";0,0,0");
 		tick3.add("LC;0,12,35,12");
 		tick3.add("LC,MC;15,25,15");
-		
-		Throwable t1 = assertThrows(PlaybackLoadException.class, ()->{
+
+		Throwable t1 = assertThrows(PlaybackLoadException.class, () -> {
 			deserialiseMouse(tick3);
 		});
-		
-		assertEquals("Line 1, Tick 30, Subtick 1: Mouse functions do not have the correct length", t1.getMessage());
+
+		assertEquals("Line 1, Tick 30, Subtick 1: Mouse can't be read. Probably a missing comma: LC;0,12,35,12", t1.getMessage());
 	}
 
 	/**

@@ -16,7 +16,7 @@ public class PlaybackMetadata {
 
 	private String extensionName;
 	private LinkedHashMap<String, String> data;
-	
+
 	private static String SEPERATOR = ":";
 
 	public PlaybackMetadata(PlaybackMetadataExtension extension) {
@@ -81,7 +81,7 @@ public class PlaybackMetadata {
 	public static PlaybackMetadata fromStringList(String extensionName, List<String> list) {
 		PlaybackMetadata out = new PlaybackMetadata(extensionName);
 
-		final Pattern pattern = Pattern.compile("(\\w+)\\"+SEPERATOR+"(.+)");
+		final Pattern pattern = Pattern.compile("(\\w+)\\" + SEPERATOR + "(.+)");
 
 		for (String data : list) {
 			Matcher matcher = pattern.matcher(data);
@@ -94,19 +94,20 @@ public class PlaybackMetadata {
 
 		return out;
 	}
-	
+
 	public static PlaybackMetadata fromHashMap(String extensionName, LinkedHashMap<String, String> data) {
 		return new PlaybackMetadata(extensionName, new LinkedHashMap<>(data));
 	}
-	
+
 	public static abstract class PlaybackMetadataExtension implements Registerable {
-		
+
 		/**
 		 * Currently unused.<br>
 		 * Maybe in the future, TASes have to be created with /create, then you can interactively set the values...<br>
 		 */
-		public void onCreate() {};
-	
+		public void onCreate() {
+		};
+
 		/**
 		 * Runs, when the TASfile is being stored to a file.<br>
 		 * Create a new {@link PlaybackMetadata} with <code>PlaybackMetadata metadata = new PlaybackMetadata(this);</code>.<br>
@@ -115,14 +116,14 @@ public class PlaybackMetadata {
 		 * @return The {@link PlaybackMetadata} to be saved in the TASfile
 		 */
 		public abstract PlaybackMetadata onStore();
-	
+
 		/**
 		 * Runs when the TASfile is being loaded from a file<br>
 		 * 
 		 * @param metadata The metadata for this extension to read from
 		 */
 		public abstract void onLoad(PlaybackMetadata metadata);
-		
+
 		/**
 		 * Runs when the PlaybackController is cleared
 		 */
