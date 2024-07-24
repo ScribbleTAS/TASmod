@@ -210,7 +210,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		for (VirtualCameraAngle subtick : cameraAngle.getAll()) {
 
 			if (!subtick.equals(previousCamera))
-				out.add(subtick.toString2());
+				out.add(String.format("%s;%s", subtick.getYaw(), subtick.getPitch()));
 
 			previousCamera = subtick;
 		}
@@ -308,7 +308,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * Joins strings together but ignores empty strings
 	 * 
 	 * @param delimiter The delimiter of the joined string
-	 * @param args      The strings to join
+	 * @param args The strings to join
 	 * @return Joined string
 	 */
 	protected String joinNotEmpty(String delimiter, Iterable<String> args) {
@@ -868,7 +868,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 		String previousCamera = null;
 		if (previousTickContainer != null) {
-			previousCamera = previousTickContainer.getCameraAngle().toString2();
+			VirtualCameraAngle camera = previousTickContainer.getCameraAngle();
+			previousCamera = String.format("%s;%s", camera.getYaw(), camera.getPitch());
 		}
 
 		for (String line : lines) {

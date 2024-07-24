@@ -35,12 +35,12 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.clear();
 		TASmodAPIRegistry.PLAYBACK_METADATA.clear();
 		TASmodAPIRegistry.SERIALISER_FLAVOR.clear();
-		
+
 		this.currentTick = 0;
 		this.currentSubtick = 0;
 		this.previousTickContainer = null;
 	}
-	
+
 	@Override
 	public String getExtensionName() {
 		return "Test";
@@ -67,7 +67,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	 */
 	@Test
 	void testSerialiseMetadata() {
-		
+
 		class MetadataTest extends PlaybackMetadataExtension {
 
 			public String testValue;
@@ -100,7 +100,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			}
 
 		}
-		
+
 		class MetadataTest2 extends PlaybackMetadataExtension {
 
 			public String testValue;
@@ -133,7 +133,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			}
 
 		}
-		
+
 		MetadataTest testmetadata1 = new MetadataTest();
 		testmetadata1.testValue = "This is a test";
 
@@ -156,14 +156,14 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		assertIterableEquals(expected, actual);
 		assertEquals(0, currentTick);
-		
+
 		TASmodAPIRegistry.PLAYBACK_METADATA.unregister(testmetadata1);
 		TASmodAPIRegistry.PLAYBACK_METADATA.unregister(testmetadata2);
 	}
-	
+
 	@Test
 	void testSerialiseFileCommandNames() {
-		
+
 		class TestFileCommand extends PlaybackFileCommandExtension {
 
 			@Override
@@ -176,18 +176,18 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 				return null;
 			}
 		}
-		
+
 		TestFileCommand fc = new TestFileCommand();
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(fc);
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testFileCommand", true);
-		
+
 		List<String> actual = new ArrayList<>();
 		serialiseFileCommandNames(actual);
-		
+
 		List<String> expected = new ArrayList<>();
 		expected.add("FileCommand-Extensions: tasmod_testFileCommand");
 		expected.add("");
-		
+
 		assertIterableEquals(expected, actual);
 	}
 
@@ -380,11 +380,11 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	 */
 	@Test
 	void testDeserialiseMetadata() {
-		
-		class GeneralMetadata extends PlaybackMetadataExtension{
+
+		class GeneralMetadata extends PlaybackMetadataExtension {
 
 			PlaybackMetadata metadata = null;
-			
+
 			@Override
 			public String getExtensionName() {
 				return "General";
@@ -407,13 +407,13 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			@Override
 			public void onClear() {
 			}
-			
+
 		}
-		
+
 		class StartPositionMetadata extends PlaybackMetadataExtension {
 
 			PlaybackMetadata metadata = null;
-			
+
 			@Override
 			public String getExtensionName() {
 				return "StartPosition";
@@ -436,15 +436,15 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			@Override
 			public void onClear() {
 			}
-			
+
 		}
-		
+
 		GeneralMetadata general = new GeneralMetadata();
 		StartPositionMetadata startPosition = new StartPositionMetadata();
-		
+
 		TASmodAPIRegistry.PLAYBACK_METADATA.register(general);
 		TASmodAPIRegistry.PLAYBACK_METADATA.register(startPosition);
-		
+
 		List<String> lines = new ArrayList<>();
 		lines.add("--- General");
 		lines.add("Author: Scribble");
@@ -481,8 +481,8 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 	@Test
 	void testDeserialiseFileCommandNames() {
-		
-		class Test1 extends PlaybackFileCommandExtension{
+
+		class Test1 extends PlaybackFileCommandExtension {
 
 			@Override
 			public String getExtensionName() {
@@ -493,9 +493,9 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			public String[] getFileCommandNames() {
 				return null;
 			}
-			
+
 		}
-		
+
 		class Test2 extends PlaybackFileCommandExtension {
 
 			@Override
@@ -507,49 +507,49 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 			public String[] getFileCommandNames() {
 				return null;
 			}
-			
+
 		}
-		
+
 		Test1 test1 = new Test1();
 		Test2 test2 = new Test2();
-		
+
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(test1);
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(test2);
-		
+
 		List<String> lines = new ArrayList<>();
 		lines.add("FileCommand-Extensions: tasmod_test1, tasmod_test2");
-		
+
 		deserialiseFileCommandNames(lines);
-		
+
 		assertTrue(test1.isEnabled());
 		assertTrue(test2.isEnabled());
-		
+
 		lines = new ArrayList<>();
 		lines.add("FileCommand-Extensions: ");
-		
+
 		deserialiseFileCommandNames(lines);
-		
+
 		assertFalse(test1.isEnabled());
 		assertFalse(test2.isEnabled());
-		
+
 		lines = new ArrayList<>();
 		lines.add("FileCommand-Extensions: tasmod_test1,tasmod_test2");
-		
+
 		deserialiseFileCommandNames(lines);
-		
+
 		assertTrue(test1.isEnabled());
 		assertTrue(test2.isEnabled());
-		
+
 		final List<String> lines2 = new ArrayList<>();
 		lines2.add("FileCommand-Extensions tasmod_test1,tasmod_test2");
-		
-		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+
+		Throwable t = assertThrows(PlaybackLoadException.class, () -> {
 			deserialiseFileCommandNames(lines2);
 		});
 
 		assertEquals("FileCommand-Extensions value was not found in the header", t.getMessage());
 	}
-	
+
 	/**
 	 * Test extracing ticks from some lines
 	 */
@@ -597,7 +597,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		tick2.add("56|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
 		tick2.add("\t1||RC;0,1580,658|17.85;-202.74799");
 		tick2.add("\t2||;0,1580,658|17.85;-202.74799");
-		
+
 		List<String> tick3 = new ArrayList<>();
 		tick3.add("// This is a comment");
 		tick3.add("// $fileCommand();");
@@ -620,7 +620,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertIterableEquals(expected, actual);
 		assertIterableEquals(expectedIndex, actualIndex);
 	}
-	
+
 	@Test
 	void testExtractExceptions() {
 		// Create lines to be extracted from
@@ -629,14 +629,14 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		lines.add("55|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
 		lines.add("\t2||;0,1580,658|17.85;-202.74799");
 
-		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+		Throwable t = assertThrows(PlaybackLoadException.class, () -> {
 			extractContainer(new ArrayList<>(), lines, 0);
 		});
 
 		// C o m p a r e
 		assertEquals("Line 1, Tick 0, Subtick 0: Error while trying to parse the file. This should not be a subtick at this position", t.getMessage());
 	}
-	
+
 	@Test
 	void testExtractExceptions2() {
 		// Create lines to be extracted from
@@ -646,14 +646,14 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		lines.add("57|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
 		lines.add("\t2||;0,1580,658|17.85;-202.74799");
 
-		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+		Throwable t = assertThrows(PlaybackLoadException.class, () -> {
 			extractContainer(new ArrayList<>(), lines, 0);
 		});
 
 		// C o m p a r e
 		assertEquals("Line 2, Tick 0, Subtick 0: Error while trying to parse the file. This should not be a subtick at this position", t.getMessage());
 	}
-	
+
 	@Test
 	void testExtractExceptions3() {
 		// Create lines to be extracted from
@@ -664,15 +664,15 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		lines.add("\t2||;0,1580,658|17.85;-202.74799");
 
 		extractContainer(new ArrayList<>(), lines, 0); // First extraction passes as it parses up to the comment.
-		
-		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
-			extractContainer(new ArrayList<>(), lines, 1);	// Second extraction fails as it starts with the comment then, a subtick which is disallowed
+
+		Throwable t = assertThrows(PlaybackLoadException.class, () -> {
+			extractContainer(new ArrayList<>(), lines, 1); // Second extraction fails as it starts with the comment then, a subtick which is disallowed
 		});
 
 		// C o m p a r e
 		assertEquals("Line 3, Tick 0, Subtick 0: Error while trying to parse the file. This should not be a subtick at this position", t.getMessage());
 	}
-	
+
 	/**
 	 * Test deserialising a container a.k.a a tick
 	 */
@@ -697,10 +697,10 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		mouse.updateFromState(new int[] { VirtualKey.MOUSEMOVED.getKeycode() }, 0, 1580, 658);
 
 		VirtualCameraAngle cameraAngle = new VirtualCameraAngle();
-		cameraAngle.updateFromState(17.85F, -202.74799F);
-		cameraAngle.updateFromState(11.85F, -2.74799F);
-		cameraAngle.updateFromState(45F, -22.799F);
-		
+		cameraAngle.updateFromState(-202.74799F, 17.85F);
+		cameraAngle.updateFromState(-2.74799F, 11.85F);
+		cameraAngle.updateFromState(-22.799F, 45F);
+
 		expected.add(new TickContainer(keyboard, mouse, cameraAngle));
 
 		assertBigArrayList(expected, actual);
@@ -818,7 +818,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		assertEquals(expected, actual);
 	}
-	
+
 	@Test
 	void testDeserialiseKeyboardWithKeyCodes() {
 		List<String> tick = new ArrayList<>();
@@ -898,9 +898,9 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		VirtualCameraAngle expected = new VirtualCameraAngle();
 		expected.set(0, 0);
-		expected.updateFromEvent(19F, -202.74799F);
-		expected.updateFromEvent(11.1241500F - 19F, -2.799F + 202.74799F);
-		expected.updateFromEvent(17.3F - 11.1241500F, -202.79F + 2.799F);
+		expected.updateFromEvent(-202.74799F, 19F);
+		expected.updateFromEvent(-2.799F + 202.74799F, 11.1241500F - 19F);
+		expected.updateFromEvent(-202.79F + 2.799F, 17.3F - 11.1241500F);
 
 		assertEquals(expected, actual);
 	}
@@ -926,66 +926,66 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertTrue(isFloat("-145.23"));
 		assertTrue(isFloat(Long.toString(Integer.MAX_VALUE + 1L)));
 	}
-	
+
 	@Test
 	void testParseInt() {
 		int actual = parseInt("testParseInt", "12");
 		assertEquals(12, actual);
-		
+
 		this.currentTick = 13;
 		this.currentSubtick = 1;
-		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+		Throwable t = assertThrows(PlaybackLoadException.class, () -> {
 			parseInt("testParseInt", "12.1");
 		});
-		
-		assertEquals("Line 1, Tick 13, Subtick 1: Can't parse integer in testParseInt", t.getMessage());
+
+		assertEquals("Line 1, Tick 13, Subtick 1: The testParseInt could not be processed. This should be a number: 12.1", t.getMessage());
 		assertEquals(NumberFormatException.class, t.getCause().getClass());
 		assertEquals("For input string: \"12.1\"", t.getCause().getMessage());
 	}
-	
+
 	@Test
 	void testParseFloat() {
 		float actual = parseFloat("testParseFloat", "12.1");
 		assertEquals(12.1f, actual);
-		
+
 		this.currentTick = 15;
 		this.currentSubtick = 6;
-		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+		Throwable t = assertThrows(PlaybackLoadException.class, () -> {
 			parseFloat("testParseFloat", "12.123h");
 		});
-		
-		assertEquals("Line 1, Tick 15, Subtick 6: Can't parse float in testParseFloat", t.getMessage());
+
+		assertEquals("Line 1, Tick 15, Subtick 6: The testParseFloat could not be processed. This should be a decimal number: 12.123h", t.getMessage());
 		assertEquals(NumberFormatException.class, t.getCause().getClass());
 		assertEquals("For input string: \"12.123h\"", t.getCause().getMessage());
 	}
-	
+
 	@Test
 	void testDeserialiseRelativeInt() {
 		int actual = deserialiseRelativeInt("testParseRelativeInt", "12", null);
 		assertEquals(12, actual);
-		
+
 		actual = deserialiseRelativeInt("test", "~2", 14);
 		assertEquals(16, actual);
-		
+
 		this.currentTick = 23;
 		this.currentSubtick = 11;
-		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+		Throwable t = assertThrows(PlaybackLoadException.class, () -> {
 			deserialiseRelativeInt("testParseRelativeInt", "~12", null);
 		});
 		assertEquals("Line 1, Tick 23, Subtick 11: Can't process relative value ~12 in testParseRelativeInt. Previous value for comparing is not available", t.getMessage());
 	}
-	
+
 	@Test
 	void testDeserialiseRelativeFloat() {
 		float actual = deserialiseRelativeFloat("testParseRelativeFloat", "12.2", null);
 		assertEquals(12.2f, actual);
-		
+
 		actual = deserialiseRelativeFloat("test", "~2.4", 14.4f);
 		assertEquals(16.8f, actual);
-		
+
 		this.currentTick = 20;
 		this.currentSubtick = 2;
-		Throwable t = assertThrows(PlaybackLoadException.class, ()->{
+		Throwable t = assertThrows(PlaybackLoadException.class, () -> {
 			deserialiseRelativeFloat("testParseRelativeFloat", "~12.3", null);
 		});
 		assertEquals("Line 1, Tick 20, Subtick 2: Can't process relative value ~12.3 in testParseRelativeFloat. Previous value for comparing is not available", t.getMessage());
@@ -1068,6 +1068,5 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	public SerialiserFlavorBase clone() {
 		return new SerialiserFlavorBaseTest();
 	}
-	
-	
+
 }
