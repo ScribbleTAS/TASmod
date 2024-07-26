@@ -38,6 +38,7 @@ import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.server.MinecraftServer;
 
@@ -48,9 +49,11 @@ import net.minecraft.server.MinecraftServer;
  */
 public class TASmod implements ModInitializer, EventServerInit, EventServerStop {
 
-	private static MinecraftServer serverInstance;
-
 	public static final Logger LOGGER = LogManager.getLogger("TASmod");
+
+	public static String version = "dev";
+
+	private static MinecraftServer serverInstance;
 
 	public static PlaybackControllerServer playbackControllerServer = new PlaybackControllerServer();;
 
@@ -81,6 +84,12 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 	public void onInitialize() {
 
 		LOGGER.info("Initializing TASmod");
+
+		String modVersion = FabricLoader.getInstance().getModContainer("tasmod").get().getMetadata().getVersion().getFriendlyString();
+
+		if (!"${mod_version}".equals(modVersion)) {
+			version = modVersion;
+		}
 
 		// Start ticksync
 		ticksyncServer = new TickSyncServer();

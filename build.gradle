@@ -3,11 +3,16 @@ plugins {
     id 'fabric-loom' version "${loom_version}"
     // legacy looming (loom plugin improvements)
     id 'legacy-looming' version "${loom_version}"
+    id 'com.palantir.git-version' version '3.1.0'
 }
 
 
 // set basic properties
-version = project.version
+def hash = ""
+if(project.release=="false") {
+	hash = "_"+versionDetails().gitHash.substring(0,7)
+}
+version = project.version+hash
 group = project.group
 
 // compile for java 8
@@ -18,7 +23,6 @@ loom {
 	accessWidenerPath = file('src/main/resources/tasmod.accesswidener')
 	// add log4jconfig
 	log4jConfigs.from(file('src/main/resources/log4j.xml'))
-	
 }
 
 // dependency repositories
@@ -52,8 +56,6 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
 }
 
-
-
 // task for downloading KillTheRng
 //task downloadKTRNG(type: Copy) {
 	//group 'tasmod'
@@ -70,7 +72,7 @@ compileJava{
 processResources {
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft_version
-
+    
     filesMatching("fabric.mod.json") {
         expand 'mod_url': project.mod_url, 'name': project.mod_name, 'mod_version': project.version, 'mod_description': project.mod_description, 'mod_sources': project.mod_sources, 'mod_email': project.mod_email
     }

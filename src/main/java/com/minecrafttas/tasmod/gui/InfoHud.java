@@ -509,6 +509,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 		}
 		ScaledResolution scaled = new ScaledResolution(Minecraft.getMinecraft());
 		drawCenteredString(Minecraft.getMinecraft().fontRenderer, "TASmod is still in development! Major issues may arise!", scaled.getScaledWidth() / 2, scaled.getScaledHeight() - 50, 0xFF8400);
+		drawString(Minecraft.getMinecraft().fontRenderer, TASmod.version, scaled.getScaledWidth() - Minecraft.getMinecraft().fontRenderer.getStringWidth(TASmod.version) - 2, scaled.getScaledHeight() - 10, 0xFFFFFF);
 //		drawCenteredString(Minecraft.getMinecraft().fontRenderer, Float.toString(TASmod.tickratechanger.ticksPerSecond), scaled.getScaledWidth() / 2, scaled.getScaledHeight() - 36, 0xFFFFFF);
 	}
 
@@ -523,27 +524,29 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 	}
 
 	private String keystrokes() {
-		if (Display.isActive()) {
-			String out1 = "" + ChatFormatting.WHITE;
-			for (String mouse : TASmodClient.virtual.getCurrentMousePresses()) {
-				out1 = out1.concat(mouse + " ");
-			}
+
+		String out1 = "" + ChatFormatting.WHITE;
+		for (String mouse : TASmodClient.virtual.getCurrentMousePresses()) {
+			out1 = out1.concat(mouse + " ");
+		}
+		if (Display.isActive() || TASmodClient.controller.isPlayingback()) {
 			out1 = out1.concat("" + ChatFormatting.GREEN);
 			for (String mouse : TASmodClient.virtual.getNextMousePresses()) {
 				out1 = out1.concat(mouse + " ");
 			}
+		}
 
-			String out2 = "" + ChatFormatting.WHITE;
-			for (String key : TASmodClient.virtual.getCurrentKeyboardPresses()) {
-				out2 = out2.concat(key + " ");
-			}
+		String out2 = "" + ChatFormatting.WHITE;
+		for (String key : TASmodClient.virtual.getCurrentKeyboardPresses()) {
+			out2 = out2.concat(key + " ");
+		}
+		if (Display.isActive() || TASmodClient.controller.isPlayingback()) {
 			out2 = out2.concat("" + ChatFormatting.GREEN);
 			for (String key : TASmodClient.virtual.getNextKeyboardPresses()) {
 				out2 = out2.concat(key + " ");
 			}
-			return out1 + out2;
 		}
-		return "";
+		return out1 + out2;
 	}
 
 	private Pair<Integer, Integer> getScreenOffset(int x, int y, InfoLabel label) {

@@ -173,19 +173,13 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 
 	public String getPos() {
 		if (currentValues != null && !TASmodClient.controller.isNothingPlaying()) {
-			EntityPlayerSP player = Minecraft.getMinecraft().player;
+//			EntityPlayerSP player = Minecraft.getMinecraft().player;
 			String[] values = new String[3];
-			values[0] = getFormattedString(player.posX - currentValues.values[0]);
-			values[1] = getFormattedString(player.posY - currentValues.values[1]);
-			values[2] = getFormattedString(player.posZ - currentValues.values[2]);
+			values[0] = getFormattedString(/*player.posX - */currentValues.values[0]);
+			values[1] = getFormattedString(/*player.posY - */currentValues.values[1]);
+			values[2] = getFormattedString(/*player.posZ - */currentValues.values[2]);
 
-			String out = "";
-			for (String val : values) {
-				if (val != null) {
-					out += val + " ";
-				}
-			}
-			lastPos = out;
+			lastPos = String.join(" ", values);
 		}
 		return lastPos;
 	}
@@ -194,19 +188,13 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 
 	public String getMotion() {
 		if (currentValues != null && !TASmodClient.controller.isNothingPlaying()) {
-			EntityPlayerSP player = Minecraft.getMinecraft().player;
+//			EntityPlayerSP player = Minecraft.getMinecraft().player;
 			String[] values = new String[3];
-			values[0] = getFormattedString(player.motionX - currentValues.values[3]);
-			values[1] = getFormattedString(player.motionY - currentValues.values[4]);
-			values[2] = getFormattedString(player.motionZ - currentValues.values[5]);
+			values[0] = getFormattedString(/*player.motionX - */currentValues.values[3]);
+			values[1] = getFormattedString(/*player.motionY - */currentValues.values[4]);
+			values[2] = getFormattedString(/*player.motionZ - */currentValues.values[5]);
 
-			String out = "";
-			for (String val : values) {
-				if (val != null) {
-					out += val + " ";
-				}
-			}
-			lastMotion = out;
+			lastMotion = String.join(" ", values);
 		}
 		return lastMotion;
 	}
