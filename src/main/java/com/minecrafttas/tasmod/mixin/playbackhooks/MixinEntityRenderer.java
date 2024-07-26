@@ -81,13 +81,13 @@ public class MixinEntityRenderer implements SubtickDuck {
 			}
 
 			mc.getTutorial().handleMouse(mc.mouseHelper);
-			TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle((float) -((double)deltaPitch * 0.15D * invertMouse), (float) ((double)deltaYaw * 0.15D), TASmodClient.tickratechanger.ticksPerSecond != 0);
+			TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle((float) -((double) deltaPitch * 0.15D * invertMouse), (float) ((double) deltaYaw * 0.15D), TASmodClient.tickratechanger.ticksPerSecond != 0);
 		}
 	}
 
 	@Redirect(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;turn(FF)V"))
-	public void playback_stopVanilla(EntityPlayerSP player, float deltaYaw, float deltaPitch){
-		if(TASmodClient.tickratechanger.ticksPerSecond == 0){
+	public void playback_turnPlayer(EntityPlayerSP player, float deltaYaw, float deltaPitch) {
+		if (TASmodClient.tickratechanger.ticksPerSecond == 0 && !TASmodClient.controller.isPlayingback()) {
 			player.turn(deltaYaw, deltaPitch);
 		}
 	}
@@ -100,35 +100,35 @@ public class MixinEntityRenderer implements SubtickDuck {
 	 */
 	@Override
 	public void runUpdate(float partialTicks) {
-			if(mc.player == null){
-				return;
-			}
-			// Update the currentCameraAngle
-			TASmodClient.virtual.CAMERA_ANGLE.nextCameraTick();
+		if (mc.player == null) {
+			return;
+		}
+		// Update the currentCameraAngle
+		TASmodClient.virtual.CAMERA_ANGLE.nextCameraTick();
 
-			// Store current rotation to be used as prevRotationPitch/Yaw
-			float prevPitch = mc.player.rotationPitch;
-			float prevYaw = mc.player.rotationYaw;
+		// Store current rotation to be used as prevRotationPitch/Yaw
+		float prevPitch = mc.player.rotationPitch;
+		float prevYaw = mc.player.rotationYaw;
 
-			// Get the new pitch from the virtual input
-			Float newPitch = TASmodClient.virtual.CAMERA_ANGLE.getCurrentPitch();
-			Float newYaw = TASmodClient.virtual.CAMERA_ANGLE.getCurrentYaw();
+		// Get the new pitch from the virtual input
+		Float newPitch = TASmodClient.virtual.CAMERA_ANGLE.getCurrentPitch();
+		Float newYaw = TASmodClient.virtual.CAMERA_ANGLE.getCurrentYaw();
 
-			// If the pitch or yaw is null (usually on initialize or when the player joins the world),
-			// set nextCameraAngle to the current absolute camera coordinates.
-			// This ensures that the camera position is loaded correctly
-			if(newPitch == null || newYaw == null) {
-				TASmodClient.virtual.CAMERA_ANGLE.setCamera(prevPitch, prevYaw);
-				return;
-			}
+		// If the pitch or yaw is null (usually on initialize or when the player joins the world),
+		// set nextCameraAngle to the current absolute camera coordinates.
+		// This ensures that the camera position is loaded correctly
+		if (newPitch == null || newYaw == null) {
+			TASmodClient.virtual.CAMERA_ANGLE.setCamera(prevPitch, prevYaw);
+			return;
+		}
 
-			// Update the rotation of the player
-			mc.player.rotationPitch = newPitch;
-			mc.player.rotationYaw = newYaw;
+		// Update the rotation of the player
+		mc.player.rotationPitch = newPitch;
+		mc.player.rotationYaw = newYaw;
 
-			// Update the previous rotation of the player
-			mc.player.prevRotationPitch = prevPitch;
-			mc.player.prevRotationYaw = prevYaw;
+		// Update the previous rotation of the player
+		mc.player.prevRotationPitch = prevPitch;
+		mc.player.prevRotationYaw = prevYaw;
 	}
 
 	/**
