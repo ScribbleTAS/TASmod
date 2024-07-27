@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventServer.EventServerTickPost;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -109,12 +110,15 @@ public abstract class MixinMinecraftServer {
 
 		TASmod.gameLoopSchedulerServer.runAllTasks();
 
-		synchronized (this.futureTaskQueue) {
-			while (!this.futureTaskQueue.isEmpty()) {
-				try {
-					((FutureTask<?>) this.futureTaskQueue.poll()).run();
-				} catch (Throwable var9) {
-					var9.printStackTrace();
+		boolean stopTaskQueue = TASmod.savestateHandlerServer != null && TASmod.savestateHandlerServer.state == SavestateState.LOADING;
+		if (!stopTaskQueue) {
+			synchronized (this.futureTaskQueue) {
+				while (!this.futureTaskQueue.isEmpty()) {
+					try {
+						((FutureTask<?>) this.futureTaskQueue.poll()).run();
+					} catch (Throwable var9) {
+						var9.printStackTrace();
+					}
 				}
 			}
 		}

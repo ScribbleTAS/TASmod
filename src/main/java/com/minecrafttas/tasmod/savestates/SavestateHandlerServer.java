@@ -395,11 +395,11 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			ChunkHandler.addPlayerToServerChunk(player);
 		});
 
-		WorldServer[] worlds = server.worlds;
-
-		for (WorldServer world : worlds) {
-			world.tick();
-		}
+//		WorldServer[] worlds = server.worlds;
+//
+//		for (WorldServer world : worlds) {
+//			world.tick();
+//		}
 
 		if (!tickrate0) {
 			TASmod.tickratechanger.pauseGame(false);
@@ -756,7 +756,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 			case SAVESTATE_LOAD:
 				int indexing = TASmodBufferBuilder.readInt(buf);
-				player.getServerWorld().addScheduledTask(() -> {
+				TASmod.gameLoopSchedulerServer.add(() -> {
 					try {
 						TASmod.savestateHandlerServer.loadState(indexing, true);
 					} catch (LoadstateException e) {
