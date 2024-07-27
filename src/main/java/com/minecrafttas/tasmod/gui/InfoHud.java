@@ -311,7 +311,18 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "Facing";
-						return String.format("%.2f %.2f", Minecraft.getMinecraft().player.rotationPitch, Minecraft.getMinecraft().player.rotationYaw);
+						return String.format("%.2f %.2f", Minecraft.getMinecraft().player.rotationYaw, Minecraft.getMinecraft().player.rotationPitch);
+					}));
+
+			title = "camera";
+			y += 14;
+			if (configuration.getProperty(title + "_x", "err").equals("err"))
+				setDefaults(title, y);
+			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
+					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+						if (Minecraft.getMinecraft().currentScreen == this)
+							return "Camera";
+						return String.format("%.2f %.2f", TASmodClient.virtual.CAMERA_ANGLE.getCurrentYaw(), TASmodClient.virtual.CAMERA_ANGLE.getCurrentPitch());
 					}));
 
 			title = "cticks";
@@ -508,7 +519,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 			}
 		}
 		ScaledResolution scaled = new ScaledResolution(Minecraft.getMinecraft());
-		drawCenteredString(Minecraft.getMinecraft().fontRenderer, "TASmod is still in development! Major issues may arise!", scaled.getScaledWidth() / 2, scaled.getScaledHeight() - 50, 0xFF8400);
+//		drawCenteredString(Minecraft.getMinecraft().fontRenderer, "TASmod is still in development! Major issues may arise!", scaled.getScaledWidth() / 2, scaled.getScaledHeight() - 50, 0xFF8400);
 		drawString(Minecraft.getMinecraft().fontRenderer, TASmod.version, scaled.getScaledWidth() - Minecraft.getMinecraft().fontRenderer.getStringWidth(TASmod.version) - 2, scaled.getScaledHeight() - 10, 0xFFFFFF);
 //		drawCenteredString(Minecraft.getMinecraft().fontRenderer, Float.toString(TASmod.tickratechanger.ticksPerSecond), scaled.getScaledWidth() / 2, scaled.getScaledHeight() - 36, 0xFFFFFF);
 	}

@@ -26,7 +26,6 @@
         //General
         "MixinMinecraft",
         "MixinTimer",
-        "MixinInGameHud",
         
         //Savestates
 		"savestates.MixinChunkProviderClient",
@@ -37,9 +36,10 @@
 		//Keybinding
 		"MixinTextfield",
 		
-		//Join and leave game event on the client
+		//Events
 		"events.MixinGuiMainMenu",
 		"events.MixinGuiIngame",
+		"events.MixinEntityRenderer",
 		
 		//Playbackhooks
 		"playbackhooks.MixinMinecraft",
