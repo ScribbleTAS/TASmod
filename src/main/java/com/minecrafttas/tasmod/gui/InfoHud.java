@@ -406,7 +406,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "Velocity";
-						return "Velocity: " + Minecraft.getMinecraft().player.motionX + " " + Minecraft.getMinecraft().player.motionY + " " + Minecraft.getMinecraft().player.motionZ;
+						return Minecraft.getMinecraft().player.motionX + " " + Minecraft.getMinecraft().player.motionY + " " + Minecraft.getMinecraft().player.motionZ;
 					}));
 
 			title = "desyncstatus";

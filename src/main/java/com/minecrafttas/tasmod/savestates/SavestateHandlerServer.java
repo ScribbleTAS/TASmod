@@ -38,6 +38,7 @@ import com.minecrafttas.tasmod.savestates.files.SavestateTrackerFile;
 import com.minecrafttas.tasmod.savestates.modules.PlayerHandler;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
+import com.minecrafttas.tasmod.util.Scheduler.Task;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -395,11 +396,11 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			ChunkHandler.addPlayerToServerChunk(player);
 		});
 
-//		WorldServer[] worlds = server.worlds;
-//
-//		for (WorldServer world : worlds) {
-//			world.tick();
-//		}
+		WorldServer[] worlds = server.worlds;
+
+		for (WorldServer world : worlds) {
+			world.tick();
+		}
 
 		if (!tickrate0) {
 			TASmod.tickratechanger.pauseGame(false);
@@ -735,7 +736,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		switch (packet) {
 			case SAVESTATE_SAVE:
 				Integer index = TASmodBufferBuilder.readInt(buf);
-				TASmod.gameLoopSchedulerServer.add(() -> {
+
+				Task savestateTask = () -> {
 					try {
 						TASmod.savestateHandlerServer.saveState(index, true);
 					} catch (SavestateException e) {
@@ -751,12 +753,17 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 					} finally {
 						TASmod.savestateHandlerServer.state = SavestateState.NONE;
 					}
-				});
+				};
+
+				if (TASmod.tickratechanger.ticksPerSecond == 0)
+					TASmod.gameLoopSchedulerServer.add(savestateTask);
+				else
+					TASmod.tickSchedulerServer.add(savestateTask);
 				break;
 
 			case SAVESTATE_LOAD:
 				int indexing = TASmodBufferBuilder.readInt(buf);
-				TASmod.gameLoopSchedulerServer.add(() -> {
+				Task loadstateTask = () -> {
 					try {
 						TASmod.savestateHandlerServer.loadState(indexing, true);
 					} catch (LoadstateException e) {
@@ -772,7 +779,11 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 						LOGGER.error(e);
 						TASmod.savestateHandlerServer.state = SavestateState.NONE;
 					}
-				});
+				};
+				if (TASmod.tickratechanger.ticksPerSecond == 0)
+					TASmod.gameLoopSchedulerServer.add(loadstateTask);
+				else
+					TASmod.tickSchedulerServer.add(loadstateTask);
 				break;
 
 			case SAVESTATE_SCREEN:

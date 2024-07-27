@@ -23,12 +23,12 @@ public interface EventClient {
 	}
 
 	/**
-	 * Fired when drawing something on screen. Always.
+	 * Fired when drawing something on screen. Ignores F1
 	 */
 	@FunctionalInterface
 	public static interface EventDrawHotbarAlways extends EventBase {
 		/**
-		 * Fired behind the hotbar hotbar is drawn on screen
+		 * Fired when the gui is drawn on screen. Ignores F1
 		 */
 		public void onDrawHotbarAlways();
 	}

@@ -19,6 +19,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
@@ -248,6 +249,8 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 	private static void preload(BigArrayList<TickContainer> containerList, long index) {
 		TickContainer containerToPreload = containerList.get(index);
 		TASmodClient.virtual.preloadInput(containerToPreload.getKeyboard(), containerToPreload.getMouse(), containerToPreload.getCameraAngle());
+
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.onPlaybackTick(index, containerToPreload);
 	}
 
 	public static void loadPlayer(NBTTagCompound compound) {
@@ -288,9 +291,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		GameType type = GameType.getByID(gamemode);
 		mc.playerController.setGameType(type);
 
-		// Player rotation does not change when loading a savestate
-		//		CameraInterpolationEvents.rotationPitch = player.rotationPitch;
-		//		CameraInterpolationEvents.rotationYaw = player.rotationYaw + 180f;
+		// Set the camera rotation to the player rotation
 		TASmodClient.virtual.CAMERA_ANGLE.setCamera(player.rotationPitch, player.rotationYaw);
 		SubtickDuck entityRenderer = (SubtickDuck) Minecraft.getMinecraft().entityRenderer;
 		entityRenderer.runUpdate(0);
