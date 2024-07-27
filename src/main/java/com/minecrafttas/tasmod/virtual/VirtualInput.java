@@ -16,6 +16,7 @@ import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinMinecraft;
 import com.minecrafttas.tasmod.util.Ducks;
+import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.PointerNormalizer;
 import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
@@ -144,8 +145,9 @@ public class VirtualInput {
 		MOUSE.nextMouse.deepCopyFrom(mouseToPreload);
 		CAMERA_ANGLE.nextCameraAngle.deepCopyFrom(angleToPreload);
 		Minecraft.getMinecraft().runTickKeyboard(); // Letting mouse and keyboard tick once to load inputs into the "currentKeyboard"
-													// 
 		Minecraft.getMinecraft().runTickMouse();
+		SubtickDuck entityRenderer = (SubtickDuck) Minecraft.getMinecraft().entityRenderer;
+		entityRenderer.runUpdate(0);
 	}
 
 	public List<String> getCurrentMousePresses() {
@@ -615,10 +617,10 @@ public class VirtualInput {
 		 * <br>
 		 * Runs every frame
 		 * 
-		 * @see com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer#runUpdate(float);
 		 * @param pitchDelta Relative rotationPitch delta from LWJGLs mouse delta.
 		 * @param yawDelta Relative rotationYaw delta from LWJGLs mouse delta.
 		 * @param updateSubtick Whether to add the previous camera angle to the {@link Subtickable#subtickList}
+		 * @see MixinEntityRenderer#runUpdate(float)
 		 */
 		public void updateNextCameraAngle(float pitchDelta, float yawDelta, boolean updateSubtick) {
 			//			LOGGER.debug("Pitch: {}, Yaw: {}", pitch, yaw);

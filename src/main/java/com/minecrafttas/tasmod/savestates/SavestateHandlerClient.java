@@ -23,6 +23,7 @@ import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
+import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.mojang.realmsclient.gui.ChatFormatting;
 
@@ -287,9 +288,12 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		GameType type = GameType.getByID(gamemode);
 		mc.playerController.setGameType(type);
 
-		// #?? Player rotation does not change when loading a savestate
+		// Player rotation does not change when loading a savestate
 		//		CameraInterpolationEvents.rotationPitch = player.rotationPitch;
 		//		CameraInterpolationEvents.rotationYaw = player.rotationYaw + 180f;
+		TASmodClient.virtual.CAMERA_ANGLE.setCamera(player.rotationPitch, player.rotationYaw);
+		SubtickDuck entityRenderer = (SubtickDuck) Minecraft.getMinecraft().entityRenderer;
+		entityRenderer.runUpdate(0);
 
 		SavestateHandlerClient.keepPlayerInLoadedEntityList(player);
 	}
