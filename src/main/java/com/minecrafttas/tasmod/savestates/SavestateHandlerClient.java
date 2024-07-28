@@ -165,7 +165,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		BigArrayList<TickContainer> savestateContainerList;
 
 		if (targetfile.exists()) {
-			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile, false);
+			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile, state != TASstate.PLAYBACK);
 		} else {
 			controller.setTASStateClient(TASstate.NONE, false);
 			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "Inputs could not be loaded for this savestate,"));
