@@ -37,6 +37,7 @@ import com.minecrafttas.tasmod.savestates.files.SavestateDataFile.DataValues;
 import com.minecrafttas.tasmod.savestates.files.SavestateTrackerFile;
 import com.minecrafttas.tasmod.savestates.modules.PlayerHandler;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
+import com.minecrafttas.tasmod.util.Ducks.WorldServerDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 
@@ -396,11 +397,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			ChunkHandler.addPlayerToServerChunk(player);
 		});
 
-		WorldServer[] worlds = server.worlds;
-
-		for (WorldServer world : worlds) {
-			world.tick();
-		}
+		ChunkHandler.sendChunksToClient(server);
 
 		if (!tickrate0) {
 			TASmod.tickratechanger.pauseGame(false);
@@ -931,7 +928,19 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 				((ChunkProviderDuck) chunkProvider).unloadAllChunks();
 			}
+		}
 
+		/**
+		 * Tick and send chunks to the client
+		 * @param server
+		 */
+		public static void sendChunksToClient(MinecraftServer server) {
+			WorldServer[] worlds = server.worlds;
+
+			for (WorldServer world : worlds) {
+				WorldServerDuck worldTick = (WorldServerDuck) world;
+				worldTick.sendChunksToClient();
+			}
 		}
 	}
 }

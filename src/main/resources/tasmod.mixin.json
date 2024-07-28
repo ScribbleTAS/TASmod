@@ -1,47 +1,46 @@
 {
-    "required": true,
-    "minVersion": "0.8.5",
-    "package": "com.minecrafttas.tasmod.mixin",
-    "compatibilityLevel": "JAVA_8",
-    "mixins": [
-    
-        //General
-        "MixinMinecraftServer",
-        "MixinEntityPlayer",
-        
-        //Savestates
-        "savestates.MixinChunkProviderServer",
-        "savestates.MixinEntityPlayerMP",
-        "savestates.MixinNetHandlerPlayServer",
-        "savestates.AccessorChunkLoader",
-        "savestates.AccessorAnvilChunkLoader",
-        
-        //Events
-        
-        //Fixing forge and vanilla stuff
-        "fixes.MixinDragonFightManager"
-        
-    ],
-    "client": [
-        //General
-        "MixinMinecraft",
-        "MixinTimer",
-        
-        //Savestates
+	"required": true,
+	"minVersion": "0.8.5",
+	"package": "com.minecrafttas.tasmod.mixin",
+	"compatibilityLevel": "JAVA_8",
+	"mixins": [
+		// General
+		"MixinMinecraftServer",
+		"MixinEntityPlayer",
+
+		// Savestates
+		"savestates.MixinChunkProviderServer",
+		"savestates.MixinNetHandlerPlayServer",
+		"savestates.AccessorChunkLoader",
+		"savestates.AccessorAnvilChunkLoader",
+		"savestates.MixinWorldServer",
+		
+		// Events
+		"events.MixinEntityPlayerMP",
+
+		// Fixing forge and vanilla stuff
+		"fixes.MixinDragonFightManager"
+	],
+	"client": [
+		// General
+		"MixinMinecraft",
+		"MixinTimer",
+		
+		// Savestates
 		"savestates.MixinChunkProviderClient",
 		
-		//Interpolation
+		// Interpolation
 		"MixinFrustum",
 		
-		//Keybinding
+		// Keybinding
 		"MixinTextfield",
 		
-		//Events
+		// Events
 		"events.MixinGuiMainMenu",
 		"events.MixinGuiIngame",
 		"events.MixinEntityRenderer",
 		
-		//Playbackhooks
+		// Playbackhooks
 		"playbackhooks.MixinMinecraft",
 		"playbackhooks.MixinEntityRenderer",
 		"playbackhooks.MixinGuiScreen",
@@ -55,12 +54,12 @@
 		"playbackhooks.MixinGuiStats",
 		"playbackhooks.MixinKeyBinding",
 		
-		//Shields
+		// Shields
 		"shields.MixinRenderItem",
 		"shields.MixinTileEntityItemStackRenderer",
 		
-		//Fixes
-        "fixes.MixinMinecraftFullscreen",
-        "fixes.MixinNetworkManager"
+		// Fixes
+		"fixes.MixinMinecraftFullscreen",
+		"fixes.MixinNetworkManager"
 	]
 }

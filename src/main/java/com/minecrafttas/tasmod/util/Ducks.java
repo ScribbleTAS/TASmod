@@ -19,19 +19,38 @@ package com.minecrafttas.tasmod.util;
  * @author Pancake
  */
 public class Ducks {
-	
+
 	/**
 	 * Quacks the chunk provider to unload all chunks
 	 */
 	public static interface ChunkProviderDuck {
+		/**
+		 * Unloads chunks in the chunk providers
+		 * @see com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer#unloadAllChunks() MixinChunkProviderServer#unloadAllChunks()
+		 * @see com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderClient#unloadAllChunks() MixinChunkProviderClient#unloadAllChunks()
+		 */
 		public void unloadAllChunks();
 	}
-	
+
+	/**
+	 * Quacks the worldserver to implement custom chunk ticking behavior
+	 * 
+	 * @author Scribble
+	 */
+	public static interface WorldServerDuck {
+
+		/**
+		 * Sends the chunks to the client
+		 * @see com.minecrafttas.tasmod.mixin.savestates.MixinWorldServer#sendChunksToClient() MixinWorldServer#sendChunksToClient()
+		 */
+		public void sendChunksToClient();
+	}
+
 	/**
 	 * Quacks the gui screen to spit out mouse positions independent of the display size
 	 */
 	public static interface GuiScreenDuck {
-		
+
 		/**
 		 * Calculates the true value of the pointer coordinate, by removing the scaling for custom screen sizes applied to it:
 		 * <pre>
@@ -43,7 +62,7 @@ public class Ducks {
 		 * @see #rescaleX(int)
 		 */
 		public int unscaleX(int x);
-		
+
 		/**
 		 * Calculates the true value of the pointer coordinate, by removing the scaling for custom screen sizes applied to it:
 		 * <pre>
@@ -55,7 +74,7 @@ public class Ducks {
 		 * @see #rescaleY(int)
 		 */
 		public int unscaleY(int y);
-		
+
 		/**
 		 * Reapplies the math for custom gui scales to the pointer coordinate:
 		 * <pre>
@@ -65,7 +84,7 @@ public class Ducks {
 		 * @return The scaled pointer coordinate
 		 */
 		public int rescaleX(int x);
-		
+
 		/**
 		 * Reapplies the math for custom gui scales to the pointer coordinate:
 		 * <pre>
@@ -87,6 +106,5 @@ public class Ducks {
 		 */
 		void runUpdate(float partialTicks);
 	}
-	
-}
 
+}
