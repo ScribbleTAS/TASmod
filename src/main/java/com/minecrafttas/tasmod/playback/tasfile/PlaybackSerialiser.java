@@ -87,8 +87,6 @@ public class PlaybackSerialiser {
 			if (defaultFlavor == null || defaultFlavor.isEmpty())
 				throw new PlaybackSaveException("No default flavor specified... Please specify a flavor name first");
 			flavorName = defaultFlavor;
-		} else {
-			defaultFlavor = flavorName;
 		}
 
 		FileThread writerThread;
@@ -100,6 +98,12 @@ public class PlaybackSerialiser {
 		writerThread.start();
 
 		SerialiserFlavorBase flavor = TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
+
+		if (flavor == null) {
+			throw new PlaybackSaveException("Flavor %s doesn't exist", flavorName);
+		}
+
+		defaultFlavor = flavorName;
 
 		List<String> header = flavor.serialiseHeader();
 		for (String line : header) {
