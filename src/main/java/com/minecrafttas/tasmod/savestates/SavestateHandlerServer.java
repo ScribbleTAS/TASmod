@@ -777,10 +777,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 						TASmod.savestateHandlerServer.state = SavestateState.NONE;
 					}
 				};
-				if (TASmod.tickratechanger.ticksPerSecond == 0)
-					TASmod.gameLoopSchedulerServer.add(loadstateTask);
-				else
-					TASmod.tickSchedulerServer.add(loadstateTask);
+				TASmod.gameLoopSchedulerServer.add(loadstateTask);
 				break;
 
 			case SAVESTATE_SCREEN:
