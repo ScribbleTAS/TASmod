@@ -1,13 +1,17 @@
 package com.minecrafttas.tasmod.mixin.savestates;
 
 import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
 
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import com.minecrafttas.tasmod.util.Ducks.WorldServerDuck;
 
 import net.minecraft.server.management.PlayerChunkMap;
+import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
@@ -21,6 +25,13 @@ public class MixinWorldServer implements WorldServerDuck {
 
 	@Shadow
 	private PlayerChunkMap playerChunkMap;
+
+	@Shadow
+	@Final
+	private Set<NextTickListEntry> pendingTickListEntriesHashSet;
+	@Shadow
+	@Final
+	private TreeSet<NextTickListEntry> pendingTickListEntriesTreeSet;
 
 	/**
 	 * <p>Tricks the {@link #playerChunkMap} into sending the loaded chunks to the client.<br>
@@ -40,5 +51,14 @@ public class MixinWorldServer implements WorldServerDuck {
 			chunk.onTick(false);
 		}
 		this.playerChunkMap.tick();
+	}
+
+	/**
+	 * <p>Clears {@link #pendingTickListEntriesTreeSet} and {@link #pendingTickListEntriesHashSet} to avoid crashes or weird behaviour of redstone components after a savestate.
+	 */
+	@Override
+	public void clearTickListEntries() {
+		this.pendingTickListEntriesHashSet.clear();
+		this.pendingTickListEntriesTreeSet.clear();
 	}
 }

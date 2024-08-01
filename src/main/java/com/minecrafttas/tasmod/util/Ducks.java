@@ -1,5 +1,6 @@
 package com.minecrafttas.tasmod.util;
 
+
 /**
  * Oh boy, ducks! I can't help but quack up when they waddle their way into the code. :duck:
  * But let me tell you a little secret: I have a love-hate relationship with ducks. Not the adorable feathered creatures, mind you, but those sneaky little programming devils that swim in the deep waters of out-of-scope variables.
@@ -44,6 +45,12 @@ public class Ducks {
 		 * @see com.minecrafttas.tasmod.mixin.savestates.MixinWorldServer#sendChunksToClient() MixinWorldServer#sendChunksToClient()
 		 */
 		public void sendChunksToClient();
+
+		/**
+		 * Clears {@link net.minecraft.world.WorldServer#pendingTickListEntriesHashSet} and {@link net.minecraft.world.WorldServer#pendingTickListEntriesTreeSet}
+		 * @see com.minecrafttas.tasmod.mixin.savestates.MixinWorldServer#clearTickListEntries() MixinWorldServer#clearTickListEntries()
+		 */
+		public void clearTickListEntries();
 	}
 
 	/**

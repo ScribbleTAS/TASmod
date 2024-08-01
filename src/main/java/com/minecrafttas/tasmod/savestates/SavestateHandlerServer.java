@@ -52,7 +52,6 @@ import net.minecraft.server.management.PlayerList;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
@@ -680,8 +679,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			NBTTagCompound nbttagcompound = playerList.readPlayerDataFromFile(player);
 			playerHandler.reattachEntityToPlayer(nbttagcompound, player.getServerWorld(), player);
 		}
-		// Updating redstone component timers to the new world time (#136)
-		ChunkHandler.updateWorldServerTickListEntries();
+		// Clear tick list entries after a savestate (#136)
+		ChunkHandler.clearWorldServerTickListEntries();
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -796,13 +795,12 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		/**
 		 * Updates ticklist entries to the current world time, allowing them to not be stuck in a pressed state #136
 		 */
-		public static void updateWorldServerTickListEntries() {
+		public static void clearWorldServerTickListEntries() {
 			LOGGER.trace(LoggerMarkers.Savestate, "Update server tick list entries");
 			MinecraftServer server = TASmod.getServerInstance();
 			for (WorldServer world : server.worlds) {
-				for (NextTickListEntry nextticklistentry : world.pendingTickListEntriesHashSet) {
-					nextticklistentry.setScheduledTime(world.getTotalWorldTime());
-				}
+				WorldServerDuck worldDuck = (WorldServerDuck) world;
+				worldDuck.clearTickListEntries();
 			}
 		}
 
