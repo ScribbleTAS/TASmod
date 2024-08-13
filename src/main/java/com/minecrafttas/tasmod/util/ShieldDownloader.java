@@ -35,7 +35,7 @@ import net.minecraft.util.ResourceLocation;
  *
  * @author Scribble
  */
-public class ShieldDownloader implements EventPlayerJoinedClientSide, EventOtherPlayerJoinedClientSide{
+public class ShieldDownloader implements EventPlayerJoinedClientSide, EventOtherPlayerJoinedClientSide {
 	private final ResourceLocation bottleshield = new ResourceLocation("tasmod:textures/shields/bottleshield.png");
 	private final String defaultshield = "bottleshield";
 	private final String cacheLocation = "tasmod/shields/";
@@ -59,15 +59,19 @@ public class ShieldDownloader implements EventPlayerJoinedClientSide, EventOther
 	public void onPlayerJoinedClientSide(EntityPlayerSP player) {
 		onPlayerJoin(player.getGameProfile());
 	}
-	
+
 	@Override
 	public void onOtherPlayerJoinedClientSide(GameProfile profile) {
 		onPlayerJoin(profile);
 	}
-	
+
 	public void onPlayerJoin(GameProfile profile) {
 		String uuid = profile.getId().toString();
-		loadTexture(uuid);
+		Thread t = new Thread(() -> {
+			loadTexture(uuid);
+		}, "Shield downloader");
+		t.run();
+
 //		downloadFromTASTools(uuid, cacheLocation);
 	}
 
@@ -124,7 +128,7 @@ public class ShieldDownloader implements EventPlayerJoinedClientSide, EventOther
 			return bottleshield;
 		}
 	}
-	
+
 	@Deprecated
 	public void downloadFromTASTools(String uuid, String location) {
 		String name = getShieldName(uuid);
