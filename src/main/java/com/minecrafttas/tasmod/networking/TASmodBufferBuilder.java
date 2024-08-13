@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import com.minecrafttas.mctcommon.networking.ByteBufferBuilder;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.savestates.modules.PlayerHandler.MotionData;
+import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandler.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 
 import net.minecraft.nbt.CompressedStreamTools;

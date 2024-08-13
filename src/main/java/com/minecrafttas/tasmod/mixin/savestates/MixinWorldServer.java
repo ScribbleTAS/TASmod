@@ -53,12 +53,13 @@ public class MixinWorldServer implements WorldServerDuck {
 		this.playerChunkMap.tick();
 	}
 
-	/**
-	 * <p>Clears {@link #pendingTickListEntriesTreeSet} and {@link #pendingTickListEntriesHashSet} to avoid crashes or weird behaviour of redstone components after a savestate.
-	 */
 	@Override
-	public void clearTickListEntries() {
-		this.pendingTickListEntriesHashSet.clear();
-		this.pendingTickListEntriesTreeSet.clear();
+	public TreeSet<NextTickListEntry> getTickListEntriesTreeSet() {
+		return this.pendingTickListEntriesTreeSet;
+	}
+
+	@Override
+	public Set<NextTickListEntry> getTickListEntriesHashSet() {
+		return this.pendingTickListEntriesHashSet;
 	}
 }

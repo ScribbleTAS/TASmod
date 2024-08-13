@@ -26,7 +26,6 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventSavestate;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorAnvilChunkLoader;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorChunkLoader;
-import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
@@ -35,28 +34,22 @@ import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.files.SavestateDataFile;
 import com.minecrafttas.tasmod.savestates.files.SavestateDataFile.DataValues;
 import com.minecrafttas.tasmod.savestates.files.SavestateTrackerFile;
-import com.minecrafttas.tasmod.savestates.modules.PlayerHandler;
-import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
-import com.minecrafttas.tasmod.util.Ducks.WorldServerDuck;
+import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandler;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
-import net.minecraft.world.gen.ChunkProviderServer;
-import net.minecraft.world.storage.SaveHandler;
 
 /**
  * Creates and loads savestates on both client and server without closing the
@@ -81,7 +74,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	private int latestIndex = 0;
 	private int currentIndex;
 
-	private final PlayerHandler playerHandler;
+	private final SavestatePlayerHandler playerHandler;
+	private final SavestateWorldHandler worldHandler;
 
 	private final Logger logger;
 	public static boolean wasLoading;
@@ -95,7 +89,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	public SavestateHandlerServer(MinecraftServer server, Logger logger) {
 		this.server = server;
 		this.logger = logger;
-		this.playerHandler = new PlayerHandler(server);
+		this.playerHandler = new SavestatePlayerHandler(server);
+		this.worldHandler = new SavestateWorldHandler(server);
 		createSavestateDirectory();
 		refresh();
 		loadCurrentIndexFromFile();
@@ -348,9 +343,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Disabeling level saving for all worlds in case the auto save kicks in during
 		// world unload
-		for (WorldServer world : server.worlds) {
-			world.disableLevelSaving = true;
-		}
+		worldHandler.disableLevelSaving();
 
 		try {
 			// unload chunks on client
@@ -360,9 +353,9 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		}
 
 		// Unload chunks on the server
-		ChunkHandler.disconnectPlayersFromChunkMap(server);
-		ChunkHandler.unloadAllServerChunks(server);
-		ChunkHandler.flushSaveHandler(server);
+		worldHandler.disconnectPlayersFromChunkMap();
+		worldHandler.unloadAllServerChunks();
+		worldHandler.flushSaveHandler();
 
 		// Delete and copy directories
 		FileUtils.deleteDirectory(currentfolder);
@@ -374,14 +367,11 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		// Update the player and the client
 		playerHandler.loadAndSendMotionToPlayer();
 		// Update the session.lock file so minecraft behaves and saves the world
-		ChunkHandler.updateSessionLock(server);
+		worldHandler.updateSessionLock();
 		// Load the chunks and send them to the client
-		ChunkHandler.addPlayersToChunkMap(server);
+		worldHandler.addPlayersToChunkMap();
 
-		// Enable level saving again
-		for (WorldServer world : server.worlds) {
-			world.disableLevelSaving = false;
-		}
+		worldHandler.enableLevelSaving();
 
 		// Incrementing info file
 		SavestateTrackerFile tracker = new SavestateTrackerFile(new File(savestateDirectory, worldname + "-info.txt"));
@@ -393,10 +383,10 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Add players to the chunk
 		server.getPlayerList().getPlayers().forEach(player -> {
-			ChunkHandler.addPlayerToServerChunk(player);
+			worldHandler.addPlayerToServerChunk(player);
 		});
 
-		ChunkHandler.sendChunksToClient(server);
+		worldHandler.sendChunksToClient();
 
 		if (!tickrate0) {
 			TASmod.tickratechanger.pauseGame(false);
@@ -584,11 +574,11 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		file.set(DataValues.INDEX, Integer.toString(currentIndex));
 
-		if (!legacy) {
-			if (TASmod.ktrngHandler.isLoaded()) {
-				file.set(DataValues.SEED, Long.toString(TASmod.ktrngHandler.getGlobalSeedServer()));
-			}
-		}
+//		if (!legacy) {
+//			if (TASmod.ktrngHandler.isLoaded()) {
+//				file.set(DataValues.SEED, Long.toString(TASmod.ktrngHandler.getGlobalSeedServer()));
+//			}
+//		}
 
 		file.save(savestateDat);
 	}
@@ -611,14 +601,14 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		datafile.load(savestateDat);
 
-		if (TASmod.ktrngHandler.isLoaded()) {
-			String seedString = datafile.get(DataValues.SEED);
-			if (seedString != null) {
-				TASmod.ktrngHandler.sendGlobalSeedToServer(Long.parseLong(seedString));
-			} else {
-				logger.warn("KTRNG seed not loaded because it was not found in savestateData.txt!");
-			}
-		}
+//		if (TASmod.ktrngHandler.isLoaded()) {
+//			String seedString = datafile.get(DataValues.SEED);
+//			if (seedString != null) {
+//				TASmod.ktrngHandler.sendGlobalSeedToServer(Long.parseLong(seedString));
+//			} else {
+//				logger.warn("KTRNG seed not loaded because it was not found in savestateData.txt!");
+//			}
+//		}
 	}
 
 	/**
@@ -664,7 +654,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		logger.debug(LoggerMarkers.Savestate, "Setting the savestate index to {}", currentIndex);
 	}
 
-	public PlayerHandler getPlayerHandler() {
+	public SavestatePlayerHandler getPlayerHandler() {
 		return playerHandler;
 	}
 
@@ -679,8 +669,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			NBTTagCompound nbttagcompound = playerList.readPlayerDataFromFile(player);
 			playerHandler.reattachEntityToPlayer(nbttagcompound, player.getServerWorld(), player);
 		}
-		// Clear tick list entries after a savestate (#136)
-		ChunkHandler.clearWorldServerTickListEntries();
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -784,158 +772,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 				throw new WrongSideException(id, Side.SERVER);
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.SERVER);
-		}
-	}
-
-	/**
-	 * Contains static chunk actions, which can be triggered indiviadually for testing
-	 */
-	public static class ChunkHandler {
-
-		/**
-		 * Updates ticklist entries to the current world time, allowing them to not be stuck in a pressed state #136
-		 */
-		public static void clearWorldServerTickListEntries() {
-			LOGGER.trace(LoggerMarkers.Savestate, "Update server tick list entries");
-			MinecraftServer server = TASmod.getServerInstance();
-			for (WorldServer world : server.worlds) {
-				WorldServerDuck worldDuck = (WorldServerDuck) world;
-				worldDuck.clearTickListEntries();
-			}
-		}
-
-		/**
-		 * Just like {@link SavestateHandlerClient#addPlayerToClientChunk(EntityPlayer)}, adds the player to the chunk on the server.
-		 * This prevents the player from being able to place block inside of him
-		 * 
-		 * Side: Server
-		 */
-		public static void addPlayerToServerChunk(EntityPlayerMP player) {
-			LOGGER.trace(LoggerMarkers.Savestate, "Add player {} to server chunk", player.getName());
-			int i = MathHelper.floor(player.posX / 16.0D);
-			int j = MathHelper.floor(player.posZ / 16.0D);
-			WorldServer world = player.getServerWorld();
-			Chunk chunk = world.getChunkFromChunkCoords(i, j);
-			for (int k = 0; k < chunk.getEntityLists().length; k++) {
-				if (chunk.getEntityLists()[k].contains(player)) {
-					return;
-				}
-			}
-			chunk.addEntity(player);
-		}
-
-		/**
-		 * The session lock is minecrafts failsafe system when it comes to saving. It prevents writing to the world folder from 2 different locations <br>
-		 * <br>
-		 * That works by storing system time to a session.lock file, when the server started. The integrated server also saves the time when it started in a variable. <br>
-		 * <br>
-		 * Those two times are then compared every time minecraft tries to save and fails if the times are different.<br>
-		 * <br>
-		 * Since we never close the integrated server, but copy an "old" session.lock file with the savestate, the session.lock will always mismatch.<br>
-		 * Thus we need to update the session lock once the loadstating is completed<br>
-		 * <br>
-		 * TLDR:<br>
-		 * Updates the session lock to allow for vanilla saving again<br>
-		 * <br>
-		 * Side: Server
-		 */
-		public static void updateSessionLock(MinecraftServer server) {
-			LOGGER.trace(LoggerMarkers.Savestate, "Update the session lock");
-			WorldServer[] worlds = server.worlds;
-			for (WorldServer world : worlds) {
-				((SaveHandler) world.getSaveHandler()).setSessionLock();
-			}
-		}
-
-		/**
-		 * Tells the save handler to save all changes to disk and remove all references to the region files, making them editable on disc<br>
-		 * <br>
-		 * Side: Server
-		 */
-		public static void flushSaveHandler(MinecraftServer server) {
-			LOGGER.trace(LoggerMarkers.Savestate, "Flush the save handler");
-			//Vanilla
-			WorldServer[] worlds = server.worlds;
-			for (WorldServer world : worlds) {
-				world.getSaveHandler().flush();
-			}
-		}
-
-		/**
-		 * The player chunk map keeps track of which chunks need to be sent to the client. <br>
-		 * This adds the player to the chunk map so the server knows it can send the information to the client<br>
-		 * <br>
-		 * Side: Server
-		 * @see #disconnectPlayersFromChunkMap(MinecraftServer)
-		 */
-		public static void addPlayersToChunkMap(MinecraftServer server) {
-			List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
-			WorldServer[] worlds = server.worlds;
-			for (EntityPlayerMP player : players) {
-				LOGGER.trace(LoggerMarkers.Savestate, "Add player {} to the chunk map", player.getName());
-				switch (player.dimension) {
-					case -1:
-						worlds[1].getPlayerChunkMap().addPlayer(player);
-						worlds[1].getChunkProvider().provideChunk((int) player.posX >> 4, (int) player.posZ >> 4);
-						break;
-					case 0:
-						worlds[0].getPlayerChunkMap().addPlayer(player);
-						worlds[0].getChunkProvider().provideChunk((int) player.posX >> 4, (int) player.posZ >> 4);
-						break;
-					case 1:
-						worlds[2].getPlayerChunkMap().addPlayer(player);
-						worlds[2].getChunkProvider().provideChunk((int) player.posX >> 4, (int) player.posZ >> 4);
-						break;
-				}
-			}
-		}
-
-		/**
-		 * The player chunk map keeps track of which chunks need to be sent to the client. <br>
-		 * Removing the player stops the server from sending chunks to the client.<br>
-		 * <br>
-		 * Side: Server
-		 * @see #addPlayersToChunkMap(MinecraftServer)
-		 */
-		public static void disconnectPlayersFromChunkMap(MinecraftServer server) {
-			List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
-			WorldServer[] worlds = server.worlds;
-			for (WorldServer world : worlds) {
-				for (EntityPlayerMP player : players) {
-					LOGGER.trace(LoggerMarkers.Savestate, "Disconnect player {} from the chunk map", player.getName());
-					world.getPlayerChunkMap().removePlayer(player);
-				}
-			}
-		}
-
-		/**
-		 * Unloads all chunks on the server<br>
-		 * <br>
-		 * Side: Server
-		 * @see MixinChunkProviderServer#unloadAllChunks()
-		 */
-		public static void unloadAllServerChunks(MinecraftServer server) {
-			LOGGER.trace(LoggerMarkers.Savestate, "Unloading all server chunks");
-			WorldServer[] worlds = server.worlds;
-
-			for (WorldServer world : worlds) {
-				ChunkProviderServer chunkProvider = world.getChunkProvider();
-
-				((ChunkProviderDuck) chunkProvider).unloadAllChunks();
-			}
-		}
-
-		/**
-		 * Tick and send chunks to the client
-		 * @param server
-		 */
-		public static void sendChunksToClient(MinecraftServer server) {
-			WorldServer[] worlds = server.worlds;
-
-			for (WorldServer world : worlds) {
-				WorldServerDuck worldTick = (WorldServerDuck) world;
-				worldTick.sendChunksToClient();
-			}
 		}
 	}
 }

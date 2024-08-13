@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.savestates.modules;
+package com.minecrafttas.tasmod.savestates.handlers;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_PLAYER;
@@ -44,9 +44,9 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.storage.WorldInfo;
 
 /**
- * Contains player related classes
+ * Handles player related savestating methods
  */
-public class PlayerHandler implements ClientPacketHandler, ServerPacketHandler, EventNBT.EventPlayerRead, EventNBT.EventPlayerWrite {
+public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacketHandler, EventNBT.EventPlayerRead, EventNBT.EventPlayerWrite {
 
 	private final MinecraftServer server;
 
@@ -54,7 +54,7 @@ public class PlayerHandler implements ClientPacketHandler, ServerPacketHandler, 
 
 	private final Map<EntityPlayerMP, MotionData> motionData;
 
-	public PlayerHandler(MinecraftServer server) {
+	public SavestatePlayerHandler(MinecraftServer server) {
 		this.server = server;
 		this.futures = new HashMap<>();
 		this.motionData = new HashMap<>();

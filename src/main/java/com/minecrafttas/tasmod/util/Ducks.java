@@ -1,5 +1,9 @@
 package com.minecrafttas.tasmod.util;
 
+import java.util.Set;
+import java.util.TreeSet;
+
+import net.minecraft.world.NextTickListEntry;
 
 /**
  * Oh boy, ducks! I can't help but quack up when they waddle their way into the code. :duck:
@@ -46,11 +50,9 @@ public class Ducks {
 		 */
 		public void sendChunksToClient();
 
-		/**
-		 * Clears {@link net.minecraft.world.WorldServer#pendingTickListEntriesHashSet} and {@link net.minecraft.world.WorldServer#pendingTickListEntriesTreeSet}
-		 * @see com.minecrafttas.tasmod.mixin.savestates.MixinWorldServer#clearTickListEntries() MixinWorldServer#clearTickListEntries()
-		 */
-		public void clearTickListEntries();
+		public TreeSet<NextTickListEntry> getTickListEntriesTreeSet();
+
+		public Set<NextTickListEntry> getTickListEntriesHashSet();
 	}
 
 	/**
