@@ -25,7 +25,7 @@ public class TASmodAPIRegistry {
 	 * 
 	 */
 	public static final PlaybackFileCommandsRegistry PLAYBACK_FILE_COMMAND = new PlaybackFileCommandsRegistry();
-	
+
 	/**
 	 * Registry for registering custom serialiser flavors that dictate the syntax of the inputs stored in the TASfile.<br>
 	 * <br>
@@ -35,5 +35,4 @@ public class TASmodAPIRegistry {
 	 * The resulting flavor can be registered here and can be found as a saving option with /saveTAS
 	 */
 	public static final SerialiserFlavorRegistry SERIALISER_FLAVOR = new SerialiserFlavorRegistry();
-	
 }

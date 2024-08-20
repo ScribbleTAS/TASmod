@@ -4,11 +4,14 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 import org.apache.logging.log4j.Level;
 
 import com.minecrafttas.mctcommon.Configuration;
+import com.minecrafttas.mctcommon.ConfigurationRegistry;
 import com.minecrafttas.mctcommon.KeybindManager;
 import com.minecrafttas.mctcommon.LanguageManager;
 import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
@@ -109,6 +112,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	public void onInitializeClient() {
 
 		LanguageManager.registerMod("tasmod");
+
+		registerConfigValues();
 
 		loadConfig(Minecraft.getMinecraft());
 
@@ -312,13 +317,22 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setConfig(config);
 	}
 
+	private static final ConfigurationRegistry CONFIG_REGISTRY = new ConfigurationRegistry();
+
+	private void registerConfigValues() {
+		CONFIG_REGISTRY.register(TASmodConfig.values());
+	}
+
 	private void loadConfig(Minecraft mc) {
-		File configDir = new File(mc.mcDataDir, "config");
-		if (!configDir.exists()) {
-			configDir.mkdir();
+		Path configDir = mc.mcDataDir.toPath().resolve("config");
+		if (Files.exists(configDir)) {
+			try {
+				Files.createDirectory(configDir);
+			} catch (IOException e) {
+				LOGGER.catching(e);
+			}
 		}
-		config = new Configuration("TASmod configuration", new File(configDir, "tasmod.cfg"));
-		config.register(TASmodConfig.values());
+		config = new Configuration("TASmod configuration", configDir.resolve("tasmod.cfg"), CONFIG_REGISTRY);
 		config.load();
 		config.save();
 	}

@@ -1,7 +1,12 @@
 package com.minecrafttas.tasmod.registries;
 
-import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
+import com.minecrafttas.mctcommon.ConfigurationRegistry.ConfigOptions;
 
+/**
+ * The config options that will be stored in .minecraft/config/tasmod.cfg
+ * 
+ * @author Scribble
+ */
 public enum TASmodConfig implements ConfigOptions {
 	FileToOpen("fileToOpen", ""),
 	ServerConnection("serverConnection", ""),
@@ -9,12 +14,12 @@ public enum TASmodConfig implements ConfigOptions {
 
 	private String configKey;
 	private String defaultValue;
-	
+
 	private TASmodConfig(String configKey, String defaultValue) {
 		this.configKey = configKey;
 		this.defaultValue = defaultValue;
 	}
-	
+
 	@Override
 	public String getDefaultValue() {
 		return defaultValue;
@@ -29,5 +34,4 @@ public enum TASmodConfig implements ConfigOptions {
 	public String getExtensionName() {
 		return "TASmodConfig";
 	}
-
 }

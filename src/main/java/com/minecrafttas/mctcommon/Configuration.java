@@ -1,19 +1,11 @@
 package com.minecrafttas.mctcommon;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.InvalidPropertiesFormatException;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
-import com.minecrafttas.mctcommon.Configuration.ConfigOptions;
-import com.minecrafttas.mctcommon.registry.AbstractRegistry;
-import com.minecrafttas.mctcommon.registry.Registerable;
+import com.minecrafttas.mctcommon.ConfigurationRegistry.ConfigOptions;
+import com.minecrafttas.mctcommon.file.AbstractDataFile;
 
 /**
  * A <i>very</i> simple configuration class
@@ -21,96 +13,33 @@ import com.minecrafttas.mctcommon.registry.Registerable;
  * @author Scribble
  */
 
-public class Configuration extends AbstractRegistry<ConfigOptions> {
+public class Configuration extends AbstractDataFile {
 
-	private File file;
+	private ConfigurationRegistry registry;
 
-	private Properties properties;
-
-	private String comment;
-
-	public Configuration(String comment, File configFile) {
-		super("Configuration", new LinkedHashMap<>());
-
-		file = configFile;
-		this.comment = comment;
+	public Configuration(String comment, Path configFile, ConfigurationRegistry registry) {
+		super(configFile, "config", comment);
+		this.registry = registry;
 	}
 
-	protected final List<ConfigOptions> configRegistry = new ArrayList<>();
-	
 	@Override
-	public void register(ConfigOptions registryObject) {
-		if(registryObject == null) {
-			return;
-		}
-		
-		if(configRegistry.contains(registryObject)) {
-			return;
-		}
-		
-		configRegistry.add(registryObject);
-	}
-	
-	@Override
-	public void unregister(ConfigOptions registryObject) {
-		if (registryObject == null) {
-			return;
-		}
-
-		if (!configRegistry.contains(registryObject)) {
-			return;
-		}
-		
-		configRegistry.remove(registryObject);
-	}
-
 	public void load() {
-		if (file.exists()) {
-			properties = loadInner();
+		if (Files.exists(file)) {
+			load(file);
 		}
-		if (properties == null || !file.exists()) {
+		if (properties == null || !Files.exists(file)) {
 			properties = generateDefault();
 			save();
-		}		
-	}
-	
-	private Properties loadInner() {
-		FileInputStream fis;
-		Properties newProp = new Properties();
-		try {
-			fis = new FileInputStream(file);
-			newProp.loadFromXML(fis);
-			fis.close();
-		} catch (InvalidPropertiesFormatException e) {
-			MCTCommon.LOGGER.error("The config file could not be read", e);
-			return null;
-		} catch (FileNotFoundException e) {
-			MCTCommon.LOGGER.warn("No config file found: {}", file);
-			return null;
-		} catch (IOException e) {
-			MCTCommon.LOGGER.error("An error occured while reading the config", e);
-			return null;
-		}
-		return newProp;
-	}
-
-	public void save() {
-		save(file);
-	}
-
-	public void save(File file) {
-		try {
-			FileOutputStream fos = new FileOutputStream(file);
-			properties.storeToXML(fos, comment, "UTF-8");
-			fos.close();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 
+	/**
+	 * Generates the default property list from the values provided in {@link #registry}
+	 * @return The default property list
+	 */
 	public Properties generateDefault() {
 		Properties newProperties = new Properties();
-		configRegistry.forEach((configOption)->{
+		registry.getConfigRegistry().forEach((configOption) -> {
 			newProperties.put(configOption.getConfigKey(), configOption.getDefaultValue());
 		});
 		return newProperties;
@@ -121,6 +50,7 @@ public class Configuration extends AbstractRegistry<ConfigOptions> {
 	}
 
 	public int getInt(ConfigOptions configOption) {
+		// TODO Add config exception or something... NumberFormatExceptions all around...
 		return Integer.parseInt(get(configOption));
 	}
 
@@ -133,7 +63,7 @@ public class Configuration extends AbstractRegistry<ConfigOptions> {
 	}
 
 	public void set(ConfigOptions configOption, String value) {
-		if(properties == null) {
+		if (properties == null) {
 			throw new NullPointerException("Config needs to be loaded first, before trying to set a value");
 		}
 		properties.setProperty(configOption.getConfigKey(), value);
@@ -157,12 +87,5 @@ public class Configuration extends AbstractRegistry<ConfigOptions> {
 	public void delete(ConfigOptions configOption) {
 		properties.remove(configOption);
 		save();
-	}
-
-	public interface ConfigOptions extends Registerable {
-
-		public String getDefaultValue();
-
-		public String getConfigKey();
 	}
 }
