@@ -42,6 +42,7 @@ public abstract class AbstractDataFile {
 		this.file = file;
 		this.name = name;
 		this.comment = comment;
+		this.properties = new Properties();
 
 		createDirectory(file);
 	}
@@ -58,19 +59,45 @@ public abstract class AbstractDataFile {
 		}
 	}
 
-	/**
-	 * Loads the {@link #file} into {@link #properties} if it exists
-	 */
 	public void load() {
 		if (Files.exists(file)) {
 			load(file);
 		}
 	}
 
-	/**
-	 * @param file The file to load into {@link #properties}
-	 */
 	public void load(Path file) {
+		InputStream fis;
+		Properties newProp = new Properties();
+		try {
+			fis = Files.newInputStream(file);
+			newProp.load(fis);
+			fis.close();
+		} catch (InvalidPropertiesFormatException e) {
+			MCTCommon.LOGGER.error("The {} file could not be read", name, e);
+			return;
+		} catch (FileNotFoundException e) {
+			MCTCommon.LOGGER.warn("No {} file found: {}", name, file);
+			return;
+		} catch (IOException e) {
+			MCTCommon.LOGGER.error("An error occured while reading the {} file", file, e);
+			return;
+		}
+		this.properties = newProp;
+	}
+
+	/**
+	 * Loads the xml {@link #file} into {@link #properties} if it exists
+	 */
+	public void loadFromXML() {
+		if (Files.exists(file)) {
+			loadFromXML(file);
+		}
+	}
+
+	/**
+	 * @param file The xml file to load into {@link #properties}
+	 */
+	public void loadFromXML(Path file) {
 		InputStream fis;
 		Properties newProp = new Properties();
 		try {
@@ -90,18 +117,32 @@ public abstract class AbstractDataFile {
 		this.properties = newProp;
 	}
 
+	public void save() {
+		this.save(file);
+	}
+
+	public void save(Path file) {
+		try {
+			OutputStream fos = Files.newOutputStream(file);
+			properties.store(fos, comment);
+			fos.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * Saves the {@link #properties} to the {@link #file} location
 	 */
-	public void save() {
-		this.save(file);
+	public void saveToXML() {
+		this.saveToXML(file);
 	}
 
 	/**
 	 * Saves the {@link #properties} to a specified file
 	 * @param file The file to save the {@link #properties} to
 	 */
-	public void save(Path file) {
+	public void saveToXML(Path file) {
 		try {
 			OutputStream fos = Files.newOutputStream(file);
 			properties.storeToXML(fos, comment, "UTF-8");

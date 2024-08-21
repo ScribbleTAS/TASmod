@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
@@ -26,12 +25,10 @@ import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.commands.TabCompletionUtils;
-import com.minecrafttas.tasmod.ktrng.KillTheRNGHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
-import com.minecrafttas.tasmod.savestates.files.SavestateTrackerFile;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -59,7 +56,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 	public static SavestateHandlerServer savestateHandlerServer;
 
-	public static KillTheRNGHandler ktrngHandler;
+	//	public static KillTheRNGHandler ktrngHandler;
 
 	public static TickrateChangerServer tickratechanger;
 
@@ -96,7 +93,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 		// Initilize KillTheRNG
 		LOGGER.info("Testing connection with KillTheRNG");
-		ktrngHandler = new KillTheRNGHandler(FabricLoaderImpl.INSTANCE.isModLoaded("killtherng"));
+		//		ktrngHandler = new KillTheRNGHandler(FabricLoaderImpl.INSTANCE.isModLoaded("killtherng"));
 
 		// Initialize TickrateChanger
 		tickratechanger = new TickrateChangerServer(LOGGER);
@@ -105,13 +102,13 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		EventListenerRegistry.register(this);
 		EventListenerRegistry.register(ticksyncServer);
 		EventListenerRegistry.register(tickratechanger);
-		EventListenerRegistry.register(ktrngHandler);
+		//		EventListenerRegistry.register(ktrngHandler);
 
 		// Register packet handlers
 		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers");
 		PacketHandlerRegistry.register(ticksyncServer);
 		PacketHandlerRegistry.register(tickratechanger);
-		PacketHandlerRegistry.register(ktrngHandler);
+		//		PacketHandlerRegistry.register(ktrngHandler);
 		PacketHandlerRegistry.register(playbackControllerServer);
 		PacketHandlerRegistry.register(startPositionMetadataExtension);
 		PacketHandlerRegistry.register(tabCompletionUtils);
@@ -138,14 +135,6 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		CommandRegistry.registerServerCommand(new CommandRestartAndPlay(), server);
 		CommandRegistry.registerServerCommand(new CommandPlayUntil(), server);
 		CommandRegistry.registerServerCommand(commandFileCommand, server);
-
-		// Save Loadstate Count
-		File savestateDirectory = new File(server.getDataDirectory() + File.separator + "saves" + File.separator + "savestates" + File.separator);
-		try {
-			new SavestateTrackerFile(new File(savestateDirectory, server.getFolderName() + "-info.txt")); // TODO Ew, remove
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
 		savestateHandlerServer = new SavestateHandlerServer(server, LOGGER);
 		PacketHandlerRegistry.register(savestateHandlerServer);

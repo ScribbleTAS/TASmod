@@ -56,7 +56,7 @@ class TestConfiguration {
 	void beforeEach() {
 		registry.register(TestConfig.values());
 		config = new Configuration("Test config", configPath, registry);
-		config.load();
+		config.loadFromXML();
 	}
 
 	@AfterEach
@@ -79,7 +79,7 @@ class TestConfiguration {
 	void testDefault() throws Exception {
 		Files.delete(configPath);
 		config = new Configuration("Test config", configPath, registry);
-		config.load();
+		config.loadFromXML();
 		assertEquals("", config.get(TestConfig.FileToOpen));
 	}
 
@@ -89,7 +89,7 @@ class TestConfiguration {
 	@Test
 	void testSavingAndLoading() {
 		config.set(TestConfig.FileToOpen, "Test");
-		config.load();
+		config.loadFromXML();
 		assertEquals("Test", config.get(TestConfig.FileToOpen));
 	}
 

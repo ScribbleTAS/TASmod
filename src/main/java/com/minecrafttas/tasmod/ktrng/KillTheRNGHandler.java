@@ -163,7 +163,7 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 				e.printStackTrace();
 			}
 		} else {
-			TASmod.ktrngHandler.setGlobalSeedClient(initialSeed);
+			//			TASmod.ktrngHandler.setGlobalSeedClient(initialSeed);
 		}
 	}
 
@@ -190,7 +190,7 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 
 			case KILLTHERNG_STARTSEED:
 				TASmod.tickSchedulerServer.add(() -> {
-					TASmod.ktrngHandler.setGlobalSeedServer(seed);
+					//					TASmod.ktrngHandler.setGlobalSeedServer(seed);
 				});
 				break;
 

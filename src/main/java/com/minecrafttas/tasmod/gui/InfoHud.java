@@ -291,17 +291,17 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 
 			y += 14;
 
-			if (TASmod.ktrngHandler.isLoaded()) {
-				title = "ktrng_randomseed";
-				if (configuration.getProperty(title + "_x", "err").equals("err"))
-					setDefaults(title, y);
-				lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
-						+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-							if (Minecraft.getMinecraft().currentScreen == this)
-								return "KTRNG";
-							return "RandomSeed: " + TASmod.ktrngHandler.getGlobalSeedClient();
-						}));
-			}
+//			if (TASmod.ktrngHandler.isLoaded()) {
+//				title = "ktrng_randomseed";
+//				if (configuration.getProperty(title + "_x", "err").equals("err"))
+//					setDefaults(title, y);
+//				lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
+//						+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+//							if (Minecraft.getMinecraft().currentScreen == this)
+//								return "KTRNG";
+//							return "RandomSeed: " + TASmod.ktrngHandler.getGlobalSeedClient();
+//						}));
+//			}
 
 			title = "facing";
 			y += 14;
@@ -327,27 +327,27 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 
 			title = "cticks";
 			y += 14;
-//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
-//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-//				if (Minecraft.getMinecraft().currentScreen == this) return "Client Ticks";
-//				return "Client Ticks: " + ClientProxy.ticksyncClient.getClienttickcounter();
-//			}));
+			//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
+			//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+			//				if (Minecraft.getMinecraft().currentScreen == this) return "Client Ticks";
+			//				return "Client Ticks: " + ClientProxy.ticksyncClient.getClienttickcounter();
+			//			}));
 
 			title = "sticks";
 			y += 14;
-//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
-//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-//				if (Minecraft.getMinecraft().currentScreen == this) return "Server Ticks";
-//				return "Server Ticks: " + ClientProxy.ticksyncClient.getServertickcounter();
-//			}));
+			//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
+			//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+			//				if (Minecraft.getMinecraft().currentScreen == this) return "Server Ticks";
+			//				return "Server Ticks: " + ClientProxy.ticksyncClient.getServertickcounter();
+			//			}));
 
 			title = "nextxyz";
 			y += 14;
-//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
-//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-//				if (Minecraft.getMinecraft().currentScreen == this) return "Predicted Position";
-//				return String.format("%f %f %f", PlayerPositionCalculator.xNew, PlayerPositionCalculator.yNew, PlayerPositionCalculator.zNew);
-//			}));
+			//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
+			//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+			//				if (Minecraft.getMinecraft().currentScreen == this) return "Predicted Position";
+			//				return String.format("%f %f %f", PlayerPositionCalculator.xNew, PlayerPositionCalculator.yNew, PlayerPositionCalculator.zNew);
+			//			}));
 
 			title = "state";
 			y += 14;
@@ -377,26 +377,26 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 						}
 					}));
 
-//			title = "cursor";
-//			y += 14;
-//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
-//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-//				if (Minecraft.getMinecraft().currentScreen == this) return "Mouse Position";
-//				return String.format("Mouse Cursor: " + TASmodClient.virtual.getNextMouse().getPath().get(0).cursorX + " " + TASmodClient.virtual.getNextMouse().getPath().get(0).cursorY);
-//			})); TODO Remove?
+			//			title = "cursor";
+			//			y += 14;
+			//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
+			//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+			//				if (Minecraft.getMinecraft().currentScreen == this) return "Mouse Position";
+			//				return String.format("Mouse Cursor: " + TASmodClient.virtual.getNextMouse().getPath().get(0).cursorX + " " + TASmodClient.virtual.getNextMouse().getPath().get(0).cursorY);
+			//			})); TODO Remove?
 
-//			title = "trajectories";
-//			y += 14;
-//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
-//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-//				if (Minecraft.getMinecraft().currentScreen == this) return "Trajectories";
-//				String message = "Invalid Item";
-//				Vec3d vec = TrajectoriesCalculator.calculate();
-//				if (vec != null) {
-//					message = String.format("%.3f %.3f %.3f", vec.x, vec.y, vec.z);
-//				}
-//				return String.format("Trajectories: " + message);
-//			}));
+			//			title = "trajectories";
+			//			y += 14;
+			//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
+			//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+			//				if (Minecraft.getMinecraft().currentScreen == this) return "Trajectories";
+			//				String message = "Invalid Item";
+			//				Vec3d vec = TrajectoriesCalculator.calculate();
+			//				if (vec != null) {
+			//					message = String.format("%.3f %.3f %.3f", vec.x, vec.y, vec.z);
+			//				}
+			//				return String.format("Trajectories: " + message);
+			//			}));
 
 			title = "velocity";
 			y += 14;
@@ -519,9 +519,9 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 			}
 		}
 		ScaledResolution scaled = new ScaledResolution(Minecraft.getMinecraft());
-//		drawCenteredString(Minecraft.getMinecraft().fontRenderer, "TASmod is still in development! Major issues may arise!", scaled.getScaledWidth() / 2, scaled.getScaledHeight() - 50, 0xFF8400);
+		//		drawCenteredString(Minecraft.getMinecraft().fontRenderer, "TASmod is still in development! Major issues may arise!", scaled.getScaledWidth() / 2, scaled.getScaledHeight() - 50, 0xFF8400);
 		drawString(Minecraft.getMinecraft().fontRenderer, TASmod.version, scaled.getScaledWidth() - Minecraft.getMinecraft().fontRenderer.getStringWidth(TASmod.version) - 2, scaled.getScaledHeight() - 10, 0xFFFFFF);
-//		drawCenteredString(Minecraft.getMinecraft().fontRenderer, Float.toString(TASmod.tickratechanger.ticksPerSecond), scaled.getScaledWidth() / 2, scaled.getScaledHeight() - 36, 0xFFFFFF);
+		//		drawCenteredString(Minecraft.getMinecraft().fontRenderer, Float.toString(TASmod.tickratechanger.ticksPerSecond), scaled.getScaledWidth() / 2, scaled.getScaledHeight() - 36, 0xFFFFFF);
 	}
 
 	/**

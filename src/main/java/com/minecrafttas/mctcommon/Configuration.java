@@ -23,13 +23,13 @@ public class Configuration extends AbstractDataFile {
 	}
 
 	@Override
-	public void load() {
+	public void loadFromXML() {
 		if (Files.exists(file)) {
-			load(file);
+			loadFromXML(file);
 		}
 		if (properties == null || !Files.exists(file)) {
 			properties = generateDefault();
-			save();
+			saveToXML();
 		}
 	}
 
@@ -67,7 +67,7 @@ public class Configuration extends AbstractDataFile {
 			throw new NullPointerException("Config needs to be loaded first, before trying to set a value");
 		}
 		properties.setProperty(configOption.getConfigKey(), value);
-		save();
+		saveToXML();
 	}
 
 	public void set(ConfigOptions configOption, int value) {
@@ -86,6 +86,6 @@ public class Configuration extends AbstractDataFile {
 
 	public void delete(ConfigOptions configOption) {
 		properties.remove(configOption);
-		save();
+		saveToXML();
 	}
 }

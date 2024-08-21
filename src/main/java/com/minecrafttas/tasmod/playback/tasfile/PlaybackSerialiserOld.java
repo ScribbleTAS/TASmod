@@ -12,7 +12,6 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
@@ -209,7 +208,7 @@ public class PlaybackSerialiserOld {
 		String startLocation="";
 		
 		// Default the start seed to the current global ktrng seed. If KTRNG is not loaded, defaults to 0
-		long startSeed=TASmod.ktrngHandler.getGlobalSeedClient();
+		long startSeed/*=TASmod.ktrngHandler.getGlobalSeedClient()*/;
 
 		// Clear the current container before reading new data
 		controller.clear();

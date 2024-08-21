@@ -325,7 +325,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 	private void loadConfig(Minecraft mc) {
 		Path configDir = mc.mcDataDir.toPath().resolve("config");
-		if (Files.exists(configDir)) {
+		if (!Files.exists(configDir)) {
 			try {
 				Files.createDirectory(configDir);
 			} catch (IOException e) {
@@ -333,7 +333,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			}
 		}
 		config = new Configuration("TASmod configuration", configDir.resolve("tasmod.cfg"), CONFIG_REGISTRY);
-		config.load();
-		config.save();
+		config.loadFromXML();
+		config.saveToXML();
 	}
 }

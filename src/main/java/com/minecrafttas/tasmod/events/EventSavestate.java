@@ -1,6 +1,6 @@
 package com.minecrafttas.tasmod.events;
 
-import java.io.File;
+import java.nio.file.Path;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
 
@@ -19,7 +19,7 @@ public interface EventSavestate {
 		 * @param target  Target folder, where the savestate is copied to
 		 * @param current The current folder that will be copied from
 		 */
-		public void onServerSavestate(int index, File target, File current);
+		public void onServerSavestate(int index, Path target, Path current);
 	}
 
 	/**
@@ -35,7 +35,7 @@ public interface EventSavestate {
 		 * @param target  Target folder, where the savestate is copied to
 		 * @param current The current folder that will be copied from
 		 */
-		public void onServerLoadstate(int index, File target, File current);
+		public void onServerLoadstate(int index, Path target, Path current);
 	}
 
 	/**

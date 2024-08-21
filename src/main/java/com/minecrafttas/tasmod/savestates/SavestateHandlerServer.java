@@ -3,15 +3,18 @@ package com.minecrafttas.tasmod.savestates;
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
@@ -65,9 +68,15 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 public class SavestateHandlerServer implements ServerPacketHandler {
 
 	private final MinecraftServer server;
-	private File savestateDirectory;
+	private Path savestateDirectory;
 
 	public SavestateState state = SavestateState.NONE;
+
+	public static enum SavestateState {
+		SAVING,
+		LOADING,
+		NONE
+	}
 
 	private final List<Integer> indexList = new ArrayList<>();
 
@@ -91,6 +100,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		this.logger = logger;
 		this.playerHandler = new SavestatePlayerHandler(server);
 		this.worldHandler = new SavestateWorldHandler(server);
+
 		createSavestateDirectory();
 		refresh();
 		loadCurrentIndexFromFile();
@@ -182,14 +192,14 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Get the current and target directory for copying
 		String worldname = server.getFolderName();
-		File currentfolder = new File(savestateDirectory, ".." + File.separator + worldname);
-		File targetfolder = getSavestateFile(indexToSave);
+		Path currentfolder = savestateDirectory.resolve(".." + File.separator + worldname);
+		Path targetfolder = getSavestateFile(indexToSave);
 
 		EventListenerRegistry.fireEvent(EventSavestate.EventServerSavestate.class, indexToSave, targetfolder, currentfolder);
 
-		if (targetfolder.exists()) {
+		if (Files.exists(targetfolder)) {
 			logger.warn(LoggerMarkers.Savestate, "WARNING! Overwriting the savestate with the index {}", indexToSave);
-			FileUtils.deleteDirectory(targetfolder);
+			deleteFolder(targetfolder);
 		}
 
 		/*
@@ -220,12 +230,11 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		saveSavestateDataFile(false);
 
 		// Copy the directory
-		FileUtils.copyDirectory(currentfolder, targetfolder);
+		copyFolder(currentfolder, targetfolder);
 
 		// Incrementing info file
-		SavestateTrackerFile tracker = new SavestateTrackerFile(new File(savestateDirectory, worldname + "-info.txt"));
-		tracker.increaseSavestates();
-		tracker.saveFile();
+		SavestateTrackerFile tracker = new SavestateTrackerFile(savestateDirectory.resolve(worldname + "-info.txt"));
+		tracker.increaseSaveStateCount();
 
 		// Send a notification that the savestate has been loaded
 		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToSave + " saved"));
@@ -309,7 +318,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		int indexToLoad = savestateIndex < 0 ? currentIndex : savestateIndex;
 
-		if (getSavestateFile(indexToLoad).exists()) {
+		if (Files.exists(getSavestateFile(indexToLoad))) {
 			// Updating current index
 			if (changeIndex) {
 				setCurrentIndex(indexToLoad);
@@ -322,8 +331,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Get the current and target directory for copying
 		String worldname = server.getFolderName();
-		File currentfolder = new File(savestateDirectory, ".." + File.separator + worldname);
-		File targetfolder = getSavestateFile(indexToLoad);
+		Path currentfolder = savestateDirectory.resolve(".." + File.separator + worldname);
+		Path targetfolder = getSavestateFile(indexToLoad);
 
 		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstate.class, indexToLoad, targetfolder, currentfolder);
 
@@ -358,8 +367,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		worldHandler.flushSaveHandler();
 
 		// Delete and copy directories
-		FileUtils.deleteDirectory(currentfolder);
-		FileUtils.copyDirectory(targetfolder, currentfolder);
+		deleteFolder(currentfolder);
+		copyFolder(targetfolder, currentfolder);
 
 		// Loads savestate data from the file like name and ktrng seed if ktrng is loaded
 		loadSavestateDataFile();
@@ -374,9 +383,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		worldHandler.enableLevelSaving();
 
 		// Incrementing info file
-		SavestateTrackerFile tracker = new SavestateTrackerFile(new File(savestateDirectory, worldname + "-info.txt"));
-		tracker.increaseRerecords();
-		tracker.saveFile();
+		SavestateTrackerFile tracker = new SavestateTrackerFile(savestateDirectory.resolve(worldname + "-info.txt"));
+		tracker.increaseLoadstateCount();
 
 		// Send a notification that the savestate has been loaded
 		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToLoad + " loaded"));
@@ -407,13 +415,21 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	 */
 	private void createSavestateDirectory() {
 		logger.trace(LoggerMarkers.Savestate, "Creating savestate directory");
+
+		Path dataDirectory = server.getDataDirectory().toPath();
+
 		if (!server.isDedicatedServer()) {
-			savestateDirectory = new File(server.getDataDirectory() + File.separator + "saves" + File.separator + "savestates" + File.separator);
+			savestateDirectory = dataDirectory.resolve("saves/savestates");
 		} else {
-			savestateDirectory = new File(server.getDataDirectory() + File.separator + "savestates" + File.separator);
+			savestateDirectory = dataDirectory.resolve("savestates");
 		}
-		if (!savestateDirectory.exists()) {
-			savestateDirectory.mkdir();
+		if (!Files.exists(savestateDirectory)) {
+			try {
+				Files.createDirectory(savestateDirectory);
+			} catch (IOException e) {
+				logger.error("Could not create savestate directory");
+				logger.catching(e);
+			}
 		}
 	}
 
@@ -423,31 +439,42 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	private void refresh() {
 		logger.trace(LoggerMarkers.Savestate, "Refreshing savestate list");
 		indexList.clear();
-		File[] files = savestateDirectory.listFiles(new FileFilter() {
+		if (!Files.isDirectory(savestateDirectory)) {
+			logger.error("Savestate directory is not a directory! {}", savestateDirectory.toAbsolutePath().toString());
+			return;
+		}
 
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().startsWith(server.getFolderName() + "-Savestate");
-			}
+		Stream<Path> files = null;
+		try {
+			files = Files.list(savestateDirectory);
+		} catch (IOException e) {
+			logger.error("Can't refresh savestatelist");
+			logger.catching(e);
+			return;
+		}
+		Stream<Path> filteredfiles = files.filter(file -> file.getFileName().toString().startsWith(server.getFolderName() + "-Savestate"));
 
-		});
-		int index = 0;
-		for (File file : files) {
+		filteredfiles.forEach(file -> {
+			int index = 0;
 			try {
 				Pattern patt = Pattern.compile("\\d+$");
-				Matcher matcher = patt.matcher(file.getName());
+				Matcher matcher = patt.matcher(file.getFileName().toString());
 				if (matcher.find()) {
 					index = Integer.parseInt(matcher.group(0));
 				} else {
-					logger.warn(String.format("Could not process the savestate %s", file.getName()));
-					continue;
+					logger.warn(String.format("Could not process the savestate %s", file.getFileName()));
+					return;
 				}
 			} catch (NumberFormatException e) {
 				logger.warn(String.format("Could not process the savestate %s", e.getMessage()));
-				continue;
+				return;
 			}
 			indexList.add(index);
-		}
+		});
+
+		filteredfiles.close();
+		files.close();
+
 		Collections.sort(indexList);
 		if (!indexList.isEmpty()) {
 			latestIndex = indexList.get(indexList.size() - 1);
@@ -460,8 +487,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	 * @param index The index of the savestate file that we want to get
 	 * @return The file of the savestate from the specified index
 	 */
-	private File getSavestateFile(int index) {
-		return new File(savestateDirectory, getSavestateName(index));
+	private Path getSavestateFile(int index) {
+		return savestateDirectory.resolve(getSavestateName(index));
 	}
 
 	/**
@@ -492,17 +519,19 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		if (index == 0) {
 			throw new SavestateDeleteException("Cannot delete protected savestate 0");
 		}
-		File toDelete = getSavestateFile(index);
-		if (toDelete.exists()) {
-			try {
-				FileUtils.deleteDirectory(toDelete);
-			} catch (IOException e) {
-				e.printStackTrace();
-				throw new SavestateDeleteException("Something went wrong while trying to delete the savestate " + index);
-			}
+
+		Path toDelete = getSavestateFile(index);
+		if (Files.exists(getSavestateFile(index))) {
+//			try {
+			deleteFolder(toDelete);
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//				throw new SavestateDeleteException("Something went wrong while trying to delete the savestate " + index);
+//			}
 		} else {
 			throw new SavestateDeleteException(TextFormatting.YELLOW + "Savestate " + index + " doesn't exist, so it can't be deleted");
 		}
+
 		refresh();
 		if (!indexList.contains(currentIndex)) {
 			setCurrentIndex(latestIndex);
@@ -560,25 +589,31 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	 */
 	private void saveSavestateDataFile(boolean legacy) {
 		logger.trace(LoggerMarkers.Savestate, "Saving savestate data file");
-		File tasmodDir = new File(savestateDirectory, "../" + server.getFolderName() + "/tasmod/");
-		if (!tasmodDir.exists()) {
-			tasmodDir.mkdir();
+		Path tasmodDir = savestateDirectory.resolve("../" + server.getFolderName() + "/tasmod/");
+		if (!Files.exists(tasmodDir)) {
+			try {
+				Files.createDirectories(tasmodDir);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-		File savestateDat = new File(tasmodDir, "savestateData.txt");
 
-		if (savestateDat.exists()) {
-			savestateDat.delete();
+		Path savestateDat = tasmodDir.resolve("savestateData.txt");
+		try {
+			Files.deleteIfExists(savestateDat);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 
-		SavestateDataFile file = new SavestateDataFile();
+		SavestateDataFile file = new SavestateDataFile(savestateDat);
 
 		file.set(DataValues.INDEX, Integer.toString(currentIndex));
 
-//		if (!legacy) {
-//			if (TASmod.ktrngHandler.isLoaded()) {
-//				file.set(DataValues.SEED, Long.toString(TASmod.ktrngHandler.getGlobalSeedServer()));
-//			}
-//		}
+		//		if (!legacy) {
+		//			if (TASmod.ktrngHandler.isLoaded()) {
+		//				file.set(DataValues.SEED, Long.toString(TASmod.ktrngHandler.getGlobalSeedServer()));
+		//			}
+		//		}
 
 		file.save(savestateDat);
 	}
@@ -590,25 +625,25 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	 */
 	private void loadSavestateDataFile() {
 		logger.trace(LoggerMarkers.Savestate, "Loading savestate data file");
-		File tasmodDir = new File(savestateDirectory, "../" + server.getFolderName() + "/tasmod/");
-		File savestateDat = new File(tasmodDir, "savestateData.txt");
+		Path tasmodDir = savestateDirectory.resolve("../" + server.getFolderName() + "/tasmod/");
+		Path savestateDat = tasmodDir.resolve("savestateData.txt");
 
-		if (!savestateDat.exists()) {
+		if (!Files.exists(savestateDat)) {
 			return;
 		}
 
-		SavestateDataFile datafile = new SavestateDataFile();
+		SavestateDataFile datafile = new SavestateDataFile(savestateDirectory);
 
 		datafile.load(savestateDat);
 
-//		if (TASmod.ktrngHandler.isLoaded()) {
-//			String seedString = datafile.get(DataValues.SEED);
-//			if (seedString != null) {
-//				TASmod.ktrngHandler.sendGlobalSeedToServer(Long.parseLong(seedString));
-//			} else {
-//				logger.warn("KTRNG seed not loaded because it was not found in savestateData.txt!");
-//			}
-//		}
+		//		if (TASmod.ktrngHandler.isLoaded()) {
+		//			String seedString = datafile.get(DataValues.SEED);
+		//			if (seedString != null) {
+		//				TASmod.ktrngHandler.sendGlobalSeedToServer(Long.parseLong(seedString));
+		//			} else {
+		//				logger.warn("KTRNG seed not loaded because it was not found in savestateData.txt!");
+		//			}
+		//		}
 	}
 
 	/**
@@ -620,23 +655,31 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	public void loadCurrentIndexFromFile() {
 		logger.trace(LoggerMarkers.Savestate, "Loading current index from file");
 		int index = -1;
-		File tasmodDir = new File(savestateDirectory, "../" + server.getFolderName() + "/tasmod/");
-		if (!tasmodDir.exists()) {
-			tasmodDir.mkdir();
+		Path tasmodDir = savestateDirectory.resolve("../" + server.getFolderName() + "/tasmod/");
+		if (!Files.exists(tasmodDir)) {
+			try {
+				Files.createDirectory(tasmodDir);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
-		File savestateDat = new File(tasmodDir, "savestate.data");
-		if (savestateDat.exists()) {
+		Path savestateDat = tasmodDir.resolve("savestate.data");
+		if (Files.exists(savestateDat)) {
 			index = legacyIndexFile(savestateDat);
 			setCurrentIndex(index);
 			saveSavestateDataFile(true);
-			savestateDat.delete();
+			try {
+				Files.delete(savestateDat);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			return;
 		}
 
-		savestateDat = new File(tasmodDir, "savestateData.txt");
-		if (savestateDat.exists()) {
-			SavestateDataFile file = new SavestateDataFile();
+		savestateDat = tasmodDir.resolve("savestateData.txt");
+		if (Files.exists(savestateDat)) {
+			SavestateDataFile file = new SavestateDataFile(savestateDat);
 			file.load(savestateDat);
 
 			index = Integer.parseInt(file.get(DataValues.INDEX));
@@ -676,11 +719,11 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		SavestateHandlerClient.addPlayerToClientChunk(Minecraft.getMinecraft().player);
 	}
 
-	private int legacyIndexFile(File savestateDat) {
+	private int legacyIndexFile(Path savestateDat) {
 		int index = -1;
 		List<String> lines = new ArrayList<String>();
 		try {
-			lines = FileUtils.readLines(savestateDat, StandardCharsets.UTF_8);
+			lines = FileUtils.readLines(savestateDat.toFile(), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			logger.warn("No savestate.data file found in current world folder, ignoring it");
 		}
@@ -698,15 +741,15 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		return index;
 	}
 
-	public static enum SavestateState {
-		SAVING,
-		LOADING,
-		NONE
-	}
-
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new TASmodPackets[] { TASmodPackets.SAVESTATE_SAVE, TASmodPackets.SAVESTATE_LOAD, TASmodPackets.SAVESTATE_SCREEN, TASmodPackets.SAVESTATE_UNLOAD_CHUNKS
+		return new TASmodPackets[] {
+				//@formatter:off
+				TASmodPackets.SAVESTATE_SAVE, 
+				TASmodPackets.SAVESTATE_LOAD, 
+				TASmodPackets.SAVESTATE_SCREEN, 
+				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS
+				//@formatter:on
 		};
 	}
 
@@ -728,12 +771,15 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 						if (player != null)
 							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getMessage()));
 
-						LOGGER.error(LoggerMarkers.Savestate, "Failed to create a savestate", e);
+						LOGGER.error(LoggerMarkers.Savestate, "Failed to create a savestate");
+						LOGGER.catching(e);
+						return;
 					} catch (Exception e) {
 						if (player != null)
-							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getCause().toString()));
+							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getClass().getName().toString() + ": " + e.getMessage()));
 
-						LOGGER.error(e);
+						LOGGER.catching(e);
+						return;
 					} finally {
 						TASmod.savestateHandlerServer.state = SavestateState.NONE;
 					}
@@ -772,6 +818,47 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 				throw new WrongSideException(id, Side.SERVER);
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.SERVER);
+		}
+	}
+
+	public static void copyFolder(Path src, Path dest) {
+		try {
+			Files.walk(src).forEach(s -> {
+				try {
+					Path d = dest.resolve(src.relativize(s));
+					if (Files.isDirectory(s)) {
+						if (!Files.exists(d))
+							Files.createDirectory(d);
+						return;
+					}
+					Files.copy(s, d, StandardCopyOption.REPLACE_EXISTING);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void deleteFolder(Path toDelete) {
+		try {
+			Files.walk(toDelete).forEach(s -> {
+				if (toDelete.equals(s))
+					return;
+				if (Files.isDirectory(s)) {
+					deleteFolder(s);
+				} else {
+					try {
+						Files.delete(s);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			Files.delete(toDelete);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
