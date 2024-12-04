@@ -29,6 +29,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
 
+/**
+ * <p>Extends the savestate storage to store {@link NextTickListEntry NextTickListEntries} from the {@link WorldServer}.
+ * <p>TickListEntries are timed blocks like pressure plates,<br>
+ * which schedule their update time, when they are pressed.<br>
+ * The timer that is used is the world time.
+ * <p>As we can "rewind" the world time with savestates,<br>
+ * we also have to update the scheduledTime to account for that
+ * @author Scribble
+ */
 public class NextTickListEntryStorage extends AbstractExtendStorage {
 
 	private Path file = Paths.get("ticklistEntries.json");
@@ -40,6 +49,7 @@ public class NextTickListEntryStorage extends AbstractExtendStorage {
 
 		Path path = current.resolve(SavestateHandlerServer.storageDir).resolve(file);
 
+		// Ticklistentries can be in every dimension, so this array stores them one by one. Also supports modded dimensions
 		JsonArray dimensionJson = new JsonArray();
 		for (WorldServer world : worlds) {
 			WorldServerDuck worldserverDuck = (WorldServerDuck) world;
@@ -89,10 +99,12 @@ public class NextTickListEntryStorage extends AbstractExtendStorage {
 		for (JsonElement jsonTickListEntries : dimensionJson) {
 			JsonArray jsonTickListEntriesArray = jsonTickListEntries.getAsJsonArray();
 			WorldServer world = worlds[i];
+
 			WorldServerDuck worldserverDuck = (WorldServerDuck) world;
 			Set<NextTickListEntry> tickListEntries = worldserverDuck.getTickListEntriesHashSet();
 			TreeSet<NextTickListEntry> tickListTreeSet = worldserverDuck.getTickListEntriesTreeSet();
 
+			// Clear all existing tickListEntries
 			tickListEntries.clear();
 			tickListTreeSet.clear();
 
