@@ -4,6 +4,8 @@ import java.nio.file.Path;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
 
+import net.minecraft.server.MinecraftServer;
+
 public interface EventSavestate {
 
 	/**
@@ -19,7 +21,7 @@ public interface EventSavestate {
 		 * @param target  Target folder, where the savestate is copied to
 		 * @param current The current folder that will be copied from
 		 */
-		public void onServerSavestate(int index, Path target, Path current);
+		public void onServerSavestate(MinecraftServer server, int index, Path target, Path current);
 	}
 
 	/**
@@ -35,7 +37,7 @@ public interface EventSavestate {
 		 * @param target  Target folder, where the savestate is copied to
 		 * @param current The current folder that will be copied from
 		 */
-		public void onServerLoadstate(int index, Path target, Path current);
+		public void onServerLoadstate(MinecraftServer server, int index, Path target, Path current);
 	}
 
 	/**
@@ -49,10 +51,10 @@ public interface EventSavestate {
 		 */
 		public void onServerLoadstateComplete();
 	}
-	
+
 	@FunctionalInterface
 	interface EventClientSavestate extends EventBase {
-		
+
 		public void onClientSavestate();
 	}
 }

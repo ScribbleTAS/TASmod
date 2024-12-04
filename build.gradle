@@ -15,8 +15,10 @@ if(project.release=="false") {
 version = project.version+hash
 group = project.group
 
-// compile for java 8
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+java {
+	// compile for java 8
+	sourceCompatibility = targetCompatibility = 8
+}
 
 loom {
 	// set access widener
@@ -64,7 +66,7 @@ dependencies {
     //into 'run/mods/'
 //}
 
-compileJava{
+compileJava {
 	options.release = 8
 }
 

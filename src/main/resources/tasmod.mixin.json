@@ -19,7 +19,9 @@
 		"events.MixinEntityPlayerMP",
 
 		// Fixing forge and vanilla stuff
-		"fixes.MixinDragonFightManager"
+		"fixes.MixinDragonFightManager",
+		
+		"storage.AccessorNextTickListEntry"
 	],
 	"client": [
 		// General

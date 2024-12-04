@@ -21,7 +21,7 @@ import net.minecraft.world.chunk.Chunk;
  * @author Scribble
  */
 @Mixin(WorldServer.class)
-public class MixinWorldServer implements WorldServerDuck {
+public abstract class MixinWorldServer implements WorldServerDuck {
 
 	@Shadow
 	private PlayerChunkMap playerChunkMap;
@@ -53,11 +53,17 @@ public class MixinWorldServer implements WorldServerDuck {
 		this.playerChunkMap.tick();
 	}
 
+	/**
+	 * Retrieves the {@link #pendingTickListEntriesTreeSet}
+	 */
 	@Override
 	public TreeSet<NextTickListEntry> getTickListEntriesTreeSet() {
 		return this.pendingTickListEntriesTreeSet;
 	}
 
+	/**
+	 * Retrieves the {@link #pendingTickListEntriesHashSet}
+	 */
 	@Override
 	public Set<NextTickListEntry> getTickListEntriesHashSet() {
 		return this.pendingTickListEntriesHashSet;

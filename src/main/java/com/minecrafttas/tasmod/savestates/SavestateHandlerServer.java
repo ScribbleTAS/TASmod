@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,6 +86,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 	private final SavestatePlayerHandler playerHandler;
 	private final SavestateWorldHandler worldHandler;
+
+	public static final Path storageDir = Paths.get("tasmod/");
 
 	private final Logger logger;
 	public static boolean wasLoading;
@@ -195,7 +198,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		Path currentfolder = savestateDirectory.resolve(".." + File.separator + worldname);
 		Path targetfolder = getSavestateFile(indexToSave);
 
-		EventListenerRegistry.fireEvent(EventSavestate.EventServerSavestate.class, indexToSave, targetfolder, currentfolder);
+		EventListenerRegistry.fireEvent(EventSavestate.EventServerSavestate.class, server, indexToSave, targetfolder, currentfolder);
 
 		if (Files.exists(targetfolder)) {
 			logger.warn(LoggerMarkers.Savestate, "WARNING! Overwriting the savestate with the index {}", indexToSave);
@@ -334,7 +337,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		Path currentfolder = savestateDirectory.resolve(".." + File.separator + worldname);
 		Path targetfolder = getSavestateFile(indexToLoad);
 
-		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstate.class, indexToLoad, targetfolder, currentfolder);
+		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstate.class, server, indexToLoad, targetfolder, currentfolder);
 
 		/*
 		 * Prevents loading an InputSavestate when loading index 0 (Index 0 is the
@@ -625,7 +628,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	 */
 	private void loadSavestateDataFile() {
 		logger.trace(LoggerMarkers.Savestate, "Loading savestate data file");
-		Path tasmodDir = savestateDirectory.resolve("../" + server.getFolderName() + "/tasmod/");
+		Path tasmodDir = savestateDirectory.resolve("../" + server.getFolderName()).resolve(storageDir);
 		Path savestateDat = tasmodDir.resolve("savestateData.txt");
 
 		if (!Files.exists(savestateDat)) {
@@ -655,7 +658,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	public void loadCurrentIndexFromFile() {
 		logger.trace(LoggerMarkers.Savestate, "Loading current index from file");
 		int index = -1;
-		Path tasmodDir = savestateDirectory.resolve("../" + server.getFolderName() + "/tasmod/");
+		Path tasmodDir = savestateDirectory.resolve("../" + server.getFolderName()).resolve(storageDir);
 		if (!Files.exists(tasmodDir)) {
 			try {
 				Files.createDirectory(tasmodDir);
@@ -806,7 +809,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 						if (player != null)
 							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to load a savestate: " + e.getCause().toString()));
 
-						LOGGER.error(e);
+						LOGGER.throwing(e);
 						TASmod.savestateHandlerServer.state = SavestateState.NONE;
 					}
 				};

@@ -1,11 +1,12 @@
 package com.minecrafttas.mctcommon.events;
 
-import org.apache.commons.lang3.ClassUtils;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ClassUtils;
 
 /**
  * Registry for making objects available to listen for events.<br>
@@ -94,7 +95,8 @@ public class EventListenerRegistry {
 		if (eventListener == null) {
 			throw new NullPointerException("Tried to register a packethandler with value null");
 		}
-		for (Class<?> type : eventListener.getClass().getInterfaces()) {
+
+		for (Class<?> type : searchForInterfaces(eventListener.getClass())) {
 			if (EventBase.class.isAssignableFrom(type)) {
 
 				// If a new event type is being registered, add a new arraylist
@@ -105,6 +107,18 @@ public class EventListenerRegistry {
 				registryList.add(eventListener);
 			}
 		}
+	}
+
+	private static Class<?>[] searchForInterfaces(Class<?> clazz) {
+		if (clazz == null) {
+			return new Class<?>[] {};
+		}
+		Class<?>[] interfaces = clazz.getInterfaces();
+		Class<?> superclass = clazz.getSuperclass();
+		if (superclass != null && superclass != Object.class) {
+			interfaces = ArrayUtils.addAll(interfaces, searchForInterfaces(superclass));
+		}
+		return interfaces;
 	}
 
 	/**
@@ -128,7 +142,7 @@ public class EventListenerRegistry {
 		if (eventListener == null) {
 			throw new NullPointerException("Tried to unregister a packethandler with value null");
 		}
-		for (Class<?> type : eventListener.getClass().getInterfaces()) {
+		for (Class<?> type : searchForInterfaces(eventListener.getClass())) {
 			if (EventBase.class.isAssignableFrom(type)) {
 				ArrayList<EventBase> registryList = EVENTLISTENER_REGISTRY.get(type);
 				if (registryList != null) {
