@@ -10,7 +10,7 @@ plugins {
 // set basic properties
 def hash = ""
 if(project.release=="false") {
-	hash = "_"+versionDetails().gitHash.substring(0,7)
+	hash = "-SNAPSHOT_"+versionDetails().gitHash.substring(0,7)
 }
 version = project.version+hash
 group = project.group
