@@ -68,24 +68,29 @@ public class NextTickListEntryStorage extends AbstractExtendStorage {
 			try {
 				Files.delete(path);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.catching(e);
 			}
 		}
 
 		try {
 			Files.write(path, gson.toJson(dimensionJson).getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.catching(e);
 			return;
 		}
 	}
 
 	@Override
 	public void onServerLoadstate(MinecraftServer server, int index, Path target, Path current) {
+		Path path = current.resolve(SavestateHandlerServer.storageDir).resolve(file);
+
+		if (!Files.exists(path)) {
+			logger.warn("Could not load tickListEntries, as the file does not exist: {}", target.relativize(path));
+			return;
+		}
+
 		Gson gson = new GsonBuilder().registerTypeAdapter(NextTickListEntry.class, new NextTickListEntryDeserializer()).create();
 		WorldServer[] worlds = server.worlds;
-
-		Path path = current.resolve(SavestateHandlerServer.storageDir).resolve(file);
 
 		JsonArray dimensionJson = null;
 		try {
