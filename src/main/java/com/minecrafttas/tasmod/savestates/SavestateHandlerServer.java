@@ -382,6 +382,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		worldHandler.updateSessionLock();
 		// Load the chunks and send them to the client
 		worldHandler.addPlayersToChunkMap();
+		// Clear the portal destination cache
+		worldHandler.clearPortalDestinationCache();
 
 		worldHandler.enableLevelSaving();
 

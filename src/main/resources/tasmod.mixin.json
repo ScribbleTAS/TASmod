@@ -14,6 +14,7 @@
 		"savestates.AccessorChunkLoader",
 		"savestates.AccessorAnvilChunkLoader",
 		"savestates.AccessorPlayerChunkMap",
+		"savestates.AccessorTeleporter",
 		"savestates.MixinWorldServer",
 		
 		// Events
