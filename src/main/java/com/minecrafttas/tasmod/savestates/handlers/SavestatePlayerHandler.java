@@ -1,6 +1,7 @@
 package com.minecrafttas.tasmod.savestates.handlers;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.CLEAR_SCREEN;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_PLAYER;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_REQUEST_MOTION;
 
@@ -36,6 +37,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketRespawn;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
 import net.minecraft.world.World;
@@ -117,8 +119,8 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 	 */
 	public void loadAndSendMotionToPlayer() {
 
-		List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
 		PlayerList list = server.getPlayerList();
+		List<EntityPlayerMP> players = list.getPlayers();
 
 		WorldServer[] worlds = server.worlds;
 		for (WorldServer world : worlds) {
@@ -127,17 +129,17 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 		}
 		for (EntityPlayerMP player : players) {
 
-			int dimensionPrev = player.dimension;
+			int dimensionFrom = player.dimension;
 
 			NBTTagCompound nbttagcompound = server.getPlayerList().readPlayerDataFromFile(player);
 
-			int dimensionNow = 0;
+			int dimensionTo = 0;
 			if (nbttagcompound.hasKey("Dimension")) {
-				dimensionNow = nbttagcompound.getInteger("Dimension");
+				dimensionTo = nbttagcompound.getInteger("Dimension");
 			}
 
-			if (dimensionNow != dimensionPrev) {
-				list.changePlayerDimension(player, dimensionNow);
+			if (dimensionTo != dimensionFrom) {
+				changeDimensionDangerously(player, dimensionTo);
 			} else {
 				player.getServerWorld().unloadedEntityList.remove(player);
 			}
@@ -151,6 +153,42 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	/**
+	 * <p>Changes the dimension of the player without loading chunks.
+	 * 
+	 * @param player The player that should change the dimension
+	 * @param dimensionTo The dimension where the player should be put 
+	 */
+	public void changeDimensionDangerously(EntityPlayerMP player, int dimensionTo) {
+		int dimensionFrom = player.dimension;
+		WorldServer worldServerFrom = this.server.getWorld(dimensionFrom);
+		WorldServer worldServerTo = this.server.getWorld(dimensionTo);
+
+		//@formatter:off
+		player.connection
+			.sendPacket(
+				new SPacketRespawn(
+						dimensionTo,
+						player.world.getDifficulty(),
+						player.world.getWorldInfo().getTerrainType(),
+						player.interactionManager.getGameType()
+				)
+			);
+		//@formatter:on
+		worldServerFrom.removeEntityDangerously(player);
+		player.isDead = false;
+		worldServerTo.spawnEntity(player);
+		worldServerTo.updateEntityWithOptionalForce(player, false);
+		player.setWorld(worldServerTo);
+		player.interactionManager.setWorld(worldServerTo);
+
+		try {
+			TASmod.server.sendTo(player, new TASmodBufferBuilder(CLEAR_SCREEN));
+		} catch (Exception e) {
+			LOGGER.catching(e);
 		}
 	}
 

@@ -8,8 +8,10 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
+import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandler.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 
 /**
@@ -189,6 +191,16 @@ public enum TASmodPackets implements PacketID {
 		}
 	}),
 	/**
+	 * <p>Clears the current gui screen on the client
+	 * 
+	 * <p>Side: CLIENT<br>
+	 * ARGS: none
+	 */
+	CLEAR_SCREEN(Side.CLIENT, (buf, clientID) -> {
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.displayGuiScreen(null);
+	}),
+	/**
 	 * <p>Requests the list of TASfiles in the folder from the client for use in tab completions
 	 * <p>SIDE: Both<br>
 	 * ARGS: <br>
@@ -206,7 +218,7 @@ public enum TASmodPackets implements PacketID {
 	COMMAND_FLAVORLIST,
 	/**
 	 * <p>Requests the list of {@link PlaybackFileCommandExtension PlaybackFileCommandExtensions} from the client for use in tab completions
-	 * <p>SIDE: Bith<br>
+	 * <p>SIDE: Both<br>
 	 * ARGS: <br>
 	 * <strong>Server->Client</strong> None<br>
 	 * <strong>Client->Server</strong> String The string of file command names, seperated with |

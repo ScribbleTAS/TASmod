@@ -13,6 +13,7 @@ import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.mixin.savestates.AccessorEntityLivingBase;
 import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
@@ -258,6 +259,9 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		Minecraft mc = Minecraft.getMinecraft();
 		EntityPlayerSP player = mc.player;
 
+		// Clear any accidental applied potion particles on the client
+		((AccessorEntityLivingBase) player).clearPotionEffects();
+
 		player.readFromNBT(compound);
 		NBTTagCompound motion = compound.getCompoundTag("clientMotion");
 
@@ -363,14 +367,9 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 				});
 				break;
 			case SAVESTATE_SCREEN:
-				// Open/Close Savestate screen
-				boolean open = TASmodBufferBuilder.readBoolean(buf);
+				// Open Savestate screen
 				Minecraft.getMinecraft().addScheduledTask(() -> {
-					if (open) {
-						mc.displayGuiScreen(new GuiSavestateSavingScreen());
-					} else {
-						mc.displayGuiScreen(null);
-					}
+					mc.displayGuiScreen(new GuiSavestateSavingScreen());
 				});
 				break;
 

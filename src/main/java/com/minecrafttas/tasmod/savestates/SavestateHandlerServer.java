@@ -156,7 +156,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		try {
 			// Open GuiSavestateScreen
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SCREEN).writeBoolean(true));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SCREEN));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -244,7 +244,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		try {
 			// close GuiSavestateScreen
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SCREEN).writeBoolean(false));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
