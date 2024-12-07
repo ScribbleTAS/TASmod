@@ -113,7 +113,13 @@ public class Ducks {
 		 * Custom updating method for EntityRenderer, updating the player rotation
 		 * @param partialTicks The partial ticks from the vanilla Minecraft timer
 		 */
-		void runUpdate(float partialTicks);
+		public void runUpdate(float partialTicks);
 	}
 
+	/**
+	 * Quacks the scoreboard
+	 */
+	public static interface ScoreboardDuck {
+		public void clearScoreboard();
+	}
 }

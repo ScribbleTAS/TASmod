@@ -10,6 +10,7 @@ import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.Playbac
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandler.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
+import com.minecrafttas.tasmod.util.Ducks.ScoreboardDuck;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
@@ -93,6 +94,10 @@ public enum TASmodPackets implements PacketID {
 	 * <p>SIDE: Both<br>
 	 * ARGS: none
 	 */
+	SAVESTATE_CLEAR_SCOREBOARD(Side.CLIENT, (buf, clientID) -> {
+		Minecraft mc = Minecraft.getMinecraft();
+		((ScoreboardDuck) mc.world.getScoreboard()).clearScoreboard();
+	}),
 	PLAYBACK_CLEAR_INPUTS,
 	/**
 	 * <p>Notifies the client to quit to the main menu and start recording inputs in {@link PlaybackControllerClient}

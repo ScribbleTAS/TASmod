@@ -376,13 +376,15 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		// Loads savestate data from the file like name and ktrng seed if ktrng is loaded
 		loadSavestateDataFile();
 
+//		server.loadAllWorlds(worldname, worldname, 0, WorldType.DEFAULT, "");
+
 		// Update the player and the client
 		playerHandler.loadAndSendMotionToPlayer();
-		// Update the session.lock file so minecraft behaves and saves the world
+//		// Update the session.lock file so minecraft behaves and saves the world
 		worldHandler.updateSessionLock();
 		// Load the chunks and send them to the client
 		worldHandler.addPlayersToChunkMap();
-		// Clear the portal destination cache
+//		// Clear the portal destination cache
 		worldHandler.clearPortalDestinationCache();
 
 		worldHandler.enableLevelSaving();

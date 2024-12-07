@@ -15,7 +15,9 @@
 		"savestates.AccessorAnvilChunkLoader",
 		"savestates.AccessorPlayerChunkMap",
 		"savestates.AccessorTeleporter",
-		"savestates.AccessorEntityLivingBase",		
+		"savestates.AccessorEntityLivingBase",
+		"savestates.MixinScoreboard",
+		"savestates.MixinServerScoreboard",
 		"savestates.MixinWorldServer",
 		// Events
 		"events.MixinEntityPlayerMP",

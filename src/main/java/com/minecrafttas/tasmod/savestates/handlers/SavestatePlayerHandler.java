@@ -145,6 +145,7 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 			}
 
 			player.clearActivePotions();
+			sendStats(player, list);
 
 			player.readFromNBT(nbttagcompound);
 
@@ -156,6 +157,11 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private void sendStats(EntityPlayerMP player, PlayerList list) {
+		WorldServer world = server.getWorld(player.dimension);
+//		list.sendScoreboard((ServerScoreboard) world.getScoreboard(), player);
 	}
 
 	/**
@@ -189,6 +195,14 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 
 		try {
 			TASmod.server.sendTo(player, new TASmodBufferBuilder(CLEAR_SCREEN));
+		} catch (Exception e) {
+			LOGGER.catching(e);
+		}
+	}
+
+	public void clearScoreboard(EntityPlayerMP player) {
+		try {
+			TASmod.server.sendTo(player, new TASmodBufferBuilder(TASmodPackets.SAVESTATE_CLEAR_SCOREBOARD));
 		} catch (Exception e) {
 			LOGGER.catching(e);
 		}
