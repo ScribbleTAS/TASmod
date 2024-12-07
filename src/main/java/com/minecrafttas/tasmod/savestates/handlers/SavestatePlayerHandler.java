@@ -144,6 +144,8 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 				player.getServerWorld().unloadedEntityList.remove(player);
 			}
 
+			player.clearActivePotions();
+
 			player.readFromNBT(nbttagcompound);
 
 			LOGGER.debug(LoggerMarkers.Savestate, "Sending motion to {}", player.getName());
