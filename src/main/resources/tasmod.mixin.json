@@ -13,6 +13,7 @@
 		"savestates.MixinNetHandlerPlayServer",
 		"savestates.AccessorChunkLoader",
 		"savestates.AccessorAnvilChunkLoader",
+		"savestates.AccessorPlayerChunkMap",
 		"savestates.MixinWorldServer",
 		
 		// Events

@@ -4,15 +4,17 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.util.List;
 
+import com.minecrafttas.tasmod.mixin.savestates.AccessorPlayerChunkMap;
 import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
-import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
 import com.minecrafttas.tasmod.util.Ducks.WorldServerDuck;
+import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -117,19 +119,40 @@ public class SavestateWorldHandler {
 			LOGGER.trace(LoggerMarkers.Savestate, "Add player {} to the chunk map", player.getName());
 			switch (player.dimension) {
 				case -1:
-					worlds[1].getPlayerChunkMap().addPlayer(player);
-					worlds[1].getChunkProvider().provideChunk((int) player.posX >> 4, (int) player.posZ >> 4);
+					addPlayerToChunkMap(worlds[1], player);
 					break;
 				case 0:
-					worlds[0].getPlayerChunkMap().addPlayer(player);
-					worlds[0].getChunkProvider().provideChunk((int) player.posX >> 4, (int) player.posZ >> 4);
+					addPlayerToChunkMap(worlds[0], player);
 					break;
 				case 1:
-					worlds[2].getPlayerChunkMap().addPlayer(player);
-					worlds[2].getChunkProvider().provideChunk((int) player.posX >> 4, (int) player.posZ >> 4);
+					addPlayerToChunkMap(worlds[2], player);
+					break;
+				default:
+					if (worlds.length > player.dimension)
+						addPlayerToChunkMap(worlds[player.dimension + 1], player);
 					break;
 			}
 		}
+	}
+
+	/**
+	 * Adds a single player to a chunkMap
+	 * @param world 
+	 * @param player
+	 */
+	private void addPlayerToChunkMap(WorldServer world, EntityPlayerMP player) {
+		int playerChunkPosX = (int) player.posX >> 4;
+		int playerChunkPosY = (int) player.posZ >> 4;
+		PlayerChunkMap playerChunkMap = world.getPlayerChunkMap();
+
+		List<EntityPlayerMP> players = ((AccessorPlayerChunkMap) playerChunkMap).getPlayers();
+
+		if (players.contains(player)) {
+			LOGGER.debug(LoggerMarkers.Savestate, "Not adding player {} to chunkmap, as he was already added", player.getName());
+		} else {
+			playerChunkMap.addPlayer(player);
+		}
+		world.getChunkProvider().provideChunk(playerChunkPosX, playerChunkPosY);
 	}
 
 	/**
