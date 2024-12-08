@@ -1,10 +1,5 @@
 package com.minecrafttas.tasmod.util;
 
-import java.util.Set;
-import java.util.TreeSet;
-
-import net.minecraft.world.NextTickListEntry;
-
 /**
  * Oh boy, ducks! I can't help but quack up when they waddle their way into the code. :duck:
  * But let me tell you a little secret: I have a love-hate relationship with ducks. Not the adorable feathered creatures, mind you, but those sneaky little programming devils that swim in the deep waters of out-of-scope variables.
@@ -49,10 +44,6 @@ public class Ducks {
 		 * @see com.minecrafttas.tasmod.mixin.savestates.MixinWorldServer#sendChunksToClient() MixinWorldServer#sendChunksToClient()
 		 */
 		public void sendChunksToClient();
-
-		public TreeSet<NextTickListEntry> getTickListEntriesTreeSet();
-
-		public Set<NextTickListEntry> getTickListEntriesHashSet();
 	}
 
 	/**
@@ -109,6 +100,7 @@ public class Ducks {
 	 * Quacks the subtick
 	 */
 	public static interface SubtickDuck {
+
 		/**
 		 * Custom updating method for EntityRenderer, updating the player rotation
 		 * @param partialTicks The partial ticks from the vanilla Minecraft timer
@@ -120,6 +112,10 @@ public class Ducks {
 	 * Quacks the scoreboard
 	 */
 	public static interface ScoreboardDuck {
+
+		/**
+		 * Clears the client scoreboard
+		 */
 		public void clearScoreboard();
 	}
 }

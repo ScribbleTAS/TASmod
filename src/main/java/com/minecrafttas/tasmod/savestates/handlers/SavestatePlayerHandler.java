@@ -131,6 +131,8 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 
 			int dimensionFrom = player.dimension;
 
+			player.setWorld(server.getWorld(dimensionFrom));
+
 			NBTTagCompound nbttagcompound = server.getPlayerList().readPlayerDataFromFile(player);
 
 			int dimensionTo = 0;
@@ -145,7 +147,7 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 			}
 
 			player.clearActivePotions();
-			sendStats(player, list);
+			clearScoreboard(player);
 
 			player.readFromNBT(nbttagcompound);
 
@@ -157,11 +159,6 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 				e.printStackTrace();
 			}
 		}
-	}
-
-	private void sendStats(EntityPlayerMP player, PlayerList list) {
-		WorldServer world = server.getWorld(player.dimension);
-//		list.sendScoreboard((ServerScoreboard) world.getScoreboard(), player);
 	}
 
 	/**

@@ -9,23 +9,21 @@
 		"MixinEntityPlayer",
 
 		// Savestates
+		"savestates.AccessorAnvilChunkLoader",
+		"savestates.AccessorChunkLoader",
+		"savestates.AccessorEntityLivingBase",
+		"savestates.AccessorPlayerChunkMap",
 		"savestates.MixinChunkProviderServer",
 		"savestates.MixinNetHandlerPlayServer",
-		"savestates.AccessorChunkLoader",
-		"savestates.AccessorAnvilChunkLoader",
-		"savestates.AccessorPlayerChunkMap",
-		"savestates.AccessorTeleporter",
-		"savestates.AccessorEntityLivingBase",
 		"savestates.MixinScoreboard",
-		"savestates.MixinServerScoreboard",
 		"savestates.MixinWorldServer",
+		
 		// Events
 		"events.MixinEntityPlayerMP",
 
 		// Fixing forge and vanilla stuff
-		"fixes.MixinDragonFightManager",
+		"fixes.MixinDragonFightManager"
 		
-		"storage.AccessorNextTickListEntry"
 	],
 	"client": [
 		// General

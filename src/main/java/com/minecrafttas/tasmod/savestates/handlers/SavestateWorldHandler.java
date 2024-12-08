@@ -5,7 +5,6 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 import java.util.List;
 
 import com.minecrafttas.tasmod.mixin.savestates.AccessorPlayerChunkMap;
-import com.minecrafttas.tasmod.mixin.savestates.AccessorTeleporter;
 import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
@@ -17,7 +16,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
@@ -150,7 +148,7 @@ public class SavestateWorldHandler {
 		List<EntityPlayerMP> players = ((AccessorPlayerChunkMap) playerChunkMap).getPlayers();
 
 		if (players.contains(player)) {
-			LOGGER.debug(LoggerMarkers.Savestate, "Not adding player {} to chunkmap, as he was already added", player.getName());
+			LOGGER.debug(LoggerMarkers.Savestate, "Not adding player {} to chunkmap, player already exists", player.getName());
 		} else {
 			playerChunkMap.addPlayer(player);
 		}
@@ -201,27 +199,6 @@ public class SavestateWorldHandler {
 		for (WorldServer world : worlds) {
 			WorldServerDuck worldTick = (WorldServerDuck) world;
 			worldTick.sendChunksToClient();
-		}
-	}
-
-	/**
-	 * <p>Clears the portal destination cache to fix portals not generating after a savestate.
-	 * 
-	 * <p>When walking through a portal, the game is searching in the other dimension for an existing portal.<br>
-	 * As this action is very time consuming, a {@link Teleporter#destinationCoordinateCache destinationCoordinateCache} was set up,<br>
-	 * that stores the portal locations, after a successful search.
-	 * 
-	 * <p>If we savestate just before entering the nether and, after entering, a new portal is generated,<br>
-	 * then we hit an amusing problem after loading that savestate and reentering the nether again:<br>
-	 * The portal cache still has an entry with that portal location, but the savestate doesn't contain a portal,<br>
-	 * so the game will not generate a new portal, effectively stranding us in the nether. 
-	 */
-	public void clearPortalDestinationCache() {
-		WorldServer[] worlds = server.worlds;
-
-		for (WorldServer world : worlds) {
-			AccessorTeleporter worldTeleporter = (AccessorTeleporter) world.getDefaultTeleporter();
-			worldTeleporter.getDestinationCoordinateCache().clear();
 		}
 	}
 }

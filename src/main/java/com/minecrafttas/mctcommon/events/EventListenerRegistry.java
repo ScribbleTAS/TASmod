@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
@@ -134,6 +135,18 @@ public class EventListenerRegistry {
 	}
 
 	/**
+	 * Registers multiple objects to be an event listener. The objects must
+	 * implement an event extending {@link EventBase}
+	 * 
+	 * @param eventListeners The event listeners to register
+	 */
+	public static void register(List<? extends EventBase> eventListeners) {
+		for (EventBase eventListener : eventListeners) {
+			register(eventListener);
+		}
+	}
+
+	/**
 	 * Unregisters an object from being an event listener.
 	 * 
 	 * @param eventListener The event listener to unregister
@@ -162,6 +175,17 @@ public class EventListenerRegistry {
 	 * @param eventListener The event listeners to unregister
 	 */
 	public static void unregister(EventBase... eventListeners) {
+		for (EventBase eventListener : eventListeners) {
+			unregister(eventListener);
+		}
+	}
+
+	/**
+	 * Unregisters multiple objects from being an event listener.
+	 * 
+	 * @param eventListener The event listeners to unregister
+	 */
+	public static void unregister(List<? extends EventBase> eventListeners) {
 		for (EventBase eventListener : eventListeners) {
 			unregister(eventListener);
 		}

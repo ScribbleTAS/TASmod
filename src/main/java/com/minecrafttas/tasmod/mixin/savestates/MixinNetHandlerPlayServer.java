@@ -10,14 +10,12 @@ import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
 
-/**
- * Disables the "Player moved too quickly" message during a savestate 
- * 
- * @author Scribble
- */
 @Mixin(NetHandlerPlayServer.class)
 public class MixinNetHandlerPlayServer {
 
+	/**
+	 * Disables the "Player moved wrongly!" message during a savestate 
+	 */
 	@Redirect(method = "processPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/EntityPlayerMP;isInvulnerableDimensionChange()Z"))
 	public boolean redirect_processPlayer(EntityPlayerMP parentIn) {
 		return !parentIn.isInvulnerableDimensionChange() && TASmod.savestateHandlerServer.state != SavestateState.LOADING;

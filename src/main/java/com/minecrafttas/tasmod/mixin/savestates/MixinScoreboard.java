@@ -38,7 +38,6 @@ public class MixinScoreboard implements ScoreboardDuck {
 
 	@Override
 	public void clearScoreboard() {
-		System.out.println("Client");
 		scoreObjectives.clear();
 		scoreObjectiveCriterias.clear();
 		entitiesScoreObjectives.clear();
