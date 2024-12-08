@@ -47,6 +47,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.WorldServer;
@@ -771,13 +772,11 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 						LOGGER.error(LoggerMarkers.Savestate, "Failed to create a savestate");
 						LOGGER.catching(e);
-						return;
 					} catch (Exception e) {
 						if (player != null)
 							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getClass().getName().toString() + ": " + e.getMessage()));
 
 						LOGGER.catching(e);
-						return;
 					} finally {
 						TASmod.savestateHandlerServer.state = SavestateState.NONE;
 					}
@@ -801,8 +800,13 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 						LOGGER.error(LoggerMarkers.Savestate, "Failed to create a savestate: " + e.getMessage());
 						TASmod.savestateHandlerServer.state = SavestateState.NONE;
 					} catch (Exception e) {
-						if (player != null)
-							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to load a savestate: " + e.getCause().toString()));
+						if (player != null) {
+							Throwable cause = e.getCause();
+							if (cause == null) {
+								cause = e;
+							}
+							player.sendMessage(new TextComponentString(String.format("Failed to load a savestate: %s", cause.getMessage())).setStyle(new Style().setColor(TextFormatting.RED)));
+						}
 
 						LOGGER.throwing(e);
 						TASmod.savestateHandlerServer.state = SavestateState.NONE;
