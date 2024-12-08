@@ -7,12 +7,14 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.events.EventSavestate;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorEntityLivingBase;
 import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
@@ -34,7 +36,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
@@ -46,7 +47,7 @@ import net.minecraft.world.chunk.Chunk;
  * 
  * @author Scribble
  */
-public class SavestateHandlerClient implements ClientPacketHandler {
+public class SavestateHandlerClient implements ClientPacketHandler, EventSavestate.EventClientCompleteLoadstate, EventSavestate.EventClientLoadPlayer {
 
 	public final static File savestateDirectory = new File(TASmodClient.tasdirectory + File.separator + "savestates");
 
@@ -67,8 +68,8 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 	 * <br>
 	 * Side: Client
 	 */
-	@Environment(EnvType.CLIENT)
-	public static void keepPlayerInLoadedEntityList(net.minecraft.entity.player.EntityPlayer player) {
+	@Override
+	public void onClientLoadPlayer(EntityPlayerSP player) {
 		LOGGER.trace(LoggerMarkers.Savestate, "Keep player {} in loaded entity list", player.getName());
 		Minecraft.getMinecraft().world.unloadedEntityList.remove(player);
 	}
@@ -89,8 +90,9 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 	 * <br>
 	 * Side: Client
 	 */
-	@Environment(EnvType.CLIENT)
-	public static void addPlayerToClientChunk(EntityPlayer player) {
+	@Override
+	public void onClientLoadstateComplete() {
+		EntityPlayerSP player = Minecraft.getMinecraft().player;
 		LOGGER.trace(LoggerMarkers.Savestate, "Add player {} to loaded entity list", player.getName());
 		int i = MathHelper.floor(player.posX / 16.0D);
 		int j = MathHelper.floor(player.posZ / 16.0D);
@@ -245,6 +247,10 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 				controller.setInputs(savestateContainerList, index);
 			}
 		}
+
+		TASmodClient.tickSchedulerClient.add(() -> {
+			EventListenerRegistry.fireEvent(EventSavestate.EventClientCompleteLoadstate.class);
+		});
 	}
 
 	private static void preload(BigArrayList<TickContainer> containerList, long index) {
@@ -300,7 +306,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		SubtickDuck entityRenderer = (SubtickDuck) Minecraft.getMinecraft().entityRenderer;
 		entityRenderer.runUpdate(0);
 
-		SavestateHandlerClient.keepPlayerInLoadedEntityList(player);
+		EventListenerRegistry.fireEvent(EventSavestate.EventClientLoadPlayer.class, player);
 	}
 
 	/**

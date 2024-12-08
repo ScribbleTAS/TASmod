@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
 
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.server.MinecraftServer;
 
 public interface EventSavestate {
@@ -52,9 +53,45 @@ public interface EventSavestate {
 		public void onServerLoadstateComplete();
 	}
 
+	/**
+	 * Fired when saving a savestate
+	 */
 	@FunctionalInterface
 	interface EventClientSavestate extends EventBase {
 
 		public void onClientSavestate();
+	}
+
+	/**
+	 * Fired when loading a savestate
+	 */
+	@FunctionalInterface
+	interface EventClientLoadstate extends EventBase {
+
+		public void onClientLoadstate();
+	}
+
+	/**
+	 * Fired one tick after a loadstate was carried out
+	 */
+	@FunctionalInterface
+	interface EventClientCompleteLoadstate extends EventBase {
+
+		/**
+		 * Fired one tick after a loadstate was carried out
+		 */
+		public void onClientLoadstateComplete();
+	}
+
+	/**
+	 * Fired during loadstating, after the player is loaded on the client
+	 */
+	@FunctionalInterface
+	interface EventClientLoadPlayer extends EventBase {
+
+		/**
+		 * Fired during loadstating, after the player is loaded on the client
+		 */
+		public void onClientLoadPlayer(EntityPlayerSP player);
 	}
 }

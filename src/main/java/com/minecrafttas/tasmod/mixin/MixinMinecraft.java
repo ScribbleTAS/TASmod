@@ -1,8 +1,5 @@
 package com.minecrafttas.tasmod.mixin;
 
-import java.io.IOException;
-
-import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,9 +9,9 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
 import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 
 import net.minecraft.client.Minecraft;
@@ -25,12 +22,11 @@ import net.minecraft.util.Timer;
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft {
 
-
 	// =====================================================================================================================================
 
 	@Shadow
 	private GuiScreen currentScreen;
-	
+
 	@Inject(method = "runGameLoop", at = @At(value = "HEAD"))
 	public void injectRunGameLoop(CallbackInfo ci) {
 		TASmodClient.gameLoopSchedulerClient.runAllTasks();
@@ -58,7 +54,7 @@ public abstract class MixinMinecraft {
 			TASmodClient.tickratechanger.advanceTick = false;
 			TASmodClient.tickratechanger.changeClientTickrate(0F);
 		}
-		EventListenerRegistry.fireEvent(EventClientTickPost.class, (Minecraft)(Object)this);
+		EventListenerRegistry.fireEvent(EventClientTickPost.class, (Minecraft) (Object) this);
 	}
 
 	@Shadow
@@ -73,17 +69,6 @@ public abstract class MixinMinecraft {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-	}
-	
-	@Inject(method = "runTick", at = @At(value = "HEAD"))
-	public void injectRunTick(CallbackInfo ci) throws IOException {
-		if (SavestateHandlerServer.wasLoading) {
-			SavestateHandlerServer.wasLoading = false;
-			
-			if(Minecraft.getMinecraft().player!=null) { 		//The player can be null when loading a savestate and quitting to the main menu
-				SavestateHandlerServer.playerLoadSavestateEventClient(); // TODO Replace with event
-			}
 		}
 	}
 

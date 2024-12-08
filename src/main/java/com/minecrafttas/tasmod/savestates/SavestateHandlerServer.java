@@ -43,9 +43,6 @@ import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
@@ -91,7 +88,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	public static final Path storageDir = Paths.get("tasmod/");
 
 	private final Logger logger;
-	public static boolean wasLoading;
 
 	/**
 	 * Creates a savestate handler on the specified server
@@ -719,11 +715,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			NBTTagCompound nbttagcompound = playerList.readPlayerDataFromFile(player);
 			playerHandler.reattachEntityToPlayer(nbttagcompound, player.getServerWorld(), player);
 		}
-	}
-
-	@Environment(EnvType.CLIENT)
-	public static void playerLoadSavestateEventClient() {
-		SavestateHandlerClient.addPlayerToClientChunk(Minecraft.getMinecraft().player);
 	}
 
 	private int legacyIndexFile(Path savestateDat) {
