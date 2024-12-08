@@ -12,3 +12,6 @@ accessible field net/minecraft/world/World worldInfo Lnet/minecraft/world/storag
 accessible method net/minecraft/world/storage/SaveHandler setSessionLock ()V
 
 accessible field net/minecraft/client/settings/KeyBinding CATEGORY_ORDER Ljava/util/Map;
+
+accessible field net/minecraft/world/WorldServer entityTracker Lnet/minecraft/entity/EntityTracker;
+mutable field net/minecraft/world/WorldServer entityTracker Lnet/minecraft/entity/EntityTracker;

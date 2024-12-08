@@ -43,7 +43,6 @@ import net.minecraft.server.management.PlayerList;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
-import net.minecraft.world.storage.WorldInfo;
 
 /**
  * Handles player related savestating methods
@@ -122,11 +121,6 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 		PlayerList list = server.getPlayerList();
 		List<EntityPlayerMP> players = list.getPlayers();
 
-		WorldServer[] worlds = server.worlds;
-		for (WorldServer world : worlds) {
-			WorldInfo info = world.getSaveHandler().loadWorldInfo();
-			world.worldInfo = info;
-		}
 		for (EntityPlayerMP player : players) {
 
 			int dimensionFrom = player.dimension;
@@ -147,7 +141,6 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 			}
 
 			player.clearActivePotions();
-			clearScoreboard(player);
 
 			player.readFromNBT(nbttagcompound);
 
@@ -197,9 +190,9 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 		}
 	}
 
-	public void clearScoreboard(EntityPlayerMP player) {
+	public void clearScoreboard() {
 		try {
-			TASmod.server.sendTo(player, new TASmodBufferBuilder(TASmodPackets.SAVESTATE_CLEAR_SCOREBOARD));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_CLEAR_SCOREBOARD));
 		} catch (Exception e) {
 			LOGGER.catching(e);
 		}

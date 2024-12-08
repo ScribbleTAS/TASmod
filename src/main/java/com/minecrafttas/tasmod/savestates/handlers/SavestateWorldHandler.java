@@ -2,6 +2,7 @@ package com.minecrafttas.tasmod.savestates.handlers;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.minecrafttas.tasmod.mixin.savestates.AccessorPlayerChunkMap;
@@ -11,15 +12,21 @@ import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
 import com.minecrafttas.tasmod.util.Ducks.WorldServerDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.WorldServerMulti;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.SaveHandler;
+import net.minecraft.world.storage.WorldInfo;
 
 /**
  * Contains static chunk actions, which can be triggered individually for testing
@@ -199,6 +206,51 @@ public class SavestateWorldHandler {
 		for (WorldServer world : worlds) {
 			WorldServerDuck worldTick = (WorldServerDuck) world;
 			worldTick.sendChunksToClient();
+		}
+	}
+
+	public void loadAllWorlds(String string, String string2) {
+		List<EntityTracker> trackers = new ArrayList<>();
+		for (WorldServer world : server.worlds) {
+			trackers.add(world.entityTracker);
+		}
+
+		server.convertMapIfNeeded(string);
+		server.worlds = new WorldServer[3];
+		server.timeOfLastDimensionTick = new long[server.worlds.length][100];
+		ISaveHandler iSaveHandler = server.getActiveAnvilConverter().getSaveLoader(string, true);
+		server.setResourcePackFromWorld(server.getFolderName(), iSaveHandler);
+		WorldInfo worldInfo = iSaveHandler.loadWorldInfo();
+		if (worldInfo == null) {
+//			worldInfo = new WorldInfo(server.worldSettings, string2);
+		} else {
+			worldInfo.setWorldName(string2);
+		}
+
+		for (int i = 0; i < server.worlds.length; i++) {
+			int j = 0;
+			if (i == 1) {
+				j = -1;
+			}
+
+			if (i == 2) {
+				j = 1;
+			}
+
+			if (i == 0) {
+				server.worlds[i] = (WorldServer) new WorldServer(server, iSaveHandler, worldInfo, j, server.profiler).init();
+				server.worlds[i].entityTracker = trackers.get(i);
+			} else {
+				server.worlds[i] = (WorldServer) new WorldServerMulti(server, iSaveHandler, j, server.worlds[0], server.profiler).init();
+				server.worlds[i].entityTracker = trackers.get(i);
+			}
+
+			server.worlds[i].addEventListener(new ServerWorldEventHandler(server, server.worlds[i]));
+		}
+
+		server.getPlayerList().setPlayerManager(server.worlds);
+		if (server.worlds[0].getWorldInfo().getDifficulty() == null) {
+			server.setDifficultyForAllWorlds(Minecraft.getMinecraft().gameSettings.difficulty);
 		}
 	}
 }
