@@ -32,6 +32,8 @@ import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
@@ -143,6 +145,8 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 			player.clearActivePotions();
 
 			player.readFromNBT(nbttagcompound);
+			player.setWorld(this.server.getWorld(player.dimension));
+			player.interactionManager.setWorld((WorldServer) player.world);
 
 			LOGGER.debug(LoggerMarkers.Savestate, "Sending motion to {}", player.getName());
 
@@ -254,6 +258,7 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 		}
 	}
 
+	@Environment(EnvType.CLIENT)
 	@Override
 	public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
 		TASmodPackets packet = (TASmodPackets) id;

@@ -2,7 +2,6 @@ package com.minecrafttas.tasmod.savestates.handlers;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.minecrafttas.tasmod.mixin.savestates.AccessorPlayerChunkMap;
@@ -13,7 +12,6 @@ import com.minecrafttas.tasmod.util.Ducks.WorldServerDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -160,6 +158,9 @@ public class SavestateWorldHandler {
 			playerChunkMap.addPlayer(player);
 		}
 		world.getChunkProvider().provideChunk(playerChunkPosX, playerChunkPosY);
+
+		world.addWeatherEffect(player);
+		world.spawnEntity(player);
 	}
 
 	/**
@@ -210,11 +211,6 @@ public class SavestateWorldHandler {
 	}
 
 	public void loadAllWorlds(String string, String string2) {
-		List<EntityTracker> trackers = new ArrayList<>();
-		for (WorldServer world : server.worlds) {
-			trackers.add(world.entityTracker);
-		}
-
 		server.convertMapIfNeeded(string);
 		server.worlds = new WorldServer[3];
 		server.timeOfLastDimensionTick = new long[server.worlds.length][100];
@@ -239,10 +235,8 @@ public class SavestateWorldHandler {
 
 			if (i == 0) {
 				server.worlds[i] = (WorldServer) new WorldServer(server, iSaveHandler, worldInfo, j, server.profiler).init();
-				server.worlds[i].entityTracker = trackers.get(i);
 			} else {
 				server.worlds[i] = (WorldServer) new WorldServerMulti(server, iSaveHandler, j, server.worlds[0], server.profiler).init();
-				server.worlds[i].entityTracker = trackers.get(i);
 			}
 
 			server.worlds[i].addEventListener(new ServerWorldEventHandler(server, server.worlds[i]));
