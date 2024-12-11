@@ -1,7 +1,6 @@
 package com.minecrafttas.tasmod.savestates.handlers;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
-import static com.minecrafttas.tasmod.registries.TASmodPackets.CLEAR_SCREEN;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_PLAYER;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_REQUEST_MOTION;
 
@@ -167,7 +166,7 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 	public void changeDimensionDangerously(EntityPlayerMP player, int dimensionTo) {
 		int dimensionFrom = player.dimension;
 		WorldServer worldServerFrom = this.server.getWorld(dimensionFrom);
-		WorldServer worldServerTo = this.server.getWorld(dimensionTo);
+//		WorldServer worldServerTo = this.server.getWorld(dimensionTo);
 
 		//@formatter:off
 		player.connection
@@ -182,16 +181,10 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 		//@formatter:on
 		worldServerFrom.removeEntityDangerously(player);
 		player.isDead = false;
-		worldServerTo.spawnEntity(player);
-		worldServerTo.updateEntityWithOptionalForce(player, false);
-		player.setWorld(worldServerTo);
-		player.interactionManager.setWorld(worldServerTo);
-
-		try {
-			TASmod.server.sendTo(player, new TASmodBufferBuilder(CLEAR_SCREEN));
-		} catch (Exception e) {
-			LOGGER.catching(e);
-		}
+//		worldServerTo.spawnEntity(player);
+//		worldServerTo.updateEntityWithOptionalForce(player, false);
+//		player.setWorld(worldServerTo);
+//		player.interactionManager.setWorld(worldServerTo);
 	}
 
 	public void clearScoreboard() {

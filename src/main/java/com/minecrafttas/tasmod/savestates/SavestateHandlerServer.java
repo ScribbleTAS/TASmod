@@ -1,6 +1,7 @@
 package com.minecrafttas.tasmod.savestates;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.CLEAR_SCREEN;
 
 import java.io.File;
 import java.io.IOException;
@@ -401,6 +402,12 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		});
 
 		worldHandler.sendChunksToClient();
+
+		try {
+			TASmod.server.sendToAll(new TASmodBufferBuilder(CLEAR_SCREEN));
+		} catch (Exception e) {
+			LOGGER.catching(e);
+		}
 
 		if (!tickrate0) {
 			TASmod.tickratechanger.pauseGame(false);
