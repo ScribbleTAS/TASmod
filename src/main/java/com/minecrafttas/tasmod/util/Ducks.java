@@ -118,4 +118,15 @@ public class Ducks {
 		 */
 		public void clearScoreboard();
 	}
+
+	/**
+	 * Quacks the world client
+	 */
+	public static interface WorldClientDuck {
+
+		/**
+		 * Clear entitylist on the client
+		 */
+		public void clearEntityList();
+	}
 }

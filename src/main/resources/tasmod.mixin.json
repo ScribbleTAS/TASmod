@@ -32,6 +32,7 @@
 		
 		// Savestates
 		"savestates.MixinChunkProviderClient",
+		"savestates.MixinWorldClient",
 		
 		// Interpolation
 		"MixinFrustum",

@@ -28,6 +28,7 @@ import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
 import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
+import com.minecrafttas.tasmod.util.Ducks.WorldClientDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.mojang.realmsclient.gui.ChatFormatting;
 
@@ -325,7 +326,8 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		ChunkProviderClient chunkProvider = mc.world.getChunkProvider();
 
 		((ChunkProviderDuck) chunkProvider).unloadAllChunks();
-		Minecraft.getMinecraft().renderGlobal.loadRenderers();
+		mc.renderGlobal.loadRenderers();
+		((WorldClientDuck) mc.world).clearEntityList();
 	}
 
 	@Override

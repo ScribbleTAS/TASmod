@@ -159,7 +159,6 @@ public class SavestateWorldHandler {
 		}
 		world.getChunkProvider().provideChunk(playerChunkPosX, playerChunkPosY);
 
-		world.addWeatherEffect(player);
 		world.spawnEntity(player);
 	}
 
