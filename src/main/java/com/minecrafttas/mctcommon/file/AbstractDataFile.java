@@ -4,11 +4,23 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.InvalidPropertiesFormatException;
+import java.util.Map.Entry;
 import java.util.Properties;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.minecrafttas.mctcommon.MCTCommon;
 
 public abstract class AbstractDataFile {
@@ -117,6 +129,28 @@ public abstract class AbstractDataFile {
 		this.properties = newProp;
 	}
 
+	public void loadFromJson() {
+		loadFromJson(file);
+	}
+
+	public void loadFromJson(Path file) {
+		//@formatter:off
+		Gson json = new GsonBuilder()
+				.registerTypeAdapter(Properties.class, new PropertiesDeserializer())
+				.create();
+		//@formatter:on
+
+		String in;
+		try {
+			in = new String(Files.readAllBytes(file));
+		} catch (IOException e) {
+			MCTCommon.LOGGER.catching(e);
+			return;
+		}
+
+		properties = json.fromJson(in, Properties.class);
+	}
+
 	public void save() {
 		this.save(file);
 	}
@@ -127,7 +161,7 @@ public abstract class AbstractDataFile {
 			properties.store(fos, comment);
 			fos.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			MCTCommon.LOGGER.catching(e);
 		}
 	}
 
@@ -148,7 +182,53 @@ public abstract class AbstractDataFile {
 			properties.storeToXML(fos, comment, "UTF-8");
 			fos.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			MCTCommon.LOGGER.catching(e);
+		}
+	}
+
+	public void saveToJson() {
+		saveToJson(file);
+	}
+
+	public void saveToJson(Path file) {
+		//@formatter:off
+		Gson json = new GsonBuilder()
+				.registerTypeAdapter(Properties.class, new PropertiesSerializer())
+				.setPrettyPrinting()
+				.create();
+		//@formatter:on
+		try {
+			String element = json.toJson(properties);
+			Files.write(file, element.getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+		} catch (IOException e) {
+			MCTCommon.LOGGER.catching(e);
+		}
+	}
+
+	public class PropertiesSerializer implements JsonSerializer<Properties> {
+
+		@Override
+		public JsonElement serialize(Properties src, Type typeOfSrc, JsonSerializationContext context) {
+			JsonObject obj = new JsonObject();
+			src.forEach((key, val) -> {
+				obj.addProperty((String) key, (String) val);
+			});
+			return obj;
+		}
+	}
+
+	public class PropertiesDeserializer implements JsonDeserializer<Properties> {
+
+		@Override
+		public Properties deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+			Properties properties = new Properties();
+			JsonObject obj = json.getAsJsonObject();
+			for (Entry<String, JsonElement> elem : obj.entrySet()) {
+				String key = elem.getKey();
+				String val = elem.getValue().getAsString();
+				properties.put(key, val);
+			}
+			return properties;
 		}
 	}
 }
