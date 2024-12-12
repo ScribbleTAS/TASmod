@@ -8,7 +8,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
-import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandler.MotionData;
+import com.minecrafttas.tasmod.savestates.storage.SavestateMotionStorage.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 import com.minecrafttas.tasmod.util.Ducks.ScoreboardDuck;
 
@@ -83,6 +83,13 @@ public enum TASmodPackets implements PacketID {
 	 * <strong>Client->Server</strong> {@link MotionData} motionData An Object containing all necessary motion data<br>
 	 */
 	SAVESTATE_REQUEST_MOTION,
+	/**
+	 * <p>Used for setting the client motion data after it was loaded from a savestate
+	 * <p>Side: Client<br>
+	 * ARGS: <br>
+	 * <strong>Server->Client</strong> {@link MotionData} motionData An Object containing all necessary motion data<br>
+	 */
+	SAVESTATE_SET_MOTION,
 	/**
 	 * <p>Unloads the chunks on the client side
 	 * <p>SIDE: Client<br>
