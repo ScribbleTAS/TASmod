@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.playback.tasfile.flavor.integrated;
+package com.minecrafttas.tasmod.playback.tasfile.flavor.builtin;
 
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 

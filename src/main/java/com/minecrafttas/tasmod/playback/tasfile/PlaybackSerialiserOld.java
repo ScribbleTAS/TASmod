@@ -14,7 +14,7 @@ import org.apache.commons.io.FileUtils;
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
-import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
+import com.minecrafttas.tasmod.playback.filecommands.builtin.DesyncMonitorFileCommandExtension;
 import com.minecrafttas.tasmod.util.FileThread;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;

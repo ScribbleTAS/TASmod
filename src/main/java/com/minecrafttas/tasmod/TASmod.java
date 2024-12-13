@@ -26,7 +26,7 @@ import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.commands.TabCompletionUtils;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
-import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
+import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
 import com.minecrafttas.tasmod.savestates.storage.SavestateMotionStorage;
