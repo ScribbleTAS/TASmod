@@ -7,7 +7,6 @@ import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -199,7 +198,7 @@ public abstract class AbstractDataFile {
 		//@formatter:on
 		try {
 			String element = json.toJson(properties);
-			Files.write(file, element.getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+			Files.write(file, element.getBytes());
 		} catch (IOException e) {
 			MCTCommon.LOGGER.catching(e);
 		}

@@ -168,9 +168,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		// Enable tickrate 0
 		TASmod.tickratechanger.pauseGame(true);
 
-		// Get the motion from the client
-		playerHandler.requestMotionFromClient();
-
 		// Save the world!
 		server.getPlayerList().saveAllPlayerData();
 		server.saveAllWorlds(false);

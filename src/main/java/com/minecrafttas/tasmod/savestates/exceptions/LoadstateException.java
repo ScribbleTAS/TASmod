@@ -1,6 +1,6 @@
 package com.minecrafttas.tasmod.savestates.exceptions;
 
-public class LoadstateException extends Exception{
+public class LoadstateException extends RuntimeException {
 	/**
 	 * 
 	 */
@@ -8,5 +8,9 @@ public class LoadstateException extends Exception{
 
 	public LoadstateException(String s) {
 		super(s);
+	}
+
+	public LoadstateException(Throwable t, String msg, Object... args) {
+		super(String.format(msg, args), t);
 	}
 }

@@ -269,32 +269,44 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		// Clear any accidental applied potion particles on the client
 		((AccessorEntityLivingBase) player).clearPotionEffects();
 
+		/*
+		 * TODO
+		 * The following 20 lines are all one
+		 * gross workaround for correctly applying the player motion
+		 * to the client...
+		 * 
+		 * The motion is applied
+		 * to the player in a previous step and unfortunately
+		 * player.readFromNBT(compound) overwrites the
+		 * previously applied motion...
+		 * 
+		 * So this workaround makes sure that the motion is not overwritten
+		 * Fixing this, requires restructuring the steps for loadstating
+		 * and since I plan to do this anyway at some point, I will
+		 * leave this here and be done for today*/
+		double x = player.motionX;
+		double y = player.motionY;
+		double z = player.motionZ;
+
+		float rx = player.moveForward;
+		float ry = player.moveStrafing;
+		float rz = player.moveVertical;
+
+		boolean sprinting = player.isSprinting();
+		float jumpVector = player.jumpMovementFactor;
+
 		player.readFromNBT(compound);
-		NBTTagCompound motion = compound.getCompoundTag("clientMotion");
 
-		if (motion.hasNoTags()) {
-			LOGGER.warn(LoggerMarkers.Savestate, "Could not load the motion from the savestate. Savestate seems to be created manually or by a different mod");
-		} else {
-			LOGGER.trace(LoggerMarkers.Savestate, "Loading client motion from NBT");
-			double x = motion.getDouble("x");
-			double y = motion.getDouble("y");
-			double z = motion.getDouble("z");
-			player.motionX = x;
-			player.motionY = y;
-			player.motionZ = z;
+		player.motionX = x;
+		player.motionY = y;
+		player.motionZ = z;
 
-			float rx = motion.getFloat("RelativeX");
-			float ry = motion.getFloat("RelativeY");
-			float rz = motion.getFloat("RelativeZ");
-			player.moveForward = rx;
-			player.moveVertical = ry;
-			player.moveStrafing = rz;
+		player.moveForward = rx;
+		player.moveVertical = ry;
+		player.moveStrafing = rz;
 
-			boolean sprinting = motion.getBoolean("Sprinting");
-			float jumpVector = motion.getFloat("JumpFactor");
-			player.setSprinting(sprinting);
-			player.jumpMovementFactor = jumpVector;
-		}
+		player.setSprinting(sprinting);
+		player.jumpMovementFactor = jumpVector;
 
 		LOGGER.trace(LoggerMarkers.Savestate, "Setting client gamemode");
 		// #86

@@ -189,7 +189,6 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 	@Override
 	public void onServerPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
 		TASmodPackets packet = (TASmodPackets) id;
-		EntityPlayerMP player = TASmod.getServerInstance().getPlayerList().getPlayerByUsername(username);
 
 		switch (packet) {
 			case SAVESTATE_PLAYER:

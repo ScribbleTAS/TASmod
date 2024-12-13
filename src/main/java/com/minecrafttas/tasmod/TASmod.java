@@ -114,6 +114,9 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		PacketHandlerRegistry.register(startPositionMetadataExtension);
 		PacketHandlerRegistry.register(tabCompletionUtils);
 		PacketHandlerRegistry.register(commandFileCommand);
+		SavestateMotionStorage motionStorage = new SavestateMotionStorage();
+		PacketHandlerRegistry.register(motionStorage);
+		EventListenerRegistry.register(motionStorage);
 	}
 
 	@Override
@@ -140,8 +143,6 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		savestateHandlerServer = new SavestateHandlerServer(server, LOGGER);
 		PacketHandlerRegistry.register(savestateHandlerServer);
 		PacketHandlerRegistry.register(savestateHandlerServer.getPlayerHandler());
-
-		EventListenerRegistry.register(savestateHandlerServer.getPlayerHandler());
 
 		if (!server.isDedicatedServer()) {
 			TASmod.tickratechanger.ticksPerSecond = 0F;
@@ -174,7 +175,6 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 			PacketHandlerRegistry.unregister(savestateHandlerServer); // Unregistering the savestatehandler, as a new instance is registered in onServerStart()
 			PacketHandlerRegistry.unregister(savestateHandlerServer.getPlayerHandler());
 
-			EventListenerRegistry.unregister(savestateHandlerServer.getPlayerHandler());
 			savestateHandlerServer = null;
 		}
 	}

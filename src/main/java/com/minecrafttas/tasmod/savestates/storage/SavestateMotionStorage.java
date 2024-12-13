@@ -2,16 +2,18 @@ package com.minecrafttas.tasmod.savestates.storage;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_REQUEST_MOTION;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_SET_MOTION;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +21,8 @@ import java.util.concurrent.TimeoutException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
@@ -31,6 +34,7 @@ import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
+import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -41,6 +45,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.PlayerList;
 
 public class SavestateMotionStorage extends AbstractExtendStorage implements ClientPacketHandler, ServerPacketHandler {
 
@@ -72,12 +77,18 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 			e.printStackTrace();
 		}
 
-		JsonArray playerJsonArray = new JsonArray();
+		JsonObject playerJsonObject = new JsonObject();
 
 		futures.forEach((player, future) -> {
 			try {
 				MotionData data = future.get(5L, TimeUnit.SECONDS);
-				playerJsonArray.add(json.toJsonTree(data));
+
+				String uuid = player.getUniqueID().toString();
+				if (player.getName().equals(server.getServerOwner())) {
+					uuid = "singleplayer";
+				}
+				playerJsonObject.add(uuid, json.toJsonTree(data));
+
 			} catch (TimeoutException e) {
 				throw new SavestateException(e, "Writing client motion for %s timed out!", player.getName());
 			} catch (ExecutionException | InterruptedException e) {
@@ -85,15 +96,16 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 			}
 		});
 
-		saveMotionData(current, playerJsonArray);
+		saveJson(current, playerJsonObject);
 	}
 
-	private void saveMotionData(Path current, JsonArray playerJsonArray) {
+	private void saveJson(Path current, JsonObject data) {
 		Path saveFile = current.resolve(SavestateHandlerServer.storageDir).resolve(fileName);
-		String out = json.toJson(playerJsonArray);
+
+		String out = json.toJson(data);
 
 		try {
-			Files.write(saveFile, out.getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+			Files.write(saveFile, out.getBytes());
 		} catch (IOException e) {
 			throw new SavestateException(e, "Could not write to the file system");
 		}
@@ -101,27 +113,62 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 
 	@Override
 	public void onServerLoadstate(MinecraftServer server, int index, Path target, Path current) {
+		JsonObject playerJsonObject = loadMotionData(target);
+		PlayerList list = server.getPlayerList();
 
+		for (Entry<String, JsonElement> motionDataJsonElement : playerJsonObject.entrySet()) {
+			String playerUUID = motionDataJsonElement.getKey();
+			MotionData motionData = json.fromJson(motionDataJsonElement.getValue(), MotionData.class);
+
+			EntityPlayerMP player;
+			if (playerUUID.equals("singleplayer")) {
+				String ownerName = server.getServerOwner();
+				if (ownerName == null) {
+					continue;
+				}
+				player = list.getPlayerByUsername(ownerName);
+			} else {
+				player = list.getPlayerByUUID(UUID.fromString(playerUUID));
+			}
+
+			if (player == null) {
+				continue;
+			}
+
+			try {
+				TASmod.server.sendTo(player, new TASmodBufferBuilder(SAVESTATE_SET_MOTION).writeMotionData(motionData));
+			} catch (Exception e) {
+				logger.catching(e);
+			}
+		}
 	}
 
-	private MotionData loadMotionData(Path saveData) {
-		return null;
+	private JsonObject loadMotionData(Path target) {
+		Path saveFile = target.resolve(SavestateHandlerServer.storageDir).resolve(fileName);
+		String in;
+		try {
+			in = new String(Files.readAllBytes(saveFile));
+		} catch (IOException e) {
+			throw new LoadstateException(e, "Could not read from the file system");
+		}
+		return json.fromJson(in, JsonObject.class);
 	}
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new PacketID[] { SAVESTATE_REQUEST_MOTION };
+		return new PacketID[] { SAVESTATE_REQUEST_MOTION, SAVESTATE_SET_MOTION };
 	}
 
 	@Environment(EnvType.CLIENT)
 	@Override
 	public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
 		TASmodPackets packet = (TASmodPackets) id;
+		Minecraft mc = Minecraft.getMinecraft();
+		EntityPlayerSP player = mc.player;
 
 		switch (packet) {
 			case SAVESTATE_REQUEST_MOTION:
-				Minecraft mc = Minecraft.getMinecraft();
-				EntityPlayerSP player = mc.player;
+
 				if (player != null) {
 					if (!(mc.currentScreen instanceof GuiSavestateSavingScreen)) {
 						mc.displayGuiScreen(new GuiSavestateSavingScreen());
@@ -142,7 +189,19 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 				}
 				break;
 			case SAVESTATE_SET_MOTION:
+				LOGGER.trace(LoggerMarkers.Savestate, "Loading client motion");
 
+				MotionData data = TASmodBufferBuilder.readMotionData(buf);
+				player.motionX = data.motionX;
+				player.motionY = data.motionY;
+				player.motionZ = data.motionZ;
+
+				player.moveForward = data.deltaX;
+				player.moveVertical = data.deltaY;
+				player.moveStrafing = data.deltaZ;
+
+				player.setSprinting(data.sprinting);
+				player.jumpMovementFactor = data.jumpMovementFactor;
 				break;
 			default:
 				break;
@@ -169,24 +228,24 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 
 	public static class MotionData {
 
-		private double clientX;
-		private double clientY;
-		private double clientZ;
-		private float clientrX;
-		private float clientrY;
-		private float clientrZ;
+		private double motionX;
+		private double motionY;
+		private double motionZ;
+		private float deltaX;
+		private float deltaY;
+		private float deltaZ;
 		private boolean sprinting;
-		private float jumpMovementVector;
+		private float jumpMovementFactor;
 
 		public MotionData(double x, double y, double z, float rx, float ry, float rz, boolean sprinting, float jumpMovementVector) {
-			clientX = x;
-			clientY = y;
-			clientZ = z;
-			clientrX = rx;
-			clientrY = ry;
-			clientrZ = rz;
+			motionX = x;
+			motionY = y;
+			motionZ = z;
+			deltaX = rx;
+			deltaY = ry;
+			deltaZ = rz;
 			this.sprinting = sprinting;
-			this.jumpMovementVector = jumpMovementVector;
+			this.jumpMovementFactor = jumpMovementVector;
 		}
 
 		public MotionData() {
@@ -194,27 +253,27 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 		}
 
 		public double getClientX() {
-			return clientX;
+			return motionX;
 		}
 
 		public double getClientY() {
-			return clientY;
+			return motionY;
 		}
 
 		public double getClientZ() {
-			return clientZ;
+			return motionZ;
 		}
 
 		public float getClientrX() {
-			return clientrX;
+			return deltaX;
 		}
 
 		public float getClientrY() {
-			return clientrY;
+			return deltaY;
 		}
 
 		public float getClientrZ() {
-			return clientrZ;
+			return deltaZ;
 		}
 
 		public boolean isSprinting() {
@@ -222,8 +281,7 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 		}
 
 		public float getJumpMovementVector() {
-			return jumpMovementVector;
+			return jumpMovementFactor;
 		}
 	}
-
 }
