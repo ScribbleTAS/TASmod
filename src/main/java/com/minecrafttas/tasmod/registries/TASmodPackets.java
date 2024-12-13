@@ -97,14 +97,19 @@ public enum TASmodPackets implements PacketID {
 	 */
 	SAVESTATE_UNLOAD_CHUNKS,
 	/**
-	 * <p>Notifies the client to clear all inputs from the input buffer in {@link PlaybackControllerClient}
-	 * <p>SIDE: Both<br>
+	 * <p>Clears the scoreboard on the client side
+	 * <p>SIDE: Client<br>
 	 * ARGS: none
 	 */
 	SAVESTATE_CLEAR_SCOREBOARD(Side.CLIENT, (buf, clientID) -> {
 		Minecraft mc = Minecraft.getMinecraft();
 		((ScoreboardDuck) mc.world.getScoreboard()).clearScoreboard();
 	}),
+	/**
+	 * <p>Notifies the client to clear all inputs from the input buffer in {@link PlaybackControllerClient}
+	 * <p>SIDE: Both<br>
+	 * ARGS: none
+	 */
 	PLAYBACK_CLEAR_INPUTS,
 	/**
 	 * <p>Notifies the client to quit to the main menu and start recording inputs in {@link PlaybackControllerClient}
