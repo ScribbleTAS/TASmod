@@ -70,6 +70,25 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 		// Unused atm
 	}
 
+	public enum StartPositionFields {
+		X("x"),
+		Y("y"),
+		Z("z"),
+		Pitch("pitch"),
+		Yaw("yaw");
+
+		private final String name;
+
+		private StartPositionFields(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	@Override
 	public PlaybackMetadata onStore() {
 		PlaybackMetadata metadata = new PlaybackMetadata(this);
@@ -78,23 +97,27 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 		if (this.startPosition != null) {
 			startPositionToStore = startPosition;
 		}
-		metadata.setValue("x", Double.toString(startPositionToStore.x));
-		metadata.setValue("y", Double.toString(startPositionToStore.y));
-		metadata.setValue("z", Double.toString(startPositionToStore.z));
-		metadata.setValue("pitch", Float.toString(startPositionToStore.pitch));
-		metadata.setValue("yaw", Float.toString(startPositionToStore.yaw));
+		metadata.setValue(StartPositionFields.X, Double.toString(startPositionToStore.x));
+		metadata.setValue(StartPositionFields.Y, Double.toString(startPositionToStore.y));
+		metadata.setValue(StartPositionFields.Z, Double.toString(startPositionToStore.z));
+		metadata.setValue(StartPositionFields.Pitch, Float.toString(startPositionToStore.pitch));
+		metadata.setValue(StartPositionFields.Yaw, Float.toString(startPositionToStore.yaw));
 		return metadata;
 	}
 
 	@Override
 	public void onLoad(PlaybackMetadata metadata) {
-		double x = getDouble("x", metadata);
-		double y = getDouble("y", metadata);
-		double z = getDouble("z", metadata);
-		float pitch = getFloat("pitch", metadata);
-		float yaw = getFloat("yaw", metadata);
+		double x = getDouble(StartPositionFields.X, metadata);
+		double y = getDouble(StartPositionFields.Y, metadata);
+		double z = getDouble(StartPositionFields.Z, metadata);
+		float pitch = getFloat(StartPositionFields.Pitch, metadata);
+		float yaw = getFloat(StartPositionFields.Yaw, metadata);
 
 		this.startPosition = new StartPosition(x, y, z, pitch, yaw);
+	}
+
+	private double getDouble(Object key, PlaybackMetadata metadata) {
+		return getDouble(key.toString(), metadata);
 	}
 
 	private double getDouble(String key, PlaybackMetadata metadata) {
@@ -108,6 +131,10 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 		} else {
 			throw new PlaybackLoadException(String.format("Missing key %s in Start Position metadata", key));
 		}
+	}
+
+	private float getFloat(Object key, PlaybackMetadata metadata) {
+		return getFloat(key.toString(), metadata);
 	}
 
 	private float getFloat(String key, PlaybackMetadata metadata) {
@@ -158,7 +185,7 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 		if (player != null)
 			startPosition = new StartPosition(player.posX, player.posY, player.posZ, player.rotationPitch, player.rotationYaw);
 		else
-			LOGGER.warn("Start position not set, the player was null! This will make problems when storing inputs!");
+			LOGGER.warn("Start position not set, the player was null! This will create problems when storing inputs!");
 
 	}
 
