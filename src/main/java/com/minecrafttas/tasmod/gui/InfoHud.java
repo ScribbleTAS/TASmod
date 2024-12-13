@@ -19,7 +19,7 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventDrawHotbar;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
+import com.minecrafttas.tasmod.playback.filecommands.builtin.DesyncMonitorFileCommandExtension;
 import com.mojang.realmsclient.gui.ChatFormatting;
 
 import net.minecraft.client.Minecraft;

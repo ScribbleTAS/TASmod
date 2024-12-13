@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.playback.metadata.integrated;
+package com.minecrafttas.tasmod.playback.metadata.builtin;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
