@@ -37,8 +37,16 @@ public class PlaybackMetadata {
 		data.put(key, value);
 	}
 
+	public void setValue(Object key, String value) {
+		setValue(key.toString(), value);
+	}
+
 	public String getValue(String key) {
 		return data.get(key);
+	}
+
+	public String getValue(Object key) {
+		return getValue(key.toString());
 	}
 
 	@Override

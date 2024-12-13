@@ -27,6 +27,32 @@ import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
+/**
+ * <p>The base class of a flavor.
+ * 
+ * <p>All serialisation and deserialisation is broken apart into functions whenever possible,<br>
+ * with the intention of allowing small changes to the existing syntax.
+ * 
+ * <p>Adding functionality to playback should be made via {@link PlaybackFileCommand PlaybackFileCommands} instead of creating a new syntax<br>
+ * and adding new information to the header should be made via {@link PlaybackMetadata}
+ * 
+ * <h2>Sections</h2>
+ * <p>The TASfile has 2 main sections:
+ * 
+ * <ol>
+ * 	<li>
+ * 		{@link #serialiseHeader() Header}: Contains metadata about this TAS, like credits and start position,<br>
+ *		but also a list of enabled extensions and the name of the flavor that was used to encode the file.
+ * 	</li>
+ * 	<li>
+ * 		{@link #serialise(BigArrayList, long) Content}: Contains the actual inputs per tick, inputs in a subtick (a.k.a in a frame), comments and other extensions.
+ * 	</li>
+ * </ol>
+ * 
+ * Clicking on either of these will lead you to a breakdown in their respective javadocs
+ * 
+ * @author Scribble
+ */
 public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected long currentLine = 1;
@@ -48,25 +74,6 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 */
 	protected boolean processExtensions = true;
 
-	protected String headerStart() {
-		return createCenteredHeading("TASfile", '#', 50);
-	}
-
-	/**
-	 * @return The regex used for detecting comment lines
-	 */
-	protected String singleComment() {
-		return "^//";
-	}
-
-	protected String endlineComment() {
-		return "(//.+)";
-	}
-
-	protected String headerEnd() {
-		return createPaddedString('#', 50);
-	}
-
 	/*==============================================
 		   _____           _       _ _          
 		  / ____|         (_)     | (_)         
@@ -77,6 +84,33 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		 
 	  ==============================================*/
 
+	/*
+	 _   _  ____    __    ____  ____  ____ 
+	( )_( )( ___)  /__\  (  _ \( ___)(  _ \
+	 ) _ (  )__)  /(__)\  )(_) ))__)  )   /
+	(_) (_)(____)(__)(__)(____/(____)(_)\_)
+	
+	 */
+
+	/**
+	 * @return The very top of the header
+	 */
+	protected String headerStart() {
+		return createCenteredHeading("TASfile", '#', 50);
+	}
+
+	/**
+	 * The end of the header, used for detecting when the header stops
+	 * @return The end of the header
+	 */
+	protected String headerEnd() {
+		return createPaddedString('#', 50);
+	}
+
+	/**
+	 * 
+	 * @return List of lines containing the header
+	 */
 	public List<String> serialiseHeader() {
 		List<String> out = new ArrayList<>();
 		out.add(headerStart());
@@ -1070,6 +1104,17 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		}
 	}
 
+	/**
+	 * @return The regex used for detecting comment lines
+	 */
+	protected String singleComment() {
+		return "^//";
+	}
+
+	protected String endlineComment() {
+		return "(//.+)";
+	}
+
 	@Override
 	public abstract SerialiserFlavorBase clone();
 
@@ -1082,6 +1127,13 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return super.equals(obj);
 	}
 
+	/**
+	 * Set if extensions should be loaded.
+	 * 
+	 * Setting this to false will stop {@link TASmodAPIRegistry#PLAYBACK_FILE_COMMAND} and {@link TASmodAPIRegistry#PLAYBACK_METADATA} from being processed
+	 * 
+	 * @param processExtensions
+	 */
 	public void setProcessExtensions(boolean processExtensions) {
 		this.processExtensions = processExtensions;
 	}

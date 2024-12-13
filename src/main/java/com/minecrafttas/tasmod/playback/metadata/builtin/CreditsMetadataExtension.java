@@ -54,23 +54,41 @@ public class CreditsMetadataExtension extends PlaybackMetadataExtension implemen
 		// Unused atm
 	}
 
+	public enum CreditFields {
+		Title("Title"),
+		Author("Author"),
+		PlayTime("Playing Time"),
+		Rerecords("Rerecords");
+
+		private final String name;
+
+		private CreditFields(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	@Override
 	public PlaybackMetadata onStore() {
 		PlaybackMetadata metadata = new PlaybackMetadata(this);
-		metadata.setValue("Title", title);
-		metadata.setValue("Author", authors);
-		metadata.setValue("Playing Time", playtime);
-		metadata.setValue("Rerecords", Integer.toString(rerecords));
+		metadata.setValue(CreditFields.Title, title);
+		metadata.setValue(CreditFields.Author, authors);
+		metadata.setValue(CreditFields.PlayTime, playtime);
+		metadata.setValue(CreditFields.Rerecords, Integer.toString(rerecords));
 		return metadata;
 	}
 
 	@Override
 	public void onLoad(PlaybackMetadata metadata) {
-		title = metadata.getValue("Title");
-		authors = metadata.getValue("Author");
-		playtime = metadata.getValue("Playing Time");
+		title = metadata.getValue(CreditFields.Title);
+		authors = metadata.getValue(CreditFields.Author);
+		playtime = metadata.getValue(CreditFields.PlayTime);
 		try {
-			rerecords = Integer.parseInt(metadata.getValue("Rerecords"));
+			rerecords = Integer.parseInt(metadata.getValue(CreditFields.Rerecords));
 		} catch (NumberFormatException e) {
 			rerecords = 0;
 			throw new PlaybackLoadException(e);
