@@ -25,6 +25,7 @@ import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.util.math.MathHelper;
 
 /**
  * The info hud is a hud that is always being rendered ontop of the screen, it can show some stuff such as coordinates, etc.,
@@ -311,7 +312,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "Facing";
-						return String.format("%.2f %.2f", Minecraft.getMinecraft().player.rotationYaw, Minecraft.getMinecraft().player.rotationPitch);
+						return String.format("%.2f %.2f", MathHelper.wrapDegrees(Minecraft.getMinecraft().player.rotationYaw), MathHelper.wrapDegrees(Minecraft.getMinecraft().player.rotationPitch));
 					}));
 
 			title = "camera";
