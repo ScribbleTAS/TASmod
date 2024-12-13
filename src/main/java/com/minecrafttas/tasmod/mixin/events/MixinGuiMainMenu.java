@@ -14,7 +14,7 @@ import net.minecraft.client.gui.GuiScreen;
 public class MixinGuiMainMenu extends GuiScreen {
 	
 	@Redirect(method = "actionPerformed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayGuiScreen(Lnet/minecraft/client/gui/GuiScreen;)V", ordinal = 3))
-	public void redirectOpenGuiMultiplayer(Minecraft mc, GuiScreen screen) {
+	public void redirect_openGuiMultiplayer(Minecraft mc, GuiScreen screen) {
 		mc.displayGuiScreen(new GuiMultiplayerWarn((GuiMainMenu)(Object)this));
 	}
 }

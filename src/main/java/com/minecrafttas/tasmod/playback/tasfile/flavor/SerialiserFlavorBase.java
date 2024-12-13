@@ -43,6 +43,11 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected TickContainer previousTickContainer = null;
 
+	/**
+	 * If true, process extension data like {@link PlaybackMetadata PlaybackMetadata} and {@link PlaybackFileCommand PlaybackFileCommands}
+	 */
+	protected boolean processExtensions = true;
+
 	protected String headerStart() {
 		return createCenteredHeading("TASfile", '#', 50);
 	}
@@ -89,12 +94,17 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	protected void serialiseFileCommandNames(List<String> out) {
 		List<String> stringlist = new ArrayList<>();
 		List<PlaybackFileCommandExtension> extensionList = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
-		extensionList.forEach(extension -> stringlist.add(extension.getExtensionName()));
+		if (processExtensions) {
+			extensionList.forEach(extension -> stringlist.add(extension.getExtensionName()));
+		}
 		out.add("FileCommand-Extensions: " + String.join(", ", stringlist));
 		out.add("");
 	}
 
 	protected void serialiseMetadata(List<String> out) {
+		if (!processExtensions)
+			return;
+
 		List<PlaybackMetadata> metadataList = TASmodAPIRegistry.PLAYBACK_METADATA.handleOnStore();
 
 		for (PlaybackMetadata metadata : metadataList) {
@@ -122,7 +132,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				break;
 			}
 			currentTick = i;
-			TickContainer container = inputs.get(i);
+			TickContainer container = inputs.get(i).clone();
 			serialiseContainer(out, container);
 			previousTickContainer = container;
 		}
@@ -152,6 +162,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected String serialiseFileCommand(PlaybackFileCommand fileCommand) {
+		if (!processExtensions)
+			return "";
 		return String.format("$%s(%s);", fileCommand.getName(), String.join(", ", fileCommand.getArgs()));
 	}
 
@@ -193,15 +205,12 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	protected List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle) {
 
 		VirtualCameraAngle previousCamera = null;
-		if (previousTickContainer != null) {
-			previousCamera = previousTickContainer.getCameraAngle();
-		}
 
 		List<String> out = new ArrayList<>();
 		for (VirtualCameraAngle subtick : cameraAngle.getAll()) {
 
 			if (!subtick.equals(previousCamera))
-				out.add(subtick.toString2());
+				out.add(String.format("%s;%s", subtick.getYaw(), subtick.getPitch()));
 
 			previousCamera = subtick;
 		}
@@ -299,7 +308,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * Joins strings together but ignores empty strings
 	 * 
 	 * @param delimiter The delimiter of the joined string
-	 * @param args      The strings to join
+	 * @param args The strings to join
 	 * @return Joined string
 	 */
 	protected String joinNotEmpty(String delimiter, Iterable<String> args) {
@@ -368,10 +377,17 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected void deserialiseFileCommandNames(List<String> headerLines) {
+		if (!processExtensions) // Stops FileCommandProcessing
+			return;
+
 		for (String line : headerLines) {
 			Matcher matcher = extract("FileCommand-Extensions: ?(.*)", line);
 
 			if (matcher.find()) {
+
+				if (!processExtensions)
+					return;
+
 				String extensionStrings = matcher.group(1);
 				String[] extensionNames = extensionStrings.split(", ?");
 
@@ -383,6 +399,9 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected void deserialiseMetadata(List<String> headerLines) {
+		if (!processExtensions)
+			return;
+
 		List<PlaybackMetadata> out = new ArrayList<>();
 
 		String metadataName = null;
@@ -429,9 +448,9 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			// Extract the tick and set the index
 			i = extractContainer(container, lines, i);
 			currentLine = i;
-			currentTick++;
 			// Extract container
 			deserialiseContainer(out, container);
+			currentTick++;
 		}
 		previousTickContainer = null;
 		return out;
@@ -619,8 +638,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 		TickContainer deserialisedContainer = new TickContainer(keyboard, mouse, cameraAngle, comments);
 
-		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
-		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
+		if (processExtensions) {
+			TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
+			TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
+		}
 
 		previousTickContainer = deserialisedContainer;
 
@@ -664,11 +685,15 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected String deserialiseFileCommands(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+
 		Matcher matcher = extract("\\$(.+?)\\((.*?)\\);", comment);
 		while (matcher.find()) {
 			String name = matcher.group(1);
 			String[] args = matcher.group(2).split(", ?");
-			deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
+
+			if (processExtensions)
+				deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
+
 			comment = matcher.replaceFirst("");
 			matcher.reset(comment);
 		}
@@ -686,8 +711,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				String[] keys = matcher.group(1).split(",");
 				char[] chars = matcher.group(2).toCharArray();
 
-				int[] keycodes = deserialiseVirtualKey(keys, VirtualKey.ZERO);
+				int[] keycodes = deserialiseVirtualKeyboardKey(keys);
 				out.updateFromState(keycodes, chars);
+			} else {
+				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Keyboard could not be read. Probably a missing semicolon: %s", line);
 			}
 			currentSubtick++;
 		}
@@ -707,7 +734,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				String[] buttons = matcher.group(1).split(",");
 				String[] functions = matcher.group(2).split(",");
 
-				int[] keycodes = deserialiseVirtualKey(buttons, VirtualKey.MOUSEMOVED);
+				int[] keycodes = deserialiseVirtualMouseKey(buttons);
 				int scrollwheel;
 				Integer cursorX;
 				Integer cursorY;
@@ -717,13 +744,15 @@ public abstract class SerialiserFlavorBase implements Registerable {
 					cursorX = deserialiseRelativeInt("cursorX", functions[1], previousCursorX);
 					cursorY = deserialiseRelativeInt("cursorY", functions[2], previousCursorY);
 				} else {
-					throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Mouse functions do not have the correct length");
+					throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Mouse can't be read. Probably a missing comma: %s", line);
 				}
 
 				out.updateFromState(keycodes, scrollwheel, cursorX, cursorY);
 
 				previousCursorX = cursorX;
 				previousCursorY = cursorY;
+			} else {
+				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Mouse is missing a semicolon");
 			}
 			currentSubtick++;
 		}
@@ -741,57 +770,92 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			Matcher matcher = extract("(.+?);(.+)", line);
 
 			if (matcher.find()) {
-				String cameraPitchString = matcher.group(1);
-				String cameraYawString = matcher.group(2);
+				String cameraYawString = matcher.group(1);
+				String cameraPitchString = matcher.group(2);
 
-				Float cameraPitch = null;
 				Float cameraYaw = null;
-
-				if (!"null".equals(cameraPitchString))
-					cameraPitch = deserialiseRelativeFloat("camera pitch", cameraPitchString, previousPitch);
+				Float cameraPitch = null;
 
 				if (!"null".equals(cameraYawString))
 					cameraYaw = deserialiseRelativeFloat("camera yaw", cameraYawString, previousYaw);
 
+				if (!"null".equals(cameraPitchString))
+					cameraPitch = deserialiseRelativeFloat("camera pitch", cameraPitchString, previousPitch);
+
 				out.updateFromState(cameraPitch, cameraYaw);
+			} else {
+				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Camera is missing a semicolon");
 			}
 			currentSubtick++;
 		}
 		return out;
 	}
 
-	protected int[] deserialiseVirtualKey(String[] keyString, VirtualKey defaultKey) {
+	protected int[] deserialiseVirtualKeyboardKey(String[] keyString) {
 		int[] out = new int[keyString.length];
 
 		for (int i = 0; i < keyString.length; i++) {
 			String key = keyString[i];
-
-			/* If no key is pressed, then a zero key will be used for the state.
-			 * This zero key is either VirtualKey.ZERO on a keyboard or VirtualKey.MOUSEMOVED on a mouse,
-			 * hence the parameter */
-			if (key.isEmpty()) {
-				out[i] = defaultKey.getKeycode();
-				continue;
-			}
-
-			/* Instead of keynames such as W, A, S, KEY_1, NUMPAD3 you can also write the numerical keycodes
-			 * into the tasfile, e.g. 17, 30, 31, 2, 81. This enables TASmod to support every current and future
-			 * keycodes, even if no name was given to the key in VirtualKey.*/
-			if (isNumeric(key)) {
-				out[i] = Integer.parseInt(key);
-				continue;
-			}
-
-			out[i] = VirtualKey.getKeycode(key);
+			out[i] = deserialiseVirtualKey(key, VirtualKey.ZERO, (vkey) -> {
+				if (vkey < 0) {
+					throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Keyboard section contains a mouse key: %s", VirtualKey.get(vkey));
+				}
+			});
 		}
 		return out;
+	}
+
+	protected int[] deserialiseVirtualMouseKey(String[] keyString) {
+		int[] out = new int[keyString.length];
+
+		for (int i = 0; i < keyString.length; i++) {
+			String key = keyString[i];
+			out[i] = deserialiseVirtualKey(key, VirtualKey.MOUSEMOVED, (vkey) -> {
+				if (vkey >= 0) {
+					throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Mouse section contains a keyboard key: %s", VirtualKey.get(vkey));
+				}
+			});
+		}
+		return out;
+	}
+
+	protected int deserialiseVirtualKey(String key, VirtualKey defaultKey, WrongKeyCheck keyValidator) {
+
+		Integer vkey = null;
+		/* If no key is pressed, then a zero key will be used for the state.
+		 * This zero key is either VirtualKey.ZERO on a keyboard or VirtualKey.MOUSEMOVED on a mouse,
+		 * hence the parameter */
+		if (key.isEmpty()) {
+			vkey = defaultKey.getKeycode();
+		}
+		/* Instead of keynames such as W, A, S, KEY_1, NUMPAD3 you can also write the numerical keycodes
+		 * into the tasfile, e.g. 17, 30, 31, 2, 81. This enables TASmod to support every current and future
+		 * keycodes, even if no name was given to the key in VirtualKey.*/
+		else if (isNumeric(key)) {
+			vkey = Integer.parseInt(key);
+		} else {
+			vkey = VirtualKey.getKeycode(key);
+		}
+
+		if (vkey == null) {
+			throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "The keycode %s does not exist", key);
+		}
+
+		keyValidator.checkKey(vkey);
+
+		return vkey;
+	}
+
+	@FunctionalInterface
+	protected interface WrongKeyCheck {
+		public void checkKey(int key) throws PlaybackLoadException;
 	}
 
 	protected int parseInt(String name, String intstring) {
 		try {
 			return Integer.parseInt(intstring);
 		} catch (NumberFormatException e) {
-			throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, e, "Can't parse integer in %s", name);
+			throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, e, "The %s could not be processed. This should be a number: %s", name, intstring);
 		}
 	}
 
@@ -815,7 +879,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		try {
 			return Float.parseFloat(floatstring);
 		} catch (NumberFormatException e) {
-			throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, e, "Can't parse float in %s", name);
+			throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, e, "The %s could not be processed. This should be a decimal number: %s", name, floatstring);
 		}
 	}
 
@@ -843,7 +907,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 		String previousCamera = null;
 		if (previousTickContainer != null) {
-			previousCamera = previousTickContainer.getCameraAngle().toString2();
+			VirtualCameraAngle camera = previousTickContainer.getCameraAngle();
+			previousCamera = String.format("%s;%s", camera.getYaw(), camera.getPitch());
 		}
 
 		for (String line : lines) {
@@ -1015,5 +1080,9 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			return this.getExtensionName().equals(flavor.getExtensionName());
 		}
 		return super.equals(obj);
+	}
+
+	public void setProcessExtensions(boolean processExtensions) {
+		this.processExtensions = processExtensions;
 	}
 }

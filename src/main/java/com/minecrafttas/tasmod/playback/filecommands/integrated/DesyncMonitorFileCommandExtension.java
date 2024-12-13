@@ -52,7 +52,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 
 	@Override
 	public void onControllerStateChange(TASstate newstate, TASstate oldstate) {
-		if(newstate==TASstate.RECORDING && monitorContainer.isEmpty()) {
+		if (newstate == TASstate.RECORDING && monitorContainer.isEmpty()) {
 			recordNull(0);
 		}
 	}
@@ -179,13 +179,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 			values[1] = getFormattedString(player.posY - currentValues.values[1]);
 			values[2] = getFormattedString(player.posZ - currentValues.values[2]);
 
-			String out = "";
-			for (String val : values) {
-				if (val != null) {
-					out += val + " ";
-				}
-			}
-			lastPos = out;
+			lastPos = String.join(" ", values);
 		}
 		return lastPos;
 	}
@@ -200,13 +194,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 			values[1] = getFormattedString(player.motionY - currentValues.values[4]);
 			values[2] = getFormattedString(player.motionZ - currentValues.values[5]);
 
-			String out = "";
-			for (String val : values) {
-				if (val != null) {
-					out += val + " ";
-				}
-			}
-			lastMotion = out;
+			lastMotion = String.join(" ", values);
 		}
 		return lastMotion;
 	}
@@ -247,14 +235,14 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		public String[] toStringArray() {
 			String[] out = new String[values.length];
 			for (int i = 0; i < values.length; i++) {
-				out[i] = String.format(Locale.ENGLISH, "%.5f", values[i]);
+				out[i] = String.format(Locale.ENGLISH, "%s", values[i]);
 			}
 			return out;
 		}
 
 		@Override
 		public String toString() {
-			return String.format(Locale.US, "%d, %d, %d, %d, %d, %d", values[0], values[1], values[2], values[3], values[4], values[5]);
+			return String.format(Locale.ENGLISH, "%d, %d, %d, %d, %d, %d", values[0], values[1], values[2], values[3], values[4], values[5]);
 		}
 
 		public DesyncStatus getSeverity(long index, double[] playerValues) {

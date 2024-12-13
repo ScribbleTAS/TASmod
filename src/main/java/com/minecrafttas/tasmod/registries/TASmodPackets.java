@@ -8,9 +8,11 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
+import com.minecrafttas.tasmod.savestates.storage.SavestateMotionStorage.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
+import com.minecrafttas.tasmod.util.Ducks.ScoreboardDuck;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 
 /**
@@ -82,11 +84,27 @@ public enum TASmodPackets implements PacketID {
 	 */
 	SAVESTATE_REQUEST_MOTION,
 	/**
+	 * <p>Used for setting the client motion data after it was loaded from a savestate
+	 * <p>Side: Client<br>
+	 * ARGS: <br>
+	 * <strong>Server->Client</strong> {@link MotionData} motionData An Object containing all necessary motion data<br>
+	 */
+	SAVESTATE_SET_MOTION,
+	/**
 	 * <p>Unloads the chunks on the client side
 	 * <p>SIDE: Client<br>
 	 * ARGS: none
 	 */
 	SAVESTATE_UNLOAD_CHUNKS,
+	/**
+	 * <p>Clears the scoreboard on the client side
+	 * <p>SIDE: Client<br>
+	 * ARGS: none
+	 */
+	SAVESTATE_CLEAR_SCOREBOARD(Side.CLIENT, (buf, clientID) -> {
+		Minecraft mc = Minecraft.getMinecraft();
+		((ScoreboardDuck) mc.world.getScoreboard()).clearScoreboard();
+	}),
 	/**
 	 * <p>Notifies the client to clear all inputs from the input buffer in {@link PlaybackControllerClient}
 	 * <p>SIDE: Both<br>
@@ -190,6 +208,16 @@ public enum TASmodPackets implements PacketID {
 		}
 	}),
 	/**
+	 * <p>Clears the current gui screen on the client
+	 * 
+	 * <p>Side: CLIENT<br>
+	 * ARGS: none
+	 */
+	CLEAR_SCREEN(Side.CLIENT, (buf, clientID) -> {
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.displayGuiScreen(null);
+	}),
+	/**
 	 * <p>Requests the list of TASfiles in the folder from the client for use in tab completions
 	 * <p>SIDE: Both<br>
 	 * ARGS: <br>
@@ -207,7 +235,7 @@ public enum TASmodPackets implements PacketID {
 	COMMAND_FLAVORLIST,
 	/**
 	 * <p>Requests the list of {@link PlaybackFileCommandExtension PlaybackFileCommandExtensions} from the client for use in tab completions
-	 * <p>SIDE: Bith<br>
+	 * <p>SIDE: Both<br>
 	 * ARGS: <br>
 	 * <strong>Server->Client</strong> None<br>
 	 * <strong>Client->Server</strong> String The string of file command names, seperated with |

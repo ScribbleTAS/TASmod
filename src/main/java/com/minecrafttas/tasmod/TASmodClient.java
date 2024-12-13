@@ -4,11 +4,14 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 import org.apache.logging.log4j.Level;
 
 import com.minecrafttas.mctcommon.Configuration;
+import com.minecrafttas.mctcommon.ConfigurationRegistry;
 import com.minecrafttas.mctcommon.KeybindManager;
 import com.minecrafttas.mctcommon.LanguageManager;
 import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
@@ -33,6 +36,7 @@ import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodKeybinds;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
+import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandler;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerClient;
 import com.minecrafttas.tasmod.ticksync.TickSyncClient;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -50,41 +54,40 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.server.MinecraftServer;
 
-public class TASmodClient implements ClientModInitializer, EventClientInit, EventPlayerJoinedClientSide, EventOpenGui{
-
+public class TASmodClient implements ClientModInitializer, EventClientInit, EventPlayerJoinedClientSide, EventOpenGui {
 
 	public static VirtualInput virtual;
 
 	public static TickSyncClient ticksyncClient;
-	
+
 	public static final String tasdirectory = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles";
 
 	public static final String savestatedirectory = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "savestates";
 
 	public static InfoHud hud;
-	
+
 	public static ShieldDownloader shieldDownloader;
-	
+
 	public static TickrateChangerClient tickratechanger = new TickrateChangerClient();
-	
+
 	public static Scheduler gameLoopSchedulerClient = new Scheduler();
-	
+
 	public static Scheduler tickSchedulerClient = new Scheduler();
-	
+
 	public static Scheduler openMainMenuScheduler = new Scheduler();
-	
+
 	public static Configuration config;
-	
+
 	public static LoadingScreenHandler loadingScreenHandler;
-	
+
 	public static KeybindManager keybindManager;
-	
+
 	public static SavestateHandlerClient savestateHandlerClient = new SavestateHandlerClient();
-	
+
 	public static Client client;
-	
+
 	public static CreditsMetadataExtension creditsMetadataExtension = new CreditsMetadataExtension();
-	
+
 	public static StartpositionMetadataExtension startpositionMetadataExtension = new StartpositionMetadataExtension();
 	/**
 	 * The container where all inputs get stored during recording or stored and
@@ -93,28 +96,30 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	public static PlaybackControllerClient controller = new PlaybackControllerClient();
 
 	public static void createTASDir() {
-		File tasDir=new File(tasdirectory);
-		if(!tasDir.exists()) {
+		File tasDir = new File(tasdirectory);
+		if (!tasDir.exists()) {
 			tasDir.mkdir();
 		}
 	}
-	
+
 	public static void createSavestatesDir() {
-		File savestateDir=new File(savestatedirectory);
-		if(!savestateDir.exists()) {
+		File savestateDir = new File(savestatedirectory);
+		if (!savestateDir.exists()) {
 			savestateDir.mkdir();
 		}
 	}
 
 	@Override
 	public void onInitializeClient() {
-		
+
 		LanguageManager.registerMod("tasmod");
 
+		registerConfigValues();
+
 		loadConfig(Minecraft.getMinecraft());
-		
-		virtual=new VirtualInput(LOGGER);
-		
+
+		virtual = new VirtualInput(LOGGER);
+
 		// Initialize InfoHud
 		hud = new InfoHud();
 		// Initialize shield downloader
@@ -125,27 +130,28 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		ticksyncClient = new TickSyncClient();
 		// Initialize keybind manager
 		keybindManager = new KeybindManager(VirtualKeybindings::isKeyDownExceptTextfield);
-		
+
 		registerEventListeners();
-		
+
 		registerNetworkPacketHandlers();
-		
+
 		// Starting local server instance
 		try {
-			TASmod.server = new Server(TASmod.networkingport-1, TASmodPackets.values());
+			TASmod.server = new Server(TASmod.networkingport - 1, TASmodPackets.values());
 		} catch (Exception e) {
 			LOGGER.error("Unable to launch TASmod server: {}", e.getMessage());
 		}
-		
+
 	}
-	
+
 	private void registerNetworkPacketHandlers() {
 		// Register packet handlers
 		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers on client");
 		PacketHandlerRegistry.register(controller);
 		PacketHandlerRegistry.register(ticksyncClient);
 		PacketHandlerRegistry.register(tickratechanger);
-		PacketHandlerRegistry.register(savestateHandlerClient);		
+		PacketHandlerRegistry.register(savestateHandlerClient);
+		PacketHandlerRegistry.register(new SavestatePlayerHandler(null));
 	}
 
 	private void registerEventListeners() {
@@ -155,8 +161,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		EventListenerRegistry.register(loadingScreenHandler);
 		EventListenerRegistry.register(ticksyncClient);
 		EventListenerRegistry.register(keybindManager);
-		EventListenerRegistry.register((EventOpenGui)(gui -> {
-			if(gui instanceof GuiMainMenu) {
+		EventListenerRegistry.register((EventOpenGui) (gui -> {
+			if (gui instanceof GuiMainMenu) {
 				openMainMenuScheduler.runAllTasks();
 			}
 			return gui;
@@ -164,26 +170,28 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		EventListenerRegistry.register(controller);
 		EventListenerRegistry.register(creditsMetadataExtension);
 		EventListenerRegistry.register(startpositionMetadataExtension);
-		
+
 		EventListenerRegistry.register(desyncMonitorFileCommandExtension);
-		
+
 		EventListenerRegistry.register(TASmodAPIRegistry.PLAYBACK_METADATA);
 		EventListenerRegistry.register(TASmodAPIRegistry.PLAYBACK_FILE_COMMAND);
+		EventListenerRegistry.register(new LoggerMarkers());
+		EventListenerRegistry.register(savestateHandlerClient);
 	}
-	
+
 	@Override
 	public void onClientInit(Minecraft mc) {
 		registerKeybindings(mc);
 		registerPlaybackMetadata(mc);
 		registerSerialiserFlavors(mc);
 		registerFileCommands();
-		
+
 		createTASDir();
 		createSavestatesDir();
 	}
 
 	boolean waszero;
-	
+
 	boolean isLoading;
 
 	@Override
@@ -191,29 +199,28 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		Minecraft mc = Minecraft.getMinecraft();
 		ServerData data = mc.getCurrentServerData();
 		MinecraftServer server = TASmod.getServerInstance();
-		
+
 		String ip = null;
 		int port;
 		boolean local;
-		if(server!=null) {
+		if (server != null) {
 			ip = "localhost";
-			port = TASmod.networkingport-1;
+			port = TASmod.networkingport - 1;
 			local = true;
 		} else {
 			ip = data.serverIP.split(":")[0];
 			port = TASmod.networkingport;
 			local = false;
 		}
-		
+
 		String connectedIP = null;
 		try {
 			connectedIP = client.getRemote();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
-		if(!(ip+":"+port).equals(connectedIP)) { // TODO Clean this up. Make TASmodNetworkHandler out of this... Maybe with Permission system?
+
+		if (!(ip + ":" + port).equals(connectedIP)) { // TODO Clean this up. Make TASmodNetworkHandler out of this... Maybe with Permission system?
 			try {
 				LOGGER.info("Closing client connection: {}", client.getRemote());
 				client.disconnect();
@@ -222,7 +229,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			}
 			final String IP = ip;
 			final int PORT = port;
-			gameLoopSchedulerClient.add(()->{
+			gameLoopSchedulerClient.add(() -> {
 				try {
 					// connect to server and authenticate
 					client = new Client(IP, PORT, TASmodPackets.values(), mc.getSession().getUsername(), local);
@@ -253,17 +260,17 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		}
 		return gui;
 	}
-	
+
 	private void initializeCustomPacketHandler() {
 		if (client == null) {
 			Minecraft mc = Minecraft.getMinecraft();
 
 			String IP = "localhost";
 			int PORT = TASmod.networkingport - 1;
-			
+
 			// Get the connection on startup from config
 			String configAddress = config.get(TASmodConfig.ServerConnection);
-			if(configAddress != null && !configAddress.isEmpty()) {
+			if (configAddress != null && !configAddress.isEmpty()) {
 				String[] ipSplit = configAddress.split(":");
 				IP = ipSplit[0];
 				try {
@@ -274,7 +281,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 					PORT = TASmod.networkingport - 1;
 				}
 			}
-			
+
 			try {
 				// connect to server and authenticate
 				client = new Client(IP, PORT, TASmodPackets.values(), mc.getSession().getUsername(), true);
@@ -282,45 +289,54 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 				LOGGER.error("Unable to connect TASmod client: {}", e);
 			}
 			ticksyncClient.setEnabled(true);
-		}		
+		}
 	}
-	
+
 	private void registerKeybindings(Minecraft mc) {
 		Arrays.stream(TASmodKeybinds.valuesKeybind()).forEach(keybindManager::registerKeybind);
 		Arrays.stream(TASmodKeybinds.valuesVanillaKeybind()).forEach(VirtualKeybindings::registerBlockedKeyBinding);
 	}
-	
+
 	private void registerPlaybackMetadata(Minecraft mc) {
 		TASmodAPIRegistry.PLAYBACK_METADATA.register(creditsMetadataExtension);
 		TASmodAPIRegistry.PLAYBACK_METADATA.register(startpositionMetadataExtension);
 	}
-	
+
 	public static Beta1Flavor betaFlavor = new Beta1Flavor();
-	
+
 	private void registerSerialiserFlavors(Minecraft mc) {
 		TASmodAPIRegistry.SERIALISER_FLAVOR.register(betaFlavor);
 	}
-	
+
 	public static DesyncMonitorFileCommandExtension desyncMonitorFileCommandExtension = new DesyncMonitorFileCommandExtension();
 	public static OptionsFileCommandExtension optionsFileCommandExtension = new OptionsFileCommandExtension();
 	public static LabelFileCommandExtension labelFileCommandExtension = new LabelFileCommandExtension();
-	
+
 	private void registerFileCommands() {
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(desyncMonitorFileCommandExtension);
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(optionsFileCommandExtension);
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(labelFileCommandExtension);
-		
+
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setConfig(config);
 	}
-	
+
+	private static final ConfigurationRegistry CONFIG_REGISTRY = new ConfigurationRegistry();
+
+	private void registerConfigValues() {
+		CONFIG_REGISTRY.register(TASmodConfig.values());
+	}
+
 	private void loadConfig(Minecraft mc) {
-		File configDir = new File(mc.mcDataDir, "config");
-		if(!configDir.exists()) {
-			configDir.mkdir();
+		Path configDir = mc.mcDataDir.toPath().resolve("config");
+		if (!Files.exists(configDir)) {
+			try {
+				Files.createDirectory(configDir);
+			} catch (IOException e) {
+				LOGGER.catching(e);
+			}
 		}
-		config = new Configuration("TASmod configuration", new File(configDir, "tasmod.cfg"));
-		config.register(TASmodConfig.values());
-		config.load();
-		config.save();
+		config = new Configuration("TASmod configuration", configDir.resolve("tasmod.cfg"), CONFIG_REGISTRY);
+		config.loadFromXML();
+		config.saveToXML();
 	}
 }

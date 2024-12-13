@@ -1,47 +1,51 @@
 {
-    "required": true,
-    "minVersion": "0.8.5",
-    "package": "com.minecrafttas.tasmod.mixin",
-    "compatibilityLevel": "JAVA_8",
-    "mixins": [
-    
-        //General
-        "MixinMinecraftServer",
-        "MixinEntityPlayer",
-        
-        //Savestates
-        "savestates.MixinChunkProviderServer",
-        "savestates.MixinEntityPlayerMP",
-        "savestates.MixinNetHandlerPlayServer",
-        "savestates.AccessorChunkLoader",
-        "savestates.AccessorAnvilChunkLoader",
-        
-        //Events
-        
-        //Fixing forge and vanilla stuff
-        "fixes.MixinDragonFightManager"
-        
-    ],
-    "client": [
-        //General
-        "MixinMinecraft",
-        "MixinTimer",
-        "MixinInGameHud",
-        
-        //Savestates
-		"savestates.MixinChunkProviderClient",
+	"required": true,
+	"minVersion": "0.8.5",
+	"package": "com.minecrafttas.tasmod.mixin",
+	"compatibilityLevel": "JAVA_8",
+	"mixins": [
+		// General
+		"MixinMinecraftServer",
+		"MixinEntityPlayer",
+
+		// Savestates
+		"savestates.AccessorAnvilChunkLoader",
+		"savestates.AccessorChunkLoader",
+		"savestates.AccessorEntityLivingBase",
+		"savestates.AccessorPlayerChunkMap",
+		"savestates.MixinChunkProviderServer",
+		"savestates.MixinNetHandlerPlayServer",
+		"savestates.MixinScoreboard",
+		"savestates.MixinWorldServer",
 		
-		//Interpolation
+		// Events
+		"events.MixinEntityPlayerMP",
+
+		// Fixing forge and vanilla stuff
+		"fixes.MixinDragonFightManager"
+		
+	],
+	"client": [
+		// General
+		"MixinMinecraft",
+		"MixinTimer",
+		
+		// Savestates
+		"savestates.MixinChunkProviderClient",
+		"savestates.MixinWorldClient",
+		
+		// Interpolation
 		"MixinFrustum",
 		
-		//Keybinding
+		// Keybinding
 		"MixinTextfield",
 		
-		//Join and leave game event on the client
+		// Events
 		"events.MixinGuiMainMenu",
 		"events.MixinGuiIngame",
+		"events.MixinEntityRenderer",
 		
-		//Playbackhooks
+		// Playbackhooks
 		"playbackhooks.MixinMinecraft",
 		"playbackhooks.MixinEntityRenderer",
 		"playbackhooks.MixinGuiScreen",
@@ -55,12 +59,12 @@
 		"playbackhooks.MixinGuiStats",
 		"playbackhooks.MixinKeyBinding",
 		
-		//Shields
+		// Shields
 		"shields.MixinRenderItem",
 		"shields.MixinTileEntityItemStackRenderer",
 		
-		//Fixes
-        "fixes.MixinMinecraftFullscreen",
-        "fixes.MixinNetworkManager"
+		// Fixes
+		"fixes.MixinMinecraftFullscreen",
+		"fixes.MixinNetworkManager"
 	]
 }

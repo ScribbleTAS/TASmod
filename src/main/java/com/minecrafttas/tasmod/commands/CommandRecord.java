@@ -43,9 +43,9 @@ public class CommandRecord extends CommandBase {
 		}
 		if (args.length < 1) {
 			TASmod.playbackControllerServer.toggleRecording();
-			TASmod.tickSchedulerServer.add(() ->{
-				TASmod.ktrngHandler.broadcastStartSeed();
-			});
+//			TASmod.tickSchedulerServer.add(() ->{
+//				TASmod.ktrngHandler.broadcastStartSeed();
+//			});
 		} else if (args.length > 1) {
 			sender.sendMessage(new TextComponentString(TextFormatting.RED + "Too many arguments. " + getUsage(sender)));
 		}

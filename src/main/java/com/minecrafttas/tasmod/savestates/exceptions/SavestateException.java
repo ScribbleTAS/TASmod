@@ -1,12 +1,23 @@
 package com.minecrafttas.tasmod.savestates.exceptions;
 
-public class SavestateException extends Exception{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3011404784481488693L;
+public class SavestateException extends RuntimeException {
 
-	public SavestateException(String s) {
-		super(s);
+	public SavestateException() {
+	}
+
+	public SavestateException(String msg) {
+		super(msg);
+	}
+
+	public SavestateException(String msg, Object... args) {
+		super(String.format(msg, args));
+	}
+
+	public SavestateException(Throwable t, String msg) {
+		super(msg, t);
+	}
+
+	public SavestateException(Throwable t, String msg, Object... args) {
+		super(String.format(msg, args), t);
 	}
 }

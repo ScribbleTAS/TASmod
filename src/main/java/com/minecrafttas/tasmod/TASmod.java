@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
@@ -26,18 +25,18 @@ import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.commands.TabCompletionUtils;
-import com.minecrafttas.tasmod.ktrng.KillTheRNGHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
-import com.minecrafttas.tasmod.savestates.files.SavestateTrackerFile;
+import com.minecrafttas.tasmod.savestates.storage.SavestateMotionStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.server.MinecraftServer;
 
@@ -48,21 +47,24 @@ import net.minecraft.server.MinecraftServer;
  */
 public class TASmod implements ModInitializer, EventServerInit, EventServerStop {
 
-	private static MinecraftServer serverInstance;
-
 	public static final Logger LOGGER = LogManager.getLogger("TASmod");
+
+	public static String version = "dev";
+
+	private static MinecraftServer serverInstance;
 
 	public static PlaybackControllerServer playbackControllerServer = new PlaybackControllerServer();;
 
 	public static SavestateHandlerServer savestateHandlerServer;
 
-	public static KillTheRNGHandler ktrngHandler;
+	//	public static KillTheRNGHandler ktrngHandler;
 
 	public static TickrateChangerServer tickratechanger;
 
 	public static TickSyncServer ticksyncServer;
 
 	public static final Scheduler tickSchedulerServer = new Scheduler();
+	public static final Scheduler gameLoopSchedulerServer = new Scheduler();
 
 	public static Server server;
 
@@ -81,12 +83,18 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 		LOGGER.info("Initializing TASmod");
 
+		String modVersion = FabricLoader.getInstance().getModContainer("tasmod").get().getMetadata().getVersion().getFriendlyString();
+
+		if (!"${mod_version}".equals(modVersion)) {
+			version = modVersion;
+		}
+
 		// Start ticksync
 		ticksyncServer = new TickSyncServer();
 
 		// Initilize KillTheRNG
 		LOGGER.info("Testing connection with KillTheRNG");
-		ktrngHandler = new KillTheRNGHandler(FabricLoaderImpl.INSTANCE.isModLoaded("killtherng"));
+		//		ktrngHandler = new KillTheRNGHandler(FabricLoaderImpl.INSTANCE.isModLoaded("killtherng"));
 
 		// Initialize TickrateChanger
 		tickratechanger = new TickrateChangerServer(LOGGER);
@@ -95,17 +103,20 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		EventListenerRegistry.register(this);
 		EventListenerRegistry.register(ticksyncServer);
 		EventListenerRegistry.register(tickratechanger);
-		EventListenerRegistry.register(ktrngHandler);
+		//		EventListenerRegistry.register(ktrngHandler);
 
 		// Register packet handlers
 		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers");
 		PacketHandlerRegistry.register(ticksyncServer);
 		PacketHandlerRegistry.register(tickratechanger);
-		PacketHandlerRegistry.register(ktrngHandler);
+		//		PacketHandlerRegistry.register(ktrngHandler);
 		PacketHandlerRegistry.register(playbackControllerServer);
 		PacketHandlerRegistry.register(startPositionMetadataExtension);
 		PacketHandlerRegistry.register(tabCompletionUtils);
 		PacketHandlerRegistry.register(commandFileCommand);
+		SavestateMotionStorage motionStorage = new SavestateMotionStorage();
+		PacketHandlerRegistry.register(motionStorage);
+		EventListenerRegistry.register(motionStorage);
 	}
 
 	@Override
@@ -129,16 +140,9 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		CommandRegistry.registerServerCommand(new CommandPlayUntil(), server);
 		CommandRegistry.registerServerCommand(commandFileCommand, server);
 
-		// Save Loadstate Count
-		File savestateDirectory = new File(server.getDataDirectory() + File.separator + "saves" + File.separator + "savestates" + File.separator);
-		try {
-			new SavestateTrackerFile(new File(savestateDirectory, server.getFolderName() + "-info.txt")); // TODO Ew, remove
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
 		savestateHandlerServer = new SavestateHandlerServer(server, LOGGER);
 		PacketHandlerRegistry.register(savestateHandlerServer);
+		PacketHandlerRegistry.register(savestateHandlerServer.getPlayerHandler());
 
 		if (!server.isDedicatedServer()) {
 			TASmod.tickratechanger.ticksPerSecond = 0F;
@@ -169,6 +173,8 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 		if (savestateHandlerServer != null) {
 			PacketHandlerRegistry.unregister(savestateHandlerServer); // Unregistering the savestatehandler, as a new instance is registered in onServerStart()
+			PacketHandlerRegistry.unregister(savestateHandlerServer.getPlayerHandler());
+
 			savestateHandlerServer = null;
 		}
 	}

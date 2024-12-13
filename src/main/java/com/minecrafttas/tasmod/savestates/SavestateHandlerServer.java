@@ -1,24 +1,26 @@
 package com.minecrafttas.tasmod.savestates;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.CLEAR_SCREEN;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.collect.Maps;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
@@ -29,39 +31,28 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventSavestate;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorAnvilChunkLoader;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorChunkLoader;
-import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateDeleteException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.files.SavestateDataFile;
 import com.minecrafttas.tasmod.savestates.files.SavestateDataFile.DataValues;
 import com.minecrafttas.tasmod.savestates.files.SavestateTrackerFile;
-import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
+import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandler;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
+import com.minecrafttas.tasmod.util.Scheduler.Task;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.NextTickListEntry;
-import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
-import net.minecraft.world.gen.ChunkProviderServer;
-import net.minecraft.world.storage.SaveHandler;
-import net.minecraft.world.storage.WorldInfo;
 
 /**
  * Creates and loads savestates on both client and server without closing the
@@ -76,18 +67,28 @@ import net.minecraft.world.storage.WorldInfo;
  */
 public class SavestateHandlerServer implements ServerPacketHandler {
 
-	private MinecraftServer server;
-	private File savestateDirectory;
+	private final MinecraftServer server;
+	private Path savestateDirectory;
 
 	public SavestateState state = SavestateState.NONE;
+
+	public static enum SavestateState {
+		SAVING,
+		LOADING,
+		NONE
+	}
 
 	private final List<Integer> indexList = new ArrayList<>();
 
 	private int latestIndex = 0;
 	private int currentIndex;
 
+	private final SavestatePlayerHandler playerHandler;
+	private final SavestateWorldHandler worldHandler;
+
+	public static final Path storageDir = Paths.get("tasmod/");
+
 	private final Logger logger;
-	public static boolean wasLoading;
 
 	/**
 	 * Creates a savestate handler on the specified server
@@ -98,6 +99,9 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	public SavestateHandlerServer(MinecraftServer server, Logger logger) {
 		this.server = server;
 		this.logger = logger;
+		this.playerHandler = new SavestatePlayerHandler(server);
+		this.worldHandler = new SavestateWorldHandler(server);
+
 		createSavestateDirectory();
 		refresh();
 		loadCurrentIndexFromFile();
@@ -150,7 +154,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		try {
 			// Open GuiSavestateScreen
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SCREEN).writeBoolean(true));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SCREEN));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -163,12 +167,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Enable tickrate 0
 		TASmod.tickratechanger.pauseGame(true);
-
-		// Update the server variable
-		server = TASmod.getServerInstance();
-
-		// Get the motion from the client
-		PlayerHandler.requestMotionFromClient();
 
 		// Save the world!
 		server.getPlayerList().saveAllPlayerData();
@@ -192,14 +190,14 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Get the current and target directory for copying
 		String worldname = server.getFolderName();
-		File currentfolder = new File(savestateDirectory, ".." + File.separator + worldname);
-		File targetfolder = getSavestateFile(indexToSave);
+		Path currentfolder = savestateDirectory.resolve(".." + File.separator + worldname);
+		Path targetfolder = getSavestateFile(indexToSave);
 
-		EventListenerRegistry.fireEvent(EventSavestate.EventServerSavestate.class, indexToSave, targetfolder, currentfolder);
+		EventListenerRegistry.fireEvent(EventSavestate.EventServerSavestate.class, server, indexToSave, targetfolder, currentfolder);
 
-		if (targetfolder.exists()) {
+		if (Files.exists(targetfolder)) {
 			logger.warn(LoggerMarkers.Savestate, "WARNING! Overwriting the savestate with the index {}", indexToSave);
-			FileUtils.deleteDirectory(targetfolder);
+			deleteFolder(targetfolder);
 		}
 
 		/*
@@ -230,19 +228,18 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		saveSavestateDataFile(false);
 
 		// Copy the directory
-		FileUtils.copyDirectory(currentfolder, targetfolder);
+		copyFolder(currentfolder, targetfolder);
 
 		// Incrementing info file
-		SavestateTrackerFile tracker = new SavestateTrackerFile(new File(savestateDirectory, worldname + "-info.txt"));
-		tracker.increaseSavestates();
-		tracker.saveFile();
+		SavestateTrackerFile tracker = new SavestateTrackerFile(savestateDirectory.resolve(worldname + "-info.txt"));
+		tracker.increaseSaveStateCount();
 
 		// Send a notification that the savestate has been loaded
 		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToSave + " saved"));
 
 		try {
 			// close GuiSavestateScreen
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SCREEN).writeBoolean(false));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -315,14 +312,11 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		// Enable tickrate 0
 		TASmod.tickratechanger.pauseGame(true);
 
-		// Update the server instance
-		server = TASmod.getServerInstance();
-
 		refresh();
 
 		int indexToLoad = savestateIndex < 0 ? currentIndex : savestateIndex;
 
-		if (getSavestateFile(indexToLoad).exists()) {
+		if (Files.exists(getSavestateFile(indexToLoad))) {
 			// Updating current index
 			if (changeIndex) {
 				setCurrentIndex(indexToLoad);
@@ -335,10 +329,10 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Get the current and target directory for copying
 		String worldname = server.getFolderName();
-		File currentfolder = new File(savestateDirectory, ".." + File.separator + worldname);
-		File targetfolder = getSavestateFile(indexToLoad);
+		Path currentfolder = savestateDirectory.resolve(".." + File.separator + worldname);
+		Path targetfolder = getSavestateFile(indexToLoad);
 
-		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstate.class, indexToLoad, targetfolder, currentfolder);
+		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstate.class, server, indexToLoad, targetfolder, currentfolder);
 
 		/*
 		 * Prevents loading an InputSavestate when loading index 0 (Index 0 is the
@@ -356,9 +350,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Disabeling level saving for all worlds in case the auto save kicks in during
 		// world unload
-		for (WorldServer world : server.worlds) {
-			world.disableLevelSaving = true;
-		}
+		worldHandler.disableLevelSaving();
 
 		try {
 			// unload chunks on client
@@ -368,46 +360,50 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		}
 
 		// Unload chunks on the server
-		ChunkHandler.disconnectPlayersFromChunkMap(server);
-		ChunkHandler.unloadAllServerChunks(server);
-		ChunkHandler.flushSaveHandler(server);
+		worldHandler.disconnectPlayersFromChunkMap();
+		worldHandler.unloadAllServerChunks();
+		worldHandler.flushSaveHandler();
 
 		// Delete and copy directories
-		FileUtils.deleteDirectory(currentfolder);
-		FileUtils.copyDirectory(targetfolder, currentfolder);
+		deleteFolder(currentfolder);
+		copyFolder(targetfolder, currentfolder);
 
 		// Loads savestate data from the file like name and ktrng seed if ktrng is loaded
 		loadSavestateDataFile();
 
-		// Update the player and the client
-		PlayerHandler.loadAndSendMotionToPlayer(server);
-		// Update the session.lock file so minecraft behaves and saves the world
-		ChunkHandler.updateSessionLock(server);
-		// Load the chunks and send them to the client
-		ChunkHandler.addPlayersToChunkMap(server);
+		playerHandler.clearScoreboard();
 
-		// Enable level saving again
-		for (WorldServer world : server.worlds) {
-			world.disableLevelSaving = false;
-		}
+		// Load the world from disk
+//		server.loadAllWorlds(worldname, worldname, 0, WorldType.DEFAULT, "");
+		worldHandler.loadAllWorlds(worldname, worldname);
+
+		// Update the player and the client
+		playerHandler.loadAndSendMotionToPlayer();
+
+		// Load the chunks and send them to the client
+		worldHandler.addPlayersToChunkMap();
+
+		// Reenable level saving
+		worldHandler.enableLevelSaving();
 
 		// Incrementing info file
-		SavestateTrackerFile tracker = new SavestateTrackerFile(new File(savestateDirectory, worldname + "-info.txt"));
-		tracker.increaseRerecords();
-		tracker.saveFile();
+		SavestateTrackerFile tracker = new SavestateTrackerFile(savestateDirectory.resolve(worldname + "-info.txt"));
+		tracker.increaseLoadstateCount();
 
 		// Send a notification that the savestate has been loaded
 		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToLoad + " loaded"));
 
 		// Add players to the chunk
 		server.getPlayerList().getPlayers().forEach(player -> {
-			ChunkHandler.addPlayerToServerChunk(player);
+			worldHandler.addPlayerToServerChunk(player);
 		});
 
-		WorldServer[] worlds = server.worlds;
+		worldHandler.sendChunksToClient();
 
-		for (WorldServer world : worlds) {
-			world.tick();
+		try {
+			TASmod.server.sendToAll(new TASmodBufferBuilder(CLEAR_SCREEN));
+		} catch (Exception e) {
+			LOGGER.catching(e);
 		}
 
 		if (!tickrate0) {
@@ -429,13 +425,21 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	 */
 	private void createSavestateDirectory() {
 		logger.trace(LoggerMarkers.Savestate, "Creating savestate directory");
+
+		Path dataDirectory = server.getDataDirectory().toPath();
+
 		if (!server.isDedicatedServer()) {
-			savestateDirectory = new File(server.getDataDirectory() + File.separator + "saves" + File.separator + "savestates" + File.separator);
+			savestateDirectory = dataDirectory.resolve("saves/savestates");
 		} else {
-			savestateDirectory = new File(server.getDataDirectory() + File.separator + "savestates" + File.separator);
+			savestateDirectory = dataDirectory.resolve("savestates");
 		}
-		if (!savestateDirectory.exists()) {
-			savestateDirectory.mkdir();
+		if (!Files.exists(savestateDirectory)) {
+			try {
+				Files.createDirectory(savestateDirectory);
+			} catch (IOException e) {
+				logger.error("Could not create savestate directory");
+				logger.catching(e);
+			}
 		}
 	}
 
@@ -445,31 +449,42 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	private void refresh() {
 		logger.trace(LoggerMarkers.Savestate, "Refreshing savestate list");
 		indexList.clear();
-		File[] files = savestateDirectory.listFiles(new FileFilter() {
+		if (!Files.isDirectory(savestateDirectory)) {
+			logger.error("Savestate directory is not a directory! {}", savestateDirectory.toAbsolutePath().toString());
+			return;
+		}
 
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().startsWith(server.getFolderName() + "-Savestate");
-			}
+		Stream<Path> files = null;
+		try {
+			files = Files.list(savestateDirectory);
+		} catch (IOException e) {
+			logger.error("Can't refresh savestatelist");
+			logger.catching(e);
+			return;
+		}
+		Stream<Path> filteredfiles = files.filter(file -> file.getFileName().toString().startsWith(server.getFolderName() + "-Savestate"));
 
-		});
-		int index = 0;
-		for (File file : files) {
+		filteredfiles.forEach(file -> {
+			int index = 0;
 			try {
 				Pattern patt = Pattern.compile("\\d+$");
-				Matcher matcher = patt.matcher(file.getName());
+				Matcher matcher = patt.matcher(file.getFileName().toString());
 				if (matcher.find()) {
 					index = Integer.parseInt(matcher.group(0));
 				} else {
-					logger.warn(String.format("Could not process the savestate %s", file.getName()));
-					continue;
+					logger.warn(String.format("Could not process the savestate %s", file.getFileName()));
+					return;
 				}
 			} catch (NumberFormatException e) {
 				logger.warn(String.format("Could not process the savestate %s", e.getMessage()));
-				continue;
+				return;
 			}
 			indexList.add(index);
-		}
+		});
+
+		filteredfiles.close();
+		files.close();
+
 		Collections.sort(indexList);
 		if (!indexList.isEmpty()) {
 			latestIndex = indexList.get(indexList.size() - 1);
@@ -482,8 +497,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	 * @param index The index of the savestate file that we want to get
 	 * @return The file of the savestate from the specified index
 	 */
-	private File getSavestateFile(int index) {
-		return new File(savestateDirectory, getSavestateName(index));
+	private Path getSavestateFile(int index) {
+		return savestateDirectory.resolve(getSavestateName(index));
 	}
 
 	/**
@@ -514,17 +529,19 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		if (index == 0) {
 			throw new SavestateDeleteException("Cannot delete protected savestate 0");
 		}
-		File toDelete = getSavestateFile(index);
-		if (toDelete.exists()) {
-			try {
-				FileUtils.deleteDirectory(toDelete);
-			} catch (IOException e) {
-				e.printStackTrace();
-				throw new SavestateDeleteException("Something went wrong while trying to delete the savestate " + index);
-			}
+
+		Path toDelete = getSavestateFile(index);
+		if (Files.exists(getSavestateFile(index))) {
+//			try {
+			deleteFolder(toDelete);
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//				throw new SavestateDeleteException("Something went wrong while trying to delete the savestate " + index);
+//			}
 		} else {
 			throw new SavestateDeleteException(TextFormatting.YELLOW + "Savestate " + index + " doesn't exist, so it can't be deleted");
 		}
+
 		refresh();
 		if (!indexList.contains(currentIndex)) {
 			setCurrentIndex(latestIndex);
@@ -582,25 +599,31 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	 */
 	private void saveSavestateDataFile(boolean legacy) {
 		logger.trace(LoggerMarkers.Savestate, "Saving savestate data file");
-		File tasmodDir = new File(savestateDirectory, "../" + server.getFolderName() + "/tasmod/");
-		if (!tasmodDir.exists()) {
-			tasmodDir.mkdir();
+		Path tasmodDir = savestateDirectory.resolve("../" + server.getFolderName() + "/tasmod/");
+		if (!Files.exists(tasmodDir)) {
+			try {
+				Files.createDirectories(tasmodDir);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-		File savestateDat = new File(tasmodDir, "savestateData.txt");
 
-		if (savestateDat.exists()) {
-			savestateDat.delete();
+		Path savestateDat = tasmodDir.resolve("savestateData.txt");
+		try {
+			Files.deleteIfExists(savestateDat);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 
-		SavestateDataFile file = new SavestateDataFile();
+		SavestateDataFile file = new SavestateDataFile(savestateDat);
 
 		file.set(DataValues.INDEX, Integer.toString(currentIndex));
 
-		if (!legacy) {
-			if (TASmod.ktrngHandler.isLoaded()) {
-				file.set(DataValues.SEED, Long.toString(TASmod.ktrngHandler.getGlobalSeedServer()));
-			}
-		}
+		//		if (!legacy) {
+		//			if (TASmod.ktrngHandler.isLoaded()) {
+		//				file.set(DataValues.SEED, Long.toString(TASmod.ktrngHandler.getGlobalSeedServer()));
+		//			}
+		//		}
 
 		file.save(savestateDat);
 	}
@@ -612,25 +635,25 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	 */
 	private void loadSavestateDataFile() {
 		logger.trace(LoggerMarkers.Savestate, "Loading savestate data file");
-		File tasmodDir = new File(savestateDirectory, "../" + server.getFolderName() + "/tasmod/");
-		File savestateDat = new File(tasmodDir, "savestateData.txt");
+		Path tasmodDir = savestateDirectory.resolve("../" + server.getFolderName()).resolve(storageDir);
+		Path savestateDat = tasmodDir.resolve("savestateData.txt");
 
-		if (!savestateDat.exists()) {
+		if (!Files.exists(savestateDat)) {
 			return;
 		}
 
-		SavestateDataFile datafile = new SavestateDataFile();
+		SavestateDataFile datafile = new SavestateDataFile(savestateDirectory);
 
 		datafile.load(savestateDat);
 
-		if (TASmod.ktrngHandler.isLoaded()) {
-			String seedString = datafile.get(DataValues.SEED);
-			if (seedString != null) {
-				TASmod.ktrngHandler.sendGlobalSeedToServer(Long.parseLong(seedString));
-			} else {
-				logger.warn("KTRNG seed not loaded because it was not found in savestateData.txt!");
-			}
-		}
+		//		if (TASmod.ktrngHandler.isLoaded()) {
+		//			String seedString = datafile.get(DataValues.SEED);
+		//			if (seedString != null) {
+		//				TASmod.ktrngHandler.sendGlobalSeedToServer(Long.parseLong(seedString));
+		//			} else {
+		//				logger.warn("KTRNG seed not loaded because it was not found in savestateData.txt!");
+		//			}
+		//		}
 	}
 
 	/**
@@ -642,23 +665,31 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	public void loadCurrentIndexFromFile() {
 		logger.trace(LoggerMarkers.Savestate, "Loading current index from file");
 		int index = -1;
-		File tasmodDir = new File(savestateDirectory, "../" + server.getFolderName() + "/tasmod/");
-		if (!tasmodDir.exists()) {
-			tasmodDir.mkdir();
+		Path tasmodDir = savestateDirectory.resolve("../" + server.getFolderName()).resolve(storageDir);
+		if (!Files.exists(tasmodDir)) {
+			try {
+				Files.createDirectory(tasmodDir);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
-		File savestateDat = new File(tasmodDir, "savestate.data");
-		if (savestateDat.exists()) {
+		Path savestateDat = tasmodDir.resolve("savestate.data");
+		if (Files.exists(savestateDat)) {
 			index = legacyIndexFile(savestateDat);
 			setCurrentIndex(index);
 			saveSavestateDataFile(true);
-			savestateDat.delete();
+			try {
+				Files.delete(savestateDat);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			return;
 		}
 
-		savestateDat = new File(tasmodDir, "savestateData.txt");
-		if (savestateDat.exists()) {
-			SavestateDataFile file = new SavestateDataFile();
+		savestateDat = tasmodDir.resolve("savestateData.txt");
+		if (Files.exists(savestateDat)) {
+			SavestateDataFile file = new SavestateDataFile(savestateDat);
 			file.load(savestateDat);
 
 			index = Integer.parseInt(file.get(DataValues.INDEX));
@@ -676,31 +707,28 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		logger.debug(LoggerMarkers.Savestate, "Setting the savestate index to {}", currentIndex);
 	}
 
+	public SavestatePlayerHandler getPlayerHandler() {
+		return playerHandler;
+	}
+
 	public int getCurrentIndex() {
 		return currentIndex;
 	}
 
 	public void onLoadstateComplete() {
 		logger.trace(LoggerMarkers.Savestate, "Running loadstate complete event");
-		PlayerList playerList = TASmod.getServerInstance().getPlayerList();
+		PlayerList playerList = server.getPlayerList();
 		for (EntityPlayerMP player : playerList.getPlayers()) {
 			NBTTagCompound nbttagcompound = playerList.readPlayerDataFromFile(player);
-			PlayerHandler.reattachEntityToPlayer(nbttagcompound, player.getServerWorld(), player);
+			playerHandler.reattachEntityToPlayer(nbttagcompound, player.getServerWorld(), player);
 		}
-		// Updating redstone component timers to the new world time (#136)
-		ChunkHandler.updateWorldServerTickListEntries();
 	}
 
-	@Environment(EnvType.CLIENT)
-	public static void playerLoadSavestateEventClient() {
-		SavestateHandlerClient.addPlayerToClientChunk(Minecraft.getMinecraft().player);
-	}
-
-	private int legacyIndexFile(File savestateDat) {
+	private int legacyIndexFile(Path savestateDat) {
 		int index = -1;
 		List<String> lines = new ArrayList<String>();
 		try {
-			lines = FileUtils.readLines(savestateDat, StandardCharsets.UTF_8);
+			lines = FileUtils.readLines(savestateDat.toFile(), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			logger.warn("No savestate.data file found in current world folder, ignoring it");
 		}
@@ -718,21 +746,15 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		return index;
 	}
 
-	public static enum SavestateState {
-		SAVING,
-		LOADING,
-		NONE
-	}
-
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
 		return new TASmodPackets[] {
-				TASmodPackets.SAVESTATE_SAVE,
-				TASmodPackets.SAVESTATE_LOAD,
-				TASmodPackets.SAVESTATE_PLAYER,
-				TASmodPackets.SAVESTATE_REQUEST_MOTION,
-				TASmodPackets.SAVESTATE_SCREEN,
+				//@formatter:off
+				TASmodPackets.SAVESTATE_SAVE, 
+				TASmodPackets.SAVESTATE_LOAD, 
+				TASmodPackets.SAVESTATE_SCREEN, 
 				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS
+				//@formatter:on
 		};
 	}
 
@@ -742,31 +764,39 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		TASmodPackets packet = (TASmodPackets) id;
 
 		EntityPlayerMP player = TASmod.getServerInstance().getPlayerList().getPlayerByUsername(username);
-		Integer index = null;
 
 		switch (packet) {
 			case SAVESTATE_SAVE:
-				index = TASmodBufferBuilder.readInt(buf);
-				try {
-					TASmod.savestateHandlerServer.saveState(index, true);
-				} catch (SavestateException e) {
-					if (player != null)
-						player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getMessage()));
+				Integer index = TASmodBufferBuilder.readInt(buf);
 
-					LOGGER.error(LoggerMarkers.Savestate, "Failed to create a savestate: " + e.getMessage());
-				} catch (Exception e) {
-					if (player != null)
-						player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getCause().toString()));
+				Task savestateTask = () -> {
+					try {
+						TASmod.savestateHandlerServer.saveState(index, true);
+					} catch (SavestateException e) {
+						if (player != null)
+							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getMessage()));
 
-					LOGGER.error(e);
-				} finally {
-					TASmod.savestateHandlerServer.state = SavestateState.NONE;
-				}
+						LOGGER.error(LoggerMarkers.Savestate, "Failed to create a savestate");
+						LOGGER.catching(e);
+					} catch (Exception e) {
+						if (player != null)
+							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getClass().getName().toString() + ": " + e.getMessage()));
+
+						LOGGER.catching(e);
+					} finally {
+						TASmod.savestateHandlerServer.state = SavestateState.NONE;
+					}
+				};
+
+				if (TASmod.tickratechanger.ticksPerSecond == 0)
+					TASmod.gameLoopSchedulerServer.add(savestateTask);
+				else
+					TASmod.tickSchedulerServer.add(savestateTask);
 				break;
 
 			case SAVESTATE_LOAD:
 				int indexing = TASmodBufferBuilder.readInt(buf);
-				player.getServerWorld().addScheduledTask(() -> {
+				Task loadstateTask = () -> {
 					try {
 						TASmod.savestateHandlerServer.loadState(indexing, true);
 					} catch (LoadstateException e) {
@@ -776,20 +806,21 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 						LOGGER.error(LoggerMarkers.Savestate, "Failed to create a savestate: " + e.getMessage());
 						TASmod.savestateHandlerServer.state = SavestateState.NONE;
 					} catch (Exception e) {
-						if (player != null)
-							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to load a savestate: " + e.getCause().toString()));
+						if (player != null) {
+							Throwable cause = e.getCause();
+							if (cause == null) {
+								cause = e;
+							}
+							player.sendMessage(new TextComponentString(String.format("Failed to load a savestate: %s", cause.getMessage())).setStyle(new Style().setColor(TextFormatting.RED)));
+						}
 
-						LOGGER.error(e);
+						LOGGER.throwing(e);
 						TASmod.savestateHandlerServer.state = SavestateState.NONE;
 					}
-				});
+				};
+				TASmod.gameLoopSchedulerServer.add(loadstateTask);
 				break;
 
-			case SAVESTATE_REQUEST_MOTION:
-				MotionData data = TASmodBufferBuilder.readMotionData(buf);
-				PlayerHandler.getMotion().put(player, data);
-				break;
-			case SAVESTATE_PLAYER:
 			case SAVESTATE_SCREEN:
 			case SAVESTATE_UNLOAD_CHUNKS:
 				throw new WrongSideException(id, Side.SERVER);
@@ -798,316 +829,44 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		}
 	}
 
-	/**
-	 * Contains player related classes
-	 */
-	public static class PlayerHandler {
-
-		public static class MotionData {
-			private double clientX;
-			private double clientY;
-			private double clientZ;
-			private float clientrX;
-			private float clientrY;
-			private float clientrZ;
-			private boolean sprinting;
-			private float jumpMovementVector;
-
-			public MotionData(double x, double y, double z, float rx, float ry, float rz, boolean sprinting, float jumpMovementVector) {
-				clientX = x;
-				clientY = y;
-				clientZ = z;
-				clientrX = rx;
-				clientrY = ry;
-				clientrZ = rz;
-				this.sprinting = sprinting;
-				this.jumpMovementVector = jumpMovementVector;
-			}
-
-			public double getClientX() {
-				return clientX;
-			}
-
-			public double getClientY() {
-				return clientY;
-			}
-
-			public double getClientZ() {
-				return clientZ;
-			}
-
-			public float getClientrX() {
-				return clientrX;
-			}
-
-			public float getClientrY() {
-				return clientrY;
-			}
-
-			public float getClientrZ() {
-				return clientrZ;
-			}
-
-			public boolean isSprinting() {
-				return sprinting;
-			}
-
-			public float getJumpMovementVector() {
-				return jumpMovementVector;
-			}
-		}
-
-		/**
-		 * Tries to reattach the player to an entity, if the player was riding it it while savestating.
-		 * 
-		 * Side: Server
-		 * @param nbttagcompound where the ridden entity is saved
-		 * @param worldserver that needs to spawn the entity
-		 * @param playerIn that needs to ride the entity
-		 */
-		public static void reattachEntityToPlayer(NBTTagCompound nbttagcompound, World worldserver, Entity playerIn) {
-			if (nbttagcompound != null && nbttagcompound.hasKey("RootVehicle", 10)) {
-				NBTTagCompound nbttagcompound1 = nbttagcompound.getCompoundTag("RootVehicle");
-				Entity entity1 = AnvilChunkLoader.readWorldEntity(nbttagcompound1.getCompoundTag("Entity"), worldserver, true);
-
-				if (entity1 == null) {
-					for (Entity entity : worldserver.loadedEntityList) {
-						if (entity.getUniqueID().equals(nbttagcompound1.getUniqueId("Attach")))
-							entity1 = entity;
-					}
-				}
-
-				if (entity1 != null) {
-					UUID uuid = nbttagcompound1.getUniqueId("Attach");
-
-					if (entity1.getUniqueID().equals(uuid)) {
-						playerIn.startRiding(entity1, true);
-					} else {
-						for (Entity entity : entity1.getRecursivePassengers()) {
-							if (entity.getUniqueID().equals(uuid)) {
-								playerIn.startRiding(entity, true);
-								break;
-							}
-						}
-					}
-
-					if (!playerIn.isRiding()) {
-						LOGGER.warn("Couldn't reattach entity to player");
-						worldserver.removeEntityDangerously(entity1);
-
-						for (Entity entity2 : entity1.getRecursivePassengers()) {
-							worldserver.removeEntityDangerously(entity2);
-						}
-					}
-				}
-			} else {
-				if (playerIn.isRiding()) {
-					playerIn.dismountRidingEntity();
-				}
-			}
-		}
-
-		/**
-		 * Loads all worlds and players from the disk. Also sends the playerdata to the client in {@linkplain SavestateHandlerClient#onClientPacket(PacketID, ByteBuffer, String)}
-		 * 
-		 * Side: Server
-		 */
-		public static void loadAndSendMotionToPlayer(MinecraftServer server) {
-
-			List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
-			PlayerList list = server.getPlayerList();
-
-			WorldServer[] worlds = server.worlds;
-			for (WorldServer world : worlds) {
-				WorldInfo info = world.getSaveHandler().loadWorldInfo();
-				world.worldInfo = info;
-			}
-			for (EntityPlayerMP player : players) {
-
-				int dimensionPrev = player.dimension;
-
-				NBTTagCompound nbttagcompound = server.getPlayerList().readPlayerDataFromFile(player);
-
-				int dimensionNow = 0;
-				if (nbttagcompound.hasKey("Dimension")) {
-					dimensionNow = nbttagcompound.getInteger("Dimension");
-				}
-
-				if (dimensionNow != dimensionPrev) {
-					list.changePlayerDimension(player, dimensionNow);
-				} else {
-					player.getServerWorld().unloadedEntityList.remove(player);
-				}
-
-				player.readFromNBT(nbttagcompound);
-
-				LOGGER.debug(LoggerMarkers.Savestate, "Sending motion to {}", player.getName());
-
+	public static void copyFolder(Path src, Path dest) {
+		try {
+			Files.walk(src).forEach(s -> {
 				try {
-					TASmod.server.sendTo(player, new TASmodBufferBuilder(TASmodPackets.SAVESTATE_PLAYER).writeNBTTagCompound(nbttagcompound));
+					Path d = dest.resolve(src.relativize(s));
+					if (Files.isDirectory(s)) {
+						if (!Files.exists(d))
+							Files.createDirectory(d);
+						return;
+					}
+					Files.copy(s, d, StandardCopyOption.REPLACE_EXISTING);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			}
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-
-		public static void requestMotionFromClient() {
-			LOGGER.trace(LoggerMarkers.Savestate, "Request motion from client");
-			PlayerHandler.motion.clear();
-			try {
-				// request client motion
-				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_REQUEST_MOTION));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-
-		public static Map<EntityPlayerMP, PlayerHandler.MotionData> getMotion() {
-			return PlayerHandler.motion;
-		}
-
-		public static Map<EntityPlayerMP, PlayerHandler.MotionData> motion = Maps.<EntityPlayerMP, PlayerHandler.MotionData>newHashMap();
-
 	}
 
-	/**
-	 * Contains static chunk actions, which can be triggered indiviadually for testing
-	 */
-	public static class ChunkHandler {
-
-		/**
-		 * Updates ticklist entries to the current world time, allowing them to not be stuck in a pressed state #136
-		 */
-		public static void updateWorldServerTickListEntries() {
-			LOGGER.trace(LoggerMarkers.Savestate, "Update server tick list entries");
-			MinecraftServer server = TASmod.getServerInstance();
-			for (WorldServer world : server.worlds) {
-				for (NextTickListEntry nextticklistentry : world.pendingTickListEntriesHashSet) {
-					nextticklistentry.setScheduledTime(world.getTotalWorldTime());
-				}
-			}
-		}
-
-		/**
-		 * Just like {@link SavestateHandlerClient#addPlayerToClientChunk(EntityPlayer)}, adds the player to the chunk on the server.
-		 * This prevents the player from being able to place block inside of him
-		 * 
-		 * Side: Server
-		 */
-		public static void addPlayerToServerChunk(EntityPlayerMP player) {
-			LOGGER.trace(LoggerMarkers.Savestate, "Add player {} to server chunk", player.getName());
-			int i = MathHelper.floor(player.posX / 16.0D);
-			int j = MathHelper.floor(player.posZ / 16.0D);
-			WorldServer world = player.getServerWorld();
-			Chunk chunk = world.getChunkFromChunkCoords(i, j);
-			for (int k = 0; k < chunk.getEntityLists().length; k++) {
-				if (chunk.getEntityLists()[k].contains(player)) {
+	public static void deleteFolder(Path toDelete) {
+		try {
+			Files.walk(toDelete).forEach(s -> {
+				if (toDelete.equals(s))
 					return;
+				if (Files.isDirectory(s)) {
+					deleteFolder(s);
+				} else {
+					try {
+						Files.delete(s);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-			}
-			chunk.addEntity(player);
-		}
-
-		/**
-		 * The session lock is minecrafts failsafe system when it comes to saving. It prevents writing to the world folder from 2 different locations <br>
-		 * <br>
-		 * That works by storing system time to a session.lock file, when the server started. The integrated server also saves the time when it started in a variable. <br>
-		 * <br>
-		 * Those two times are then compared every time minecraft tries to save and fails if the times are different.<br>
-		 * <br>
-		 * Since we never close the integrated server, but copy an "old" session.lock file with the savestate, the session.lock will always mismatch.<br>
-		 * Thus we need to update the session lock once the loadstating is completed<br>
-		 * <br>
-		 * TLDR:<br>
-		 * Updates the session lock to allow for vanilla saving again<br>
-		 * <br>
-		 * Side: Server
-		 */
-		public static void updateSessionLock(MinecraftServer server) {
-			LOGGER.trace(LoggerMarkers.Savestate, "Update the session lock");
-			WorldServer[] worlds = server.worlds;
-			for (WorldServer world : worlds) {
-				((SaveHandler) world.getSaveHandler()).setSessionLock();
-			}
-		}
-
-		/**
-		 * Tells the save handler to save all changes to disk and remove all references to the region files, making them editable on disc<br>
-		 * <br>
-		 * Side: Server
-		 */
-		public static void flushSaveHandler(MinecraftServer server) {
-			LOGGER.trace(LoggerMarkers.Savestate, "Flush the save handler");
-			//Vanilla
-			WorldServer[] worlds = server.worlds;
-			for (WorldServer world : worlds) {
-				world.getSaveHandler().flush();
-			}
-		}
-
-		/**
-		 * The player chunk map keeps track of which chunks need to be sent to the client. <br>
-		 * This adds the player to the chunk map so the server knows it can send the information to the client<br>
-		 * <br>
-		 * Side: Server
-		 * @see #disconnectPlayersFromChunkMap(MinecraftServer)
-		 */
-		public static void addPlayersToChunkMap(MinecraftServer server) {
-			List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
-			WorldServer[] worlds = server.worlds;
-			for (EntityPlayerMP player : players) {
-				LOGGER.trace(LoggerMarkers.Savestate, "Add player {} to the chunk map", player.getName());
-				switch (player.dimension) {
-					case -1:
-						worlds[1].getPlayerChunkMap().addPlayer(player);
-						worlds[1].getChunkProvider().provideChunk((int) player.posX >> 4, (int) player.posZ >> 4);
-						break;
-					case 0:
-						worlds[0].getPlayerChunkMap().addPlayer(player);
-						worlds[0].getChunkProvider().provideChunk((int) player.posX >> 4, (int) player.posZ >> 4);
-						break;
-					case 1:
-						worlds[2].getPlayerChunkMap().addPlayer(player);
-						worlds[2].getChunkProvider().provideChunk((int) player.posX >> 4, (int) player.posZ >> 4);
-						break;
-				}
-			}
-		}
-
-		/**
-		 * The player chunk map keeps track of which chunks need to be sent to the client. <br>
-		 * Removing the player stops the server from sending chunks to the client.<br>
-		 * <br>
-		 * Side: Server
-		 * @see #addPlayersToChunkMap(MinecraftServer)
-		 */
-		public static void disconnectPlayersFromChunkMap(MinecraftServer server) {
-			List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
-			WorldServer[] worlds = server.worlds;
-			for (WorldServer world : worlds) {
-				for (EntityPlayerMP player : players) {
-					LOGGER.trace(LoggerMarkers.Savestate, "Disconnect player {} from the chunk map", player.getName());
-					world.getPlayerChunkMap().removePlayer(player);
-				}
-			}
-		}
-
-		/**
-		 * Unloads all chunks on the server<br>
-		 * <br>
-		 * Side: Server
-		 * @see MixinChunkProviderServer#unloadAllChunks()
-		 */
-		public static void unloadAllServerChunks(MinecraftServer server) {
-			LOGGER.trace(LoggerMarkers.Savestate, "Unloading all server chunks");
-			WorldServer[] worlds = server.worlds;
-
-			for (WorldServer world : worlds) {
-				ChunkProviderServer chunkProvider = world.getChunkProvider();
-
-				((ChunkProviderDuck) chunkProvider).unloadAllChunks();
-			}
-
+			});
+			Files.delete(toDelete);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }

@@ -3,7 +3,6 @@ package com.minecrafttas.tasmod.mixin;
 import java.util.Queue;
 import java.util.concurrent.FutureTask;
 
-import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,8 +10,10 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventServer.EventServerTickPost;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -33,7 +34,7 @@ public abstract class MixinMinecraftServer {
 
 	@Redirect(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;tick()V"))
 	public void redirectTick(MinecraftServer server) {
-		
+
 	}
 
 	@Shadow
@@ -61,35 +62,35 @@ public abstract class MixinMinecraftServer {
 
 	@Shadow
 	private boolean serverIsRunning;
-	
+
 	@Redirect(method = "run", at = @At(value = "INVOKE", target = "Ljava/lang/Thread;sleep(J)V"))
 	public void redirectThreadSleep(long msToTick) {
-		
+
 		/*	The server should tick if:
 		 *	(shouldTick in ticksync is true OR there are no players connected to the custom server) AND the tickrate is not zero. That or advance tick is true*/
-		if( (TASmod.ticksyncServer.shouldTick() && TASmod.tickratechanger.ticksPerSecond != 0) || TASmod.tickratechanger.advanceTick) {
+		if ((TASmod.ticksyncServer.shouldTick() && TASmod.tickratechanger.ticksPerSecond != 0) || TASmod.tickratechanger.advanceTick) {
 			long timeBeforeTick = System.currentTimeMillis();
-			
+
 			this.tick();
 			TASmod.tickSchedulerServer.runAllTasks();
-			
+
 			if (TASmod.tickratechanger.advanceTick) {
 				TASmod.tickratechanger.changeServerTickrate(0F);
 				TASmod.tickratechanger.advanceTick = false;
 			}
-			EventListenerRegistry.fireEvent(EventServerTickPost.class, (MinecraftServer)(Object)this);
-			
+			EventListenerRegistry.fireEvent(EventServerTickPost.class, (MinecraftServer) (Object) this);
+
 			long tickDuration = System.currentTimeMillis() - timeBeforeTick;
-			
+
 			// ==================================================
-			
+
 			try {
 				Thread.sleep(Math.max(1L, TASmod.tickratechanger.millisecondsPerTick - tickDuration));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		} else { // This is when the server should not tick... This is to ensure network tick stuff is working
-			if(TASmod.tickratechanger.ticksPerSecond == 0) {
+			if (TASmod.tickratechanger.ticksPerSecond == 0) {
 				faketick++;
 				if (faketick >= 50) {
 					faketick = 0;
@@ -99,20 +100,25 @@ public abstract class MixinMinecraftServer {
 					}
 				}
 			}
-			
+
 			try {
 				Thread.sleep(1);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		
-		synchronized (this.futureTaskQueue) {
-			while (!this.futureTaskQueue.isEmpty()) {
-				try {
-					((FutureTask<?>) this.futureTaskQueue.poll()).run();
-				} catch (Throwable var9) {
-					var9.printStackTrace();
+
+		TASmod.gameLoopSchedulerServer.runAllTasks();
+
+		boolean stopTaskQueue = TASmod.savestateHandlerServer != null && TASmod.savestateHandlerServer.state == SavestateState.LOADING;
+		if (!stopTaskQueue) {
+			synchronized (this.futureTaskQueue) {
+				while (!this.futureTaskQueue.isEmpty()) {
+					try {
+						((FutureTask<?>) this.futureTaskQueue.poll()).run();
+					} catch (Throwable var9) {
+						var9.printStackTrace();
+					}
 				}
 			}
 		}

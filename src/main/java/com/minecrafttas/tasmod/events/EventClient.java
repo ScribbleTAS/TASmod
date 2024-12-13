@@ -23,6 +23,17 @@ public interface EventClient {
 	}
 
 	/**
+	 * Fired when drawing something on screen. Ignores F1
+	 */
+	@FunctionalInterface
+	public static interface EventDrawHotbarAlways extends EventBase {
+		/**
+		 * Fired when the gui is drawn on screen. Ignores F1
+		 */
+		public void onDrawHotbarAlways();
+	}
+
+	/**
 	 * Fired at the end of a client tick
 	 */
 	@FunctionalInterface

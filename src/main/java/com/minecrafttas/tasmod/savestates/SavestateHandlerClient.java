@@ -7,23 +7,28 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.events.EventSavestate;
+import com.minecrafttas.tasmod.mixin.savestates.AccessorEntityLivingBase;
 import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.PlayerHandler.MotionData;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
+import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
+import com.minecrafttas.tasmod.util.Ducks.WorldClientDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.mojang.realmsclient.gui.ChatFormatting;
 
@@ -32,7 +37,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
@@ -44,7 +48,7 @@ import net.minecraft.world.chunk.Chunk;
  * 
  * @author Scribble
  */
-public class SavestateHandlerClient implements ClientPacketHandler {
+public class SavestateHandlerClient implements ClientPacketHandler, EventSavestate.EventClientCompleteLoadstate, EventSavestate.EventClientLoadPlayer {
 
 	public final static File savestateDirectory = new File(TASmodClient.tasdirectory + File.separator + "savestates");
 
@@ -65,8 +69,8 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 	 * <br>
 	 * Side: Client
 	 */
-	@Environment(EnvType.CLIENT)
-	public static void keepPlayerInLoadedEntityList(net.minecraft.entity.player.EntityPlayer player) {
+	@Override
+	public void onClientLoadPlayer(EntityPlayerSP player) {
 		LOGGER.trace(LoggerMarkers.Savestate, "Keep player {} in loaded entity list", player.getName());
 		Minecraft.getMinecraft().world.unloadedEntityList.remove(player);
 	}
@@ -87,8 +91,9 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 	 * <br>
 	 * Side: Client
 	 */
-	@Environment(EnvType.CLIENT)
-	public static void addPlayerToClientChunk(EntityPlayer player) {
+	@Override
+	public void onClientLoadstateComplete() {
+		EntityPlayerSP player = Minecraft.getMinecraft().player;
 		LOGGER.trace(LoggerMarkers.Savestate, "Add player {} to loaded entity list", player.getName());
 		int i = MathHelper.floor(player.posX / 16.0D);
 		int j = MathHelper.floor(player.posZ / 16.0D);
@@ -164,7 +169,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		BigArrayList<TickContainer> savestateContainerList;
 
 		if (targetfile.exists()) {
-			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile);
+			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile, state != TASstate.PLAYBACK);
 		} else {
 			controller.setTASStateClient(TASstate.NONE, false);
 			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "Inputs could not be loaded for this savestate,"));
@@ -175,7 +180,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 
 		/*
 		 * Imagine a recording that is 20 tick long with VV showing the current index of the controller:
-		 * 					   VV
+		 *                     VV
 		 *  0                  20
 		 * <====================>
 		 * 
@@ -186,7 +191,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		 * 
 		 * We expect to resume the recording at the 10th tick.
 		 * Therefore when loading a client savestate during a recording we set the index to size-1 and preload the inputs at the same index.
-		 * 			 VV
+		 *           VV
 		 * 0         10
 		 * <==========> 
 		 * 
@@ -194,7 +199,6 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		if (state == TASstate.RECORDING) {
 			long index = savestateContainerList.size() - 1;
 
-			preload(savestateContainerList, index);
 			controller.setInputs(savestateContainerList, index);
 
 			/*
@@ -207,7 +211,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 			 * The loadstated file is SMALLER than the total inputs in the controller:
 			 * 
 			 * The recording is 20 ticks long, with VV being the index where the playback is currently at.
-			 * 				 VV
+			 *               VV
 			 *  0            13    20
 			 * <====================>
 			 * 
@@ -220,7 +224,7 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 			 * If we were to replace the controller, everything above tick 10 would be lost.
 			 * So we only set the index to 10, preload and preload the inputs.
 			 * 
-			 * 			  VV
+			 *            VV
 			 *  0         10       20
 			 * <====================>
 			 * */
@@ -244,11 +248,17 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 				controller.setInputs(savestateContainerList, index);
 			}
 		}
+
+		TASmodClient.tickSchedulerClient.add(() -> {
+			EventListenerRegistry.fireEvent(EventSavestate.EventClientCompleteLoadstate.class);
+		});
 	}
 
 	private static void preload(BigArrayList<TickContainer> containerList, long index) {
 		TickContainer containerToPreload = containerList.get(index);
 		TASmodClient.virtual.preloadInput(containerToPreload.getKeyboard(), containerToPreload.getMouse(), containerToPreload.getCameraAngle());
+
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.onPlaybackTick(index, containerToPreload);
 	}
 
 	public static void loadPlayer(NBTTagCompound compound) {
@@ -256,32 +266,47 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		Minecraft mc = Minecraft.getMinecraft();
 		EntityPlayerSP player = mc.player;
 
+		// Clear any accidental applied potion particles on the client
+		((AccessorEntityLivingBase) player).clearPotionEffects();
+
+		/*
+		 * TODO
+		 * The following 20 lines are all one
+		 * gross workaround for correctly applying the player motion
+		 * to the client...
+		 * 
+		 * The motion is applied
+		 * to the player in a previous step and unfortunately
+		 * player.readFromNBT(compound) overwrites the
+		 * previously applied motion...
+		 * 
+		 * So this workaround makes sure that the motion is not overwritten
+		 * Fixing this, requires restructuring the steps for loadstating
+		 * and since I plan to do this anyway at some point, I will
+		 * leave this here and be done for today*/
+		double x = player.motionX;
+		double y = player.motionY;
+		double z = player.motionZ;
+
+		float rx = player.moveForward;
+		float ry = player.moveStrafing;
+		float rz = player.moveVertical;
+
+		boolean sprinting = player.isSprinting();
+		float jumpVector = player.jumpMovementFactor;
+
 		player.readFromNBT(compound);
-		NBTTagCompound motion = compound.getCompoundTag("clientMotion");
 
-		if (motion.hasNoTags()) {
-			LOGGER.warn(LoggerMarkers.Savestate, "Could not load the motion from the savestate. Savestate seems to be created manually or by a different mod");
-		} else {
-			LOGGER.trace(LoggerMarkers.Savestate, "Loading client motion from NBT");
-			double x = motion.getDouble("x");
-			double y = motion.getDouble("y");
-			double z = motion.getDouble("z");
-			player.motionX = x;
-			player.motionY = y;
-			player.motionZ = z;
+		player.motionX = x;
+		player.motionY = y;
+		player.motionZ = z;
 
-			float rx = motion.getFloat("RelativeX");
-			float ry = motion.getFloat("RelativeY");
-			float rz = motion.getFloat("RelativeZ");
-			player.moveForward = rx;
-			player.moveVertical = ry;
-			player.moveStrafing = rz;
+		player.moveForward = rx;
+		player.moveVertical = ry;
+		player.moveStrafing = rz;
 
-			boolean sprinting = motion.getBoolean("Sprinting");
-			float jumpVector = motion.getFloat("JumpFactor");
-			player.setSprinting(sprinting);
-			player.jumpMovementFactor = jumpVector;
-		}
+		player.setSprinting(sprinting);
+		player.jumpMovementFactor = jumpVector;
 
 		LOGGER.trace(LoggerMarkers.Savestate, "Setting client gamemode");
 		// #86
@@ -289,11 +314,12 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		GameType type = GameType.getByID(gamemode);
 		mc.playerController.setGameType(type);
 
-		// #?? Player rotation does not change when loading a savestate
-		//		CameraInterpolationEvents.rotationPitch = player.rotationPitch;
-		//		CameraInterpolationEvents.rotationYaw = player.rotationYaw + 180f;
+		// Set the camera rotation to the player rotation
+		TASmodClient.virtual.CAMERA_ANGLE.setCamera(player.rotationPitch, player.rotationYaw);
+		SubtickDuck entityRenderer = (SubtickDuck) Minecraft.getMinecraft().entityRenderer;
+		entityRenderer.runUpdate(0);
 
-		SavestateHandlerClient.keepPlayerInLoadedEntityList(player);
+		EventListenerRegistry.fireEvent(EventSavestate.EventClientLoadPlayer.class, player);
 	}
 
 	/**
@@ -312,7 +338,8 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 		ChunkProviderClient chunkProvider = mc.world.getChunkProvider();
 
 		((ChunkProviderDuck) chunkProvider).unloadAllChunks();
-		Minecraft.getMinecraft().renderGlobal.loadRenderers();
+		mc.renderGlobal.loadRenderers();
+		((WorldClientDuck) mc.world).clearEntityList();
 	}
 
 	@Override
@@ -321,8 +348,6 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 				//@formatter:off
 				TASmodPackets.SAVESTATE_SAVE,
 				TASmodPackets.SAVESTATE_LOAD,
-				TASmodPackets.SAVESTATE_PLAYER,
-				TASmodPackets.SAVESTATE_REQUEST_MOTION,
 				TASmodPackets.SAVESTATE_SCREEN,
 				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS };
 				//@formatter:on
@@ -331,66 +356,41 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 	@Override
 	public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
 		TASmodPackets packet = (TASmodPackets) id;
-		String name = null;
 		Minecraft mc = Minecraft.getMinecraft();
 
 		switch (packet) {
 			case SAVESTATE_SAVE:
-				// Create client savestate
-				name = TASmodBufferBuilder.readString(buf);
-				try {
-					SavestateHandlerClient.savestate(name);
-				} catch (SavestateException e) {
-					LOGGER.error(e.getMessage());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				String savestateName = TASmodBufferBuilder.readString(buf);
+				Minecraft.getMinecraft().addScheduledTask(() -> {
+
+					// Create client savestate
+					try {
+						SavestateHandlerClient.savestate(savestateName);
+					} catch (SavestateException e) {
+						LOGGER.error(e.getMessage());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				});
 				break;
 			case SAVESTATE_LOAD:
 				// Load client savestate
-				name = TASmodBufferBuilder.readString(buf);
-				try {
-					SavestateHandlerClient.loadstate(name);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				break;
-			case SAVESTATE_PLAYER:
-				NBTTagCompound compound;
-				try {
-					compound = TASmodBufferBuilder.readNBTTagCompound(buf);
-				} catch (IOException e) {
-					e.printStackTrace();
-					return;
-				}
-				/*
-				 * Fair warning: Do NOT read the buffer inside an addScheduledTask. Read it
-				 * before that. The buffer will have the wrong limit, when the task is executed.
-				 * This is probably due to the buffers being reused.
-				 */
+				String loadstateName = TASmodBufferBuilder.readString(buf);
 				Minecraft.getMinecraft().addScheduledTask(() -> {
-					SavestateHandlerClient.loadPlayer(compound);
+					try {
+						SavestateHandlerClient.loadstate(loadstateName);
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				});
 				break;
-
-			case SAVESTATE_REQUEST_MOTION:
-				EntityPlayerSP player = Minecraft.getMinecraft().player;
-				if (player != null) {
-					if (!(Minecraft.getMinecraft().currentScreen instanceof GuiSavestateSavingScreen)) {
-						Minecraft.getMinecraft().displayGuiScreen(new GuiSavestateSavingScreen());
-					}
-					MotionData motionData = new MotionData(player.motionX, player.motionY, player.motionZ, player.moveForward, player.moveVertical, player.moveStrafing, player.isSprinting(), player.jumpMovementFactor);
-					TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_REQUEST_MOTION).writeMotionData(motionData));
-				}
-				break;
 			case SAVESTATE_SCREEN:
-				// Open/Close Savestate screen
-				boolean open = TASmodBufferBuilder.readBoolean(buf);
-				if (open) {
+				// Open Savestate screen
+				Minecraft.getMinecraft().addScheduledTask(() -> {
 					mc.displayGuiScreen(new GuiSavestateSavingScreen());
-				} else {
-					mc.displayGuiScreen(null);
-				}
+				});
 				break;
 
 			case SAVESTATE_UNLOAD_CHUNKS:
@@ -402,7 +402,5 @@ public class SavestateHandlerClient implements ClientPacketHandler {
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.CLIENT);
 		}
-
 	}
-
 }
