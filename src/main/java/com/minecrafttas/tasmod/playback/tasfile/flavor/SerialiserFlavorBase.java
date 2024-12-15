@@ -361,6 +361,13 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
+	/**
+	 * Joins strings together but ignores empty strings
+	 * 
+	 * @param delimiter The delimiter of the joined string
+	 * @param args The strings to join
+	 * @return Joined string
+	 */
 	protected String joinNotEmpty(String delimiter, String... args) {
 		return joinNotEmpty(delimiter, Arrays.asList(args));
 	}
@@ -377,7 +384,13 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * 
 	 */
 
-	public boolean deserialiseFlavorName(List<String> headerLines) {
+	/**
+	 * <p>Checks if the name of this flavor is present in the header of the TASfile.
+	 * <p>Used to determine the flavor of the file if the flavor is not given
+	 * @param headerLines The lines from the header to check
+	 * @return True, if the flavor name is present in the header
+	 */
+	public boolean checkFlavorName(List<String> headerLines) {
 		for (String line : headerLines) {
 			Matcher matcher = extract("^Flavor: " + getExtensionName(), line);
 
@@ -425,7 +438,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				String extensionStrings = matcher.group(1);
 				String[] extensionNames = extensionStrings.split(", ?");
 
-				TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled(Arrays.asList(extensionNames));
+				TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled(extensionNames);
 				return;
 			}
 		}

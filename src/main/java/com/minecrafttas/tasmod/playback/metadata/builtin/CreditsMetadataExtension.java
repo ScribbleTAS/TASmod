@@ -25,24 +25,24 @@ public class CreditsMetadataExtension extends PlaybackMetadataExtension implemen
 	/**
 	 * The title/category of the TAS (e.g. KillSquid - Any% Glitched)
 	 */
-	private String title = "Insert TAS category here";
+	protected String title = "Insert TAS category here";
 	/**
 	 * The author(s) of the TAS (e.g. Scribble, Pancake)
 	 */
-	private String authors = "Insert author here";
+	protected String authors = "Insert author here";
 	/**
 	 * How long the TAS is going to take (e.g. 00:01.0 or 20ticks)
 	 */
-	private String playtime = "00:00.0";
+	protected String playtime = "00:00.0";
 	/**
 	 * How often a savestate was loaded as a measurement of effort (e.g. 200)
 	 */
-	private int rerecords = 0;
+	protected int rerecords = 0;
 
 	/**
 	 * If the credits where already printed in this instance
 	 */
-	private boolean creditsPrinted = false;
+	protected boolean creditsPrinted = false;
 
 	@Override
 	public String getExtensionName() {
@@ -84,15 +84,19 @@ public class CreditsMetadataExtension extends PlaybackMetadataExtension implemen
 
 	@Override
 	public void onLoad(PlaybackMetadata metadata) {
-		title = metadata.getValue(CreditFields.Title);
-		authors = metadata.getValue(CreditFields.Author);
-		playtime = metadata.getValue(CreditFields.PlayTime);
+		title = getOrDefault(metadata.getValue(CreditFields.Title), title);
+		authors = getOrDefault(metadata.getValue(CreditFields.Author), authors);
+		playtime = getOrDefault(metadata.getValue(CreditFields.PlayTime), playtime);
 		try {
-			rerecords = Integer.parseInt(metadata.getValue(CreditFields.Rerecords));
+			rerecords = Integer.parseInt(getOrDefault(metadata.getValue(CreditFields.Rerecords), Integer.toString(rerecords)));
 		} catch (NumberFormatException e) {
 			rerecords = 0;
 			throw new PlaybackLoadException(e);
 		}
+	}
+
+	protected String getOrDefault(String value, String defaultVal) {
+		return value != null ? value : defaultVal;
 	}
 
 	@Override
@@ -119,7 +123,7 @@ public class CreditsMetadataExtension extends PlaybackMetadataExtension implemen
 		}
 	}
 
-	private void printMessage(String msg, TextFormatting format) {
+	protected void printMessage(String msg, TextFormatting format) {
 		String formatString = "";
 		if (format != null)
 			formatString = format.toString();

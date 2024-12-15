@@ -234,7 +234,7 @@ public class PlaybackSerialiser {
 	 */
 	public static SerialiserFlavorBase searchForFlavor(List<String> lines, List<SerialiserFlavorBase> flavorList) {
 		for (SerialiserFlavorBase flavor : flavorList) {
-			if (flavor.deserialiseFlavorName(lines)) {
+			if (flavor.checkFlavorName(lines)) {
 				return flavor.clone();
 			}
 		}

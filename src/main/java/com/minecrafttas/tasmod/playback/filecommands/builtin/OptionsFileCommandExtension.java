@@ -58,6 +58,11 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 		for (PlaybackFileCommand command : line) {
 			String[] args = command.getArgs();
 			if (args.length == 1) {
+				/*
+				 * Ok this may seem dumb, but Boolean.parseBoolean returns false,
+				 * even if something other then true or false was passed...
+				 * If someone finds something less idiotic please tell me...
+				 */
 				switch (args[0]) {
 					case "true":
 						shouldRenderHud = true;

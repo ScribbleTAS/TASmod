@@ -36,15 +36,15 @@ public class StartpositionMetadataExtension extends PlaybackMetadataExtension im
 	/**
 	 * The startposition of the playback
 	 */
-	StartPosition startPosition = null;
+	protected StartPosition startPosition = null;
 
 	public static class StartPosition {
 
-		final double x;
-		final double y;
-		final double z;
-		final float pitch;
-		final float yaw;
+		public final double x;
+		public final double y;
+		public final double z;
+		public final float pitch;
+		public final float yaw;
 
 		public StartPosition(double x, double y, double z, float pitch, float yaw) {
 			this.x = x;
