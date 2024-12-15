@@ -16,9 +16,9 @@ import com.minecrafttas.tasmod.registries.TASmodConfig;
 public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick, EventPlaybackClient.EventRecordClear {
 
 	private List<PlaybackFileCommandExtension> enabledExtensions = new ArrayList<>();
-	
+
 	private Configuration config = null;
-	
+
 	public PlaybackFileCommandsRegistry() {
 		super("FILECOMMAND_REGISTRY", new LinkedHashMap<>());
 	}
@@ -38,16 +38,16 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 	public boolean setEnabled(String extensionName, boolean enabled) {
 		return setEnabled(extensionName, enabled, true);
 	}
-	
+
 	public boolean setEnabled(String extensionName, boolean enabled, boolean saveToConfig) {
 		PlaybackFileCommandExtension extension = REGISTRY.get(extensionName);
-		if(extension == null) {
+		if (extension == null) {
 			return false;
 		}
 		extension.setEnabled(enabled);
 		enabledExtensions = getEnabled();
-		
-		if(saveToConfig) {
+
+		if (saveToConfig) {
 			saveConfig();
 		}
 		return true;
@@ -59,16 +59,20 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		});
 	}
 
+	public void setEnabled(String... extensionNames) {
+		setEnabled(Arrays.asList(extensionNames));
+	}
+
 	public void setEnabled(List<String> extensionNames) {
 		setEnabled(extensionNames, false);
 	}
-	
+
 	public void setEnabled(List<String> extensionNames, boolean saveToConfig) {
 		disableAll();
 		for (String name : extensionNames) {
 			setEnabled(name, true, false);
 		}
-		if(saveToConfig)
+		if (saveToConfig)
 			saveConfig();
 	}
 
@@ -83,24 +87,24 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 
 		return out;
 	}
-	
-	public List<PlaybackFileCommandExtension> getAll(){
+
+	public List<PlaybackFileCommandExtension> getAll() {
 		return new ArrayList<>(REGISTRY.values());
 	}
-	
+
 	@Override
 	public void onRecordTick(long index, TickContainer container) {
 		enabledExtensions.forEach(extension -> {
-			if(extension.isEnabled()) {
+			if (extension.isEnabled()) {
 				extension.onRecord(index, container);
 			}
 		});
 	}
-	
+
 	@Override
 	public void onPlaybackTick(long index, TickContainer container) {
 		enabledExtensions.forEach(extension -> {
-			if(extension.isEnabled()) {
+			if (extension.isEnabled()) {
 				extension.onPlayback(index, container);
 			}
 		});
@@ -109,8 +113,8 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 	public PlaybackFileCommandContainer handleOnSerialiseInline(long currentTick, TickContainer container) {
 		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
 		for (PlaybackFileCommandExtension extension : enabledExtensions) {
-			PlaybackFileCommandContainer extensionContainer=extension.onSerialiseInlineComment(currentTick, container);
-			if(extensionContainer!=null) {
+			PlaybackFileCommandContainer extensionContainer = extension.onSerialiseInlineComment(currentTick, container);
+			if (extensionContainer != null) {
 				out.putAll(extensionContainer);
 			}
 		}
@@ -120,8 +124,8 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 	public PlaybackFileCommandContainer handleOnSerialiseEndline(long currentTick, TickContainer container) {
 		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
 		for (PlaybackFileCommandExtension extension : enabledExtensions) {
-			PlaybackFileCommandContainer extensionContainer=extension.onSerialiseEndlineComment(currentTick, container);
-			if(extensionContainer!=null) {
+			PlaybackFileCommandContainer extensionContainer = extension.onSerialiseEndlineComment(currentTick, container);
+			if (extensionContainer != null) {
 				out.putAll(extensionContainer);
 			}
 		}
@@ -155,7 +159,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		this.config = config;
 		loadConfig();
 	}
-	
+
 	private void loadConfig() {
 		if (config == null) {
 			return;
@@ -163,14 +167,14 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		String enabled = config.get(TASmodConfig.EnabledFileCommands);
 		setEnabled(Arrays.asList(enabled.split(", ")));
 	}
-	
+
 	private void saveConfig() {
 		if (config == null) {
 			return;
 		}
-		List<String> nameList = new ArrayList<>(); 
-		
-		enabledExtensions.forEach(element ->{
+		List<String> nameList = new ArrayList<>();
+
+		enabledExtensions.forEach(element -> {
 			nameList.add(element.getExtensionName());
 		});
 		config.set(TASmodConfig.EnabledFileCommands, String.join(", ", nameList));

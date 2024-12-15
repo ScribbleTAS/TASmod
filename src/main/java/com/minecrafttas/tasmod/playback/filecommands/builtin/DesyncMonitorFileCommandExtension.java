@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.playback.filecommands.builtin;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.NumberFormat;
@@ -29,8 +28,6 @@ import net.minecraft.util.text.TextFormatting;
  * @author Scribble
  */
 public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtension implements EventPlaybackClient.EventControllerStateChange {
-
-	private File tempDir = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles" + File.separator + "temp" + File.separator + "monitoring");
 
 	/**
 	 * List containing {@link MonitorContainer MonitorContainers} in a TASfile 
@@ -352,7 +349,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		monitorContainer = new BigArrayList<MonitorContainer>(tempDir.toString());
+		monitorContainer = new BigArrayList<MonitorContainer>();
 		lastStatus = TextFormatting.GRAY + "Empty";
 		lastPos = "";
 		lastMotion = "";

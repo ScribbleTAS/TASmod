@@ -23,12 +23,12 @@ public class PlaybackMetadata {
 		this(extension.getExtensionName());
 	}
 
-	private PlaybackMetadata(String extensionName) {
+	public PlaybackMetadata(String extensionName) {
 		this.extensionName = extensionName;
 		this.data = new LinkedHashMap<String, String>();
 	}
 
-	private PlaybackMetadata(String extensionName, LinkedHashMap<String, String> data) {
+	public PlaybackMetadata(String extensionName, LinkedHashMap<String, String> data) {
 		this.extensionName = extensionName;
 		this.data = data;
 	}
