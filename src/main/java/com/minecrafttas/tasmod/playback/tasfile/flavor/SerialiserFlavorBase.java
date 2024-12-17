@@ -19,6 +19,7 @@ import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.virtual.Subtickable;
@@ -33,21 +34,40 @@ import com.minecrafttas.tasmod.virtual.VirtualMouse;
  * <p>All serialisation and deserialisation is broken apart into functions whenever possible,<br>
  * with the intention of allowing small changes to the existing syntax.
  * 
- * <p>Adding functionality to playback should be made via {@link PlaybackFileCommand PlaybackFileCommands} instead of creating a new syntax<br>
- * and adding new information to the header should be made via {@link PlaybackMetadata}
+ * <p>Adding functionality to playback should be made via {@link PlaybackFileCommand PlaybackFileCommands}<br>
+ * instead of creating a new syntax and adding new information to the header should be made via {@link PlaybackMetadata}
  * 
  * <h2>Sections</h2>
- * <p>The TASfile has 2 main sections:
+ * <p>The TASfile has 2 main sections, which are called seperately by the {@link PlaybackSerialiser}:
  * 
  * <ol>
  * 	<li>
- * 		{@link #serialiseHeader() Header}: Contains metadata about this TAS, like credits and start position,<br>
+ * 		<strong>Header</strong><br>
+ * 		Contains metadata about this TAS, like credits and start position,<br>
  *		but also a list of enabled extensions and the name of the flavor that was used to encode the file.
  * 	</li>
  * 	<li>
- * 		{@link #serialise(BigArrayList, long) Content}: Contains the actual inputs per tick, inputs in a subtick (a.k.a in a frame), comments and other extensions.
+ * 		<strong>Content</strong><br>
+ * 		Contains the actual inputs per tick, inputs in a subtick (a.k.a in a frame), comments and other extensions.
  * 	</li>
  * </ol>
+ * 
+ * Both sections have serialise and deserialise methods:
+ * 
+ * <ul>
+ * 	<li>Serialisation
+ * 		<ul>
+ * 			<li>{@link #serialiseHeader()}</li>
+ * 			<li>{@link #serialise(BigArrayList, long)}</li>
+ * 		</ul>
+ * 	</li>
+ * 	<li>Deserialisation
+ * 		<ul>
+ * 			<li>{@link #deserialiseHeader(List)}</li>
+ * 			<li>{@link #deserialise(BigArrayList, long)}</li>
+ * 		</ul>
+ * 	</li>
+ * </ul>
  * 
  * Clicking on either of these will lead you to a breakdown in their respective javadocs
  * 
@@ -55,10 +75,13 @@ import com.minecrafttas.tasmod.virtual.VirtualMouse;
  */
 public abstract class SerialiserFlavorBase implements Registerable {
 
+	/**
+	 * The current line that is being serialised or deserialised. Used for debugging
+	 */
 	protected long currentLine = 1;
 
 	/**
-	 * The current tick that is being serialised or deserialised
+	 * The current tick that is being serialised or deserialised. Used for debugging
 	 */
 	protected long currentTick = 0;
 
@@ -108,7 +131,18 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	/**
-	 * 
+	 * <p>Serialises the flavor of this file, the enabled file commands and other metadata.
+	 * <p>{@link #serialiseFlavorName(List)}
+	 * <pre>
+	 * serialiseHeader
+	 *	├── {@link #headerStart()}	// The start of the header
+	 *	├── {@link #serialiseFlavorName(List)}	// The name of the flavor
+	 *	├── {@link #serialiseFileCommandNames(List)}	// The names of the enabled file commands
+	 *	├── {@link #serialiseMetadata(List)}	// The metadata of this movie
+	 *	│   ├── {@link #serialiseMetadataName(List, String)}	// The metadata extension name
+	 *	│   └── {@link #serialiseMetadataValues(List, LinkedHashMap)}	// All values in the extension
+	 *	└── {@link #headerEnd()}	// The end of the header
+	 * </pre>
 	 * @return List of lines containing the header
 	 */
 	public List<String> serialiseHeader() {
@@ -121,6 +155,13 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
+	/**
+	 * <p>How the flavor name is serialised.
+	 * <p>You normally don't have to edit this,<br>
+	 * as the flavor name is taken from the extension name.
+	 * 
+	 * @param out The serialised lines, passed by reference
+	 */
 	protected void serialiseFlavorName(List<String> out) {
 		out.add("Flavor: " + getExtensionName());
 	}
@@ -143,7 +184,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 		for (PlaybackMetadata metadata : metadataList) {
 			serialiseMetadataName(out, metadata.getExtensionName());
-			serialiseMetadataValue(out, metadata.getData());
+			serialiseMetadataValues(out, metadata.getData());
 			out.add("");
 		}
 	}
@@ -152,7 +193,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		out.add(createCenteredHeading(name, '-', 50));
 	}
 
-	protected void serialiseMetadataValue(List<String> out, LinkedHashMap<String, String> data) {
+	protected void serialiseMetadataValues(List<String> out, LinkedHashMap<String, String> data) {
 		data.forEach((key, value) -> {
 			out.add(String.format("%s:%s", key, value));
 		});
