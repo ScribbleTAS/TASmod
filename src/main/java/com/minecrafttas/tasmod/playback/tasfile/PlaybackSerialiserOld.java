@@ -35,49 +35,49 @@ import com.minecrafttas.tasmod.virtual.VirtualMouse;
  */
 @Deprecated
 public class PlaybackSerialiserOld {
-	
+
 	/**
 	 * A list of sections to check for in the playback file
 	 * @author ScribbleLP
 	 *
 	 */
-	public enum SectionsV1{
+	public enum SectionsV1 {
 		TICKS("Ticks", ""),
 		KEYBOARD("Keyboard", "(\\|Keyboard:)"),
 		MOUSE("Mouse", "(\\|Mouse:)"),
 		CAMERA("Camera", "(\\|Camera:)");
-		
+
 		private String name;
 		private String regex;
-		
+
 		private SectionsV1(String nameIn, String regexIn) {
-			name=nameIn;
-			regex=regexIn;
+			name = nameIn;
+			regex = regexIn;
 		}
-		
+
 		public String getName() {
 			return name;
 		}
-		
+
 		public String getRegex() {
 			return regex;
 		}
-		
+
 		public static String getRegexString() {
-			String out="";
-			for(SectionsV1 section : values()) {
-				if(!section.getRegex().isEmpty()) {
-					String seperator="|";
-					if(values().length-1==section.ordinal()) {
-						seperator="";
+			String out = "";
+			for (SectionsV1 section : values()) {
+				if (!section.getRegex().isEmpty()) {
+					String seperator = "|";
+					if (values().length - 1 == section.ordinal()) {
+						seperator = "";
 					}
-					out=out.concat(section.getRegex()+seperator);
+					out = out.concat(section.getRegex() + seperator);
 				}
 			}
 			return out;
 		}
 	}
-	
+
 	/**
 	 * Saves all inputs of the input container
 	 * @param file Where to save the container
@@ -87,7 +87,7 @@ public class PlaybackSerialiserOld {
 	public void saveToFileV1(File file, PlaybackControllerClient container) throws IOException {
 		saveToFileV1Until(file, container, -1);
 	}
-	
+
 	/**
 	 * Saves inputs up to a certain index of the input container
 	 * @param file Where to save the container
@@ -95,17 +95,17 @@ public class PlaybackSerialiserOld {
 	 * @param index index until the inputs get saved
 	 * @throws IOException When the input container is empty
 	 */
-	public void saveToFileV1Until(File file, PlaybackControllerClient container, long index) throws IOException{
+	public void saveToFileV1Until(File file, PlaybackControllerClient container, long index) throws IOException {
 		LOGGER.debug(LoggerMarkers.Playback, "Saving playback controller to file {}", file);
 		if (container.size() == 0) {
 			throw new IOException("There are no inputs to save to a file");
 		}
-		FileThread fileThread = new FileThread(file, false);
+		FileThread fileThread = new FileThread(file.toPath(), false);
 //		FileThread monitorThread= new FileThread(new File(file, "../"+file.getName().replace(".mctas", "")+".mon"), false);
 
 		fileThread.start();
 //		monitorThread.start();
-		
+
 //		fileThread.addLine("################################################# TASFile ###################################################\n"
 //				 + "#												Version:1													#\n"
 //				 + "#							This file was generated using the Minecraft TASMod								#\n"
@@ -127,11 +127,11 @@ public class PlaybackSerialiserOld {
 //				 + "#StartSeed:" + container.getStartSeed() + "\n"
 //				 + "#############################################################################################################\n"
 //				 + "#Comments start with \"//\" at the start of the line, comments with # will not be saved\n");
-		
+
 		BigArrayList<TickContainer> ticks = container.getInputs();
 //		Map<Integer, List<Pair<String, String[]>>> cbytes= container.getControlBytes();
 //		Map<Integer, List<String>> comments = container.getComments();
-		
+
 //		for (int i = 0; i < ticks.size(); i++) {
 //			if(i==index) {
 //				break;
@@ -144,8 +144,8 @@ public class PlaybackSerialiserOld {
 //					fileThread.addLine("//"+comment+"\n");
 //				});
 //			}
-			
-			// Add controlbytes
+
+		// Add controlbytes
 //			if(cbytes.containsKey(i)) {
 //				List<Pair<String, String[]>> cbytelist= cbytes.get(i);
 //				String cbyteString= ControlByteHandler.toString(cbytelist);
@@ -167,11 +167,11 @@ public class PlaybackSerialiserOld {
 		for (String line : lines) {
 			if (line.contains("Version")) {
 				String trimmed = line.replaceAll("#|\t", "");
-				int tick=0;
+				int tick = 0;
 				try {
-					tick=Integer.parseInt(trimmed.split(":")[1]);
+					tick = Integer.parseInt(trimmed.split(":")[1]);
 				} catch (NumberFormatException e) {
-					throw new IOException("Can't read the file version: "+trimmed);
+					throw new IOException("Can't read the file version: " + trimmed);
 				}
 				return tick;
 			}
@@ -182,17 +182,17 @@ public class PlaybackSerialiserOld {
 	public PlaybackControllerClient fromEntireFileV1(File file) throws IOException {
 		LOGGER.debug(LoggerMarkers.Playback, "Loading playback controller to file {}", file);
 		List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
-		
-		File monitorFile=new File(file, "../"+file.getName().replace(".mctas", "")+".mon");
-		
-		List<String> monitorLines=new ArrayList<>();
-		
+
+		File monitorFile = new File(file, "../" + file.getName().replace(".mctas", "") + ".mon");
+
+		List<String> monitorLines = new ArrayList<>();
+
 		// Read the legacy monitoring file system. Still reads the file but deletes it afterwards
-		if(monitorFile.exists()) {
+		if (monitorFile.exists()) {
 			monitorLines = FileUtils.readLines(monitorFile, StandardCharsets.UTF_8);
 			monitorFile.delete();
 		}
-		boolean oldmonfileLoaded=!monitorLines.isEmpty();
+		boolean oldmonfileLoaded = !monitorLines.isEmpty();
 
 		PlaybackControllerClient controller = new PlaybackControllerClient();
 
@@ -203,10 +203,10 @@ public class PlaybackSerialiserOld {
 		String playtime = "00:00.0";
 
 		int rerecords = 0;
-		
+
 		// No default start location
-		String startLocation="";
-		
+		String startLocation = "";
+
 		// Default the start seed to the current global ktrng seed. If KTRNG is not loaded, defaults to 0
 		long startSeed/*=TASmod.ktrngHandler.getGlobalSeedClient()*/;
 
@@ -214,32 +214,32 @@ public class PlaybackSerialiserOld {
 		controller.clear();
 
 		int linenumber = 0; //The current line number
-		
+
 		for (String line : lines) {
 			linenumber++;
-			int tickcount=(int) controller.getInputs().size();
+			int tickcount = (int) controller.getInputs().size();
 			// Read out header
 			if (line.startsWith("#")) {
 				// Read author tag
 				if (line.startsWith("#Author:")) {
 					author = line.split(":")[1];
-				// Read title tag
+					// Read title tag
 				} else if (line.startsWith("#Title:")) {
 					title = line.split(":")[1];
-				// Read playtime
+					// Read playtime
 				} else if (line.startsWith("#Playing Time:")) {
 					playtime = line.split("Playing Time:")[1];
-				// Read rerecords
+					// Read rerecords
 				} else if (line.startsWith("#Rerecords:")) {
 					rerecords = Integer.parseInt(line.split(":")[1]);
-				// Read start position
+					// Read start position
 				} else if (line.startsWith("#StartPosition:")) {
 					startLocation = line.replace("#StartPosition:", "");
-				// Read start seed
+					// Read start seed
 				} else if (line.startsWith("#StartSeed:")) {
 					startSeed = Long.parseLong(line.replace("#StartSeed:", ""));
 				}
-			// Read control bytes
+				// Read control bytes
 			} else if (line.startsWith("$") && line.replace('$', ' ').trim().contains(" ")) {
 				String[] sections = line.replace('$', ' ').trim().split(" ", 2);
 				if (sections.length == 0)
@@ -249,33 +249,33 @@ public class PlaybackSerialiserOld {
 //				List<Pair<String, String[]>> cbytes = controller.getControlBytes().getOrDefault(tickcount, new ArrayList<>());
 //				cbytes.add(Pair.of(control, params));
 //				controller.getControlBytes().put(tickcount, cbytes);
-			//Read comments
+				//Read comments
 			} else if (line.startsWith("//")) {
 //				List<String> commentList = controller.getComments().getOrDefault(tickcount, new ArrayList<>());
 //				commentList.add(line.replace("//", ""));
 //				controller.getComments().put(tickcount, commentList);
-			//Read data
+				//Read data
 			} else {
-				
+
 				// Splitting the line into a data- and commentPart, the comment part will most likely contain the Monitoring
-				String dataPart=line;
-				String commentPart="";
-				if(line.contains("~&")) {
-					String[] splitComments=line.split("~&");
-					dataPart=splitComments[0];
-					commentPart=splitComments[1];
+				String dataPart = line;
+				String commentPart = "";
+				if (line.contains("~&")) {
+					String[] splitComments = line.split("~&");
+					dataPart = splitComments[0];
+					commentPart = splitComments[1];
 				}
 				String[] sections = dataPart.split(SectionsV1.getRegexString());
 
 				if (sections.length != SectionsV1.values().length) {
 					throw new IOException("Error in line " + linenumber + ". Cannot read the line correctly");
 				}
-				
+
 //				controller.getInputs().add(new TickInputContainer(readTicks(sections[0], linenumber), readKeyboard(sections[1], linenumber), readMouse(sections[2], linenumber), readSubtick(sections[3], linenumber)));
-			
-				if(!oldmonfileLoaded) {
+
+				if (!oldmonfileLoaded) {
 					String[] commentData = commentPart.split("Monitoring:");
-					if(commentData.length==2) {
+					if (commentData.length == 2) {
 						monitorLines.add(commentData[1]);
 					}
 				}
@@ -287,15 +287,15 @@ public class PlaybackSerialiserOld {
 //		controller.setRerecords(rerecords);
 //		controller.setStartLocation(startLocation);
 //		controller.setStartSeed(startSeed);
-		if(!monitorLines.isEmpty()) {
+		if (!monitorLines.isEmpty()) {
 //			controller.desyncMonitor = new DesyncMonitoringFileCommand(controller, monitorLines);
 		}
-		
+
 		//If an old monitoring file is loaded, save the file immediately to not loose any data.
-		if(oldmonfileLoaded) {
+		if (oldmonfileLoaded) {
 			saveToFileV1(file, controller);
 		}
-		
+
 		return controller;
 	}
 
@@ -308,7 +308,7 @@ public class PlaybackSerialiserOld {
 		}
 		return ticks;
 	}
-	
+
 	private VirtualKeyboard readKeyboard(String section, int linenumber) throws IOException {
 		VirtualKeyboard keyboard = new VirtualKeyboard();
 
@@ -346,13 +346,13 @@ public class PlaybackSerialiserOld {
 //				vkey.setPressed(true);
 			}
 		}
-		
+
 		char[] chars = {};
 		//Check if the characterlist is empty
 		if (keys.length == 2) {
 			chars = keys[1].replace("\\n", "\n").toCharArray(); //Replacing the "\n" in lines to the character \n
 		}
-		
+
 		for (char onechar : chars) {
 //			keyboard.addChar(onechar);
 		}
@@ -361,21 +361,21 @@ public class PlaybackSerialiserOld {
 
 	private VirtualMouse readMouse(String section, int linenumber) throws IOException {
 		VirtualMouse mouse = new VirtualMouse();
-		
+
 		// Remove the prefix
 		section = section.replace("Mouse:", "");
-		
+
 		//Split into buttons and paths...
 		String buttons = section.split(";")[0];
 		String path = section.split(";")[1];
-		
+
 		//Check whether the button is empty
-		if(!buttons.isEmpty()) {
-			
+		if (!buttons.isEmpty()) {
+
 			//Splitting multiple buttons
-			String[] splitButtons=buttons.split(",");
+			String[] splitButtons = buttons.split(",");
 			for (String button : splitButtons) {
-				
+
 //				VirtualKey vkey = null;
 //				// Check if the key is a keycode
 //				if (isNumeric(button)) {
@@ -428,25 +428,23 @@ public class PlaybackSerialiserOld {
 //		}
 //		return path;
 //	}
-	
+
 	private VirtualCameraAngle readSubtick(String section, int linenumber) throws IOException {
 		section = section.replace("Camera:", "");
-		String[] split=section.split(";");
-		
-		float x=0F;
-		float y=0F;
-		
+		String[] split = section.split(";");
+
+		float x = 0F;
+		float y = 0F;
+
 		try {
-			x=Float.parseFloat(split[0]);
-			y=Float.parseFloat(split[1]);
-		} catch (NumberFormatException e){
-			throw new IOException(split[0]+" or/and "+split[1]+" are not float numbers in line "+ linenumber);
+			x = Float.parseFloat(split[0]);
+			y = Float.parseFloat(split[1]);
+		} catch (NumberFormatException e) {
+			throw new IOException(split[0] + " or/and " + split[1] + " are not float numbers in line " + linenumber);
 		}
-		
+
 		return new VirtualCameraAngle(x, y);
 	}
-	
-	
 
 //	private String getStartLocation() {
 //		Minecraft mc = Minecraft.getMinecraft();
@@ -458,8 +456,8 @@ public class PlaybackSerialiserOld {
 //		String yaw = Float.toString(mc.player.rotationYaw);
 //		return pos + "," + yaw + "," + pitch;
 //	}
-	
-	private boolean isNumeric(String in){
+
+	private boolean isNumeric(String in) {
 		try {
 			Integer.parseInt(in);
 		} catch (NumberFormatException e) {

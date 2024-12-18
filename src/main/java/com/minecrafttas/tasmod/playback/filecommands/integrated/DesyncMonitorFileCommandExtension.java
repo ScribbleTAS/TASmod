@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.playback.filecommands.integrated;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.NumberFormat;
@@ -30,13 +29,20 @@ import net.minecraft.util.text.TextFormatting;
  */
 public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtension implements EventPlaybackClient.EventControllerStateChange {
 
-	private File tempDir = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles" + File.separator + "temp" + File.separator + "monitoring");
+	/**
+	 * List containing {@link MonitorContainer MonitorContainers} in a TASfile 
+	 */
+	private BigArrayList<MonitorContainer> monitorContainer;
 
-	private BigArrayList<MonitorContainer> monitorContainer = new BigArrayList<MonitorContainer>(tempDir.toString());
-
+	/**
+	 * The {@link MonitorContainer} for the current tick
+	 */
 	private MonitorContainer currentValues;
 
 	public DesyncMonitorFileCommandExtension() {
+		super("monitoring");
+		this.monitorContainer = new BigArrayList<MonitorContainer>(tempDir.toString());
+		// Is enabled by default
 		enabled = true;
 	}
 
@@ -160,7 +166,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 				playervalues[3] = player.motionX;
 				playervalues[4] = player.motionY;
 				playervalues[5] = player.motionZ;
-				DesyncStatus status = currentValues.getSeverity(TASmodClient.controller.index(), playervalues);
+				DesyncStatus status = currentValues.getSeverity(playervalues);
 				lastStatus = status.getFormat() + status.getText();
 			} else {
 				lastStatus = TextFormatting.GRAY + "Empty";
@@ -211,6 +217,11 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		return out;
 	}
 
+	/**
+	 * Storage class containing the position and velocity of a player at a given tick.
+	 * 
+	 * @author Scribble
+	 */
 	public class MonitorContainer implements Serializable {
 		private static final long serialVersionUID = -3138791930493647885L;
 
@@ -245,7 +256,12 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 			return String.format(Locale.ENGLISH, "%d, %d, %d, %d, %d, %d", values[0], values[1], values[2], values[3], values[4], values[5]);
 		}
 
-		public DesyncStatus getSeverity(long index, double[] playerValues) {
+		/**
+		 * Compares the values in this {@link MonitorContainer} with other values
+		 * @param playerValues The values to compare to
+		 * @return The {@link DesyncStatus}, how severe the playback is currently drifting apart
+		 */
+		public DesyncStatus getSeverity(double[] playerValues) {
 
 			DesyncStatus out = null;
 

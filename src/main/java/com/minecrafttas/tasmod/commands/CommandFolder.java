@@ -3,8 +3,8 @@ package com.minecrafttas.tasmod.commands;
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.awt.Desktop;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,13 +30,13 @@ public class CommandFolder extends CommandBase {
 	@Override
 	public String getUsage(ICommandSender sender) {
 		return "/folder <type>";
-	}	
+	}
 
 	@Override
 	public int getRequiredPermissionLevel() {
 		return 0;
 	}
-	
+
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if (args.length == 1) {
@@ -66,26 +66,24 @@ public class CommandFolder extends CommandBase {
 	}
 
 	public static void openTASFolder() {
-		File file = new File(TASmodClient.tasdirectory);
+		Path file = TASmodClient.tasfiledirectory;
 		try {
-			if (!file.exists())
-				file.mkdir();
-			Desktop.getDesktop().open(file);
+			TASmodClient.createTASfileDir();
+			Desktop.getDesktop().open(file.toFile());
 		} catch (IOException e) {
-			LOGGER.error("Something went wrong while opening ", file.getPath());
-			e.printStackTrace();
+			LOGGER.error("Something went wrong while opening ", file);
+			LOGGER.catching(e);
 		}
 	}
 
 	public static void openSavestates() {
-		File file = new File(TASmodClient.savestatedirectory);
+		Path file = TASmodClient.savestatedirectory;
 		try {
-			if (!file.exists())
-				file.mkdir();
-			Desktop.getDesktop().open(file);
+			TASmodClient.createSavestatesDir();
+			Desktop.getDesktop().open(file.toFile());
 		} catch (IOException e) {
-			LOGGER.error("Something went wrong while opening ", file.getPath());
-			e.printStackTrace();
+			LOGGER.error("Something went wrong while opening ", file);
+			LOGGER.catching(e);
 		}
 	}
 }

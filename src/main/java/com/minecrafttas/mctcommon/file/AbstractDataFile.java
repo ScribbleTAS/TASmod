@@ -55,19 +55,24 @@ public abstract class AbstractDataFile {
 		this.comment = comment;
 		this.properties = new Properties();
 
-		createDirectory(file);
+		try {
+			createDirectory(file.getParent());
+		} catch (IOException e) {
+			MCTCommon.LOGGER.catching(e);
+		}
 	}
 
 	/**
 	 * Creates the directory for the file if it doesn't exist
 	 * @param file The file to create the directory for
 	 */
-	protected void createDirectory(Path file) {
-		try {
-			Files.createDirectories(file.getParent());
-		} catch (IOException e) {
-			MCTCommon.LOGGER.catching(e);
+	public static void createDirectory(Path file) throws IOException {
+		// Test if tasfiles is a file but named "tasfiles". If yes, delete that and replace with a directory
+		if (Files.exists(file) && !Files.isDirectory(file)) {
+			Files.delete(file);
 		}
+
+		Files.createDirectories(file);
 	}
 
 	public void load() {

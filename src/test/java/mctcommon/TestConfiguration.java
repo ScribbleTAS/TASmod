@@ -50,7 +50,7 @@ class TestConfiguration {
 
 	ConfigurationRegistry registry = new ConfigurationRegistry();
 
-	private static final Path configPath = Paths.get("src/test/resources/config.xml");
+	private static final Path configPath = Paths.get("src").resolve("test").resolve("resources").resolve("config.xml");
 
 	@BeforeEach
 	void beforeEach() {

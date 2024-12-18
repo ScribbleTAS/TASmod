@@ -2,7 +2,6 @@ package com.minecrafttas.tasmod;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +17,7 @@ import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
 import com.minecrafttas.mctcommon.events.EventClient.EventOpenGui;
 import com.minecrafttas.mctcommon.events.EventClient.EventPlayerJoinedClientSide;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
+import com.minecrafttas.mctcommon.file.AbstractDataFile;
 import com.minecrafttas.mctcommon.networking.Client;
 import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
 import com.minecrafttas.mctcommon.networking.Server;
@@ -60,9 +60,9 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 	public static TickSyncClient ticksyncClient;
 
-	public static final String tasdirectory = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles";
+	public final static Path tasfiledirectory = Minecraft.getMinecraft().mcDataDir.toPath().resolve("saves").resolve("tasfiles");
 
-	public static final String savestatedirectory = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "savestates";
+	public final static Path savestatedirectory = Minecraft.getMinecraft().mcDataDir.toPath().resolve("saves").resolve("savestates");
 
 	public static InfoHud hud;
 
@@ -95,17 +95,19 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	 */
 	public static PlaybackControllerClient controller = new PlaybackControllerClient();
 
-	public static void createTASDir() {
-		File tasDir = new File(tasdirectory);
-		if (!tasDir.exists()) {
-			tasDir.mkdir();
+	public static void createTASfileDir() {
+		try {
+			AbstractDataFile.createDirectory(tasfiledirectory);
+		} catch (IOException e) {
+			TASmod.LOGGER.catching(e);
 		}
 	}
 
 	public static void createSavestatesDir() {
-		File savestateDir = new File(savestatedirectory);
-		if (!savestateDir.exists()) {
-			savestateDir.mkdir();
+		try {
+			AbstractDataFile.createDirectory(savestatedirectory);
+		} catch (IOException e) {
+			TASmod.LOGGER.catching(e);
 		}
 	}
 
@@ -113,6 +115,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	public void onInitializeClient() {
 
 		LanguageManager.registerMod("tasmod");
+
+		createFolders();
 
 		registerConfigValues();
 
@@ -131,6 +135,11 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		// Initialize keybind manager
 		keybindManager = new KeybindManager(VirtualKeybindings::isKeyDownExceptTextfield);
 
+		// Create them here so they are created after the folders have been created, since they depend on the tasfiles folder
+		desyncMonitorFileCommandExtension = new DesyncMonitorFileCommandExtension();
+		optionsFileCommandExtension = new OptionsFileCommandExtension();
+		labelFileCommandExtension = new LabelFileCommandExtension();
+
 		registerEventListeners();
 
 		registerNetworkPacketHandlers();
@@ -142,6 +151,11 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			LOGGER.error("Unable to launch TASmod server: {}", e.getMessage());
 		}
 
+	}
+
+	private void createFolders() {
+		createTASfileDir();
+		createSavestatesDir();
 	}
 
 	private void registerNetworkPacketHandlers() {
@@ -185,9 +199,6 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		registerPlaybackMetadata(mc);
 		registerSerialiserFlavors(mc);
 		registerFileCommands();
-
-		createTASDir();
-		createSavestatesDir();
 	}
 
 	boolean waszero;
@@ -308,9 +319,9 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		TASmodAPIRegistry.SERIALISER_FLAVOR.register(betaFlavor);
 	}
 
-	public static DesyncMonitorFileCommandExtension desyncMonitorFileCommandExtension = new DesyncMonitorFileCommandExtension();
-	public static OptionsFileCommandExtension optionsFileCommandExtension = new OptionsFileCommandExtension();
-	public static LabelFileCommandExtension labelFileCommandExtension = new LabelFileCommandExtension();
+	public static DesyncMonitorFileCommandExtension desyncMonitorFileCommandExtension;
+	public static OptionsFileCommandExtension optionsFileCommandExtension;
+	public static LabelFileCommandExtension labelFileCommandExtension;
 
 	private void registerFileCommands() {
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(desyncMonitorFileCommandExtension);

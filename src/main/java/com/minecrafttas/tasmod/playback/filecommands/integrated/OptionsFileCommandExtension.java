@@ -15,9 +15,11 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 
 	private boolean shouldRenderHud = true;
 
-	BigArrayList<PlaybackFileCommandContainer> hud = new BigArrayList<>();
+	BigArrayList<PlaybackFileCommandContainer> hud;
 
 	public OptionsFileCommandExtension() {
+		super("hud");
+		hud = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
 

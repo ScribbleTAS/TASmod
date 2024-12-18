@@ -6,13 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -118,7 +119,7 @@ public class PlaybackSerialiserTest {
 		}
 	}
 
-	File file;
+	Path file;
 
 	private static TestFlavor testFlavor = new TestFlavor();
 	private static TestMetadatada testMetadata = new TestMetadatada();
@@ -132,9 +133,9 @@ public class PlaybackSerialiserTest {
 	}
 
 	@AfterEach
-	void afterEach() {
+	void afterEach() throws IOException {
 		if (file != null) {
-			file.delete();
+			Files.delete(file);
 		}
 
 		testMetadata.onClear();
@@ -152,7 +153,7 @@ public class PlaybackSerialiserTest {
 	void testSerialiser() {
 		BigArrayList<TickContainer> expected = new BigArrayList<>();
 
-		file = new File("src/test/resources/serialiser/PlaybackSerialiserTest.mctas");
+		file = Paths.get("src/test/resources/serialiser/PlaybackSerialiserTest.mctas");
 
 		testMetadata.testValue = "testing";
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testFileExtension", true);
@@ -203,6 +204,12 @@ public class PlaybackSerialiserTest {
 		}
 
 		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		try {
 			BigArrayList<TickContainer> actual = PlaybackSerialiser.loadFromFile(file, testFlavor);
 			assertBigArrayList(expected, actual);
 			assertEquals("testing", testMetadata.actual);
@@ -229,9 +236,9 @@ public class PlaybackSerialiserTest {
 		lines.add("3|;|-101;0,~1,~1|~1;~1");
 		lines.add("\t1|;|-101;0,~1,~1|~1;~1");
 
-		file = new File("src/test/resources/serialiser/PlaybackSerialiserTest2.mctas");
+		file = Paths.get("src/test/resources/serialiser/PlaybackSerialiserTest2.mctas");
 		try {
-			FileUtils.writeLines(file, lines);
+			Files.write(file, lines);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -318,9 +325,9 @@ public class PlaybackSerialiserTest {
 		lines.add("3|;|-101;0,~1,~1|~1;~1");
 		lines.add("\t1|;|-101;0,~1,~1|~1;~1");
 
-		file = new File("src/test/resources/serialiser/PlaybackSerialiserTest3.mctas");
+		file = Paths.get("src/test/resources/serialiser/PlaybackSerialiserTest3.mctas");
 		try {
-			FileUtils.writeLines(file, lines);
+			Files.write(file, lines);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -374,9 +381,9 @@ public class PlaybackSerialiserTest {
 			lines.add("Test");
 		}
 
-		file = new File("src/test/resources/serialiser/PlaybackSerialiserTest3.mctas");
+		file = Paths.get("src/test/resources/serialiser/PlaybackSerialiserTest3.mctas");
 		try {
-			FileUtils.writeLines(file, lines);
+			Files.write(file, lines);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
