@@ -64,15 +64,24 @@ public abstract class AbstractDataFile {
 
 	/**
 	 * Creates the directory for the file if it doesn't exist
-	 * @param file The file to create the directory for
+	 * @param directory The file to create the directory for
 	 */
-	public static void createDirectory(Path file) throws IOException {
-		// Test if tasfiles is a file but named "tasfiles". If yes, delete that and replace with a directory
-		if (Files.exists(file) && !Files.isDirectory(file)) {
-			Files.delete(file);
+	public static void createDirectory(Path directory) throws IOException {
+		/*
+		 *  Test if the directory is a file,
+		 *  but named like the target directory.
+		 *  
+		 *  For example, naming a file "tasfiles" and
+		 *  putting it in the saves folder will succeed the "Files.exists" check,
+		 *  but fail everywhere, where a directory is required...
+		 *  
+		 *  If this is the case, delete the file and create a directory instead.
+		 */
+		if (Files.exists(directory) && !Files.isDirectory(directory)) {
+			Files.delete(directory);
 		}
 
-		Files.createDirectories(file);
+		Files.createDirectories(directory);
 	}
 
 	public void load() {
