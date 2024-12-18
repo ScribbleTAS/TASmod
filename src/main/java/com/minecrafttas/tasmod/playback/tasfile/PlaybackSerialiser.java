@@ -1,10 +1,11 @@
 package com.minecrafttas.tasmod.playback.tasfile;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class PlaybackSerialiser {
 	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use for the tasfile
 	 * @throws PlaybackSaveException When a saving operation fails
 	 */
-	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorName) throws PlaybackSaveException {
+	public static void saveToFile(Path file, PlaybackControllerClient controller, String flavorName) throws PlaybackSaveException {
 		saveToFile(file, controller, flavorName, -1L);
 	}
 
@@ -47,7 +48,7 @@ public class PlaybackSerialiser {
 	 * @param stopIndex The index at which the serialiser stops. Use -1L to parse the entire file 
 	 * @throws PlaybackSaveException When a saving operation fails
 	 */
-	public static void saveToFile(File file, PlaybackControllerClient controller, String flavorName, long stopIndex) throws PlaybackSaveException {
+	public static void saveToFile(Path file, PlaybackControllerClient controller, String flavorName, long stopIndex) throws PlaybackSaveException {
 		if (controller == null) {
 			throw new PlaybackSaveException("Save to file failed. No controller specified");
 		}
@@ -62,20 +63,20 @@ public class PlaybackSerialiser {
 	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use for the tasfile
 	 * @throws PlaybackSaveException When a saving operation fails
 	 */
-	public static void saveToFile(File file, BigArrayList<TickContainer> container, String flavorName) throws PlaybackSaveException {
+	public static void saveToFile(Path file, BigArrayList<TickContainer> container, String flavorName) throws PlaybackSaveException {
 		saveToFile(file, container, flavorName, -1);
 	}
 
 	/**
 	 * Saves a BigArrayList of {@link TickContainer TickContainers} <i>partially</i> to a file
-	 * @param file The file to save the serialised inputs to
+	 * @param path The file to save the serialised inputs to
 	 * @param container The list of {@link TickContainer TickContainers} to use
 	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use for the tasfile
 	 * @param stopIndex The index at which the serialiser stops. Use -1L to parse the entire file 
 	 * @throws PlaybackSaveException When a saving operation fails
 	 */
-	public static void saveToFile(File file, BigArrayList<TickContainer> container, String flavorName, long stopIndex) throws PlaybackSaveException {
-		if (file == null) {
+	public static void saveToFile(Path path, BigArrayList<TickContainer> container, String flavorName, long stopIndex) throws PlaybackSaveException {
+		if (path == null) {
 			throw new PlaybackSaveException("Save to file failed. No file specified");
 		}
 
@@ -91,9 +92,9 @@ public class PlaybackSerialiser {
 
 		FileThread writerThread;
 		try {
-			writerThread = new FileThread(file, false);
-		} catch (FileNotFoundException e) {
-			throw new PlaybackSaveException(e, "Trying to save the file %s, but the file can't be created", file.getName());
+			writerThread = new FileThread(path, false);
+		} catch (IOException e) {
+			throw new PlaybackSaveException(e, "Trying to save the file %s, but the file can't be created", path.getFileName().toString());
 		}
 		writerThread.start();
 
@@ -127,16 +128,16 @@ public class PlaybackSerialiser {
 	 * @throws PlaybackLoadException If the file contains errors
 	 * @throws IOException If the file could not be read
 	 */
-	public static BigArrayList<TickContainer> loadFromFile(File file) throws PlaybackLoadException, IOException {
+	public static BigArrayList<TickContainer> loadFromFile(Path file) throws PlaybackLoadException, IOException {
 		return loadFromFile(file, true);
 	}
 
-	public static BigArrayList<TickContainer> loadFromFile(File file, boolean processExtensions) throws PlaybackLoadException, IOException {
+	public static BigArrayList<TickContainer> loadFromFile(Path file, boolean processExtensions) throws PlaybackLoadException, IOException {
 		if (file == null) {
 			throw new PlaybackLoadException("Load from file failed. No file specified");
 		}
-		if (!file.exists()) {
-			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
+		if (!Files.exists(file)) {
+			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getFileName().toString());
 		}
 
 		SerialiserFlavorBase flavor = readFlavor(file);
@@ -155,11 +156,11 @@ public class PlaybackSerialiser {
 	 * @throws PlaybackLoadException If the file contains errors
 	 * @throws IOException If the file could not be read
 	 */
-	public static BigArrayList<TickContainer> loadFromFile(File file, String flavorName) throws PlaybackLoadException, IOException {
+	public static BigArrayList<TickContainer> loadFromFile(Path file, String flavorName) throws PlaybackLoadException, IOException {
 		return loadFromFile(file, flavorName, true);
 	}
 
-	public static BigArrayList<TickContainer> loadFromFile(File file, String flavorName, boolean processExtensions) throws PlaybackLoadException, IOException {
+	public static BigArrayList<TickContainer> loadFromFile(Path file, String flavorName, boolean processExtensions) throws PlaybackLoadException, IOException {
 
 		// If the flavor is null or empty, try to determine the flavor by reading the header
 		if (flavorName == null || flavorName.isEmpty()) {
@@ -193,7 +194,7 @@ public class PlaybackSerialiser {
 	 * @throws PlaybackLoadException If the file contains errors
 	 * @throws IOException If the file could not be read
 	 */
-	public static BigArrayList<TickContainer> loadFromFile(File file, SerialiserFlavorBase flavor) throws PlaybackLoadException, IOException {
+	public static BigArrayList<TickContainer> loadFromFile(Path file, SerialiserFlavorBase flavor) throws PlaybackLoadException, IOException {
 		if (file == null) {
 			throw new PlaybackLoadException("Load from file failed. No file specified");
 		}
@@ -202,9 +203,9 @@ public class PlaybackSerialiser {
 		BufferedReader reader = null;
 
 		try {
-			reader = new BufferedReader(new FileReader(file));
+			reader = new BufferedReader(new FileReader(file.toFile()));
 		} catch (FileNotFoundException e) {
-			throw new PlaybackLoadException("Trying to load %s, but the file doesn't exist", file.getName());
+			throw new PlaybackLoadException("Trying to load %s, but the file doesn't exist", file.getFileName().toString());
 		}
 
 		BigArrayList<String> lines = new BigArrayList<>();
@@ -247,14 +248,14 @@ public class PlaybackSerialiser {
 	 * @throws PlaybackLoadException If an error was found during reading
 	 * @throws IOException If the reading fails
 	 */
-	public static SerialiserFlavorBase readFlavor(File file) throws PlaybackLoadException, IOException {
+	public static SerialiserFlavorBase readFlavor(Path file) throws PlaybackLoadException, IOException {
 		// Read file
 		BufferedReader reader = null;
 
 		try {
-			reader = new BufferedReader(new FileReader(file));
+			reader = new BufferedReader(new FileReader(file.toFile()));
 		} catch (FileNotFoundException e) {
-			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getName());
+			throw new PlaybackLoadException("Trying to load %s but the file doesn't exist", file.getFileName().toString());
 		}
 
 		List<String> lines = new ArrayList<>();

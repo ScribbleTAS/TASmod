@@ -50,7 +50,7 @@ import net.minecraft.world.chunk.Chunk;
  */
 public class SavestateHandlerClient implements ClientPacketHandler, EventSavestate.EventClientCompleteLoadstate, EventSavestate.EventClientLoadPlayer {
 
-	public final static File savestateDirectory = new File(TASmodClient.tasdirectory + File.separator + "savestates");
+	public final static File savestateDirectory = TASmodClient.savestatedirectory.toFile(); //TODO Change to path... don't want to deal with this rn ._.
 
 	/**
 	 * A bug occurs when unloading the client world. The client world has a
@@ -128,9 +128,9 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 
 		PlaybackControllerClient container = TASmodClient.controller;
 		if (container.isRecording()) {
-			PlaybackSerialiser.saveToFile(targetfile, container, ""); // If the container is recording, store it entirely
+			PlaybackSerialiser.saveToFile(targetfile.toPath(), container, ""); // If the container is recording, store it entirely
 		} else if (container.isPlayingback()) {
-			PlaybackSerialiser.saveToFile(targetfile, container, "", container.index()); // If the container is playing, store it until the current index
+			PlaybackSerialiser.saveToFile(targetfile.toPath(), container, "", container.index()); // If the container is playing, store it until the current index
 		}
 	}
 
@@ -169,7 +169,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		BigArrayList<TickContainer> savestateContainerList;
 
 		if (targetfile.exists()) {
-			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile, state != TASstate.PLAYBACK);
+			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile.toPath(), state != TASstate.PLAYBACK);
 		} else {
 			controller.setTASStateClient(TASstate.NONE, false);
 			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "Inputs could not be loaded for this savestate,"));

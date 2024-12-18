@@ -1,12 +1,17 @@
 package com.minecrafttas.tasmod.playback.filecommands;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.mctcommon.file.AbstractDataFile;
 import com.minecrafttas.mctcommon.registry.Registerable;
+import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 
 public class PlaybackFileCommand {
@@ -30,7 +35,7 @@ public class PlaybackFileCommand {
 	public String getName() {
 		return name;
 	}
-	
+
 	public String[] getArgs() {
 		return args;
 	}
@@ -49,7 +54,32 @@ public class PlaybackFileCommand {
 		return String.format("$%s(%s);", name, String.join(", ", args));
 	}
 
-	public static abstract class PlaybackFileCommandExtension implements Registerable{
+	public static abstract class PlaybackFileCommandExtension implements Registerable {
+
+		protected final Path tempDir;
+
+		public PlaybackFileCommandExtension() {
+			this(null);
+		}
+
+		/**
+		 * <p>Creates a FileCommandExtension and creates a temp folder with<br>
+		 * the specified name for the {@link BigArrayList} files in the correct location
+		 * 
+		 * @param tempFolderName The name of the temp folder
+		 */
+		public PlaybackFileCommandExtension(String tempFolderName) {
+			if (tempFolderName == null) {
+				tempDir = null;
+				return;
+			}
+			this.tempDir = TASmodClient.tasfiledirectory.resolve("temp").resolve(tempFolderName);
+			try {
+				AbstractDataFile.createDirectory(tempDir);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
 		protected boolean enabled = false;
 
@@ -95,7 +125,7 @@ public class PlaybackFileCommand {
 				onDisable();
 			this.enabled = enabled;
 		}
-		
+
 		@Override
 		public String toString() {
 			return getExtensionName();
@@ -200,8 +230,8 @@ public class PlaybackFileCommand {
 			return super.equals(o);
 		}
 	}
-	
+
 	public static class PlaybackFileCommandLine extends ArrayList<PlaybackFileCommand> {
-		
+
 	}
 }

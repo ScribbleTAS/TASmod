@@ -14,9 +14,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.Display;
 
 import com.dselent.bigarraylist.BigArrayList;
@@ -28,6 +31,7 @@ import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedExcep
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
@@ -80,6 +84,8 @@ import net.minecraft.util.text.event.ClickEvent;
  */
 public class PlaybackControllerClient implements ClientPacketHandler, EventClientInit, EventVirtualInput.EventVirtualKeyboardTick, EventVirtualInput.EventVirtualMouseTick, EventVirtualInput.EventVirtualCameraAngleTick, EventClientTickPost {
 
+	private Logger logger = TASmod.LOGGER;
+
 	/**
 	 * The current state of the controller.
 	 */
@@ -101,18 +107,31 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 	private VirtualCameraAngle camera = new VirtualCameraAngle();
 
-	public final File directory = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + File.separator + "saves" + File.separator + "tasfiles");
+	/**
+	 * The directory where to store the tasfiles
+	 */
+	public final Path tasFileDirectory;
+	/**
+	 * The file ending of the TASfiles
+	 */
+	public final Path fileEnding = Paths.get(".mctas");
 
 	/**
 	 * The place where all inputs get stored
 	 */
-	private BigArrayList<TickContainer> inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
+	private BigArrayList<TickContainer> inputs;
 
 //	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 
 	// =====================================================================================================
 
 	private Integer playUntil = null; // TODO Replace with event
+
+	public PlaybackControllerClient() {
+		tasFileDirectory = TASmodClient.tasfiledirectory;
+
+		inputs = new BigArrayList<TickContainer>(tasFileDirectory.resolve("temp").toAbsolutePath().toString());
+	}
 
 	/**
 	 * Sets the current {@link TASstate}
@@ -127,7 +146,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		try {
 			TASmodClient.client.send(new TASmodBufferBuilder(PLAYBACK_STATE).writeTASState(stateIn));
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.catching(e);
 		}
 	}
 
@@ -478,7 +497,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		this.inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
+		this.inputs = new BigArrayList<TickContainer>(tasFileDirectory + File.separator + "temp");
 		SerialiserFlavorBase.addAll(this.inputs, inputs);
 		setIndex(index);
 	}
@@ -522,7 +541,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		inputs = new BigArrayList<TickContainer>(directory + File.separator + "temp");
+		inputs = new BigArrayList<TickContainer>(tasFileDirectory + File.separator + "temp");
 		index = 0;
 	}
 
@@ -778,7 +797,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				flavor = TASmodBufferBuilder.readString(buf);
 
 				try {
-					PlaybackSerialiser.saveToFile(new File(directory, name + ".mctas"), this, flavor);
+					PlaybackSerialiser.saveToFile(tasFileDirectory.resolve(name + fileEnding), this, flavor);
 				} catch (PlaybackSaveException e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
@@ -804,7 +823,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 				flavor = TASmodBufferBuilder.readString(buf);
 
 				try {
-					TASmodClient.controller.setInputs(PlaybackSerialiser.loadFromFile(new File(directory, name + ".mctas"), flavor));
+					TASmodClient.controller.setInputs(PlaybackSerialiser.loadFromFile(tasFileDirectory.resolve(name + fileEnding), flavor));
 				} catch (PlaybackLoadException e) {
 					if (mc.world != null) {
 						TextComponentString textComponent = new TextComponentString(e.getMessage());

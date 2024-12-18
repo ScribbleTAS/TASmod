@@ -16,9 +16,11 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 	BigArrayList<PlaybackFileCommandContainer> label = new BigArrayList<>();
 
 	public LabelFileCommandExtension() {
+		super("label");
+		this.label = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
-	
+
 	@Override
 	public String getExtensionName() {
 		return "tasmod_label@v1";
