@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,7 +75,9 @@ public class AlphaFlavorTest extends AlphaFlavor {
 		creditsMetadata.setValue(CreditFields.Author, "Scribal");
 		creditsMetadataExtension.onLoad(creditsMetadata);
 
-		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(new LabelFileCommandExtension(), new DesyncMonitorFileCommandExtension(), new OptionsFileCommandExtension());
+		Path temp = Paths.get("src/test/resources/temp");
+
+		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.register(new LabelFileCommandExtension(temp), new DesyncMonitorFileCommandExtension(temp), new OptionsFileCommandExtension(temp));
 
 		TASmodAPIRegistry.PLAYBACK_METADATA.register(creditsMetadataExtension, startpositionMetadataExtension);
 	}

@@ -59,7 +59,7 @@ public class PlaybackFileCommand {
 		protected final Path tempDir;
 
 		public PlaybackFileCommandExtension() {
-			this(null);
+			this((Path) null);
 		}
 
 		/**
@@ -69,13 +69,18 @@ public class PlaybackFileCommand {
 		 * @param tempFolderName The name of the temp folder
 		 */
 		public PlaybackFileCommandExtension(String tempFolderName) {
-			if (tempFolderName == null) {
+			this(TASmodClient.tasfiledirectory.resolve("temp").resolve(tempFolderName));
+		}
+
+		public PlaybackFileCommandExtension(Path tempDirectory) {
+			if (tempDirectory == null) {
 				tempDir = null;
 				return;
 			}
-			this.tempDir = TASmodClient.tasfiledirectory.resolve("temp").resolve(tempFolderName);
+
+			tempDir = tempDirectory;
 			try {
-				AbstractDataFile.createDirectory(tempDir);
+				AbstractDataFile.createDirectory(tempDirectory);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

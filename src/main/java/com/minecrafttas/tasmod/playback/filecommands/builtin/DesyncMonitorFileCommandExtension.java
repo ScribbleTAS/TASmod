@@ -2,6 +2,7 @@ package com.minecrafttas.tasmod.playback.filecommands.builtin;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.List;
@@ -40,9 +41,19 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private MonitorContainer currentValues;
 
 	public DesyncMonitorFileCommandExtension() {
-		super("monitoring");
+		this("monitoring");
+	}
+
+	public DesyncMonitorFileCommandExtension(String tempDirName) {
+		super(tempDirName);
 		this.monitorContainer = new BigArrayList<MonitorContainer>(tempDir.toString());
 		// Is enabled by default
+		enabled = true;
+	}
+
+	public DesyncMonitorFileCommandExtension(Path tempDir) {
+		super(tempDir);
+		this.monitorContainer = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
 
