@@ -1,6 +1,7 @@
 package com.minecrafttas.tasmod.playback.filecommands.builtin;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmod;
@@ -18,8 +19,18 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	BigArrayList<PlaybackFileCommandContainer> hud;
 
 	public OptionsFileCommandExtension() {
-		super("hud");
+		this("hud");
+	}
+
+	public OptionsFileCommandExtension(String tempDirName) {
+		super(tempDirName);
 		hud = new BigArrayList<>(tempDir.toString());
+		enabled = true;
+	}
+
+	public OptionsFileCommandExtension(Path tempDir) {
+		super(tempDir);
+		this.hud = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
 
