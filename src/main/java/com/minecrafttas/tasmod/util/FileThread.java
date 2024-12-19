@@ -24,7 +24,7 @@ public class FileThread extends Thread {
 	private final List<String> output = new ArrayList<>();
 
 	public FileThread(Path fileLocation, boolean append) throws IOException {
-		OutputStream outStream = Files.newOutputStream(fileLocation, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+		OutputStream outStream = Files.newOutputStream(fileLocation, StandardOpenOption.CREATE, append ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING);
 		stream = new PrintWriter(new OutputStreamWriter(outStream, StandardCharsets.UTF_8));
 	}
 
