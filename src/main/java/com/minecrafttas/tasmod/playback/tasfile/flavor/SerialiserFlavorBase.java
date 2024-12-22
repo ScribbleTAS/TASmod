@@ -29,7 +29,7 @@ import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
 /**
- * <p>The base class of a flavor.
+ * <p>The base class of a flavor
  * 
  * <p>All serialisation and deserialisation is broken apart into functions whenever possible,<br>
  * with the intention of allowing small changes to the existing syntax.
@@ -116,6 +116,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 */
 
 	/**
+	 * <h3>Example</h3>
+	 * <pre>
+	 * ##################### TASfile ####################
+	 * </pre>
 	 * @return The very top of the header
 	 */
 	protected String headerStart() {
@@ -123,7 +127,11 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	/**
-	 * The end of the header, used for detecting when the header stops
+	 * <p>The end of the header, used for detecting when the header stops
+	 * <h3>Example</h3>
+	 * <pre>
+	 * ##################################################
+	 * </pre>
 	 * @return The end of the header
 	 */
 	protected String headerEnd() {
@@ -131,17 +139,38 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	/**
-	 * <p>Serialises the flavor of this file, the enabled file commands and other metadata.
-	 * <p>{@link #serialiseFlavorName(List)}
+	 * <p>Serialises the flavor of this file, the enabled file commands and other metadata
+	 * <h3>Tree</h3>
 	 * <pre>
 	 * serialiseHeader
-	 *	├── {@link #headerStart()}	// The start of the header
-	 *	├── {@link #serialiseFlavorName(List)}	// The name of the flavor
-	 *	├── {@link #serialiseFileCommandNames(List)}	// The names of the enabled file commands
-	 *	├── {@link #serialiseMetadata(List)}	// The metadata of this movie
-	 *	│   ├── {@link #serialiseMetadataName(List, String)}	// The metadata extension name
-	 *	│   └── {@link #serialiseMetadataValues(List, LinkedHashMap)}	// All values in the extension
-	 *	└── {@link #headerEnd()}	// The end of the header
+	 *	├── {@link #headerStart()}
+	 *	├── {@link #serialiseFlavorName(List)}
+	 *	├── {@link #serialiseFileCommandNames(List)}
+	 *	├── {@link #serialiseMetadata(List)}
+	 *	│   ├── {@link #serialiseMetadataName(List, String)}
+	 *	│   └── {@link #serialiseMetadataValues(List, LinkedHashMap)}
+	 *	└── {@link #headerEnd()}
+	 * </pre>
+	 * <h3>Example</h3>
+	 * <pre>
+	 * ##################### TASfile ####################					// {@link #headerStart()}
+	 * Flavor: beta1 										// {@link #serialiseFlavorName(List)}
+	 * FileCommand-Extensions: tasmod_desyncMonitor@v1, tasmod_options@v1, tasmod_label@v1	// {@link #serialiseFileCommandNames(List)}
+	 * 
+	 * --------------------- Credits -------------------- 					// {@link #serialiseMetadataName(List, String)}
+	 * Title:Insert TAS category here 							// {@link #serialiseMetadataValues(List, LinkedHashMap)}
+	 * Author:Insert author here
+	 * Playing Time:00:00.0
+	 * Rerecords:0
+	 * 
+	 * ----------------- Start Position -----------------
+	 * x:-32.577311363268976
+	 * y:56.0
+	 * z:-4.457057187505265
+	 * pitch:29.25007
+	 * yaw:-88.80094
+	 * 
+	 * ##################################################					// {@link #headerEnd()}
 	 * </pre>
 	 * @return List of lines containing the header
 	 */
@@ -156,9 +185,13 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	/**
-	 * <p>How the flavor name is serialised.
+	 * <p>How the flavor name is serialised
 	 * <p>You normally don't have to edit this,<br>
 	 * as the flavor name is taken from the extension name.
+	 * <h3>Example</h3>
+	 * <pre>
+	 * Flavor: beta1
+	 * </pre>
 	 * 
 	 * @param out The serialised lines, passed by reference
 	 */
@@ -166,6 +199,14 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		out.add("Flavor: " + getExtensionName());
 	}
 
+	/**
+	 * <p>Adds the file commands that are enabled to the lines
+	 * <h3>Example</h3>
+	 * <pre>
+	 * FileCommand-Extensions: tasmod_label@v1, tasmod_desyncMonitor@v1
+	 * </pre>
+	 * @param out The serialised lines, passed by reference
+	 */
 	protected void serialiseFileCommandNames(List<String> out) {
 		List<String> stringlist = new ArrayList<>();
 		List<PlaybackFileCommandExtension> extensionList = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
@@ -176,6 +217,25 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		out.add("");
 	}
 
+	/**
+	 * <p>Serialises the metadata to the header of the TASfile
+	 * <h3>Example</h3>
+	 * <pre>
+	 * --------------------- Credits --------------------
+	 * Title:Insert TAS category here
+	 * Author:Insert author here
+	 * Playing Time:00:00.0
+	 * Rerecords:0
+	 * 
+	 * ----------------- Start Position -----------------
+	 * x:-32.577311363268976
+	 * y:56.0
+	 * z:-4.457057187505265
+	 * pitch:29.25007
+	 * yaw:-88.80094
+	 * </pre>
+	 * @param out
+	 */
 	protected void serialiseMetadata(List<String> out) {
 		if (!processExtensions)
 			return;
@@ -189,16 +249,64 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		}
 	}
 
+	/**
+	 * <p>Serialises only the name of the metadata section
+	 * <h3>Example</h3>
+	 * <pre>
+	 * --------------------- Credits --------------------
+	 * </pre>
+	 * @param out The lines passed in by reference
+	 * @param name The name to process
+	 */
 	protected void serialiseMetadataName(List<String> out, String name) {
 		out.add(createCenteredHeading(name, '-', 50));
 	}
 
+	/**
+	 * <p>Serialises only the values of the metadata section
+	 * <h3>Example</h3>
+	 * <pre>
+	 * Title:Insert TAS category here
+	 * Author:Insert author here
+	 * Playing Time:00:00.0
+	 * Rerecords:0
+	 * </pre>
+	 * @param out
+	 * @param data
+	 */
 	protected void serialiseMetadataValues(List<String> out, LinkedHashMap<String, String> data) {
 		data.forEach((key, value) -> {
 			out.add(String.format("%s:%s", key, value));
 		});
 	}
 
+	/*
+	  ___  _____  _  _  ____  ____  _  _  ____ 
+	 / __)(  _  )( \( )(_  _)( ___)( \( )(_  _)
+	( (__  )(_)(  )  (   )(   )__)  )  (   )(  
+	 \___)(_____)(_)\_) (__) (____)(_)\_) (__) 
+	
+	 */
+
+	/**
+	 * <p>Serialises a list of inputs into a list of strings
+	 * <h3>Tree</h3>
+	 * <pre>
+	 * serialise
+	 * └── {@link #serialiseContainer(BigArrayList, TickContainer)}
+	 *     ├── {@link #serialiseKeyboard(VirtualKeyboard)}
+	 *     ├── {@link #serialiseMouse(VirtualMouse)}
+	 *     ├── {@link #serialiseCameraAngle(VirtualCameraAngle)}
+	 *     ├── {@link #serialiseInlineComments(List, List)}
+	 *     │   └── {@link #serialiseFileCommandsInLine(List)}
+	 *     ├── {@link #serialiseEndlineComments(List, List)}	// Same as serialiseInlineComments
+	 *     │   └── {@link #serialiseFileCommandsEndLine(List)}	// Unused
+	 *     └── {@link #mergeInputs(BigArrayList, List, List, List, List)}
+	 * </pre>
+	 * @param inputs The inputs to serialise
+	 * @param toTick The tick where to stop, used for partial serialisation by savestates. -1 to serialise all
+	 * @return The list of lines
+	 */
 	public BigArrayList<String> serialise(BigArrayList<TickContainer> inputs, long toTick) {
 		BigArrayList<String> out = new BigArrayList<>();
 
@@ -251,6 +359,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			serialisedCommands.add(serialiseFileCommand(command));
 		}
 		return String.join(" ", serialisedCommands);
+	}
+
+	protected String serialiseFileCommandsEndLine(List<PlaybackFileCommand> fileCommands) {
+		return serialiseFileCommandsInLine(fileCommands);
 	}
 
 	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
