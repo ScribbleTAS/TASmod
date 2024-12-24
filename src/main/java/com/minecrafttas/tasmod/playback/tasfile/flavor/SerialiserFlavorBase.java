@@ -10,6 +10,9 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.registry.Registerable;
@@ -372,7 +375,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		pruneListEndEmptySubtickable(subticks);
 
 		for (VirtualKeyboard subtick : subticks) {
-			out.add(subtick.toString2());
+			out.add(String.format("%s;%s", String.join(",", subtick.getCurrentPresses()), charListToString(subtick.getCharList())));
 		}
 		return out;
 	}
@@ -384,7 +387,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		pruneListEndEmptySubtickable(subticks);
 
 		for (VirtualMouse subtick : subticks) {
-			out.add(subtick.toString2());
+			out.add(String.format("%s;%s,%s,%s", String.join(",", subtick.getCurrentPresses()), subtick.getScrollWheel(), subtick.getCursorX(), subtick.getCursorY()));
 		}
 		return out;
 	}
@@ -1302,5 +1305,15 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 */
 	public void setProcessExtensions(boolean processExtensions) {
 		this.processExtensions = processExtensions;
+	}
+
+	protected String charListToString(List<Character> charList) {
+		String charString = "";
+		if (!charList.isEmpty()) {
+			charString = charList.stream().map(Object::toString).collect(Collectors.joining());
+			charString = StringUtils.replace(charString, "\r", "\\n");
+			charString = StringUtils.replace(charString, "\n", "\\n");
+		}
+		return charString;
 	}
 }
