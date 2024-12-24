@@ -18,6 +18,10 @@ import java.util.regex.Matcher;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
+import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
+import com.minecrafttas.tasmod.virtual.VirtualKey;
+import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
+import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
 public class AlphaFlavor extends SerialiserFlavorBase {
 
@@ -104,6 +108,122 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
+		/*
+		 * Old code from when I did not know String.join exists,
+		 * kept relatively unaltered because I want to.  
+		 */
+		List<String> out = new ArrayList<>();
+
+		List<String> stringy = keyboard.getCurrentPresses();
+		String keyString = "";
+		if (!stringy.isEmpty()) {
+			String seperator = ",";
+			for (int i = 0; i < stringy.size(); i++) {
+				if (i == stringy.size() - 1) {
+					seperator = "";
+				}
+				keyString = keyString.concat(stringy.get(i) + seperator);
+			}
+		}
+		List<Character> charList = keyboard.getCharList();
+		String charString = "";
+		if (!charList.isEmpty()) {
+			for (int i = 0; i < charList.size(); i++) {
+				charString = charString.concat(Character.toString(charList.get(i)));
+			}
+			charString = charString.replace("\r", "\\n");
+			charString = charString.replace("\n", "\\n");
+		}
+
+		out.add("Keyboard:" + keyString + ";" + charString); // Keyboard didn't support subticks, only the current key is processed
+
+		return out;
+	}
+
+	@Override
+	protected List<String> serialiseMouse(VirtualMouse mouse) {
+		/*
+		 * Old code from when I did not know String.join exists,
+		 * kept relatively unaltered because I want to.  
+		 */
+		List<String> out = new ArrayList<>();
+		List<String> stringy = mouse.getCurrentPresses();
+		String keyString = "";
+		if (!stringy.isEmpty()) {
+			String seperator = ",";
+			for (int i = 0; i < stringy.size(); i++) {
+				if (i == stringy.size() - 1) {
+					seperator = "";
+				}
+				keyString = keyString.concat(stringy.get(i) + seperator);
+			}
+		}
+
+		List<VirtualMouse> path = new ArrayList<>(mouse.getSubticks()); // I previously called subticks "paths" as it was mainly used for the mouse...
+//		pruneListEndEmptySubtickable(path);
+
+		/*
+		 * The mouse supported subticks,
+		 * but it was handled differently in alpha...
+		 * The subticks where added in square brackets, seperated by a "->"
+		 * Not the best solution in hindsight,
+		 * but that was apparently the first thing that came to my mind back then...
+		 */
+		String pathString = "";
+		if (!path.isEmpty()) {
+			String seperator = "->";
+			for (int i = 0; i < path.size(); i++) {
+				if (i == path.size() - 1) {
+					seperator = "";
+				}
+
+				VirtualMouse singlePath = path.get(i);
+
+				pathString = pathString.concat("[" + serialisePath(singlePath) + "]" + seperator);
+			}
+		}
+		out.add("Mouse:" + keyString + ";" + pathString);
+		return out;
+	}
+
+	protected String serialisePath(VirtualMouse path) {
+		String keyString = "";
+		List<String> strings = new ArrayList<String>();
+
+		path.getPressedKeys().forEach((virtualkeys) -> {
+			strings.add(VirtualKey.getName(virtualkeys));
+		});
+		if (!strings.isEmpty()) {
+			String seperator = ",";
+			for (int i = 0; i < strings.size(); i++) {
+				if (i == strings.size() - 1) {
+					seperator = "";
+				}
+				keyString = keyString.concat(strings.get(i) + seperator);
+			}
+		}
+		if (keyString.isEmpty()) {
+			return "MOUSEMOVED," + path.getScrollWheel() + "," + path.getCursorX() + "," + path.getCursorY();
+		} else {
+			return keyString + "," + path.getScrollWheel() + "," + path.getCursorX() + "," + path.getCursorY();
+		}
+	}
+
+	@Override
+	protected List<String> serialiseCameraAngle(VirtualCameraAngle subticks) {
+		List<String> out = new ArrayList<>();
+
+		/*
+		 * The camera was called "subticks" in previous iterations of this code.
+		 * To honor this fact, it is also called subticks here, even though
+		 * actual subticks were not supported
+		 */
+		out.add("Camera:" + subticks.getPitch() + ";" + subticks.getYaw());
+		return out;
 	}
 
 	@Override
