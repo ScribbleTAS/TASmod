@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.mixin.playbackhooks;
 
-import com.minecrafttas.tasmod.virtual.VirtualInput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -9,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualMouseInput;
 import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
@@ -18,10 +18,10 @@ import net.minecraft.client.gui.GuiScreen;
 
 @Mixin(Minecraft.class)
 public class MixinMinecraft {
-	
+
 	@Shadow
 	private GuiScreen currentScreen;
-	
+
 	/**
 	 * Runs every frame.
 	 * @see VirtualInput#update(GuiScreen)
@@ -31,9 +31,9 @@ public class MixinMinecraft {
 	public void playback_injectRunGameLoop(CallbackInfo ci) {
 		TASmodClient.virtual.update(currentScreen);
 	}
-	
+
 	// ============================ Keyboard
-	
+
 	/**
 	 * Run at the start of run tick keyboard. Runs every tick.
 	 * @see VirtualInput.VirtualKeyboardInput#nextKeyboardTick()
@@ -41,9 +41,19 @@ public class MixinMinecraft {
 	 */
 	@Inject(method = "runTickKeyboard", at = @At(value = "HEAD"))
 	public void playback_injectRunTickKeyboard(CallbackInfo ci) {
-		TASmodClient.virtual.KEYBOARD.nextKeyboardTick();
+		/*
+		 * This "currentScreen == null" (and the one in runTickMouse) fixes
+		 * a particularly interesting bug where subticks are not recorded in GuiScreens...
+		 * 
+		 * The reason this failed is because nextKeyboardTick is called twice in a row,
+		 * when a gui screen is open. The subticks are cleared after calling this
+		 * once, so having it be called twice essentially removes subticks alltogether.
+		 */
+		if (currentScreen == null) {
+			TASmodClient.virtual.KEYBOARD.nextKeyboardTick();
+		}
 	}
-	
+
 	/**
 	 * Redirects a {@link org.lwjgl.input.Keyboard#next()}. Starts running every tick and continues as long as there are {@link VirtualKeyboardEvent}s in {@link VirtualInput}
 	 * @see VirtualInput.VirtualKeyboardInput#nextKeyboardSubtick()
@@ -53,7 +63,7 @@ public class MixinMinecraft {
 	public boolean playback_redirectKeyboardNext() {
 		return TASmodClient.virtual.KEYBOARD.nextKeyboardSubtick();
 	}
-	
+
 	/**
 	 * @return {@link VirtualInput.VirtualKeyboardInput#getEventKeyboardKey()}
 	 */
@@ -61,7 +71,7 @@ public class MixinMinecraft {
 	public int playback_redirectKeyboardGetEventKey() {
 		return TASmodClient.virtual.KEYBOARD.getEventKeyboardKey();
 	}
-	
+
 	/**
 	 * @return {@link VirtualInput.VirtualKeyboardInput#getEventKeyboardState()}
 	 */
@@ -69,7 +79,7 @@ public class MixinMinecraft {
 	public boolean playback_redirectGetEventState() {
 		return TASmodClient.virtual.KEYBOARD.getEventKeyboardState();
 	}
-	
+
 	/**
 	 * @return {@link VirtualInput.VirtualKeyboardInput#getEventKeyboardCharacter()}
 	 */
@@ -77,7 +87,7 @@ public class MixinMinecraft {
 	public char playback_redirectKeyboardGetEventCharacter() {
 		return TASmodClient.virtual.KEYBOARD.getEventKeyboardCharacter();
 	}
-	
+
 	/**
 	 * Runs everytime {@link #playback_redirectKeyboardNext()} has an event ready. Redirects {@link org.lwjgl.input.Keyboard#isKeyDown(int)}
 	 * @see VirtualInput.VirtualKeyboardInput#isKeyDown(int)
@@ -87,7 +97,7 @@ public class MixinMinecraft {
 	public boolean playback_redirectIsKeyDown(int keyCode) {
 		return TASmodClient.virtual.KEYBOARD.isKeyDown(keyCode);
 	}
-	
+
 	/**
 	 * @return {@link VirtualInput.VirtualKeyboardInput#getEventKeyboardKey()}
 	 */
@@ -95,7 +105,7 @@ public class MixinMinecraft {
 	public int playback_redirectGetEventKeyDPK() {
 		return TASmodClient.virtual.KEYBOARD.getEventKeyboardKey();
 	}
-	
+
 	/**
 	 * @return {@link VirtualInput.VirtualKeyboardInput#getEventKeyboardState()}
 	 */
@@ -103,7 +113,7 @@ public class MixinMinecraft {
 	public boolean playback_redirectGetEventKeyStateDPK() {
 		return TASmodClient.virtual.KEYBOARD.getEventKeyboardState();
 	}
-	
+
 	/**
 	 * @return {@link VirtualInput.VirtualKeyboardInput#getEventKeyboardCharacter()}
 	 */
@@ -111,9 +121,9 @@ public class MixinMinecraft {
 	public char playback_redirectGetEventCharacterDPK() {
 		return TASmodClient.virtual.KEYBOARD.getEventKeyboardCharacter();
 	}
-	
+
 	// ============================ Mouse
-	
+
 	/**
 	 * Run at the start of run tick mouse. Runs every tick.
 	 * @see VirtualInput.VirtualMouseInput#nextMouseTick()
@@ -121,9 +131,11 @@ public class MixinMinecraft {
 	 */
 	@Inject(method = "runTickMouse", at = @At(value = "HEAD"))
 	public void playback_injectRunTickMouse(CallbackInfo ci) {
-		TASmodClient.virtual.MOUSE.nextMouseTick();
+		if (currentScreen == null) {
+			TASmodClient.virtual.MOUSE.nextMouseTick();
+		}
 	}
-	
+
 	/**
 	 * Redirects a {@link org.lwjgl.input.Mouse#next()}. Starts running every tick and continues as long as there are {@link VirtualMouseEvent}s in {@link VirtualInput}
 	 * @see VirtualInput.VirtualMouseInput#nextMouseSubtick()
@@ -133,7 +145,7 @@ public class MixinMinecraft {
 	public boolean playback_redirectMouseNext() {
 		return TASmodClient.virtual.MOUSE.nextMouseSubtick();
 	}
-	
+
 	/**
 	 * @return {@link VirtualInput.VirtualMouseInput#getEventMouseKey()}
 	 */
@@ -141,7 +153,7 @@ public class MixinMinecraft {
 	public int playback_redirectMouseGetEventButton() {
 		return TASmodClient.virtual.MOUSE.getEventMouseKey() + 100;
 	}
-	
+
 	/**
 	 * @return {@link VirtualInput.VirtualMouseInput#getEventMouseState()}
 	 */
@@ -149,7 +161,7 @@ public class MixinMinecraft {
 	public boolean playback_redirectGetEventButtonState() {
 		return TASmodClient.virtual.MOUSE.getEventMouseState();
 	}
-	
+
 	/**
 	 * @return {@link VirtualInput.VirtualMouseInput#getEventMouseScrollWheel()}
 	 */
@@ -157,5 +169,5 @@ public class MixinMinecraft {
 	public int playback_redirectGetEventDWheel() {
 		return TASmodClient.virtual.MOUSE.getEventMouseScrollWheel();
 	}
-	
+
 }

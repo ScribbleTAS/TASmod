@@ -150,7 +150,7 @@ public abstract class VirtualPeripheral<T extends VirtualPeripheral<T>> extends 
 	protected void moveFrom(T peripheral) {
 		if (peripheral == null)
 			return;
-		copyFrom(peripheral);
+		deepCopyFrom(peripheral);
 		peripheral.subtickList.clear();
 		peripheral.resetFirstUpdate();
 	}
