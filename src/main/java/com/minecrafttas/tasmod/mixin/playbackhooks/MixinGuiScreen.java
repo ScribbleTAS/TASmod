@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.mixin.playbackhooks;
 
-import com.minecrafttas.tasmod.virtual.VirtualInput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
+import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 
 import net.minecraft.client.Minecraft;
@@ -39,7 +39,6 @@ public class MixinGuiScreen implements GuiScreenDuck {
 		return TASmodClient.virtual.KEYBOARD.nextKeyboardSubtick();
 	}
 
-	
 	@Redirect(method = "handleKeyboardInput", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Keyboard;getEventCharacter()C", remap = false))
 	public char redirectGetEventCharacter() {
 		return TASmodClient.virtual.KEYBOARD.getEventKeyboardCharacter();
