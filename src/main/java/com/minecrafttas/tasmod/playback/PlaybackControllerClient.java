@@ -580,7 +580,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	// ==============================================================
 
 	/**
-	 * Storage class which stores the keyboard, mouse and subticks of a given tick.
+	 * Storage class which stores the keyboard, mouse, subticks and comments of a given tick.
 	 * 
 	 * @author Scribble
 	 *
@@ -628,7 +628,13 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			return cameraAngle;
 		}
 
+		/**
+		 * @return The comment container of this controller. If {@link #comments} is null, returns an empty container.
+		 */
 		public CommentContainer getComments() {
+			if (comments == null) {
+				return new CommentContainer();
+			}
 			return comments;
 		}
 
@@ -647,6 +653,11 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 	}
 
+	/**
+	 * Storage class for storing {@link CommentContainer#inlineComments inline} and {@link CommentContainer#endlineComments endline} comments
+	 * 
+	 * @author Scribble
+	 */
 	public static class CommentContainer implements Serializable {
 
 		/**
