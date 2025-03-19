@@ -401,6 +401,19 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return String.format("%s;%s", String.join(",", keyboardSubtick.getCurrentPresses()), charListToString(keyboardSubtick.getCharList()));
 	}
 
+	/**
+	 * <p>Serialises a {@link VirtualMouse}
+	 * <p>A {@link VirtualMouse} is most often comprised of multiple subticks,<br>
+	 * which are each serialised in {@link #serialiseMouseSubtick(VirtualMouse)}
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	LC;0,15,21
+	 * 	RC;-15,15,21
+	 * 	RC,MC;30,14,20
+	 * </pre>
+	 * @param mouse The mouse to serialise
+	 * @return A list of serialised mouse subticks
+	 */
 	protected List<String> serialiseMouse(VirtualMouse mouse) {
 		List<String> out = new ArrayList<>();
 
@@ -413,10 +426,34 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
+	/**
+	 * <p>Serialises a single mouse subtick
+	 * <p>The mouse subtick is comprised of the following:<br>
+	 * mouseKeycodes;scrollWheel,cursorX,cursorY
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	LC;0,15,21
+	 * </pre>
+	 * @param mouseSubtick The mouse subtick to serialise
+	 * @return The serialised mouse subtick
+	 */
 	protected String serialiseMouseSubtick(VirtualMouse mouseSubtick) {
 		return String.format("%s;%s,%s,%s", String.join(",", mouseSubtick.getCurrentPresses()), mouseSubtick.getScrollWheel(), mouseSubtick.getCursorX(), mouseSubtick.getCursorY());
 	}
 
+	/**
+	 * <p>Serialises a {@link VirtualCameraAngle}
+	 * <p>A {@link VirtualCameraAngle} is most often comprised of multiple subticks,<br>
+	 * which are each serialised in {@link #serialiseCameraAngleSubtick(VirtualCameraAngle)}
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	35;26
+	 * 	34;25
+	 * 	140;-130
+	 * </pre>
+	 * @param cameraAngle Camera angle to serialise
+	 * @return The serialised list of camera angles
+	 */
 	protected List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle) {
 
 		VirtualCameraAngle previousCamera = null;
@@ -432,10 +469,34 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
+	/**
+	 * <p>Serialises a single camera angle subtick
+	 * <p>The subtick is comprised of:<br>
+	 * The camera angle yaw and the camera angle pitch
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	140;-130
+	 * </pre>
+	 * 
+	 * @param cameraAngleSubtick The camera angle subtick to serialise
+	 * @return The serialised camera angle subtick
+	 */
 	protected String serialiseCameraAngleSubtick(VirtualCameraAngle cameraAngleSubtick) {
 		return String.format("%s;%s", cameraAngleSubtick.getYaw(), cameraAngleSubtick.getPitch());
 	}
 
+	/**
+	 * <p>Serialise comments that take up an entire line
+	 * <p>In addition, comments can contain {@link PlaybackFileCommand FileCommands} that are serialised in {@link #serialiseFileCommandsInLine(List)}
+	 * <h5>Example</h5>
+	 * <pre>
+	 * // Inline comment
+	 * 12|W;w||0;0
+	 * </pre>
+	 * @param inlineComments The list of inline comments to serialise
+	 * @param fileCommandsInline The list of file commands to serialise
+	 * @return List of comments including file commands
+	 */
 	protected List<String> serialiseInlineComments(List<String> inlineComments, List<List<PlaybackFileCommand>> fileCommandsInline) {
 		List<String> out = new ArrayList<>();
 
@@ -486,6 +547,16 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
+	/**
+	 * <p>Serialise comments that are written at the end of the line
+	 * <h5>Example</h5>
+	 * <pre>
+	 *	12|W;w||0;0	// Endline comment
+	 * </pre>
+	 * @param endlineComments The list of endline comments to serialise
+	 * @param fileCommandsEndline The list of file commands to serialise
+	 * @return The serialised comments
+	 */
 	protected List<String> serialiseEndlineComments(List<String> endlineComments, List<List<PlaybackFileCommand>> fileCommandsEndline) {
 		return serialiseInlineComments(endlineComments, fileCommandsEndline);
 	}
