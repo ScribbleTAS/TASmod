@@ -750,6 +750,14 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * 
 	 */
 
+	/*
+	 _   _  ____    __    ____  ____  ____ 
+	( )_( )( ___)  /__\  (  _ \( ___)(  _ \
+	 ) _ (  )__)  /(__)\  )(_) ))__)  )   /
+	(_) (_)(____)(__)(__)(____/(____)(_)\_)
+	
+	 */
+
 	/**
 	 * <p>Checks if the name of this flavor is present in the header of the TASfile.
 	 * <p>Used to determine the flavor of the file if the flavor is not given
@@ -767,11 +775,14 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return false;
 	}
 
-	public void deserialiseHeader(List<String> headerLines) {
-		deserialiseMetadata(headerLines);
-		deserialiseFileCommandNames(headerLines);
-	}
-
+	/**
+	 * <p>Extracts the header from the TASfile
+	 * <p>Optimization to seperate the header from the actual inputs.<br>
+	 * Only reads a maximum of 1000 and until it finds {@link #headerEnd()}
+	 * @param lines The total lines to check
+	 * @return The list of lines containing the header
+	 * @throws PlaybackLoadException If the end of the header is not found after 1000 lines
+	 */
 	public List<String> extractHeader(BigArrayList<String> lines) {
 		List<String> extracted = new ArrayList<>();
 
@@ -789,28 +800,26 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		throw new PlaybackLoadException("Cannot find the end of the header");
 	}
 
-	protected void deserialiseFileCommandNames(List<String> headerLines) {
-		if (!processExtensions) // Stops FileCommandProcessing
-			return;
-
-		for (String line : headerLines) {
-			Matcher matcher = extract("FileCommand-Extensions: ?(.*)", line);
-
-			if (matcher.find()) {
-
-				if (!processExtensions)
-					return;
-
-				String extensionStrings = matcher.group(1);
-				String[] extensionNames = extensionStrings.split(", ?");
-
-				TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled(extensionNames);
-				return;
-			}
-		}
-		throw new PlaybackLoadException("FileCommand-Extensions value was not found in the header");
+	/**
+	 * <p>Deserialise header lines
+	 * <pre>
+	 *	deserialiseHeader
+	 *  ├── {@link #deserialiseMetadata(List)}
+	 *  └── {@link #deserialiseFileCommandNames(List)}
+	 * </pre>
+	 * @param headerLines The header lines to deserialise
+	 * @see #serialiseHeader()
+	 */
+	public void deserialiseHeader(List<String> headerLines) {
+		deserialiseMetadata(headerLines);
+		deserialiseFileCommandNames(headerLines);
 	}
 
+	/**
+	 * <p>Deserialises the TASfile metadata
+	 * @param headerLines
+	 * @see #serialiseMetadata(List)
+	 */
 	protected void deserialiseMetadata(List<String> headerLines) {
 		if (!processExtensions)
 			return;
@@ -845,6 +854,34 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			out.add(PlaybackMetadata.fromHashMap(metadataName, values));
 
 		TASmodAPIRegistry.PLAYBACK_METADATA.handleOnLoad(out);
+	}
+
+	/**
+	 * <p>Deserialises file command extension names and enables them
+	 * @param headerLines The header lines to search
+	 * @see #serialiseFileCommandNames(List)
+	 * @throws PlaybackLoadException If the "FileCommand-Extensions" keyword is not found in the header
+	 */
+	protected void deserialiseFileCommandNames(List<String> headerLines) {
+		if (!processExtensions) // Stops FileCommandProcessing
+			return;
+
+		for (String line : headerLines) {
+			Matcher matcher = extract("FileCommand-Extensions: ?(.*)", line);
+
+			if (matcher.find()) {
+
+				if (!processExtensions)
+					return;
+
+				String extensionStrings = matcher.group(1);
+				String[] extensionNames = extensionStrings.split(", ?");
+
+				TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled(extensionNames);
+				return;
+			}
+		}
+		throw new PlaybackLoadException("FileCommand-Extensions value was not found in the header");
 	}
 
 	/**
