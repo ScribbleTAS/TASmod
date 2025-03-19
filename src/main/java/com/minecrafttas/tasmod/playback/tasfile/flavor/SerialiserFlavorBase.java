@@ -313,6 +313,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 *     │   └── {@link #serialiseFileCommandsEndLine(List)}	// Unused
 	 *     │       └── {@link #serialiseFileCommand(PlaybackFileCommand)}
 	 *     └── {@link #mergeInputs(BigArrayList, List, List, List, List)}
+	 *         ├── {@link #mergeInput(long, String, String, String, String)}
+	 *         └── {@link #mergeSubtickInput(long, String, String, String, String)}
 	 * </pre>
 	 * @param inputs The inputs to serialise
 	 * @param toTick The tick where to stop, used for partial serialisation by savestates. -1 to serialise all
@@ -525,7 +527,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 					continue;
 				}
 
-				out.add(String.format("// %s", joinNotEmpty(" ", command, comment)));
+				out.add(serialiseInlineComment(joinNotEmpty(" ", command, comment)));
 			}
 		}
 
@@ -537,7 +539,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 				String command = serialiseFileCommandsInLine(fileCommandQueue.poll());
 				if (command != null) {
-					out.add(String.format("// %s", command));
+					out.add(serialiseInlineComment(command));
 				} else {
 					out.add(""); // Add an empty line if command is null
 				}
@@ -545,6 +547,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		}
 
 		return out;
+	}
+
+	protected String serialiseInlineComment(String comment) {
+		return String.format("// %s", comment);
 	}
 
 	/**
@@ -558,7 +564,57 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * @return The serialised comments
 	 */
 	protected List<String> serialiseEndlineComments(List<String> endlineComments, List<List<PlaybackFileCommand>> fileCommandsEndline) {
-		return serialiseInlineComments(endlineComments, fileCommandsEndline);
+		List<String> out = new ArrayList<>();
+
+		Queue<List<PlaybackFileCommand>> fileCommandQueue = null;
+		if (fileCommandsEndline != null) {
+			fileCommandQueue = new LinkedList<>(fileCommandsEndline);
+		}
+
+		// Serialise comments and merge them with file commands
+		if (endlineComments != null) {
+
+			Queue<String> commentQueue = new LinkedList<>(endlineComments);
+
+			// Iterate through comments
+			while (!commentQueue.isEmpty()) {
+				String comment = commentQueue.poll(); // Due to commentQueue being a LinkedList, comment can be null at this point! 
+
+				String command = null;
+				if (fileCommandQueue != null) {
+					command = serialiseFileCommandsEndLine(fileCommandQueue.poll()); // Trying to poll a fileCommand. Command can be null at this point
+				}
+
+				// Add an empty line if comment and command is null
+				if (comment == null && command == null) {
+					out.add("");
+					continue;
+				}
+
+				out.add(serialiseEndlineComment(joinNotEmpty(" ", command, comment)));
+			}
+		}
+
+		if (fileCommandQueue != null) {
+
+			// If the fileCommandQueue is not empty or longer than the commentQueue,
+			// add the rest of the fileCommands to the end
+			while (!fileCommandQueue.isEmpty()) {
+
+				String command = serialiseFileCommandsEndLine(fileCommandQueue.poll());
+				if (command != null) {
+					out.add(serialiseEndlineComment(command));
+				} else {
+					out.add(""); // Add an empty line if command is null
+				}
+			}
+		}
+
+		return out;
+	}
+
+	protected String serialiseEndlineComment(String comment) {
+		return String.format("// %s", comment);
 	}
 
 	/**
@@ -665,7 +721,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		}
 
 		// Add tick line, not indented
-		out.add(String.format("%s|%s|%s|%s%s", currentTick, kb, ms, ca, elc));
+		out.add(mergeInput(currentTick, kb, ms, ca, elc));
 
 		// Add subtick lines, not indented
 		currentSubtick = 0;
@@ -679,7 +735,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				elc = "\t\t" + elc;
 			}
 
-			out.add(String.format("\t%s|%s|%s|%s%s", currentSubtick, kb, ms, ca, elc));
+			out.add(mergeSubtickInput(currentSubtick, kb, ms, ca, elc));
 		}
 
 		/*
@@ -693,6 +749,42 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			out.add(String.format("\t|||;\t\t%s", elc));
 		}
 		currentSubtick = 0;
+	}
+
+	/**
+	 * <p>How parent inputs are merged
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 256|W;w|;0,0,0|31.778223;85.11482		// Endline comment
+	 * </pre>
+	 * 
+	 * @param currentTick The current tick
+	 * @param keyboard The serialised keyboard 
+	 * @param mouse The serialised mouse
+	 * @param cameraAngle The serialises camera angle
+	 * @param endLineComment The end line comment
+	 * @return The merged strings
+	 */
+	protected String mergeInput(long currentTick, String keyboard, String mouse, String cameraAngle, String endLineComment) {
+		return String.format("%s|%s|%s|%s%s", currentTick, keyboard, mouse, cameraAngle, endLineComment);
+	}
+
+	/**
+	 * <p>How subtick inputs are merged
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 256|W;w|;0,0,0|31.778223;85.11482		// Parent
+	 *	1|W,S;s|;0,0,0|34.47822;82.56482		// Subtick
+	 * </pre>
+	 * @param currentSubtick The current subtick in this sequence
+	 * @param keyboard The serialised keyboard
+	 * @param mouse The serialised mouse
+	 * @param cameraAngle The serialised camera angle
+	 * @param endLineComment The serialised end line comment
+	 * @return The merged subticks
+	 */
+	protected String mergeSubtickInput(int currentSubtick, String keyboard, String mouse, String cameraAngle, String endLineComment) {
+		return String.format("\t%s|%s|%s|%s%s", currentSubtick, keyboard, mouse, cameraAngle, endLineComment);
 	}
 
 	/**

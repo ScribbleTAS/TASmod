@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
@@ -224,6 +225,30 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 		 */
 		out.add("Camera:" + subticks.getPitch() + ";" + subticks.getYaw());
 		return out;
+	}
+
+	@Override
+	protected String serialiseFileCommandsEndLine(List<PlaybackFileCommand> fileCommands) {
+		if (fileCommands == null) {
+			return null;
+		}
+		List<String> serialisedCommands = new ArrayList<>();
+		for (PlaybackFileCommand command : fileCommands) {
+			if ("desyncMonitor".equals(command.getName())) {
+				serialisedCommands.add(String.format("Monitoring:%s", String.join(" ", command.getArgs())));
+			}
+		}
+		return String.join(" ", serialisedCommands);
+	}
+
+	@Override
+	protected String serialiseEndlineComment(String comment) {
+		return String.format("//%s", comment);
+	}
+
+	@Override
+	protected String mergeInput(long currentTick, String keyboard, String mouse, String cameraAngle, String endLineComment) {
+		return String.format("%s|%s|%s|%s~&\t\t\t\t%s", currentTick, keyboard, mouse, cameraAngle, endLineComment);
 	}
 
 	@Override
