@@ -106,8 +106,8 @@ public class AlphaFlavorTest extends AlphaFlavor {
 				+ "#StartPosition:" + "0.0,0.0,0.0,0.0,0.0" + "\n"
 				+ "#																											#\n"
 				+ "#StartSeed:" + 0);
-		expected.add("#############################################################################################################\n"
-				+ "#Comments start with \"//\" at the start of the line, comments with # will not be saved");
+		expected.add("#############################################################################################################");
+		expected.add("#Comments start with \"//\" at the start of the line, comments with # will not be saved");
 
 		assertIterableEquals(expected, actual);
 	}

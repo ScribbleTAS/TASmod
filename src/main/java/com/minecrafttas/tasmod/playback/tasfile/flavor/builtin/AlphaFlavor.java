@@ -237,6 +237,23 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 	}
 
 	@Override
+	protected String serialiseFileCommandsInline(List<PlaybackFileCommand> fileCommands) {
+		if (fileCommands == null) {
+			return null;
+		}
+		List<String> serialisedCommands = new ArrayList<>();
+		for (PlaybackFileCommand command : fileCommands) {
+			if ("hud".equals(command.getName())) {
+				serialisedCommands.add(String.format("$hud %s", command.getArgs()[0].equals("true") ? "on" : "off"));
+			}
+			if ("label".equals(command.getName())) {
+				serialisedCommands.add(String.format("$info %s", command.getArgs().length == 0 ? "off" : String.join(" ", command.getArgs())));
+			}
+		}
+		return String.join(" ", serialisedCommands);
+	}
+
+	@Override
 	protected String serialiseFileCommandsEndline(List<PlaybackFileCommand> fileCommands) {
 		if (fileCommands == null) {
 			return null;
@@ -318,6 +335,32 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 	@Override
 	protected String splitInputRegex() {
 		return "^\\d+\\|(.*?)\\|(.*?)\\|(\\S*)~&";
+	}
+
+	@Override
+	protected String deserialiseFileCommandsInline(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+		Matcher matcher = extract("\\$(.+?) (.+?)", comment);
+
+		// Iterate through all file commands and add each to the list
+		while (matcher.find()) {
+			String name = matcher.group(1);
+			String[] args = matcher.group(2).split(" ");
+
+			if ("hud".equals(name)) {
+				args[0] = "on".equals(args[0]) ? "true" : "false";
+			} else if ("info".equals(name)) {
+				name = "label";
+				args[0] = "off".equals(args[0]) ? "" : args[0];
+			}
+
+			if (processExtensions)
+				deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
+
+			comment = matcher.replaceFirst("");
+			matcher.reset(comment);
+		}
+
+		return comment;
 	}
 
 	@Override
