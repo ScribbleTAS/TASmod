@@ -307,10 +307,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 *     ├── {@link #serialiseCameraAngle(VirtualCameraAngle)}
 	 *     │   └── {@link #serialiseCameraAngleSubtick(VirtualCameraAngle)}
 	 *     ├── {@link #serialiseInlineComments(List, List)}
-	 *     │   └── {@link #serialiseFileCommandsInLine(List)}
+	 *     │   └── {@link #serialiseFileCommandsInline(List)}
 	 *     │       └── {@link #serialiseFileCommand(PlaybackFileCommand)}
 	 *     ├── {@link #serialiseEndlineComments(List, List)}	// Same as serialiseInlineComments
-	 *     │   └── {@link #serialiseFileCommandsEndLine(List)}	// Unused
+	 *     │   └── {@link #serialiseFileCommandsEndline(List)}	// Unused
 	 *     │       └── {@link #serialiseFileCommand(PlaybackFileCommand)}
 	 *     └── {@link #mergeInputs(BigArrayList, List, List, List, List)}
 	 *         ├── {@link #mergeInput(long, String, String, String, String)}
@@ -489,7 +489,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 	/**
 	 * <p>Serialise comments that take up an entire line
-	 * <p>In addition, comments can contain {@link PlaybackFileCommand FileCommands} that are serialised in {@link #serialiseFileCommandsInLine(List)}
+	 * <p>In addition, comments can contain {@link PlaybackFileCommand FileCommands} that are serialised in {@link #serialiseFileCommandsInline(List)}
 	 * <h5>Example</h5>
 	 * <pre>
 	 * // Inline comment
@@ -518,7 +518,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 				String command = null;
 				if (fileCommandQueue != null) {
-					command = serialiseFileCommandsInLine(fileCommandQueue.poll()); // Trying to poll a fileCommand. Command can be null at this point
+					command = serialiseFileCommandsInline(fileCommandQueue.poll()); // Trying to poll a fileCommand. Command can be null at this point
 				}
 
 				// Add an empty line if comment and command is null
@@ -537,7 +537,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			// add the rest of the fileCommands to the end
 			while (!fileCommandQueue.isEmpty()) {
 
-				String command = serialiseFileCommandsInLine(fileCommandQueue.poll());
+				String command = serialiseFileCommandsInline(fileCommandQueue.poll());
 				if (command != null) {
 					out.add(serialiseInlineComment(command));
 				} else {
@@ -582,7 +582,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 				String command = null;
 				if (fileCommandQueue != null) {
-					command = serialiseFileCommandsEndLine(fileCommandQueue.poll()); // Trying to poll a fileCommand. Command can be null at this point
+					command = serialiseFileCommandsEndline(fileCommandQueue.poll()); // Trying to poll a fileCommand. Command can be null at this point
 				}
 
 				// Add an empty line if comment and command is null
@@ -601,7 +601,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			// add the rest of the fileCommands to the end
 			while (!fileCommandQueue.isEmpty()) {
 
-				String command = serialiseFileCommandsEndLine(fileCommandQueue.poll());
+				String command = serialiseFileCommandsEndline(fileCommandQueue.poll());
 				if (command != null) {
 					out.add(serialiseEndlineComment(command));
 				} else {
@@ -629,7 +629,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * @param fileCommands The file commands to serialise
 	 * @return A string of serialised file commands or null if fileCommands is null
 	 */
-	protected String serialiseFileCommandsInLine(List<PlaybackFileCommand> fileCommands) {
+	protected String serialiseFileCommandsInline(List<PlaybackFileCommand> fileCommands) {
 		// File commands is null if there are no file commands in the comment.
 		// Return null if that is the case
 		if (fileCommands == null) {
@@ -645,7 +645,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	/**
 	 * <p>Serialises a list of file commands in an endline comment
 	 * <p>This is added in case a flavor needs a different format for endline and inline commands,<br>
-	 * but by default this is the same as {@link #serialiseFileCommandsInLine(List) serialiseFileCommandsInLine}
+	 * but by default this is the same as {@link #serialiseFileCommandsInline(List) serialiseFileCommandsInLine}
 	 * <h5>Example</h5>
 	 * <pre>
 	 * 	12|W;w||0;0	// $fileCommandName1(argument1); $fileCommandName2(argument1, argument2);
@@ -653,8 +653,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * @param fileCommands The file commands to serialise
 	 * @return A string of serialised file commands or null if fileCommands is null
 	 */
-	protected String serialiseFileCommandsEndLine(List<PlaybackFileCommand> fileCommands) {
-		return serialiseFileCommandsInLine(fileCommands);
+	protected String serialiseFileCommandsEndline(List<PlaybackFileCommand> fileCommands) {
+		return serialiseFileCommandsInline(fileCommands);
 	}
 
 	/**
@@ -990,7 +990,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			// Extract the tick and set the index
 			i = extractContainer(container, lines, i);
 			currentLine = i;
-			// Extract container
+			// Deserialise container
 			deserialiseContainer(out, container);
 			currentTick++;
 		}
@@ -1222,7 +1222,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected String deserialiseInlineComment(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
-		comment = deserialiseFileCommands(comment, deserialisedFileCommands);
+		comment = deserialiseFileCommandsInline(comment, deserialisedFileCommands);
 		comment = extract("^// ?(.+)", comment, 1);
 		if (comment != null) {
 			comment = comment.trim();
@@ -1234,11 +1234,36 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected String deserialiseEndlineComment(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
-		return deserialiseInlineComment(comment, deserialisedFileCommands);
+		comment = deserialiseFileCommandsEndline(comment, deserialisedFileCommands);
+		comment = extract("^// ?(.+)", comment, 1);
+		if (comment != null) {
+			comment = comment.trim();
+			if (comment.isEmpty()) {
+				comment = null;
+			}
+		}
+		return comment;
 	}
 
-	protected String deserialiseFileCommands(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+	protected String deserialiseFileCommandsInline(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+		Matcher matcher = extract("\\$(.+?)\\((.*?)\\);", comment);
 
+		// Iterate through all file commands and add each to the list
+		while (matcher.find()) {
+			String name = matcher.group(1);
+			String[] args = matcher.group(2).split(", ?");
+
+			if (processExtensions)
+				deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
+
+			comment = matcher.replaceFirst("");
+			matcher.reset(comment);
+		}
+
+		return comment;
+	}
+
+	protected String deserialiseFileCommandsEndline(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
 		Matcher matcher = extract("\\$(.+?)\\((.*?)\\);", comment);
 
 		// Iterate through all file commands and add each to the list
@@ -1467,7 +1492,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		}
 
 		for (String line : lines) {
-			Matcher tickMatcher = extract("^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?", line);
+			Matcher tickMatcher = extract(splitInputRegex(), line);
 
 			if (tickMatcher.find()) {
 				if (!tickMatcher.group(1).isEmpty()) {
@@ -1496,6 +1521,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				endlineFileCommands.add(deserialisedFileCommands);
 			}
 		}
+	}
+
+	protected String splitInputRegex() {
+		return "^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?";
 	}
 
 	protected Matcher extract(String regex, String haystack) {

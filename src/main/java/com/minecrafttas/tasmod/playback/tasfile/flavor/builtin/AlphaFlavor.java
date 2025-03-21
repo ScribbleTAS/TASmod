@@ -15,8 +15,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 
+import com.dselent.bigarraylist.BigArrayList;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
@@ -53,13 +56,13 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 				+ "#																											#");
 		serialiseMetadata(out);
 		out.add(headerEnd());
+		out.add("#Comments start with \"//\" at the start of the line, comments with # will not be saved");
 		return out;
 	}
 
 	@Override
 	protected String headerEnd() {
-		return "#############################################################################################################\n"
-				+ "#Comments start with \"//\" at the start of the line, comments with # will not be saved";
+		return "#############################################################################################################";
 	}
 
 	@Override
@@ -127,6 +130,8 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 				if (i == stringy.size() - 1) {
 					seperator = "";
 				}
+				if (stringy.get(i).equals("ZERO"))
+					continue;
 				keyString = keyString.concat(stringy.get(i) + seperator);
 			}
 		}
@@ -160,11 +165,13 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 				if (i == stringy.size() - 1) {
 					seperator = "";
 				}
+				if (stringy.get(i).equals("MOUSEMOVED"))
+					continue;
 				keyString = keyString.concat(stringy.get(i) + seperator);
 			}
 		}
 
-		List<VirtualMouse> path = new ArrayList<>(mouse.getSubticks()); // I previously called subticks "paths" as it was mainly used for the mouse...
+		List<VirtualMouse> path = new ArrayList<>(mouse.getAll()); // I previously called subticks "paths" as it was mainly used for the mouse...
 //		pruneListEndEmptySubtickable(path);
 
 		/*
@@ -223,12 +230,14 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 		 * To honor this fact, it is also called subticks here, even though
 		 * actual subticks were not supported
 		 */
-		out.add("Camera:" + subticks.getPitch() + ";" + subticks.getYaw());
+		float pitch = subticks.getPitch() == null ? 0f : subticks.getPitch();
+		float yaw = subticks.getYaw() == null ? 0f : subticks.getYaw();
+		out.add("Camera:" + yaw + ";" + pitch);
 		return out;
 	}
 
 	@Override
-	protected String serialiseFileCommandsEndLine(List<PlaybackFileCommand> fileCommands) {
+	protected String serialiseFileCommandsEndline(List<PlaybackFileCommand> fileCommands) {
 		if (fileCommands == null) {
 			return null;
 		}
@@ -248,7 +257,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 
 	@Override
 	protected String mergeInput(long currentTick, String keyboard, String mouse, String cameraAngle, String endLineComment) {
-		return String.format("%s|%s|%s|%s~&\t\t\t\t%s", currentTick, keyboard, mouse, cameraAngle, endLineComment);
+		return String.format("%s|%s|%s|%s~&\t\t%s", currentTick, keyboard, mouse, cameraAngle, endLineComment);
 	}
 
 	@Override
@@ -304,6 +313,172 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 		metadataList.add(startPositionMetadata);
 
 		TASmodAPIRegistry.PLAYBACK_METADATA.handleOnLoad(metadataList);
+	}
+
+	@Override
+	protected String splitInputRegex() {
+		return "^\\d+\\|(.*?)\\|(.*?)\\|(\\S*)~&";
+	}
+
+	@Override
+	protected String deserialiseFileCommandsEndline(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+		Matcher matcher = extract("Monitoring:(.+)", comment);
+
+		// Iterate through all file commands and add each to the list
+		while (matcher.find()) {
+			String name = "desyncMonitor";
+			String[] args = matcher.group(1).split(" ");
+
+			String[] shortenedArgs = new String[6];
+			for (int i = 0; i < 6; i++) {
+				shortenedArgs[i] = args[i];
+			}
+
+			if (processExtensions)
+				deserialisedFileCommands.add(new PlaybackFileCommand(name, shortenedArgs));
+
+			comment = matcher.replaceFirst("");
+			matcher.reset(comment);
+		}
+
+		return comment;
+	}
+
+	@Override
+	protected VirtualKeyboard deserialiseKeyboard(List<String> keyboardStrings) {
+		VirtualKeyboard out = new VirtualKeyboard();
+
+		currentSubtick = 0;
+		for (String line : keyboardStrings) {
+			Matcher matcher = extract("Keyboard:(.*?);(.*)", line);
+			if (matcher.find()) {
+				String[] keys = matcher.group(1).split(",");
+				char[] chars = matcher.group(2).toCharArray();
+
+				int[] keycodes = deserialiseVirtualKeyboardKey(keys);
+				out.updateFromState(keycodes, chars);
+			} else {
+				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Keyboard could not be read. Probably a missing semicolon: %s", line);
+			}
+			currentSubtick++;
+		}
+		return out;
+	}
+
+	@Override
+	public BigArrayList<TickContainer> deserialise(BigArrayList<String> lines, long startPos) {
+		BigArrayList<TickContainer> out = new BigArrayList<>();
+		for (long i = startPos; i < lines.size(); i++) {
+
+			if (lines.get(i).startsWith("#")) {
+				continue;
+			}
+			List<String> container = new ArrayList<>();
+			// Extract the tick and set the index
+			i = extractContainer(container, lines, i);
+			currentLine = i;
+			// Deserialise container
+			deserialiseContainer(out, container);
+			currentTick++;
+		}
+		previousTickContainer = null;
+		return out;
+	}
+
+	@Override
+	protected VirtualMouse deserialiseMouse(List<String> mouseStrings) {
+		String section = mouseStrings.get(0);
+		VirtualMouse mouse = new VirtualMouse();
+
+		// Remove the prefix
+		section = section.replace("Mouse:", "");
+
+		//Split into buttons and paths...
+		String buttons = section.split(";")[0];
+		String path = section.split(";")[1];
+
+		//Check whether the button is empty
+		if (!buttons.isEmpty()) {
+
+			//Splitting multiple buttons
+			String[] splitButtons = buttons.split(",");
+			int[] keys = deserialiseVirtualMouseKey(splitButtons);
+			mouse.updateFromState(keys, 0, 0, 0);
+		}
+		readPath(path, mouse);
+
+		return mouse;
+	}
+
+	protected void readPath(String section, VirtualMouse mouse) {
+
+		section = section.replace("[", "").replace("]", "");
+		String[] pathNodes = section.split("->");
+
+		for (String pathNode : pathNodes) {
+			String[] split = pathNode.split(",");
+
+			int length = split.length;
+			int scrollWheel = 0;
+			int cursorX = 0;
+			int cursorY = 0;
+			try {
+				scrollWheel = Integer.parseInt(split[length - 3]);
+				cursorX = Integer.parseInt(split[length - 2]);
+				cursorY = Integer.parseInt(split[length - 1]);
+			} catch (NumberFormatException e) {
+				throw new PlaybackLoadException("'" + pathNode + "' couldn't be read in line " + currentLine + ": Something is not a number");
+			} catch (ArrayIndexOutOfBoundsException e) {
+				throw new PlaybackLoadException("'" + pathNode + "' couldn't be read in line " + currentLine + ": Something is missing or is too much");
+			}
+			List<Integer> keyList = new ArrayList<>();
+			for (int i = 0; i < length - 3; i++) {
+				String key = split[i];
+				Integer keyCode = VirtualKey.getKeycode(key);
+				if (keyCode == null) {
+					throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Could not find keycode");
+				}
+				keyList.add(keyCode);
+			}
+			int[] keyListArray = new int[keyList.size()];
+			for (int i = 0; i < keyList.size(); i++) {
+				keyListArray[i] = keyList.get(i);
+			}
+			mouse.updateFromState(keyListArray, scrollWheel, cursorX, cursorY);
+		}
+	}
+
+	@Override
+	protected VirtualCameraAngle deserialiseCameraAngle(List<String> cameraAngleStrings) {
+		VirtualCameraAngle out = new VirtualCameraAngle();
+
+		currentSubtick = 0;
+		Float previousPitch = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getPitch();
+		Float previousYaw = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getYaw();
+
+		for (String line : cameraAngleStrings) {
+			Matcher matcher = extract("Camera:(.+?);(.+)", line);
+
+			if (matcher.find()) {
+				String cameraYawString = matcher.group(1);
+				String cameraPitchString = matcher.group(2);
+
+				Float cameraYaw = null;
+				Float cameraPitch = null;
+
+				if (!"null".equals(cameraYawString))
+					cameraYaw = deserialiseRelativeFloat("camera yaw", cameraYawString, previousYaw);
+
+				if (!"null".equals(cameraPitchString))
+					cameraPitch = deserialiseRelativeFloat("camera pitch", cameraPitchString, previousPitch);
+
+				out.updateFromState(cameraPitch, cameraYaw);
+			} else {
+				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Camera is missing a semicolon");
+			}
+			currentSubtick++;
+		}
+		return out;
 	}
 
 	@Override

@@ -846,6 +846,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Loading failed, something went very wrong"));
 					LOGGER.catching(e);
+					return;
 				}
 
 				if (mc.world != null)

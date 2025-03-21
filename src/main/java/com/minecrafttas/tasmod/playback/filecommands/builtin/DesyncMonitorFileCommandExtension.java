@@ -135,7 +135,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private MonitorContainer loadFromFile(long tick, String[] args) throws PlaybackLoadException {
 
 		if (args.length != 6)
-			throw new PlaybackLoadException("Tick %s: desyncMonitorArgsLength ");
+			throw new PlaybackLoadException("Could not load desyncMonitor file command in tick %s. The amount of arguments doesn't match: %s", tick, args.length);
 
 		double x = 0;
 		double y = 0;
