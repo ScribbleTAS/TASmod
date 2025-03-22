@@ -46,8 +46,11 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 
 	@Override
 	public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, TickContainer tickContainer) {
-		// TODO Implement
-		return null;
+		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer();
+		if (hud.get(tick).get("hud") != null) {
+			fileCommandContainer = hud.get(tick);
+		}
+		return fileCommandContainer;
 	}
 
 	@Override

@@ -268,6 +268,11 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 	}
 
 	@Override
+	protected String serialiseInlineComment(String comment) {
+		return String.format("//%s", comment);
+	}
+
+	@Override
 	protected String serialiseEndlineComment(String comment) {
 		return String.format("//%s", comment);
 	}
