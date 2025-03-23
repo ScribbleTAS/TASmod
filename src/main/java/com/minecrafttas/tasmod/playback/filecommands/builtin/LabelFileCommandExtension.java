@@ -45,7 +45,7 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 	@Override
 	public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, TickContainer tickContainer) {
 		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer();
-		if (label.get(tick).get("label") != null) {
+		if (label.size() != 0 && label.get(tick).get("label") != null) {
 			fileCommandContainer = label.get(tick);
 		}
 		return fileCommandContainer;

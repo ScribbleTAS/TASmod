@@ -232,7 +232,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 		 */
 		float pitch = subticks.getPitch() == null ? 0f : subticks.getPitch();
 		float yaw = subticks.getYaw() == null ? 0f : subticks.getYaw();
-		out.add("Camera:" + yaw + ";" + pitch);
+		out.add("Camera:" + pitch + ";" + yaw);
 		return out;
 	}
 
@@ -261,7 +261,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 		List<String> serialisedCommands = new ArrayList<>();
 		for (PlaybackFileCommand command : fileCommands) {
 			if ("desyncMonitor".equals(command.getName())) {
-				serialisedCommands.add(String.format("Monitoring:%s", String.join(" ", command.getArgs())));
+				serialisedCommands.add(String.format("Monitoring:%s 0", String.join(" ", command.getArgs())));
 			}
 		}
 		return String.join(" ", serialisedCommands);
@@ -508,8 +508,8 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 			Matcher matcher = extract("Camera:(.+?);(.+)", line);
 
 			if (matcher.find()) {
-				String cameraYawString = matcher.group(1);
-				String cameraPitchString = matcher.group(2);
+				String cameraYawString = matcher.group(2);
+				String cameraPitchString = matcher.group(1);
 
 				Float cameraYaw = null;
 				Float cameraPitch = null;
