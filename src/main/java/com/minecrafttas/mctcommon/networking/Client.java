@@ -14,6 +14,7 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Marker;
@@ -53,9 +54,9 @@ public class Client {
 	 */
 	private boolean local = false;
 
-
 	public enum Side {
-		CLIENT, SERVER;
+		CLIENT,
+		SERVER;
 	}
 
 	/**
@@ -71,7 +72,7 @@ public class Client {
 	public Client(String host, int port, PacketID[] packetIDs, String name, boolean local) throws Exception {
 		LOGGER.info(Client, "Connecting server to {}:{}", host, port);
 		this.socket = AsynchronousSocketChannel.open();
-		this.socket.connect(new InetSocketAddress(host, port)).get();
+		this.socket.connect(new InetSocketAddress(host, port)).get(2, TimeUnit.SECONDS);
 		this.socket.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
 		this.socket.setOption(StandardSocketOptions.TCP_NODELAY, true);
 
@@ -173,7 +174,7 @@ public class Client {
 					readBuffer.clear().limit(4);
 					socket.read(readBuffer, null, this);
 				} catch (Throwable exc) {
-					if(exc instanceof ExecutionException && !isClosed()) {
+					if (exc instanceof ExecutionException && !isClosed()) {
 						LOGGER.debug(getLoggerMarker(), "{} terminated the connection!", getOppositeSide().name());
 						try {
 							close();
@@ -189,7 +190,7 @@ public class Client {
 			@Override
 			public void failed(Throwable exc, Object attachment) {
 				if (exc instanceof AsynchronousCloseException || exc instanceof IOException) {
-					if(isClosed()) {
+					if (isClosed()) {
 						return;
 					}
 					LOGGER.debug(getLoggerMarker(), "{} terminated the connection!", getOppositeSide().name());
@@ -199,7 +200,7 @@ public class Client {
 						LOGGER.error(getLoggerMarker(), "Attempted to close connection but failed", e);
 					}
 				} else {
-					if(isClosed()) {
+					if (isClosed()) {
 						return;
 					}
 					LOGGER.error(getLoggerMarker(), "Something went wrong, terminating connection!", exc);
@@ -221,7 +222,7 @@ public class Client {
 	 * @throws Exception Networking exception
 	 */
 	public void send(ByteBufferBuilder bufferBuilder) throws Exception {
-		if(bufferBuilder.getPacketID() != null && bufferBuilder.getPacketID().shouldTrace())
+		if (bufferBuilder.getPacketID() != null && bufferBuilder.getPacketID().shouldTrace())
 			LOGGER.trace(getLoggerMarker(), "Sending a {} packet to the {} with content:\n{}", bufferBuilder.getPacketID(), getOppositeSide(), bufferBuilder.getPacketContent());
 		// wait for previous buffer to send
 		if (this.future != null && !this.future.isDone())
@@ -264,7 +265,7 @@ public class Client {
 	private Marker getLoggerMarker() {
 		return side == Side.CLIENT ? Client : Server;
 	}
-	
+
 	private Side getOppositeSide() {
 		return side == Side.CLIENT ? Side.SERVER : Side.CLIENT;
 	}

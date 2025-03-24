@@ -41,7 +41,6 @@
 		"MixinTextfield",
 		
 		// Events
-		"events.MixinGuiMainMenu",
 		"events.MixinGuiIngame",
 		"events.MixinEntityRenderer",
 		

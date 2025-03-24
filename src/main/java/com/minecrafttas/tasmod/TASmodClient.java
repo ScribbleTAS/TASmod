@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.logging.log4j.Level;
 
@@ -243,11 +244,12 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 				try {
 					// connect to server and authenticate
 					client = new Client(IP, PORT, TASmodPackets.values(), mc.getSession().getUsername(), local);
+				} catch (TimeoutException e) {
+					mc.getConnection().getNetworkManager().closeChannel(null);
 				} catch (Exception e) {
 					LOGGER.error("Unable to connect TASmod client: {}", e.getMessage());
 					e.printStackTrace();
 				}
-				ticksyncClient.setEnabled(true);
 			});
 		}
 	}
@@ -298,7 +300,6 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			} catch (Exception e) {
 				LOGGER.error("Unable to connect TASmod client: {}", e);
 			}
-			ticksyncClient.setEnabled(true);
 		}
 	}
 
