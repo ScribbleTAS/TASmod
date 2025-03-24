@@ -25,12 +25,13 @@ import com.minecrafttas.tasmod.gui.InfoHud;
 import com.minecrafttas.tasmod.handlers.LoadingScreenHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.playback.filecommands.integrated.DesyncMonitorFileCommandExtension;
-import com.minecrafttas.tasmod.playback.filecommands.integrated.LabelFileCommandExtension;
-import com.minecrafttas.tasmod.playback.filecommands.integrated.OptionsFileCommandExtension;
-import com.minecrafttas.tasmod.playback.metadata.integrated.CreditsMetadataExtension;
-import com.minecrafttas.tasmod.playback.metadata.integrated.StartpositionMetadataExtension;
-import com.minecrafttas.tasmod.playback.tasfile.flavor.integrated.Beta1Flavor;
+import com.minecrafttas.tasmod.playback.filecommands.builtin.DesyncMonitorFileCommandExtension;
+import com.minecrafttas.tasmod.playback.filecommands.builtin.LabelFileCommandExtension;
+import com.minecrafttas.tasmod.playback.filecommands.builtin.OptionsFileCommandExtension;
+import com.minecrafttas.tasmod.playback.metadata.builtin.CreditsMetadataExtension;
+import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.builtin.AlphaFlavor;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.builtin.Beta1Flavor;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodKeybinds;
@@ -312,9 +313,11 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	}
 
 	public static Beta1Flavor betaFlavor = new Beta1Flavor();
+	public static AlphaFlavor alphaFlavor = new AlphaFlavor();
 
 	private void registerSerialiserFlavors(Minecraft mc) {
 		TASmodAPIRegistry.SERIALISER_FLAVOR.register(betaFlavor);
+		TASmodAPIRegistry.SERIALISER_FLAVOR.register(alphaFlavor);
 	}
 
 	public static DesyncMonitorFileCommandExtension desyncMonitorFileCommandExtension;

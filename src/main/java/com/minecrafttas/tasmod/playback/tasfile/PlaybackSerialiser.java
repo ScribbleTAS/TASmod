@@ -177,7 +177,7 @@ public class PlaybackSerialiser {
 		// Read the head of the TASfile to check if the flavors match
 		SerialiserFlavorBase flavorInFile = readFlavor(file);
 		if (!flavor.equals(flavorInFile)) {
-			throw new PlaybackLoadException("Detected flavor %s in the TASfile, which does not match the specified flavor: %s");
+			throw new PlaybackLoadException("Detected flavor %s in the TASfile, which does not match the specified flavor: %s", flavorInFile.getExtensionName(), flavor.getExtensionName());
 		}
 
 		flavor.setProcessExtensions(processExtensions);
@@ -234,7 +234,7 @@ public class PlaybackSerialiser {
 	 */
 	public static SerialiserFlavorBase searchForFlavor(List<String> lines, List<SerialiserFlavorBase> flavorList) {
 		for (SerialiserFlavorBase flavor : flavorList) {
-			if (flavor.deserialiseFlavorName(lines)) {
+			if (flavor.checkFlavorName(lines)) {
 				return flavor.clone();
 			}
 		}

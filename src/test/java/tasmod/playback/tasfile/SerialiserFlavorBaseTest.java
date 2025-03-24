@@ -773,9 +773,10 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		List<String> actualComments = new ArrayList<>();
 		List<String> actualTick = new ArrayList<>();
-		List<List<PlaybackFileCommand>> actualInlineFileCommands = new ArrayList<>();
+		splitContainer(lines, actualComments, actualTick);
 
-		splitContainer(lines, actualComments, actualTick, actualInlineFileCommands);
+		List<List<PlaybackFileCommand>> actualInlineFileCommands = new ArrayList<>();
+		deserialiseMultipleInlineComments(actualComments, actualInlineFileCommands);
 
 		List<String> expectedComments = new ArrayList<>();
 		List<String> expectedTicks = new ArrayList<>();

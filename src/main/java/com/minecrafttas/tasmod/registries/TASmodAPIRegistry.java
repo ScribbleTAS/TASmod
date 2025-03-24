@@ -4,7 +4,7 @@ import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommandsRegistr
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorRegistry;
-import com.minecrafttas.tasmod.playback.tasfile.flavor.integrated.Beta1Flavor;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.builtin.Beta1Flavor;
 
 public class TASmodAPIRegistry {
 	/**

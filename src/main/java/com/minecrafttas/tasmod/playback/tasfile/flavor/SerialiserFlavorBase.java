@@ -10,6 +10,9 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.registry.Registerable;
@@ -19,6 +22,7 @@ import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.virtual.Subtickable;
@@ -27,12 +31,60 @@ import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
+/**
+ * <p>The base class of a flavor
+ * 
+ * <p>All serialisation and deserialisation is broken apart into functions whenever possible,<br>
+ * with the intention of allowing small changes to the existing syntax.
+ * 
+ * <p>Adding functionality to playback should be made via {@link PlaybackFileCommand PlaybackFileCommands}<br>
+ * instead of creating a new syntax and adding new information to the header should be made via {@link PlaybackMetadata}
+ * 
+ * <h2>Sections</h2>
+ * <p>The TASfile has 2 main sections, which are called seperately by the {@link PlaybackSerialiser}:
+ * 
+ * <ol>
+ * 	<li>
+ * 		<strong>Header</strong><br>
+ * 		Contains metadata about this TAS, like credits and start position,<br>
+ *		but also a list of enabled extensions and the name of the flavor that was used to encode the file.
+ * 	</li>
+ * 	<li>
+ * 		<strong>Content</strong><br>
+ * 		Contains the actual inputs per tick, inputs in a subtick (a.k.a in a frame), comments and other extensions.
+ * 	</li>
+ * </ol>
+ * 
+ * Both sections have serialise and deserialise methods:
+ * 
+ * <ul>
+ * 	<li>Serialisation
+ * 		<ul>
+ * 			<li>{@link #serialiseHeader()}</li>
+ * 			<li>{@link #serialise(BigArrayList, long)}</li>
+ * 		</ul>
+ * 	</li>
+ * 	<li>Deserialisation
+ * 		<ul>
+ * 			<li>{@link #deserialiseHeader(List)}</li>
+ * 			<li>{@link #deserialise(BigArrayList, long)}</li>
+ * 		</ul>
+ * 	</li>
+ * </ul>
+ * 
+ * Clicking on either of these will lead you to a breakdown in their respective javadocs
+ * 
+ * @author Scribble
+ */
 public abstract class SerialiserFlavorBase implements Registerable {
 
+	/**
+	 * The current line that is being serialised or deserialised. Used for debugging
+	 */
 	protected long currentLine = 1;
 
 	/**
-	 * The current tick that is being serialised or deserialised
+	 * The current tick that is being serialised or deserialised. Used for debugging
 	 */
 	protected long currentTick = 0;
 
@@ -41,31 +93,15 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 */
 	protected int currentSubtick = 0;
 
+	/**
+	 * Previous serialised or deserialised container, used for allowing relative values in {@link #deserialiseRelativeFloat(String, String, Float) deserialiseRelativeFloat}
+	 */
 	protected TickContainer previousTickContainer = null;
 
 	/**
 	 * If true, process extension data like {@link PlaybackMetadata PlaybackMetadata} and {@link PlaybackFileCommand PlaybackFileCommands}
 	 */
 	protected boolean processExtensions = true;
-
-	protected String headerStart() {
-		return createCenteredHeading("TASfile", '#', 50);
-	}
-
-	/**
-	 * @return The regex used for detecting comment lines
-	 */
-	protected String singleComment() {
-		return "^//";
-	}
-
-	protected String endlineComment() {
-		return "(//.+)";
-	}
-
-	protected String headerEnd() {
-		return createPaddedString('#', 50);
-	}
 
 	/*==============================================
 		   _____           _       _ _          
@@ -77,6 +113,73 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		 
 	  ==============================================*/
 
+	/*
+	 _   _  ____    __    ____  ____  ____ 
+	( )_( )( ___)  /__\  (  _ \( ___)(  _ \
+	 ) _ (  )__)  /(__)\  )(_) ))__)  )   /
+	(_) (_)(____)(__)(__)(____/(____)(_)\_)
+	
+	 */
+
+	/**
+	 * <h5>Example</h5>
+	 * <pre>
+	 * ##################### TASfile ####################
+	 * </pre>
+	 * @return The very top of the header
+	 */
+	protected String headerStart() {
+		return createCenteredHeading("TASfile", '#', 50);
+	}
+
+	/**
+	 * <p>The end of the header, used for detecting when the header stops
+	 * <h5>Example</h5>
+	 * <pre>
+	 * ##################################################
+	 * </pre>
+	 * @return The end of the header
+	 */
+	protected String headerEnd() {
+		return createPaddedString('#', 50);
+	}
+
+	/**
+	 * <p>Serialises the flavor of this file, the enabled file commands and other metadata
+	 * <h5>Tree</h5>
+	 * <pre>
+	 * serialiseHeader
+	 *	├── {@link #headerStart()}
+	 *	├── {@link #serialiseFlavorName(List)}
+	 *	├── {@link #serialiseFileCommandNames(List)}
+	 *	├── {@link #serialiseMetadata(List)}
+	 *	│   ├── {@link #serialiseMetadataName(List, String)}
+	 *	│   └── {@link #serialiseMetadataValues(List, LinkedHashMap)}
+	 *	└── {@link #headerEnd()}
+	 * </pre>
+	 * <h5>Example</h5>
+	 * <pre>
+	 * ##################### TASfile ####################					// {@link #headerStart()}
+	 * Flavor: beta1 										// {@link #serialiseFlavorName(List)}
+	 * FileCommand-Extensions: tasmod_desyncMonitor@v1, tasmod_options@v1, tasmod_label@v1	// {@link #serialiseFileCommandNames(List)}
+	 * 
+	 * --------------------- Credits -------------------- 					// {@link #serialiseMetadataName(List, String)}
+	 * Title:Insert TAS category here 							// {@link #serialiseMetadataValues(List, LinkedHashMap)}
+	 * Author:Insert author here
+	 * Playing Time:00:00.0
+	 * Rerecords:0
+	 * 
+	 * ----------------- Start Position -----------------
+	 * x:-32.577311363268976
+	 * y:56.0
+	 * z:-4.457057187505265
+	 * pitch:29.25007
+	 * yaw:-88.80094
+	 * 
+	 * ##################################################					// {@link #headerEnd()}
+	 * </pre>
+	 * @return List of lines containing the header
+	 */
 	public List<String> serialiseHeader() {
 		List<String> out = new ArrayList<>();
 		out.add(headerStart());
@@ -87,10 +190,29 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
+	/**
+	 * <p>How the flavor name is serialised
+	 * <p>You normally don't have to edit this,<br>
+	 * as the flavor name is taken from the extension name.
+	 * <h5>Example</h5>
+	 * <pre>
+	 * Flavor: beta1
+	 * </pre>
+	 * 
+	 * @param out The serialised lines, passed by reference
+	 */
 	protected void serialiseFlavorName(List<String> out) {
 		out.add("Flavor: " + getExtensionName());
 	}
 
+	/**
+	 * <p>Adds the file commands that are enabled to the lines
+	 * <h5>Example</h5>
+	 * <pre>
+	 * FileCommand-Extensions: tasmod_label@v1, tasmod_desyncMonitor@v1
+	 * </pre>
+	 * @param out The serialised lines, passed by reference
+	 */
 	protected void serialiseFileCommandNames(List<String> out) {
 		List<String> stringlist = new ArrayList<>();
 		List<PlaybackFileCommandExtension> extensionList = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
@@ -101,6 +223,25 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		out.add("");
 	}
 
+	/**
+	 * <p>Serialises the metadata to the header of the TASfile
+	 * <h5>Example</h5>
+	 * <pre>
+	 * --------------------- Credits --------------------
+	 * Title:Insert TAS category here
+	 * Author:Insert author here
+	 * Playing Time:00:00.0
+	 * Rerecords:0
+	 * 
+	 * ----------------- Start Position -----------------
+	 * x:-32.577311363268976
+	 * y:56.0
+	 * z:-4.457057187505265
+	 * pitch:29.25007
+	 * yaw:-88.80094
+	 * </pre>
+	 * @param out
+	 */
 	protected void serialiseMetadata(List<String> out) {
 		if (!processExtensions)
 			return;
@@ -109,21 +250,76 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 		for (PlaybackMetadata metadata : metadataList) {
 			serialiseMetadataName(out, metadata.getExtensionName());
-			serialiseMetadataValue(out, metadata.getData());
+			serialiseMetadataValues(out, metadata.getData());
 			out.add("");
 		}
 	}
 
+	/**
+	 * <p>Serialises only the name of the metadata section
+	 * <h5>Example</h5>
+	 * <pre>
+	 * --------------------- Credits --------------------
+	 * </pre>
+	 * @param out The lines passed in by reference
+	 * @param name The name to process
+	 */
 	protected void serialiseMetadataName(List<String> out, String name) {
 		out.add(createCenteredHeading(name, '-', 50));
 	}
 
-	protected void serialiseMetadataValue(List<String> out, LinkedHashMap<String, String> data) {
+	/**
+	 * <p>Serialises only the values of the metadata section
+	 * <h5>Example</h5>
+	 * <pre>
+	 * Title:Insert TAS category here
+	 * Author:Insert author here
+	 * Playing Time:00:00.0
+	 * Rerecords:0
+	 * </pre>
+	 * @param out
+	 * @param data
+	 */
+	protected void serialiseMetadataValues(List<String> out, LinkedHashMap<String, String> data) {
 		data.forEach((key, value) -> {
 			out.add(String.format("%s:%s", key, value));
 		});
 	}
 
+	/*
+	  ___  _____  _  _  ____  ____  _  _  ____ 
+	 / __)(  _  )( \( )(_  _)( ___)( \( )(_  _)
+	( (__  )(_)(  )  (   )(   )__)  )  (   )(  
+	 \___)(_____)(_)\_) (__) (____)(_)\_) (__) 
+	
+	 */
+
+	/**
+	 * <p>Serialises a list of inputs into a list of strings
+	 * <h5>Tree</h5>
+	 * <pre>
+	 * serialise
+	 * └── {@link #serialiseContainer(BigArrayList, TickContainer)}
+	 *     ├── {@link #serialiseKeyboard(VirtualKeyboard)}
+	 *     │   └── {@link #serialiseKeyboardSubtick(VirtualKeyboard)}
+	 *     ├── {@link #serialiseMouse(VirtualMouse)}
+	 *     │   └── {@link #serialiseMouseSubtick(VirtualMouse)}
+	 *     ├── {@link #serialiseCameraAngle(VirtualCameraAngle)}
+	 *     │   └── {@link #serialiseCameraAngleSubtick(VirtualCameraAngle)}
+	 *     ├── {@link #serialiseInlineComments(List, List)}
+	 *     │   └── {@link #serialiseFileCommandsInline(List)}
+	 *     │       └── {@link #serialiseFileCommand(PlaybackFileCommand)}
+	 *     ├── {@link #serialiseEndlineComments(List, List)}	// Same as serialiseInlineComments
+	 *     │   └── {@link #serialiseFileCommandsEndline(List)}	// Unused
+	 *     │       └── {@link #serialiseFileCommand(PlaybackFileCommand)}
+	 *     └── {@link #mergeInputs(BigArrayList, List, List, List, List)}
+	 *         ├── {@link #mergeInput(long, String, String, String, String)}
+	 *         └── {@link #mergeSubtickInput(long, String, String, String, String)}
+	 * </pre>
+	 * @param inputs The inputs to serialise
+	 * @param toTick The tick where to stop, used for partial serialisation by savestates. -1 to serialise all
+	 * @return The list of lines
+	 */
 	public BigArrayList<String> serialise(BigArrayList<TickContainer> inputs, long toTick) {
 		BigArrayList<String> out = new BigArrayList<>();
 
@@ -139,6 +335,12 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
+	/**
+	 * Main serialising method of a single {@link TickContainer}
+	 * 
+	 * @param out The list of serialised lines, passed in by reference
+	 * @param container The {@link TickContainer} to serialise
+	 */
 	protected void serialiseContainer(BigArrayList<String> out, TickContainer container) {
 		currentLine = out.size() - 1;
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
@@ -150,58 +352,110 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		PlaybackFileCommandContainer fileCommandsEndline = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseEndline(currentTick, container);
 
 		CommentContainer comments = container.getComments();
-		if (comments == null) {
-			comments = new CommentContainer(new ArrayList<>(), new ArrayList<>());
-		}
-		List<String> serialisedInlineCommments = serialiseInlineComments(comments.getInlineComments(), fileCommandsInline.valuesBySubtick());
+		List<String> serialisedInlineComments = serialiseInlineComments(comments.getInlineComments(), fileCommandsInline.valuesBySubtick());
 		List<String> serialisedEndlineComments = serialiseEndlineComments(comments.getEndlineComments(), fileCommandsEndline.valuesBySubtick());
 
-		addAll(out, serialisedInlineCommments);
-
-		mergeInputs(out, serialisedKeyboard, serialisedMouse, serialisedCameraAngle, serialisedEndlineComments);
+		mergeInputs(out, serialisedKeyboard, serialisedMouse, serialisedCameraAngle, serialisedInlineComments, serialisedEndlineComments);
 	}
 
-	protected String serialiseFileCommand(PlaybackFileCommand fileCommand) {
-		if (!processExtensions)
-			return "";
-		return String.format("$%s(%s);", fileCommand.getName(), String.join(", ", fileCommand.getArgs()));
-	}
-
-	protected String serialiseFileCommandsInLine(List<PlaybackFileCommand> fileCommands) {
-		if (fileCommands == null) {
-			return null;
-		}
-		List<String> serialisedCommands = new ArrayList<>();
-		for (PlaybackFileCommand command : fileCommands) {
-			serialisedCommands.add(serialiseFileCommand(command));
-		}
-		return String.join(" ", serialisedCommands);
-	}
-
+	/**
+	 * <p>Serialises a {@link VirtualKeyboard}
+	 * 
+	 * <p>A {@link VirtualKeyboard} is most often comprised of multiple subticks,<br>
+	 * which are each serialised in {@link #serialiseKeyboardSubtick(VirtualKeyboard)}
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	W;w
+	 * 	A;a
+	 * 	S,D;sd
+	 * </pre>
+	 * @param keyboard The keyboard to serialise
+	 * @return A list of serialised keyboardSubticks
+	 */
 	protected List<String> serialiseKeyboard(VirtualKeyboard keyboard) {
 		List<String> out = new ArrayList<>();
 
 		List<VirtualKeyboard> subticks = new ArrayList<>(keyboard.getAll());
-		pruneListEndEmptySubtickable(subticks);
+//		pruneListEndEmptySubtickable(subticks);
 
 		for (VirtualKeyboard subtick : subticks) {
-			out.add(subtick.toString2());
+			out.add(serialiseKeyboardSubtick(subtick));
 		}
 		return out;
 	}
 
+	/**
+	 * <p>Serialises a single keyboard subtick
+	 * <p>Used for setting the format of a keyboard input in general
+	 * <p>The input is split between keycodes and key characters by a semicolon.<br>
+	 * While the key code can be written with a number (e.g. the key with the label W is keycode 17),<br>
+	 * Only the "name of the keycode" is used for serialisation. After the semicolon a key character is used.<br>
+	 * This is what is used for the chat or books, as, when holding e.g. shift, a capitalized character is used instead (SHIFT,W;W).<br>
+	 * Keycodes on the other hand have no concept of capitalisation and are used for the actual movement keys (Forward, Backward)
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	W,S;ws
+	 * </pre>
+	 * @param keyboardSubtick The subtick to serialise
+	 * @return The serialised subtick
+	 */
+	protected String serialiseKeyboardSubtick(VirtualKeyboard keyboardSubtick) {
+		return String.format("%s;%s", String.join(",", keyboardSubtick.getCurrentPresses()), charListToString(keyboardSubtick.getCharList()));
+	}
+
+	/**
+	 * <p>Serialises a {@link VirtualMouse}
+	 * <p>A {@link VirtualMouse} is most often comprised of multiple subticks,<br>
+	 * which are each serialised in {@link #serialiseMouseSubtick(VirtualMouse)}
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	LC;0,15,21
+	 * 	RC;-15,15,21
+	 * 	RC,MC;30,14,20
+	 * </pre>
+	 * @param mouse The mouse to serialise
+	 * @return A list of serialised mouse subticks
+	 */
 	protected List<String> serialiseMouse(VirtualMouse mouse) {
 		List<String> out = new ArrayList<>();
 
 		List<VirtualMouse> subticks = new ArrayList<>(mouse.getAll());
-		pruneListEndEmptySubtickable(subticks);
+//		pruneListEndEmptySubtickable(subticks);
 
 		for (VirtualMouse subtick : subticks) {
-			out.add(subtick.toString2());
+			out.add(serialiseMouseSubtick(subtick));
 		}
 		return out;
 	}
 
+	/**
+	 * <p>Serialises a single mouse subtick
+	 * <p>The mouse subtick is comprised of the following:<br>
+	 * mouseKeycodes;scrollWheel,cursorX,cursorY
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	LC;0,15,21
+	 * </pre>
+	 * @param mouseSubtick The mouse subtick to serialise
+	 * @return The serialised mouse subtick
+	 */
+	protected String serialiseMouseSubtick(VirtualMouse mouseSubtick) {
+		return String.format("%s;%s,%s,%s", String.join(",", mouseSubtick.getCurrentPresses()), mouseSubtick.getScrollWheel(), mouseSubtick.getCursorX(), mouseSubtick.getCursorY());
+	}
+
+	/**
+	 * <p>Serialises a {@link VirtualCameraAngle}
+	 * <p>A {@link VirtualCameraAngle} is most often comprised of multiple subticks,<br>
+	 * which are each serialised in {@link #serialiseCameraAngleSubtick(VirtualCameraAngle)}
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	35;26
+	 * 	34;25
+	 * 	140;-130
+	 * </pre>
+	 * @param cameraAngle Camera angle to serialise
+	 * @return The serialised list of camera angles
+	 */
 	protected List<String> serialiseCameraAngle(VirtualCameraAngle cameraAngle) {
 
 		VirtualCameraAngle previousCamera = null;
@@ -210,13 +464,41 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		for (VirtualCameraAngle subtick : cameraAngle.getAll()) {
 
 			if (!subtick.equals(previousCamera))
-				out.add(String.format("%s;%s", subtick.getYaw(), subtick.getPitch()));
+				out.add(serialiseCameraAngleSubtick(subtick));
 
 			previousCamera = subtick;
 		}
 		return out;
 	}
 
+	/**
+	 * <p>Serialises a single camera angle subtick
+	 * <p>The subtick is comprised of:<br>
+	 * The camera angle yaw and the camera angle pitch
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	140;-130
+	 * </pre>
+	 * 
+	 * @param cameraAngleSubtick The camera angle subtick to serialise
+	 * @return The serialised camera angle subtick
+	 */
+	protected String serialiseCameraAngleSubtick(VirtualCameraAngle cameraAngleSubtick) {
+		return String.format("%s;%s", cameraAngleSubtick.getYaw(), cameraAngleSubtick.getPitch());
+	}
+
+	/**
+	 * <p>Serialise comments that take up an entire line
+	 * <p>In addition, comments can contain {@link PlaybackFileCommand FileCommands} that are serialised in {@link #serialiseFileCommandsInline(List)}
+	 * <h5>Example</h5>
+	 * <pre>
+	 * // Inline comment
+	 * 12|W;w||0;0
+	 * </pre>
+	 * @param inlineComments The list of inline comments to serialise
+	 * @param fileCommandsInline The list of file commands to serialise
+	 * @return List of comments including file commands
+	 */
 	protected List<String> serialiseInlineComments(List<String> inlineComments, List<List<PlaybackFileCommand>> fileCommandsInline) {
 		List<String> out = new ArrayList<>();
 
@@ -236,7 +518,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 				String command = null;
 				if (fileCommandQueue != null) {
-					command = serialiseFileCommandsInLine(fileCommandQueue.poll()); // Trying to poll a fileCommand. Command can be null at this point
+					command = serialiseFileCommandsInline(fileCommandQueue.poll()); // Trying to poll a fileCommand. Command can be null at this point
 				}
 
 				// Add an empty line if comment and command is null
@@ -245,7 +527,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 					continue;
 				}
 
-				out.add(String.format("// %s", joinNotEmpty(" ", command, comment)));
+				out.add(serialiseInlineComment(joinNotEmpty(" ", command, comment)));
 			}
 		}
 
@@ -255,9 +537,9 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			// add the rest of the fileCommands to the end
 			while (!fileCommandQueue.isEmpty()) {
 
-				String command = serialiseFileCommandsInLine(fileCommandQueue.poll());
+				String command = serialiseFileCommandsInline(fileCommandQueue.poll());
 				if (command != null) {
-					out.add(String.format("// %s", command));
+					out.add(serialiseInlineComment(command));
 				} else {
 					out.add(""); // Add an empty line if command is null
 				}
@@ -267,39 +549,249 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
-	protected List<String> serialiseEndlineComments(List<String> endlineComments, List<List<PlaybackFileCommand>> fileCommandsEndline) {
-		return serialiseInlineComments(endlineComments, fileCommandsEndline);
+	protected String serialiseInlineComment(String comment) {
+		return String.format("// %s", comment);
 	}
 
-	protected void mergeInputs(BigArrayList<String> out, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> serialisedEndlineComments) {
+	/**
+	 * <p>Serialise comments that are written at the end of the line
+	 * <h5>Example</h5>
+	 * <pre>
+	 *	12|W;w||0;0	// Endline comment
+	 * </pre>
+	 * @param endlineComments The list of endline comments to serialise
+	 * @param fileCommandsEndline The list of file commands to serialise
+	 * @return The serialised comments
+	 */
+	protected List<String> serialiseEndlineComments(List<String> endlineComments, List<List<PlaybackFileCommand>> fileCommandsEndline) {
+		List<String> out = new ArrayList<>();
+
+		Queue<List<PlaybackFileCommand>> fileCommandQueue = null;
+		if (fileCommandsEndline != null) {
+			fileCommandQueue = new LinkedList<>(fileCommandsEndline);
+		}
+
+		// Serialise comments and merge them with file commands
+		if (endlineComments != null) {
+
+			Queue<String> commentQueue = new LinkedList<>(endlineComments);
+
+			// Iterate through comments
+			while (!commentQueue.isEmpty()) {
+				String comment = commentQueue.poll(); // Due to commentQueue being a LinkedList, comment can be null at this point! 
+
+				String command = null;
+				if (fileCommandQueue != null) {
+					command = serialiseFileCommandsEndline(fileCommandQueue.poll()); // Trying to poll a fileCommand. Command can be null at this point
+				}
+
+				// Add an empty line if comment and command is null
+				if (comment == null && command == null) {
+					out.add("");
+					continue;
+				}
+
+				out.add(serialiseEndlineComment(joinNotEmpty(" ", command, comment)));
+			}
+		}
+
+		if (fileCommandQueue != null) {
+
+			// If the fileCommandQueue is not empty or longer than the commentQueue,
+			// add the rest of the fileCommands to the end
+			while (!fileCommandQueue.isEmpty()) {
+
+				String command = serialiseFileCommandsEndline(fileCommandQueue.poll());
+				if (command != null) {
+					out.add(serialiseEndlineComment(command));
+				} else {
+					out.add(""); // Add an empty line if command is null
+				}
+			}
+		}
+
+		return out;
+	}
+
+	protected String serialiseEndlineComment(String comment) {
+		return String.format("// %s", comment);
+	}
+
+	/**
+	 * <p>Serialises a list of file commands in an inline comment
+	 * <p>Uses {@link #serialiseFileCommand(PlaybackFileCommand) serialiseFileCommand} for the actual file command format,<br>
+	 * while this method dictates how they are joined together
+	 * <p>By default, multiple file commands may be serialised like this
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	// $fileCommandName1(argument1); $fileCommandName2(argument1, argument2);
+	 * </pre>
+	 * @param fileCommands The file commands to serialise
+	 * @return A string of serialised file commands or null if fileCommands is null
+	 */
+	protected String serialiseFileCommandsInline(List<PlaybackFileCommand> fileCommands) {
+		// File commands is null if there are no file commands in the comment.
+		// Return null if that is the case
+		if (fileCommands == null) {
+			return null;
+		}
+		List<String> serialisedCommands = new ArrayList<>();
+		for (PlaybackFileCommand command : fileCommands) {
+			serialisedCommands.add(serialiseFileCommand(command));
+		}
+		return String.join(" ", serialisedCommands);
+	}
+
+	/**
+	 * <p>Serialises a list of file commands in an endline comment
+	 * <p>This is added in case a flavor needs a different format for endline and inline commands,<br>
+	 * but by default this is the same as {@link #serialiseFileCommandsInline(List) serialiseFileCommandsInLine}
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	12|W;w||0;0	// $fileCommandName1(argument1); $fileCommandName2(argument1, argument2);
+	 * </pre>
+	 * @param fileCommands The file commands to serialise
+	 * @return A string of serialised file commands or null if fileCommands is null
+	 */
+	protected String serialiseFileCommandsEndline(List<PlaybackFileCommand> fileCommands) {
+		return serialiseFileCommandsInline(fileCommands);
+	}
+
+	/**
+	 * <p>Serialises a single file command.
+	 * <p>Used for setting the format of file commands
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 	$fileCommandName(argument1, argument2, argument3);
+	 * </pre>
+	 * 
+	 * <p>Has to check if {@link #processExtensions} is false
+	 * @param fileCommand The {@link PlaybackFileCommand} to serialise
+	 * @return The serialised file command, empty if {@link #processExtensions} is false
+	 */
+	protected String serialiseFileCommand(PlaybackFileCommand fileCommand) {
+		if (!processExtensions)
+			return "";
+		return String.format("$%s(%s);", fileCommand.getName(), String.join(", ", fileCommand.getArgs()));
+	}
+
+	/**
+	 * <p>Merges lists of keyboard, mouse, camera angle, inline and endline comments together into one string
+	 * <h5>Example</h5>
+	 * <pre>
+	 * // Inline comment
+	 * // $inlineFileCommand(arg);
+	 * 256|W;w|;0,0,0|31.778223;85.11482		// Endline comment
+	 *	1|W,S;s|;0,0,0|34.47822;82.56482	// $endlineFileCommand(arg)
+	 *	2|;||37.02822;79.86482
+	 * </pre>
+	 * @param out The list of lines that will be written to file, passed in by reference
+	 * @param serialisedKeyboard The serialised keyboard from {@link #serialiseKeyboard(VirtualKeyboard)}
+	 * @param serialisedMouse The serialised mouse from {@link #serialiseMouse(VirtualMouse)}
+	 * @param serialisedCameraAngle The serialised camera angle from {@link #serialiseCameraAngle(VirtualCameraAngle)}
+	 * @param serialisedInlineComments The inline comments from {@link #serialiseInlineComments(List, List)}
+	 * @param serialisedEndlineComments The endline comments from {@link #serialiseEndlineComments(List, List)}
+	 */
+	protected void mergeInputs(BigArrayList<String> out, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> serialisedInlineComments, List<String> serialisedEndlineComments) {
+
+		/*
+		 *  Firstly add inline comments, as they appear before the inputs in the container:
+		 *  Example:
+		 *  // This is an inline comment
+		 *  1|||0;0
+		 */
+		addAll(out, serialisedInlineComments);
+
+		/*
+		 * Copy inputs with ticks and subticks into a queue,
+		 * so they can be serialised even if the length is different
+		 */
 		Queue<String> keyboardQueue = new LinkedBlockingQueue<>(serialisedKeyboard);
 		Queue<String> mouseQueue = new LinkedBlockingQueue<>(serialisedMouse);
 		Queue<String> cameraAngleQueue = new LinkedBlockingQueue<>(serialisedCameraAngle);
-		Queue<String> endlineQueue = new LinkedBlockingQueue<>(serialisedEndlineComments);
+		Queue<String> endlineCommentQueue = new LinkedBlockingQueue<>(serialisedEndlineComments);
 
 		String kb = getOrEmpty(keyboardQueue.poll());
 		String ms = getOrEmpty(mouseQueue.poll());
 		String ca = getOrEmpty(cameraAngleQueue.poll());
 
-		String elc = getOrEmpty(endlineQueue.poll());
+		String elc = getOrEmpty(endlineCommentQueue.poll());
 		if (!elc.isEmpty()) {
 			elc = "\t\t" + elc;
 		}
 
-		out.add(String.format("%s|%s|%s|%s%s", currentTick, kb, ms, ca, elc));
+		// Add tick line, not indented
+		out.add(mergeInput(currentTick, kb, ms, ca, elc));
 
+		// Add subtick lines, not indented
 		currentSubtick = 0;
 		while (!keyboardQueue.isEmpty() || !mouseQueue.isEmpty() || !cameraAngleQueue.isEmpty()) {
 			currentSubtick++;
 			kb = getOrEmpty(keyboardQueue.poll());
 			ms = getOrEmpty(mouseQueue.poll());
 			ca = getOrEmpty(cameraAngleQueue.poll());
+			elc = getOrEmpty(endlineCommentQueue.poll());
+			if (!elc.isEmpty()) {
+				elc = "\t\t" + elc;
+			}
 
-			out.add(String.format("\t%s|%s|%s|%s", currentSubtick, kb, ms, ca));
+			out.add(mergeSubtickInput(currentSubtick, kb, ms, ca, elc));
+		}
+
+		/*
+		 *  Add the rest of the endline comments.
+		 *  Normally there shouldn't be more comments
+		 *  than subticks, but maybe some file command extension
+		 *  demands it
+		 */
+		while (!endlineCommentQueue.isEmpty()) {
+			elc = getOrEmpty(endlineCommentQueue.poll());
+			out.add(String.format("\t|||;\t\t%s", elc));
 		}
 		currentSubtick = 0;
 	}
 
+	/**
+	 * <p>How parent inputs are merged
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 256|W;w|;0,0,0|31.778223;85.11482		// Endline comment
+	 * </pre>
+	 * 
+	 * @param currentTick The current tick
+	 * @param keyboard The serialised keyboard 
+	 * @param mouse The serialised mouse
+	 * @param cameraAngle The serialises camera angle
+	 * @param endLineComment The end line comment
+	 * @return The merged strings
+	 */
+	protected String mergeInput(long currentTick, String keyboard, String mouse, String cameraAngle, String endLineComment) {
+		return String.format("%s|%s|%s|%s%s", currentTick, keyboard, mouse, cameraAngle, endLineComment);
+	}
+
+	/**
+	 * <p>How subtick inputs are merged
+	 * <h5>Example</h5>
+	 * <pre>
+	 * 256|W;w|;0,0,0|31.778223;85.11482		// Parent
+	 *	1|W,S;s|;0,0,0|34.47822;82.56482		// Subtick
+	 * </pre>
+	 * @param currentSubtick The current subtick in this sequence
+	 * @param keyboard The serialised keyboard
+	 * @param mouse The serialised mouse
+	 * @param cameraAngle The serialised camera angle
+	 * @param endLineComment The serialised end line comment
+	 * @return The merged subticks
+	 */
+	protected String mergeSubtickInput(int currentSubtick, String keyboard, String mouse, String cameraAngle, String endLineComment) {
+		return String.format("\t%s|%s|%s|%s%s", currentSubtick, keyboard, mouse, cameraAngle, endLineComment);
+	}
+
+	/**
+	 * If a string is null, return an empty string
+	 * @param string String to check
+	 * @return The string or empty if null
+	 */
 	protected String getOrEmpty(String string) {
 		return string == null ? "" : string;
 	}
@@ -327,6 +819,13 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
+	/**
+	 * Joins strings together but ignores empty strings
+	 * 
+	 * @param delimiter The delimiter of the joined string
+	 * @param args The strings to join
+	 * @return Joined string
+	 */
 	protected String joinNotEmpty(String delimiter, String... args) {
 		return joinNotEmpty(delimiter, Arrays.asList(args));
 	}
@@ -343,7 +842,21 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * 
 	 */
 
-	public boolean deserialiseFlavorName(List<String> headerLines) {
+	/*
+	 _   _  ____    __    ____  ____  ____ 
+	( )_( )( ___)  /__\  (  _ \( ___)(  _ \
+	 ) _ (  )__)  /(__)\  )(_) ))__)  )   /
+	(_) (_)(____)(__)(__)(____/(____)(_)\_)
+	
+	 */
+
+	/**
+	 * <p>Checks if the name of this flavor is present in the header of the TASfile.
+	 * <p>Used to determine the flavor of the file if the flavor is not given
+	 * @param headerLines The lines from the header to check
+	 * @return True, if the flavor name is present in the header
+	 */
+	public boolean checkFlavorName(List<String> headerLines) {
 		for (String line : headerLines) {
 			Matcher matcher = extract("^Flavor: " + getExtensionName(), line);
 
@@ -354,11 +867,14 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return false;
 	}
 
-	public void deserialiseHeader(List<String> headerLines) {
-		deserialiseMetadata(headerLines);
-		deserialiseFileCommandNames(headerLines);
-	}
-
+	/**
+	 * <p>Extracts the header from the TASfile
+	 * <p>Optimization to seperate the header from the actual inputs.<br>
+	 * Only reads a maximum of 1000 and until it finds {@link #headerEnd()}
+	 * @param lines The total lines to check
+	 * @return The list of lines containing the header
+	 * @throws PlaybackLoadException If the end of the header is not found after 1000 lines
+	 */
 	public List<String> extractHeader(BigArrayList<String> lines) {
 		List<String> extracted = new ArrayList<>();
 
@@ -376,28 +892,26 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		throw new PlaybackLoadException("Cannot find the end of the header");
 	}
 
-	protected void deserialiseFileCommandNames(List<String> headerLines) {
-		if (!processExtensions) // Stops FileCommandProcessing
-			return;
-
-		for (String line : headerLines) {
-			Matcher matcher = extract("FileCommand-Extensions: ?(.*)", line);
-
-			if (matcher.find()) {
-
-				if (!processExtensions)
-					return;
-
-				String extensionStrings = matcher.group(1);
-				String[] extensionNames = extensionStrings.split(", ?");
-
-				TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled(Arrays.asList(extensionNames));
-				return;
-			}
-		}
-		throw new PlaybackLoadException("FileCommand-Extensions value was not found in the header");
+	/**
+	 * <p>Deserialise header lines
+	 * <pre>
+	 *	deserialiseHeader
+	 *  ├── {@link #deserialiseMetadata(List)}
+	 *  └── {@link #deserialiseFileCommandNames(List)}
+	 * </pre>
+	 * @param headerLines The header lines to deserialise
+	 * @see #serialiseHeader()
+	 */
+	public void deserialiseHeader(List<String> headerLines) {
+		deserialiseMetadata(headerLines);
+		deserialiseFileCommandNames(headerLines);
 	}
 
+	/**
+	 * <p>Deserialises the TASfile metadata
+	 * @param headerLines
+	 * @see #serialiseMetadata(List)
+	 */
 	protected void deserialiseMetadata(List<String> headerLines) {
 		if (!processExtensions)
 			return;
@@ -435,11 +949,39 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	/**
+	 * <p>Deserialises file command extension names and enables them
+	 * @param headerLines The header lines to search
+	 * @see #serialiseFileCommandNames(List)
+	 * @throws PlaybackLoadException If the "FileCommand-Extensions" keyword is not found in the header
+	 */
+	protected void deserialiseFileCommandNames(List<String> headerLines) {
+		if (!processExtensions) // Stops FileCommandProcessing
+			return;
+
+		for (String line : headerLines) {
+			Matcher matcher = extract("FileCommand-Extensions: ?(.*)", line);
+
+			if (matcher.find()) {
+
+				if (!processExtensions)
+					return;
+
+				String extensionStrings = matcher.group(1);
+				String[] extensionNames = extensionStrings.split(", ?");
+
+				TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled(extensionNames);
+				return;
+			}
+		}
+		throw new PlaybackLoadException("FileCommand-Extensions value was not found in the header");
+	}
+
+	/**
 	 * Deserialises the input part of the TASfile
 	 * 
 	 * @param lines    The serialised lines of the TASfile
 	 * @param startPos The position when the header ends and the inputs start
-	 * @return A list of {@link TickContainer}
+	 * @return A list of {@link TickContainer TickContainers}
 	 */
 	public BigArrayList<TickContainer> deserialise(BigArrayList<String> lines, long startPos) {
 		BigArrayList<TickContainer> out = new BigArrayList<>();
@@ -448,7 +990,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			// Extract the tick and set the index
 			i = extractContainer(container, lines, i);
 			currentLine = i;
-			// Extract container
+			// Deserialise container
 			deserialiseContainer(out, container);
 			currentTick++;
 		}
@@ -618,8 +1160,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 		List<String> inlineComments = new ArrayList<>();
 		List<String> tickLines = new ArrayList<>();
+		splitContainer(containerLines, inlineComments, tickLines);
+
 		List<List<PlaybackFileCommand>> inlineFileCommands = new ArrayList<>();
-		splitContainer(containerLines, inlineComments, tickLines, inlineFileCommands);
+		deserialiseMultipleInlineComments(inlineComments, inlineFileCommands);
 
 		List<String> keyboardStrings = new ArrayList<>();
 		List<String> mouseStrings = new ArrayList<>();
@@ -627,7 +1171,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		List<String> endlineComments = new ArrayList<>();
 		List<List<PlaybackFileCommand>> endlineFileCommands = new ArrayList<>();
 
-		splitInputs(containerLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments, endlineFileCommands);
+		splitInputs(tickLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments, endlineFileCommands);
 
 		pruneListEndNull(endlineComments);
 
@@ -653,23 +1197,32 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * 
 	 * @param lines
 	 */
-	protected void splitContainer(List<String> lines, List<String> comments, List<String> tick, List<List<PlaybackFileCommand>> inlineFileCommands) {
+	protected void splitContainer(List<String> lines, List<String> inlineComments, List<String> ticks) {
 		for (String line : lines) {
 			if (contains(singleComment(), line)) {
-				List<PlaybackFileCommand> deserialisedFileCommand = new ArrayList<>();
-				comments.add(deserialiseInlineComment(line, deserialisedFileCommand));
-				if (deserialisedFileCommand.isEmpty()) {
-					deserialisedFileCommand = null;
-				}
-				inlineFileCommands.add(deserialisedFileCommand);
+				inlineComments.add(line);
 			} else {
-				tick.add(line);
+				ticks.add(line);
 			}
 		}
 	}
 
+	protected void deserialiseMultipleInlineComments(List<String> inlineComments, List<List<PlaybackFileCommand>> inlineFileCommands) {
+		for (int i = 0; i < inlineComments.size(); i++) {
+			List<PlaybackFileCommand> deserialisedFileCommand = new ArrayList<>();
+			String comment = inlineComments.get(i);
+
+			inlineComments.set(i, deserialiseInlineComment(comment, deserialisedFileCommand));
+
+			if (deserialisedFileCommand.isEmpty()) {
+				deserialisedFileCommand = null;
+			}
+			inlineFileCommands.add(deserialisedFileCommand);
+		}
+	}
+
 	protected String deserialiseInlineComment(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
-		comment = deserialiseFileCommands(comment, deserialisedFileCommands);
+		comment = deserialiseFileCommandsInline(comment, deserialisedFileCommands);
 		comment = extract("^// ?(.+)", comment, 1);
 		if (comment != null) {
 			comment = comment.trim();
@@ -681,12 +1234,39 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected String deserialiseEndlineComment(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
-		return deserialiseInlineComment(comment, deserialisedFileCommands);
+		comment = deserialiseFileCommandsEndline(comment, deserialisedFileCommands);
+		comment = extract("^// ?(.+)", comment, 1);
+		if (comment != null) {
+			comment = comment.trim();
+			if (comment.isEmpty()) {
+				comment = null;
+			}
+		}
+		return comment;
 	}
 
-	protected String deserialiseFileCommands(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
-
+	protected String deserialiseFileCommandsInline(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
 		Matcher matcher = extract("\\$(.+?)\\((.*?)\\);", comment);
+
+		// Iterate through all file commands and add each to the list
+		while (matcher.find()) {
+			String name = matcher.group(1);
+			String[] args = matcher.group(2).split(", ?");
+
+			if (processExtensions)
+				deserialisedFileCommands.add(new PlaybackFileCommand(name, args));
+
+			comment = matcher.replaceFirst("");
+			matcher.reset(comment);
+		}
+
+		return comment;
+	}
+
+	protected String deserialiseFileCommandsEndline(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+		Matcher matcher = extract("\\$(.+?)\\((.*?)\\);", comment);
+
+		// Iterate through all file commands and add each to the list
 		while (matcher.find()) {
 			String name = matcher.group(1);
 			String[] args = matcher.group(2).split(", ?");
@@ -912,7 +1492,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		}
 
 		for (String line : lines) {
-			Matcher tickMatcher = extract("^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?", line);
+			Matcher tickMatcher = extract(splitInputRegex(), line);
 
 			if (tickMatcher.find()) {
 				if (!tickMatcher.group(1).isEmpty()) {
@@ -941,6 +1521,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				endlineFileCommands.add(deserialisedFileCommands);
 			}
 		}
+	}
+
+	protected String splitInputRegex() {
+		return "^\\t?\\d+\\|(.*?)\\|(.*?)\\|(\\S*)\\s?";
 	}
 
 	protected Matcher extract(String regex, String haystack) {
@@ -1070,6 +1654,17 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		}
 	}
 
+	/**
+	 * @return The regex used for detecting comment lines
+	 */
+	protected String singleComment() {
+		return "^//";
+	}
+
+	protected String endlineComment() {
+		return "(//.+)";
+	}
+
 	@Override
 	public abstract SerialiserFlavorBase clone();
 
@@ -1082,7 +1677,24 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return super.equals(obj);
 	}
 
+	/**
+	 * Set if extensions should be loaded.
+	 * 
+	 * Setting this to false will stop {@link TASmodAPIRegistry#PLAYBACK_FILE_COMMAND} and {@link TASmodAPIRegistry#PLAYBACK_METADATA} from being processed
+	 * 
+	 * @param processExtensions
+	 */
 	public void setProcessExtensions(boolean processExtensions) {
 		this.processExtensions = processExtensions;
+	}
+
+	protected String charListToString(List<Character> charList) {
+		String charString = "";
+		if (!charList.isEmpty()) {
+			charString = charList.stream().map(Object::toString).collect(Collectors.joining());
+			charString = StringUtils.replace(charString, "\r", "\\n");
+			charString = StringUtils.replace(charString, "\n", "\\n");
+		}
+		return charString;
 	}
 }

@@ -23,12 +23,12 @@ public class PlaybackMetadata {
 		this(extension.getExtensionName());
 	}
 
-	private PlaybackMetadata(String extensionName) {
+	public PlaybackMetadata(String extensionName) {
 		this.extensionName = extensionName;
 		this.data = new LinkedHashMap<String, String>();
 	}
 
-	private PlaybackMetadata(String extensionName, LinkedHashMap<String, String> data) {
+	public PlaybackMetadata(String extensionName, LinkedHashMap<String, String> data) {
 		this.extensionName = extensionName;
 		this.data = data;
 	}
@@ -37,8 +37,16 @@ public class PlaybackMetadata {
 		data.put(key, value);
 	}
 
+	public void setValue(Object key, String value) {
+		setValue(key.toString(), value);
+	}
+
 	public String getValue(String key) {
 		return data.get(key);
+	}
+
+	public String getValue(Object key) {
+		return getValue(key.toString());
 	}
 
 	@Override

@@ -1,6 +1,7 @@
-package com.minecrafttas.tasmod.playback.filecommands.integrated;
+package com.minecrafttas.tasmod.playback.filecommands.builtin;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
@@ -16,7 +17,17 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 	BigArrayList<PlaybackFileCommandContainer> label = new BigArrayList<>();
 
 	public LabelFileCommandExtension() {
-		super("label");
+		this("label");
+	}
+
+	public LabelFileCommandExtension(String tempDirName) {
+		super(tempDirName);
+		this.label = new BigArrayList<>(tempDir.toString());
+		enabled = true;
+	}
+
+	public LabelFileCommandExtension(Path tempDir) {
+		super(tempDir);
 		this.label = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
@@ -29,6 +40,15 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 	@Override
 	public String[] getFileCommandNames() {
 		return new String[] { "label" };
+	}
+
+	@Override
+	public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, TickContainer tickContainer) {
+		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer();
+		if (label.size() != 0 && label.get(tick).get("label") != null) {
+			fileCommandContainer = label.get(tick);
+		}
+		return fileCommandContainer;
 	}
 
 	@Override

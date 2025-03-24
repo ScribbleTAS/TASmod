@@ -1,6 +1,7 @@
-package com.minecrafttas.tasmod.playback.filecommands.integrated;
+package com.minecrafttas.tasmod.playback.filecommands.builtin;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmod;
@@ -18,8 +19,18 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	BigArrayList<PlaybackFileCommandContainer> hud;
 
 	public OptionsFileCommandExtension() {
-		super("hud");
+		this("hud");
+	}
+
+	public OptionsFileCommandExtension(String tempDirName) {
+		super(tempDirName);
 		hud = new BigArrayList<>(tempDir.toString());
+		enabled = true;
+	}
+
+	public OptionsFileCommandExtension(Path tempDir) {
+		super(tempDir);
+		this.hud = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
 
@@ -31,6 +42,15 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	@Override
 	public String[] getFileCommandNames() {
 		return new String[] { "hud" };
+	}
+
+	@Override
+	public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, TickContainer tickContainer) {
+		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer();
+		if (hud.size() != 0 && hud.get(tick).get("hud") != null) {
+			fileCommandContainer = hud.get(tick);
+		}
+		return fileCommandContainer;
 	}
 
 	@Override
@@ -58,6 +78,11 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 		for (PlaybackFileCommand command : line) {
 			String[] args = command.getArgs();
 			if (args.length == 1) {
+				/*
+				 * Ok this may seem dumb, but Boolean.parseBoolean returns false,
+				 * even if something other then true or false was passed...
+				 * If someone finds something less idiotic please tell me...
+				 */
 				switch (args[0]) {
 					case "true":
 						shouldRenderHud = true;

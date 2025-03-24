@@ -1,7 +1,8 @@
-package com.minecrafttas.tasmod.playback.filecommands.integrated;
+package com.minecrafttas.tasmod.playback.filecommands.builtin;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.List;
@@ -40,9 +41,19 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private MonitorContainer currentValues;
 
 	public DesyncMonitorFileCommandExtension() {
-		super("monitoring");
+		this("monitoring");
+	}
+
+	public DesyncMonitorFileCommandExtension(String tempDirName) {
+		super(tempDirName);
 		this.monitorContainer = new BigArrayList<MonitorContainer>(tempDir.toString());
 		// Is enabled by default
+		enabled = true;
+	}
+
+	public DesyncMonitorFileCommandExtension(Path tempDir) {
+		super(tempDir);
+		this.monitorContainer = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
 
@@ -124,7 +135,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private MonitorContainer loadFromFile(long tick, String[] args) throws PlaybackLoadException {
 
 		if (args.length != 6)
-			throw new PlaybackLoadException("Tick %s: desyncMonitorArgsLength ");
+			throw new PlaybackLoadException("Could not load desyncMonitor file command in tick %s. The amount of arguments doesn't match: %s", tick, args.length);
 
 		double x = 0;
 		double y = 0;
@@ -349,7 +360,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		monitorContainer = new BigArrayList<MonitorContainer>(tempDir.toString());
+		monitorContainer = new BigArrayList<MonitorContainer>();
 		lastStatus = TextFormatting.GRAY + "Empty";
 		lastPos = "";
 		lastMotion = "";

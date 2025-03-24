@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.playback.metadata.integrated;
+package com.minecrafttas.tasmod.playback.metadata.builtin;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
@@ -25,24 +25,24 @@ public class CreditsMetadataExtension extends PlaybackMetadataExtension implemen
 	/**
 	 * The title/category of the TAS (e.g. KillSquid - Any% Glitched)
 	 */
-	private String title = "Insert TAS category here";
+	protected String title = "Insert TAS category here";
 	/**
 	 * The author(s) of the TAS (e.g. Scribble, Pancake)
 	 */
-	private String authors = "Insert author here";
+	protected String authors = "Insert author here";
 	/**
 	 * How long the TAS is going to take (e.g. 00:01.0 or 20ticks)
 	 */
-	private String playtime = "00:00.0";
+	protected String playtime = "00:00.0";
 	/**
 	 * How often a savestate was loaded as a measurement of effort (e.g. 200)
 	 */
-	private int rerecords = 0;
+	protected int rerecords = 0;
 
 	/**
 	 * If the credits where already printed in this instance
 	 */
-	private boolean creditsPrinted = false;
+	protected boolean creditsPrinted = false;
 
 	@Override
 	public String getExtensionName() {
@@ -54,27 +54,49 @@ public class CreditsMetadataExtension extends PlaybackMetadataExtension implemen
 		// Unused atm
 	}
 
+	public enum CreditFields {
+		Title("Title"),
+		Author("Author"),
+		PlayTime("Playing Time"),
+		Rerecords("Rerecords");
+
+		private final String name;
+
+		private CreditFields(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	@Override
 	public PlaybackMetadata onStore() {
 		PlaybackMetadata metadata = new PlaybackMetadata(this);
-		metadata.setValue("Title", title);
-		metadata.setValue("Author", authors);
-		metadata.setValue("Playing Time", playtime);
-		metadata.setValue("Rerecords", Integer.toString(rerecords));
+		metadata.setValue(CreditFields.Title, title);
+		metadata.setValue(CreditFields.Author, authors);
+		metadata.setValue(CreditFields.PlayTime, playtime);
+		metadata.setValue(CreditFields.Rerecords, Integer.toString(rerecords));
 		return metadata;
 	}
 
 	@Override
 	public void onLoad(PlaybackMetadata metadata) {
-		title = metadata.getValue("Title");
-		authors = metadata.getValue("Author");
-		playtime = metadata.getValue("Playing Time");
+		title = getOrDefault(metadata.getValue(CreditFields.Title), title);
+		authors = getOrDefault(metadata.getValue(CreditFields.Author), authors);
+		playtime = getOrDefault(metadata.getValue(CreditFields.PlayTime), playtime);
 		try {
-			rerecords = Integer.parseInt(metadata.getValue("Rerecords"));
+			rerecords = Integer.parseInt(getOrDefault(metadata.getValue(CreditFields.Rerecords), Integer.toString(rerecords)));
 		} catch (NumberFormatException e) {
 			rerecords = 0;
 			throw new PlaybackLoadException(e);
 		}
+	}
+
+	protected String getOrDefault(String value, String defaultVal) {
+		return value != null ? value : defaultVal;
 	}
 
 	@Override
@@ -101,7 +123,7 @@ public class CreditsMetadataExtension extends PlaybackMetadataExtension implemen
 		}
 	}
 
-	private void printMessage(String msg, TextFormatting format) {
+	protected void printMessage(String msg, TextFormatting format) {
 		String formatString = "";
 		if (format != null)
 			formatString = format.toString();
