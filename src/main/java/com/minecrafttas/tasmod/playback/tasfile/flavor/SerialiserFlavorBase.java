@@ -307,9 +307,11 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 *     ├── {@link #serialiseCameraAngle(VirtualCameraAngle)}
 	 *     │   └── {@link #serialiseCameraAngleSubtick(VirtualCameraAngle)}
 	 *     ├── {@link #serialiseInlineComments(List, List)}
+	 *     │   ├── {@link #serialiseInlineComment(String)}
 	 *     │   └── {@link #serialiseFileCommandsInline(List)}
 	 *     │       └── {@link #serialiseFileCommand(PlaybackFileCommand)}
 	 *     ├── {@link #serialiseEndlineComments(List, List)}	// Same as serialiseInlineComments
+	 *     │   ├── {@link #serialiseEndlineComment(String)}
 	 *     │   └── {@link #serialiseFileCommandsEndline(List)}	// Unused
 	 *     │       └── {@link #serialiseFileCommand(PlaybackFileCommand)}
 	 *     └── {@link #mergeInputs(BigArrayList, List, List, List, List)}
@@ -549,6 +551,15 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
+	/**
+	 * <p>Comment format for inline comments
+	 * <h5>Example</h5>
+	 * <pre>
+	 * // Inline comment
+	 * </pre>
+	 * @param comment Content in the comment
+	 * @return The inline comment
+	 */
 	protected String serialiseInlineComment(String comment) {
 		return String.format("// %s", comment);
 	}
@@ -613,6 +624,15 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
+	/**
+	 * <p>Comment format for endline comments
+	 * <h5>Example</h5>
+	 * <pre>
+	 * // Endline comment
+	 * </pre>
+	 * @param comment Content in the comment
+	 * @return The endline comment
+	 */
 	protected String serialiseEndlineComment(String comment) {
 		return String.format("// %s", comment);
 	}
@@ -895,7 +915,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	/**
 	 * <p>Deserialise header lines
 	 * <pre>
-	 *	deserialiseHeader
+	 *  deserialiseHeader
 	 *  ├── {@link #deserialiseMetadata(List)}
 	 *  └── {@link #deserialiseFileCommandNames(List)}
 	 * </pre>
@@ -977,9 +997,23 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	/**
-	 * Deserialises the input part of the TASfile
+	 * <p>Deserialises the input part of the TASfile
 	 * 
-	 * @param lines    The serialised lines of the TASfile
+	 * <pre>
+	 * deserialise
+	 * ├── {@link #extractContainer(List, BigArrayList, long)}
+	 * └── {@link #deserialiseContainer(BigArrayList, List)}
+	 *     ├── {@link #deserialiseMultipleInlineComments(List, List)}
+	 *     │   └── {@link #deserialiseInlineComment(String, List)}
+	 *     │       └── {@link #deserialiseFileCommandsInline(String, List)}
+	 *     ├── {@link #splitInputs(List, List, List, List, List, List)}
+	 *     │   └── {@link #deserialiseEndlineComment(String, List)}
+	 *     │       └── {@link #deserialiseFileCommandsEndline(String, List)}
+	 *     ├── {@link #deserialiseKeyboard(List)}
+	 *     ├── {@link #deserialiseMouse(List)}
+	 *     └── {@link #deserialiseCameraAngle(List)}
+	 * </pre>
+	 * @param lines The serialised lines of the TASfile
 	 * @param startPos The position when the header ends and the inputs start
 	 * @return A list of {@link TickContainer TickContainers}
 	 */
@@ -1000,7 +1034,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected enum ExtractPhases {
 		/**
-		 * InlineComment phase.
+		 * Inline comment phase.
 		 * 
 		 * <pre>
 		 * ---
@@ -1029,8 +1063,12 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		 * Subtick phase. Start with a tabulator, then a number, then a | character
 		 * 
 		 * <pre>
-		 * --- 1||RC;0,1580,658|17.85;-202.74799\t\t// This is an endline comment
-		 * 2||;0,1580,658|17.85;-202.74799 --- Can have multiple subticks
+		 * ---
+		 * 	1||RC;0,1580,658|17.85;-202.74799		// This is an endline comment
+		 * 	2||;0,1580,658|17.85;-202.74799
+		 * ---
+		 * </pre>
+		 * Can have multiple subticks
 		 */
 		SUBTICK,
 		/**
@@ -1193,7 +1231,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	/**
-	 * Splits lines into comments and ticks.
+	 * Splits container into inline comments and ticks.
 	 * 
 	 * @param lines
 	 */
