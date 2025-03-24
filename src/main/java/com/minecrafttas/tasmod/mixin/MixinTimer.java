@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.mixin;
 
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -21,36 +20,36 @@ import net.minecraft.util.Timer;
  *
  */
 public class MixinTimer {
-	
+
 	@Shadow
-    private int elapsedTicks;
+	private int elapsedTicks;
 	@Shadow
-    private float renderPartialTicks;
+	private float renderPartialTicks;
 	@Shadow
-    private float elapsedPartialTicks;
+	private float elapsedPartialTicks;
 	@Shadow
-    private long lastSyncSysClock;
+	private long lastSyncSysClock;
 	@Shadow
-    private float tickLength;
-	
+	private float tickLength;
+
 	@Unique
 	private long millisLastTick;
 	@Unique
 	private long lastGameLoop;
 	@Unique
 	private float lastTickDuration;
-	
+
 	@Inject(method = "updateTimer", at = @At("HEAD"), cancellable = true)
 	public void inject_tick(CallbackInfo ci) {
-		if (TASmodClient.client != null && !TASmodClient.client.isClosed() && TASmodClient.ticksyncClient.isEnabled()) {
+		if (TASmodClient.client != null && !TASmodClient.client.isClosed()) {
 			lastSyncSysClock = Minecraft.getSystemTime(); // update the tick tracker so that after returning to scheduling the client won't catch up all ticks (max 10)
 			this.elapsedTicks = 0; // do not do any ticks
 			long newGameLoop = Minecraft.getSystemTime();
 			if (TickSyncClient.shouldTick.compareAndSet(true, false)) {
 				this.elapsedTicks++;
 				this.lastTickDuration = newGameLoop - this.millisLastTick;
-				if(TASmodClient.tickratechanger.advanceTick) {
-					lastTickDuration = TASmodClient.tickratechanger.millisecondsPerTick;	// Keep the lastTick duration steady during tickadvance, since it grows larger the longer you wait in tickrate 0
+				if (TASmodClient.tickratechanger.advanceTick) {
+					lastTickDuration = TASmodClient.tickratechanger.millisecondsPerTick; // Keep the lastTick duration steady during tickadvance, since it grows larger the longer you wait in tickrate 0
 				}
 				this.millisLastTick = newGameLoop; // Update millisLastTick
 				this.renderPartialTicks = 0; // Reset after the tick
