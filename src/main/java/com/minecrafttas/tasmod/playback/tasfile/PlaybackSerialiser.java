@@ -11,7 +11,7 @@ import java.util.List;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
@@ -56,32 +56,32 @@ public class PlaybackSerialiser {
 	}
 
 	/**
-	 * Saves a BigArrayList of {@link TickContainer TickContainers} to a file
+	 * Saves a BigArrayList of {@link InputContainer InputContainers} to a file
 	 * 
 	 * @param file The file to save the serialised inputs to
-	 * @param container The list of {@link TickContainer TickContainers} to use
+	 * @param container The list of {@link InputContainer InputContainers} to use
 	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use for the tasfile
 	 * @throws PlaybackSaveException When a saving operation fails
 	 */
-	public static void saveToFile(Path file, BigArrayList<TickContainer> container, String flavorName) throws PlaybackSaveException {
+	public static void saveToFile(Path file, BigArrayList<InputContainer> container, String flavorName) throws PlaybackSaveException {
 		saveToFile(file, container, flavorName, -1);
 	}
 
 	/**
-	 * Saves a BigArrayList of {@link TickContainer TickContainers} <i>partially</i> to a file
+	 * Saves a BigArrayList of {@link InputContainer InputContainers} <i>partially</i> to a file
 	 * @param path The file to save the serialised inputs to
-	 * @param container The list of {@link TickContainer TickContainers} to use
+	 * @param container The list of {@link InputContainer InputContainers} to use
 	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use for the tasfile
 	 * @param stopIndex The index at which the serialiser stops. Use -1L to parse the entire file 
 	 * @throws PlaybackSaveException When a saving operation fails
 	 */
-	public static void saveToFile(Path path, BigArrayList<TickContainer> container, String flavorName, long stopIndex) throws PlaybackSaveException {
+	public static void saveToFile(Path path, BigArrayList<InputContainer> container, String flavorName, long stopIndex) throws PlaybackSaveException {
 		if (path == null) {
 			throw new PlaybackSaveException("Save to file failed. No file specified");
 		}
 
 		if (container == null) {
-			throw new PlaybackSaveException("Save to file failed. No tickcontainer list specified");
+			throw new PlaybackSaveException("Save to file failed. No inputcontainer list specified");
 		}
 
 		if (flavorName == null || flavorName.isEmpty()) {
@@ -120,19 +120,19 @@ public class PlaybackSerialiser {
 	}
 
 	/**
-	 * Loads a BigArrayList of {@link TickContainer TickContainers} from a file.<br>
+	 * Loads a BigArrayList of {@link InputContainer InputContainers} from a file.<br>
 	 * Tries to determine the {@link SerialiserFlavorBase flavor} by reading the header of the TASfile
 	 * 
 	 * @param file The file to load from
-	 * @return The loaded BigArrayList of {@link TickContainer TickContainers}
+	 * @return The loaded BigArrayList of {@link InputContainer InputContainers}
 	 * @throws PlaybackLoadException If the file contains errors
 	 * @throws IOException If the file could not be read
 	 */
-	public static BigArrayList<TickContainer> loadFromFile(Path file) throws PlaybackLoadException, IOException {
+	public static BigArrayList<InputContainer> loadFromFile(Path file) throws PlaybackLoadException, IOException {
 		return loadFromFile(file, true);
 	}
 
-	public static BigArrayList<TickContainer> loadFromFile(Path file, boolean processExtensions) throws PlaybackLoadException, IOException {
+	public static BigArrayList<InputContainer> loadFromFile(Path file, boolean processExtensions) throws PlaybackLoadException, IOException {
 		if (file == null) {
 			throw new PlaybackLoadException("Load from file failed. No file specified");
 		}
@@ -148,19 +148,19 @@ public class PlaybackSerialiser {
 	}
 
 	/**
-	 * Loads a BigArrayList of {@link TickContainer TickContainers} from a file, with a specific flavor
+	 * Loads a BigArrayList of {@link InputContainer InputContainers} from a file, with a specific flavor
 	 * 
 	 * @param file The file to load from
 	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use. If the detected flavor in the TASfile mismatches, a {@link PlaybackLoadException} is thrown
-	 * @return The loaded BigArrayList of {@link TickContainer TickContainers}
+	 * @return The loaded BigArrayList of {@link InputContainer InputContainers}
 	 * @throws PlaybackLoadException If the file contains errors
 	 * @throws IOException If the file could not be read
 	 */
-	public static BigArrayList<TickContainer> loadFromFile(Path file, String flavorName) throws PlaybackLoadException, IOException {
+	public static BigArrayList<InputContainer> loadFromFile(Path file, String flavorName) throws PlaybackLoadException, IOException {
 		return loadFromFile(file, flavorName, true);
 	}
 
-	public static BigArrayList<TickContainer> loadFromFile(Path file, String flavorName, boolean processExtensions) throws PlaybackLoadException, IOException {
+	public static BigArrayList<InputContainer> loadFromFile(Path file, String flavorName, boolean processExtensions) throws PlaybackLoadException, IOException {
 
 		// If the flavor is null or empty, try to determine the flavor by reading the header
 		if (flavorName == null || flavorName.isEmpty()) {
@@ -186,15 +186,15 @@ public class PlaybackSerialiser {
 	}
 
 	/**
-	 * Loads a BigArrayList of {@link TickContainer TickContainers} from a file, with a specific flavor
+	 * Loads a BigArrayList of {@link InputContainer InputContainers} from a file, with a specific flavor
 	 * 
 	 * @param file The file to load from
 	 * @param flavor The {@link SerialiserFlavorBase flavor} to use. If the detected flavor in the TASfile mismatches, a {@link PlaybackLoadException} is thrown
-	 * @return The loaded BigArrayList of {@link TickContainer TickContainers}
+	 * @return The loaded BigArrayList of {@link InputContainer InputContainers}
 	 * @throws PlaybackLoadException If the file contains errors
 	 * @throws IOException If the file could not be read
 	 */
-	public static BigArrayList<TickContainer> loadFromFile(Path file, SerialiserFlavorBase flavor) throws PlaybackLoadException, IOException {
+	public static BigArrayList<InputContainer> loadFromFile(Path file, SerialiserFlavorBase flavor) throws PlaybackLoadException, IOException {
 		if (file == null) {
 			throw new PlaybackLoadException("Load from file failed. No file specified");
 		}
@@ -220,7 +220,7 @@ public class PlaybackSerialiser {
 		flavor.deserialiseHeader(headerLines);
 
 		// Deserialise main data
-		BigArrayList<TickContainer> deserialisedContainers = flavor.deserialise(lines, headerLines.size());
+		BigArrayList<InputContainer> deserialisedContainers = flavor.deserialise(lines, headerLines.size());
 
 		return deserialisedContainers;
 	}

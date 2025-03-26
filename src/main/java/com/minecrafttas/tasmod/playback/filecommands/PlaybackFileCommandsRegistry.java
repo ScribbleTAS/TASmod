@@ -8,7 +8,7 @@ import java.util.List;
 import com.minecrafttas.mctcommon.Configuration;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.registries.TASmodConfig;
@@ -93,7 +93,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 	}
 
 	@Override
-	public void onRecordTick(long index, TickContainer container) {
+	public void onRecordTick(long index, InputContainer container) {
 		enabledExtensions.forEach(extension -> {
 			if (extension.isEnabled()) {
 				extension.onRecord(index, container);
@@ -102,7 +102,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 	}
 
 	@Override
-	public void onPlaybackTick(long index, TickContainer container) {
+	public void onPlaybackTick(long index, InputContainer container) {
 		enabledExtensions.forEach(extension -> {
 			if (extension.isEnabled()) {
 				extension.onPlayback(index, container);
@@ -110,7 +110,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		});
 	}
 
-	public PlaybackFileCommandContainer handleOnSerialiseInline(long currentTick, TickContainer container) {
+	public PlaybackFileCommandContainer handleOnSerialiseInline(long currentTick, InputContainer container) {
 		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
 		for (PlaybackFileCommandExtension extension : enabledExtensions) {
 			PlaybackFileCommandContainer extensionContainer = extension.onSerialiseInlineComment(currentTick, container);
@@ -121,7 +121,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		return out;
 	}
 
-	public PlaybackFileCommandContainer handleOnSerialiseEndline(long currentTick, TickContainer container) {
+	public PlaybackFileCommandContainer handleOnSerialiseEndline(long currentTick, InputContainer container) {
 		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
 		for (PlaybackFileCommandExtension extension : enabledExtensions) {
 			PlaybackFileCommandContainer extensionContainer = extension.onSerialiseEndlineComment(currentTick, container);
@@ -132,7 +132,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		return out;
 	}
 
-	public void handleOnDeserialiseInline(long currentTick, TickContainer deserialisedContainer, List<List<PlaybackFileCommand>> inlineFileCommands) {
+	public void handleOnDeserialiseInline(long currentTick, InputContainer deserialisedContainer, List<List<PlaybackFileCommand>> inlineFileCommands) {
 		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer(inlineFileCommands);
 		for (PlaybackFileCommandExtension extension : enabledExtensions) {
 			String[] fileCommandNames = extension.getFileCommandNames();
@@ -140,7 +140,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		}
 	}
 
-	public void handleOnDeserialiseEndline(long currentTick, TickContainer deserialisedContainer, List<List<PlaybackFileCommand>> endlineFileCommands) {
+	public void handleOnDeserialiseEndline(long currentTick, InputContainer deserialisedContainer, List<List<PlaybackFileCommand>> endlineFileCommands) {
 		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer(endlineFileCommands);
 		for (PlaybackFileCommandExtension extension : enabledExtensions) {
 			String[] fileCommandNames = extension.getFileCommandNames();

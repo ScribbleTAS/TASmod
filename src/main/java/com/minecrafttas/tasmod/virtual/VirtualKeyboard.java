@@ -159,17 +159,15 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 	 * updateFromState is used when creating a VirtualKeyboard by deserialising the TASfile,<br>
 	 * as the inputs in the TASfile are stored in states.
 	 * 
-	 * @param keycodes An array of keycodes, that replaces {@link Subtickable#pressedKeys}
+	 * @param keycodes A set of keycodes, that replaces {@link Subtickable#pressedKeys}
 	 * @param chars An array of characters, that replaces {@link #charList}
 	 * @see SerialiserFlavorBase#deserialiseKeyboard 
 	 */
-	public void updateFromState(int[] keycodes, char[] chars) {
+	public void updateFromState(Set<Integer> keycodes, char[] chars) {
 		createSubtick();
 
 		this.pressedKeys.clear();
-		for (int i : keycodes) {
-			this.pressedKeys.add(i);
-		}
+		this.pressedKeys.addAll(keycodes);
 
 		this.charList.clear();
 		for (char c : chars) {

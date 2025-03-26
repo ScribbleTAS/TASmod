@@ -3,10 +3,12 @@ package com.minecrafttas.tasmod.playback.tasfile.flavor;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,7 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.registry.Registerable;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.CommentContainer;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
@@ -96,7 +98,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	/**
 	 * Previous serialised or deserialised container, used for allowing relative values in {@link #deserialiseRelativeFloat(String, String, Float) deserialiseRelativeFloat}
 	 */
-	protected TickContainer previousTickContainer = null;
+	protected InputContainer previousInputContainer = null;
 
 	/**
 	 * If true, process extension data like {@link PlaybackMetadata PlaybackMetadata} and {@link PlaybackFileCommand PlaybackFileCommands}
@@ -299,7 +301,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * <h5>Tree</h5>
 	 * <pre>
 	 * serialise
-	 * └── {@link #serialiseContainer(BigArrayList, TickContainer)}
+	 * └── {@link #serialiseContainer(BigArrayList, InputContainer)}
 	 *     ├── {@link #serialiseKeyboard(VirtualKeyboard)}
 	 *     │   └── {@link #serialiseKeyboardSubtick(VirtualKeyboard)}
 	 *     ├── {@link #serialiseMouse(VirtualMouse)}
@@ -322,7 +324,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * @param toTick The tick where to stop, used for partial serialisation by savestates. -1 to serialise all
 	 * @return The list of lines
 	 */
-	public BigArrayList<String> serialise(BigArrayList<TickContainer> inputs, long toTick) {
+	public BigArrayList<String> serialise(BigArrayList<InputContainer> inputs, long toTick) {
 		BigArrayList<String> out = new BigArrayList<>();
 
 		for (int i = 0; i < inputs.size(); i++) {
@@ -330,20 +332,20 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				break;
 			}
 			currentTick = i;
-			TickContainer container = inputs.get(i).clone();
+			InputContainer container = inputs.get(i).clone();
 			serialiseContainer(out, container);
-			previousTickContainer = container;
+			previousInputContainer = container;
 		}
 		return out;
 	}
 
 	/**
-	 * Main serialising method of a single {@link TickContainer}
+	 * Main serialising method of a single {@link InputContainer}
 	 * 
 	 * @param out The list of serialised lines, passed in by reference
-	 * @param container The {@link TickContainer} to serialise
+	 * @param container The {@link InputContainer} to serialise
 	 */
-	protected void serialiseContainer(BigArrayList<String> out, TickContainer container) {
+	protected void serialiseContainer(BigArrayList<String> out, InputContainer container) {
 		currentLine = out.size() - 1;
 		List<String> serialisedKeyboard = serialiseKeyboard(container.getKeyboard());
 		List<String> serialisedMouse = serialiseMouse(container.getMouse());
@@ -1015,10 +1017,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * </pre>
 	 * @param lines The serialised lines of the TASfile
 	 * @param startPos The position when the header ends and the inputs start
-	 * @return A list of {@link TickContainer TickContainers}
+	 * @return A list of {@link InputContainer InputContainers}
 	 */
-	public BigArrayList<TickContainer> deserialise(BigArrayList<String> lines, long startPos) {
-		BigArrayList<TickContainer> out = new BigArrayList<>();
+	public BigArrayList<InputContainer> deserialise(BigArrayList<String> lines, long startPos) {
+		BigArrayList<InputContainer> out = new BigArrayList<>();
 		for (long i = startPos; i < lines.size(); i++) {
 			List<String> container = new ArrayList<>();
 			// Extract the tick and set the index
@@ -1028,7 +1030,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			deserialiseContainer(out, container);
 			currentTick++;
 		}
-		previousTickContainer = null;
+		previousInputContainer = null;
 		return out;
 	}
 
@@ -1194,7 +1196,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return startPos + counter - 1;
 	}
 
-	protected void deserialiseContainer(BigArrayList<TickContainer> out, List<String> containerLines) {
+	protected void deserialiseContainer(BigArrayList<InputContainer> out, List<String> containerLines) {
 
 		List<String> inlineComments = new ArrayList<>();
 		List<String> tickLines = new ArrayList<>();
@@ -1218,14 +1220,14 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		VirtualCameraAngle cameraAngle = deserialiseCameraAngle(cameraAngleStrings);
 		CommentContainer comments = new CommentContainer(inlineComments, endlineComments);
 
-		TickContainer deserialisedContainer = new TickContainer(keyboard, mouse, cameraAngle, comments);
+		InputContainer deserialisedContainer = new InputContainer(keyboard, mouse, cameraAngle, comments);
 
 		if (processExtensions) {
 			TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
 			TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
 		}
 
-		previousTickContainer = deserialisedContainer;
+		previousInputContainer = deserialisedContainer;
 
 		out.add(deserialisedContainer);
 	}
@@ -1343,8 +1345,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		VirtualMouse out = new VirtualMouse();
 
 		currentSubtick = 0;
-		Integer previousCursorX = previousTickContainer == null ? null : previousTickContainer.getMouse().getCursorX();
-		Integer previousCursorY = previousTickContainer == null ? null : previousTickContainer.getMouse().getCursorY();
+		Integer previousCursorX = previousInputContainer == null ? null : previousInputContainer.getMouse().getCursorX();
+		Integer previousCursorY = previousInputContainer == null ? null : previousInputContainer.getMouse().getCursorY();
 
 		for (String line : mouseStrings) {
 			Matcher matcher = extract("(.*?);(.+)", line);
@@ -1381,8 +1383,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		VirtualCameraAngle out = new VirtualCameraAngle();
 
 		currentSubtick = 0;
-		Float previousPitch = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getPitch();
-		Float previousYaw = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getYaw();
+		Float previousPitch = previousInputContainer == null ? null : previousInputContainer.getCameraAngle().getPitch();
+		Float previousYaw = previousInputContainer == null ? null : previousInputContainer.getCameraAngle().getYaw();
 
 		for (String line : cameraAngleStrings) {
 			Matcher matcher = extract("(.+?);(.+)", line);
@@ -1533,8 +1535,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd, List<List<PlaybackFileCommand>> endlineFileCommands) {
 
 		String previousCamera = null;
-		if (previousTickContainer != null) {
-			VirtualCameraAngle camera = previousTickContainer.getCameraAngle();
+		if (previousInputContainer != null) {
+			VirtualCameraAngle camera = previousInputContainer.getCameraAngle();
 			previousCamera = String.format("%s;%s", camera.getYaw(), camera.getPitch());
 		}
 

@@ -132,19 +132,17 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	 * updateFromState is used when creating a VirtualMouse by deserialising the TASfile,<br>
 	 * as the inputs in the TASfile are stored in states.
 	 * 
-	 * @param keycodes An array of keycodes, that replaces {@link Subtickable#pressedKeys pressedKeys}
+	 * @param keycodes A set of keycodes, that replaces {@link Subtickable#pressedKeys pressedKeys}
 	 * @param scrollwheel The scroll wheel of this mouse state
 	 * @param cursorX The pointer location in the x axis
 	 * @param cursorY The pointer location in the y axis
 	 * @see SerialiserFlavorBase#deserialiseMouse 
 	 */
-	public void updateFromState(int[] keycodes, int scrollwheel, int cursorX, int cursorY) {
+	public void updateFromState(Set<Integer> keycodes, int scrollwheel, int cursorX, int cursorY) {
 		createSubtick();
 
 		this.pressedKeys.clear();
-		for (int i : keycodes) {
-			this.pressedKeys.add(i);
-		}
+		this.pressedKeys.addAll(keycodes);
 
 		this.scrollWheel = scrollwheel;
 		this.cursorX = cursorX;

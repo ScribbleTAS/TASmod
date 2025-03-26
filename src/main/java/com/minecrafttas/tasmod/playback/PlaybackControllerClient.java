@@ -119,7 +119,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	/**
 	 * The place where all inputs get stored
 	 */
-	private BigArrayList<TickContainer> inputs;
+	private BigArrayList<InputContainer> inputs;
 
 //	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 
@@ -130,7 +130,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	public PlaybackControllerClient() {
 		tasFileDirectory = TASmodClient.tasfiledirectory;
 
-		inputs = new BigArrayList<TickContainer>(tasFileDirectory.resolve("temp").toAbsolutePath().toString());
+		inputs = new BigArrayList<InputContainer>(tasFileDirectory.resolve("temp").toAbsolutePath().toString());
 	}
 
 	/**
@@ -263,7 +263,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 			Float yaw = CAMERA_ANGLE.getCurrentYaw();
 			this.camera.set(pitch, yaw);
 
-			inputs.add(new TickContainer());
+			inputs.add(new InputContainer());
 		}
 	}
 
@@ -417,7 +417,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 	private void recordNextTick() {
 		index++;
-		TickContainer container = new TickContainer(keyboard.clone(), mouse.clone(), camera.clone());
+		InputContainer container = new InputContainer(keyboard.clone(), mouse.clone(), camera.clone());
 		if (inputs.size() <= index) {
 			if (inputs.size() < index) {
 				LOGGER.warn("Index is {} inputs bigger than the container!", index - inputs.size());
@@ -460,7 +460,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 		/* Continue condition */
 		else {
-			TickContainer container = inputs.get(index); // Loads the new inputs from the container
+			InputContainer container = inputs.get(index); // Loads the new inputs from the container
 			this.keyboard = container.getKeyboard().clone();
 			this.mouse = container.getMouse().clone();
 			this.camera = container.getCameraAngle().clone();
@@ -483,21 +483,21 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		return index;
 	}
 
-	public BigArrayList<TickContainer> getInputs() {
+	public BigArrayList<InputContainer> getInputs() {
 		return inputs;
 	}
 
-	public void setInputs(BigArrayList<TickContainer> inputs) {
+	public void setInputs(BigArrayList<InputContainer> inputs) {
 		this.setInputs(inputs, 0);
 	}
 
-	public void setInputs(BigArrayList<TickContainer> inputs, long index) {
+	public void setInputs(BigArrayList<InputContainer> inputs, long index) {
 		try {
 			this.inputs.clearMemory();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		this.inputs = new BigArrayList<TickContainer>(tasFileDirectory + File.separator + "temp");
+		this.inputs = new BigArrayList<InputContainer>(tasFileDirectory + File.separator + "temp");
 		SerialiserFlavorBase.addAll(this.inputs, inputs);
 		setIndex(index);
 	}
@@ -506,30 +506,30 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		if (index <= size()) {
 			this.index = index;
 			if (state == TASstate.PLAYBACK) {
-				TickContainer tickcontainer = inputs.get(index);
-				this.keyboard = tickcontainer.getKeyboard();
-				this.mouse = tickcontainer.getMouse();
-				this.camera = tickcontainer.getCameraAngle();
+				InputContainer inputcontainer = inputs.get(index);
+				this.keyboard = inputcontainer.getKeyboard();
+				this.mouse = inputcontainer.getMouse();
+				this.camera = inputcontainer.getCameraAngle();
 			}
 		} else {
 			throw new IndexOutOfBoundsException("Index is bigger than the container");
 		}
 	}
 
-	public TickContainer get(long index) {
-		TickContainer tickcontainer = null;
+	public InputContainer get(long index) {
+		InputContainer inputcontainer = null;
 		try {
-			tickcontainer = inputs.get(index);
+			inputcontainer = inputs.get(index);
 		} catch (IndexOutOfBoundsException e) {
 			return null;
 		}
-		return tickcontainer;
+		return inputcontainer;
 	}
 
 	/**
-	 * @return The {@link TickContainer} at the current index
+	 * @return The {@link InputContainer} at the current index
 	 */
-	public TickContainer get() {
+	public InputContainer get() {
 		return get(index);
 	}
 
@@ -541,7 +541,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		inputs = new BigArrayList<TickContainer>(tasFileDirectory + File.separator + "temp");
+		inputs = new BigArrayList<InputContainer>(tasFileDirectory + File.separator + "temp");
 		index = 0;
 	}
 
@@ -585,7 +585,7 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	 * @author Scribble
 	 *
 	 */
-	public static class TickContainer implements Serializable {
+	public static class InputContainer implements Serializable {
 
 		private VirtualKeyboard keyboard;
 
@@ -595,18 +595,18 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 
 		private CommentContainer comments;
 
-		public TickContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
+		public InputContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle subticks) {
 			this(keyboard, mouse, subticks, new CommentContainer());
 		}
 
-		public TickContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle camera, CommentContainer comments) {
+		public InputContainer(VirtualKeyboard keyboard, VirtualMouse mouse, VirtualCameraAngle camera, CommentContainer comments) {
 			this.keyboard = keyboard;
 			this.mouse = mouse;
 			this.cameraAngle = camera;
 			this.comments = comments;
 		}
 
-		public TickContainer() {
+		public InputContainer() {
 			this(new VirtualKeyboard(), new VirtualMouse(), new VirtualCameraAngle());
 		}
 
@@ -639,14 +639,14 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 		}
 
 		@Override
-		public TickContainer clone() {
-			return new TickContainer(keyboard, mouse, cameraAngle);
+		public InputContainer clone() {
+			return new InputContainer(keyboard, mouse, cameraAngle);
 		}
 
 		@Override
 		public boolean equals(Object other) {
-			if (other instanceof TickContainer) {
-				TickContainer container = (TickContainer) other;
+			if (other instanceof InputContainer) {
+				InputContainer container = (InputContainer) other;
 				return keyboard.equals(container.keyboard) && mouse.equals(container.mouse) && cameraAngle.equals(container.cameraAngle) && comments.equals(container.comments);
 			}
 			return super.equals(other);
