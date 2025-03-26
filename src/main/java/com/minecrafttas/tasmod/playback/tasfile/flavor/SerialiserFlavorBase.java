@@ -1329,7 +1329,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				String[] keys = matcher.group(1).split(",");
 				char[] chars = matcher.group(2).toCharArray();
 
-				int[] keycodes = deserialiseVirtualKeyboardKey(keys);
+				Set<Integer> keycodes = deserialiseVirtualKeyboardKey(keys);
 				out.updateFromState(keycodes, chars);
 			} else {
 				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Keyboard could not be read. Probably a missing semicolon: %s", line);
@@ -1352,7 +1352,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				String[] buttons = matcher.group(1).split(",");
 				String[] functions = matcher.group(2).split(",");
 
-				int[] keycodes = deserialiseVirtualMouseKey(buttons);
+				Set<Integer> keycodes = deserialiseVirtualMouseKey(buttons);
 				int scrollwheel;
 				Integer cursorX;
 				Integer cursorY;
@@ -1409,42 +1409,51 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
-	protected int[] deserialiseVirtualKeyboardKey(String[] keyString) {
-		int[] out = new int[keyString.length];
+	protected Set<Integer> deserialiseVirtualKeyboardKey(String[] keyString) {
+		Set<Integer> out = new HashSet<>();
 
 		for (int i = 0; i < keyString.length; i++) {
 			String key = keyString[i];
-			out[i] = deserialiseVirtualKey(key, VirtualKey.ZERO, (vkey) -> {
+			Integer keycode = deserialiseVirtualKey(key, (vkey) -> {
 				if (vkey < 0) {
 					throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Keyboard section contains a mouse key: %s", VirtualKey.get(vkey));
 				}
 			});
+
+			if (out.contains(keycode))
+				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Keyboard has a duplicate key press");
+
+			if (keycode != null)
+				out.add(keycode);
 		}
 		return out;
 	}
 
-	protected int[] deserialiseVirtualMouseKey(String[] keyString) {
-		int[] out = new int[keyString.length];
+	protected Set<Integer> deserialiseVirtualMouseKey(String[] keyString) {
+		Set<Integer> out = new HashSet<>();
 
 		for (int i = 0; i < keyString.length; i++) {
 			String key = keyString[i];
-			out[i] = deserialiseVirtualKey(key, VirtualKey.MOUSEMOVED, (vkey) -> {
+			Integer keycode = deserialiseVirtualKey(key, (vkey) -> {
 				if (vkey >= 0) {
 					throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Mouse section contains a keyboard key: %s", VirtualKey.get(vkey));
 				}
 			});
+
+			if (out.contains(keycode))
+				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Mouse has a duplicate key press");
+
+			if (keycode != null)
+				out.add(keycode);
 		}
 		return out;
 	}
 
-	protected int deserialiseVirtualKey(String key, VirtualKey defaultKey, WrongKeyCheck keyValidator) {
+	protected Integer deserialiseVirtualKey(String key, WrongKeyCheck keyValidator) {
 
 		Integer vkey = null;
-		/* If no key is pressed, then a zero key will be used for the state.
-		 * This zero key is either VirtualKey.ZERO on a keyboard or VirtualKey.MOUSEMOVED on a mouse,
-		 * hence the parameter */
 		if (key.isEmpty()) {
-			vkey = defaultKey.getKeycode();
+			return null;
 		}
 		/* Instead of keynames such as W, A, S, KEY_1, NUMPAD3 you can also write the numerical keycodes
 		 * into the tasfile, e.g. 17, 30, 31, 2, 81. This enables TASmod to support every current and future

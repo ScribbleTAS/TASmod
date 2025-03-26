@@ -689,19 +689,26 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		BigArrayList<TickContainer> expected = new BigArrayList<>();
 
 		VirtualKeyboard keyboard = new VirtualKeyboard();
-		keyboard.updateFromState(new int[] { VirtualKey.W.getKeycode(), VirtualKey.LCONTROL.getKeycode() }, new char[] { 'w' });
+		Set<Integer> keyboardKeycodes = new HashSet<>();
+		keyboardKeycodes.add(VirtualKey.W.getKeycode());
+		keyboardKeycodes.add(VirtualKey.LCONTROL.getKeycode());
+		keyboard.updateFromState(keyboardKeycodes, new char[] { 'w' });
 
 		VirtualMouse mouse = new VirtualMouse();
-		mouse.updateFromState(new int[] { VirtualKey.MOUSEMOVED.getKeycode() }, 0, 887, 626);
-		mouse.updateFromState(new int[] { VirtualKey.RC.getKeycode() }, -15, 1580, 658);
-		mouse.updateFromState(new int[] { VirtualKey.MOUSEMOVED.getKeycode() }, 0, 1580, 658);
+		Set<Integer> mouseKeycodes1 = new HashSet<>();
+		Set<Integer> mouseKeycodes2 = new HashSet<>();
+		mouseKeycodes2.add(VirtualKey.RC.getKeycode());
+		Set<Integer> mouseKeycodes3 = new HashSet<>();
+		mouse.updateFromState(mouseKeycodes1, 0, 887, 626);
+		mouse.updateFromState(mouseKeycodes2, -15, 1580, 658);
+		mouse.updateFromState(mouseKeycodes3, 0, 1580, 658);
 
 		VirtualCameraAngle cameraAngle = new VirtualCameraAngle();
 		cameraAngle.updateFromState(-202.74799F, 17.85F);
 		cameraAngle.updateFromState(-2.74799F, 11.85F);
 		cameraAngle.updateFromState(-22.799F, 45F);
 
-		expected.add(new TickContainer(keyboard, mouse, cameraAngle));
+		expected.add(new InputContainer(keyboard, mouse, cameraAngle));
 
 		assertBigArrayList(expected, actual);
 	}
