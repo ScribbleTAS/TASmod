@@ -1748,4 +1748,9 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		}
 		return charString;
 	}
+
+	@Override
+	public String toString() {
+		return getExtensionName();
+	}
 }

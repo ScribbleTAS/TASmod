@@ -274,6 +274,7 @@ public class PlaybackSerialiserTest {
 
 		VirtualCameraAngle cameraAngle3 = new VirtualCameraAngle();
 		cameraAngle3.updateFromState(2f, 2f);
+		cameraAngle3.updateFromState(3f, 3f);
 
 		expected.add(new InputContainer(new VirtualKeyboard(), mouse3, cameraAngle3));
 
@@ -363,6 +364,7 @@ public class PlaybackSerialiserTest {
 
 		VirtualCameraAngle cameraAngle3 = new VirtualCameraAngle();
 		cameraAngle3.updateFromState(2f, 2f);
+		cameraAngle3.updateFromState(3f, 3f);
 
 		expected.add(new InputContainer(new VirtualKeyboard(), mouse3, cameraAngle3));
 
