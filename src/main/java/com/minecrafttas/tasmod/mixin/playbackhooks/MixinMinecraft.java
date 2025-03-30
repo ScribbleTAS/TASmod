@@ -44,6 +44,10 @@ public class MixinMinecraft {
 	 */
 	@Inject(method = "runTick", at = @At(value = "HEAD"))
 	public void playback_injectRunTick(CallbackInfo ci) {
+		/*
+		 * Both of these were previously in injectRunTickKeyboard/Mouse
+		 * but moved to the beginning of runTick to fix #224
+		 */
 		TASmodClient.virtual.KEYBOARD.nextKeyboardTick();
 		TASmodClient.virtual.MOUSE.nextMouseTick();
 	}
