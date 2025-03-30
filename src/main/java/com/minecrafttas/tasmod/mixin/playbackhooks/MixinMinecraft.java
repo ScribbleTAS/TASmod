@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
+import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualKeyboardInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualMouseInput;
 import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
@@ -23,7 +24,7 @@ public class MixinMinecraft {
 	private GuiScreen currentScreen;
 
 	/**
-	 * Runs every frame.
+	 * <p>Runs every frame.
 	 * @see VirtualInput#update(GuiScreen)
 	 * @param ci CBI
 	 */
@@ -32,30 +33,25 @@ public class MixinMinecraft {
 		TASmodClient.virtual.update(currentScreen);
 	}
 
+	/**
+	 * <p>Runs every tick.
+	 * 
+	 * <p>Fills the keyboard and the mouse with the inputs that will be<br>
+	 * executed in {@link #playback_redirectKeyboardNext()} and {@link #playback_redirectMouseNext()} respectively.
+	 * @see VirtualKeyboardInput#nextKeyboardTick()
+	 * @see VirtualMouseInput#nextMouseTick()
+	 * @param ci CBI
+	 */
+	@Inject(method = "runTick", at = @At(value = "HEAD"))
+	public void playback_injectRunTick(CallbackInfo ci) {
+		TASmodClient.virtual.KEYBOARD.nextKeyboardTick();
+		TASmodClient.virtual.MOUSE.nextMouseTick();
+	}
+
 	// ============================ Keyboard
 
 	/**
-	 * Run at the start of run tick keyboard. Runs every tick.
-	 * @see VirtualInput.VirtualKeyboardInput#nextKeyboardTick()
-	 * @param ci CBI
-	 */
-	@Inject(method = "runTickKeyboard", at = @At(value = "HEAD"))
-	public void playback_injectRunTickKeyboard(CallbackInfo ci) {
-		/*
-		 * This "currentScreen == null" (and the one in runTickMouse) fixes
-		 * a particularly interesting bug where subticks are not recorded in GuiScreens...
-		 * 
-		 * The reason this failed is because nextKeyboardTick is called twice in a row,
-		 * when a gui screen is open. The subticks are cleared after calling this
-		 * once, so having it be called twice essentially removes subticks alltogether.
-		 */
-		if (currentScreen == null) {
-			TASmodClient.virtual.KEYBOARD.nextKeyboardTick();
-		}
-	}
-
-	/**
-	 * Redirects a {@link org.lwjgl.input.Keyboard#next()}. Starts running every tick and continues as long as there are {@link VirtualKeyboardEvent}s in {@link VirtualInput}
+	 * <p>Redirects a {@link org.lwjgl.input.Keyboard#next()}. Starts running every tick and continues as long as there are {@link VirtualKeyboardEvent}s in {@link VirtualInput}
 	 * @see VirtualInput.VirtualKeyboardInput#nextKeyboardSubtick()
 	 * @return If {@link VirtualKeyboardEvent}s are present in {@link VirtualInput}
 	 */
@@ -123,18 +119,6 @@ public class MixinMinecraft {
 	}
 
 	// ============================ Mouse
-
-	/**
-	 * Run at the start of run tick mouse. Runs every tick.
-	 * @see VirtualInput.VirtualMouseInput#nextMouseTick()
-	 * @param ci CBI
-	 */
-	@Inject(method = "runTickMouse", at = @At(value = "HEAD"))
-	public void playback_injectRunTickMouse(CallbackInfo ci) {
-		if (currentScreen == null) {
-			TASmodClient.virtual.MOUSE.nextMouseTick();
-		}
-	}
 
 	/**
 	 * Redirects a {@link org.lwjgl.input.Mouse#next()}. Starts running every tick and continues as long as there are {@link VirtualMouseEvent}s in {@link VirtualInput}
