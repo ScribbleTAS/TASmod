@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.CommentContainer;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
@@ -98,12 +98,12 @@ public class PlaybackSerialiserTest {
 		}
 
 		@Override
-		public void onDeserialiseInlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+		public void onDeserialiseInlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
 			inline.add(fileCommandContainer.split("testKey"));
 		}
 
 		@Override
-		public void onDeserialiseEndlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+		public void onDeserialiseEndlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
 			endline.add(fileCommandContainer.split("endlineKey"));
 		}
 
@@ -151,7 +151,7 @@ public class PlaybackSerialiserTest {
 
 	@Test
 	void testSerialiser() {
-		BigArrayList<TickContainer> expected = new BigArrayList<>();
+		BigArrayList<InputContainer> expected = new BigArrayList<>();
 
 		file = Paths.get("src/test/resources/serialiser/PlaybackSerialiserTest.mctas");
 
@@ -174,7 +174,7 @@ public class PlaybackSerialiserTest {
 		angle1.set(0, 0);
 		angle1.updateFromEvent(10, 10);
 
-		expected.add(new TickContainer(keyboard1, mouse1, angle1));
+		expected.add(new InputContainer(keyboard1, mouse1, angle1));
 
 		// Tick 2
 
@@ -195,7 +195,7 @@ public class PlaybackSerialiserTest {
 		angle2.deepCopyFrom(angle1);
 		angle2.updateFromEvent(-10, -10);
 
-		expected.add(new TickContainer(keyboard2, mouse2, angle2));
+		expected.add(new InputContainer(keyboard2, mouse2, angle2));
 
 		try {
 			PlaybackSerialiser.saveToFile(file, expected, "Test");
@@ -210,7 +210,7 @@ public class PlaybackSerialiserTest {
 		}
 
 		try {
-			BigArrayList<TickContainer> actual = PlaybackSerialiser.loadFromFile(file, testFlavor);
+			BigArrayList<InputContainer> actual = PlaybackSerialiser.loadFromFile(file, testFlavor);
 			assertBigArrayList(expected, actual);
 			assertEquals("testing", testMetadata.actual);
 		} catch (PlaybackLoadException | IOException e) {
@@ -243,9 +243,9 @@ public class PlaybackSerialiserTest {
 			e.printStackTrace();
 		}
 
-		BigArrayList<TickContainer> actual = PlaybackSerialiser.loadFromFile(file);
+		BigArrayList<InputContainer> actual = PlaybackSerialiser.loadFromFile(file);
 
-		BigArrayList<TickContainer> expected = new BigArrayList<>();
+		BigArrayList<InputContainer> expected = new BigArrayList<>();
 
 		VirtualKeyboard keyboard = new VirtualKeyboard();
 		keyboard.updateFromEvent(VirtualKey.W, true, 'w');
@@ -255,7 +255,7 @@ public class PlaybackSerialiserTest {
 		container.addInlineComment("This is a regular comment");
 		container.addInlineComment(null);
 		container.addEndlineComment("test");
-		expected.add(new TickContainer(keyboard, new VirtualMouse(), new VirtualCameraAngle(), container));
+		expected.add(new InputContainer(keyboard, new VirtualMouse(), new VirtualCameraAngle(), container));
 
 		VirtualKeyboard keyboard2 = new VirtualKeyboard();
 		keyboard2.updateFromEvent(VirtualKey.W, true, 'w');
@@ -266,7 +266,7 @@ public class PlaybackSerialiserTest {
 		VirtualCameraAngle cameraAngle2 = new VirtualCameraAngle();
 		cameraAngle2.set(1f, 1f);
 
-		expected.add(new TickContainer(keyboard2, mouse2, cameraAngle2));
+		expected.add(new InputContainer(keyboard2, mouse2, cameraAngle2));
 
 		VirtualMouse mouse3 = new VirtualMouse();
 		mouse3.updateFromEvent(VirtualKey.MOUSEMOVED, false, 0, 2, 2);
@@ -274,8 +274,9 @@ public class PlaybackSerialiserTest {
 
 		VirtualCameraAngle cameraAngle3 = new VirtualCameraAngle();
 		cameraAngle3.updateFromState(2f, 2f);
+		cameraAngle3.updateFromState(3f, 3f);
 
-		expected.add(new TickContainer(new VirtualKeyboard(), mouse3, cameraAngle3));
+		expected.add(new InputContainer(new VirtualKeyboard(), mouse3, cameraAngle3));
 
 		assertBigArrayList(expected, actual);
 
@@ -332,9 +333,9 @@ public class PlaybackSerialiserTest {
 			e.printStackTrace();
 		}
 
-		BigArrayList<TickContainer> actual = PlaybackSerialiser.loadFromFile(file, false);
+		BigArrayList<InputContainer> actual = PlaybackSerialiser.loadFromFile(file, false);
 
-		BigArrayList<TickContainer> expected = new BigArrayList<>();
+		BigArrayList<InputContainer> expected = new BigArrayList<>();
 
 		VirtualKeyboard keyboard = new VirtualKeyboard();
 		keyboard.updateFromEvent(VirtualKey.W, true, 'w');
@@ -344,7 +345,7 @@ public class PlaybackSerialiserTest {
 		container.addInlineComment("This is a regular comment");
 		container.addInlineComment(null);
 		container.addEndlineComment("test");
-		expected.add(new TickContainer(keyboard, new VirtualMouse(), new VirtualCameraAngle(), container));
+		expected.add(new InputContainer(keyboard, new VirtualMouse(), new VirtualCameraAngle(), container));
 
 		VirtualKeyboard keyboard2 = new VirtualKeyboard();
 		keyboard2.updateFromEvent(VirtualKey.W, true, 'w');
@@ -355,7 +356,7 @@ public class PlaybackSerialiserTest {
 		VirtualCameraAngle cameraAngle2 = new VirtualCameraAngle();
 		cameraAngle2.set(1f, 1f);
 
-		expected.add(new TickContainer(keyboard2, mouse2, cameraAngle2));
+		expected.add(new InputContainer(keyboard2, mouse2, cameraAngle2));
 
 		VirtualMouse mouse3 = new VirtualMouse();
 		mouse3.updateFromEvent(VirtualKey.MOUSEMOVED, false, 0, 2, 2);
@@ -363,8 +364,9 @@ public class PlaybackSerialiserTest {
 
 		VirtualCameraAngle cameraAngle3 = new VirtualCameraAngle();
 		cameraAngle3.updateFromState(2f, 2f);
+		cameraAngle3.updateFromState(3f, 3f);
 
-		expected.add(new TickContainer(new VirtualKeyboard(), mouse3, cameraAngle3));
+		expected.add(new InputContainer(new VirtualKeyboard(), mouse3, cameraAngle3));
 
 		assertBigArrayList(expected, actual);
 

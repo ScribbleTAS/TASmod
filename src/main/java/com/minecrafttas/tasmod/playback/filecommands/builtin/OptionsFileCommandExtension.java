@@ -5,7 +5,7 @@ import java.nio.file.Path;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
@@ -45,7 +45,7 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	}
 
 	@Override
-	public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, TickContainer tickContainer) {
+	public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
 		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer();
 		if (hud.size() != 0 && hud.get(tick).get("hud") != null) {
 			fileCommandContainer = hud.get(tick);
@@ -54,14 +54,14 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	}
 
 	@Override
-	public void onDeserialiseInlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+	public void onDeserialiseInlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
 		if (fileCommandContainer.containsKey("hud")) {
 			hud.add(fileCommandContainer.split("hud"));
 		}
 	}
 
 	@Override
-	public void onPlayback(long tick, TickContainer tickContainer) {
+	public void onPlayback(long tick, InputContainer inputContainer) {
 		if (hud.size() <= tick) {
 			return;
 		}

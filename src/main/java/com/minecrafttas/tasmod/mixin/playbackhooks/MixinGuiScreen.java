@@ -1,12 +1,10 @@
 package com.minecrafttas.tasmod.mixin.playbackhooks;
 
+import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.At.Shift;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
@@ -18,16 +16,6 @@ import net.minecraft.client.gui.GuiScreen;
 
 @Mixin(GuiScreen.class)
 public class MixinGuiScreen implements GuiScreenDuck {
-
-	/**
-	 * Run at the start of run handleInput. Runs every tick.
-	 * @see VirtualInput.VirtualKeyboardInput#nextKeyboardTick()
-	 * @param ci CBI
-	 */
-	@Inject(method = "handleInput", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Keyboard;isCreated()Z", shift = Shift.AFTER, remap = false))
-	public void injectAfterKeyboardCreated(CallbackInfo ci) {
-		TASmodClient.virtual.KEYBOARD.nextKeyboardTick();
-	}
 
 	/**
 	 * Redirects a {@link org.lwjgl.input.Keyboard#next()}. Starts running every tick and continues as long as there are {@link VirtualKeyboardEvent}s in {@link VirtualInput}
@@ -60,13 +48,6 @@ public class MixinGuiScreen implements GuiScreenDuck {
 
 	// =====================================================================================================================================
 
-	@Inject(method = "handleInput", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;isCreated()Z", shift = Shift.AFTER, remap = false))
-	public void injectAfterMouseCreated(CallbackInfo ci) {
-		TASmodClient.virtual.MOUSE.nextMouseTick();
-	}
-
-	// =====================================================================================================================================
-
 	@Redirect(method = "handleInput", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;next()Z", remap = false))
 	public boolean redirectMouseNext() {
 		return TASmodClient.virtual.MOUSE.nextMouseSubtick();
@@ -84,7 +65,7 @@ public class MixinGuiScreen implements GuiScreenDuck {
 	@Redirect(method = "handleMouseInput", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getEventButtonState()Z", remap = false))
 	public boolean redirectGetEventButtonState() {
 		if (TASmodClient.controller.isPlayingback()) { // TODO replace with event
-			org.lwjgl.input.Mouse.setCursorPosition(rescaleX(TASmodClient.virtual.MOUSE.getEventCursorX()), rescaleY(TASmodClient.virtual.MOUSE.getEventCursorY()));
+			Mouse.setCursorPosition(rescaleX(TASmodClient.virtual.MOUSE.getEventCursorX()), rescaleY(TASmodClient.virtual.MOUSE.getEventCursorY()));
 		}
 		return TASmodClient.virtual.MOUSE.getEventMouseState();
 	}

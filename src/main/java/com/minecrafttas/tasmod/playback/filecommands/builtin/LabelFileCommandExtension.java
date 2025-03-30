@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
@@ -43,7 +43,7 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 	}
 
 	@Override
-	public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, TickContainer tickContainer) {
+	public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
 		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer();
 		if (label.size() != 0 && label.get(tick).get("label") != null) {
 			fileCommandContainer = label.get(tick);
@@ -52,14 +52,14 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 	}
 
 	@Override
-	public void onDeserialiseInlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+	public void onDeserialiseInlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
 		if (fileCommandContainer.containsKey("label")) {
 			label.add(fileCommandContainer.split("label"));
 		}
 	}
 
 	@Override
-	public void onPlayback(long tick, TickContainer tickContainer) {
+	public void onPlayback(long tick, InputContainer inputContainer) {
 		if (label.size() <= tick) {
 			return;
 		}

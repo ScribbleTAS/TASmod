@@ -12,7 +12,7 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.file.AbstractDataFile;
 import com.minecrafttas.mctcommon.registry.Registerable;
 import com.minecrafttas.tasmod.TASmodClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 
 public class PlaybackFileCommand {
 
@@ -99,24 +99,24 @@ public class PlaybackFileCommand {
 		public void onClear() {
 		};
 
-		public void onRecord(long tick, TickContainer tickContainer) {
+		public void onRecord(long tick, InputContainer inputContainer) {
 		};
 
-		public void onPlayback(long tick, TickContainer tickContainer) {
+		public void onPlayback(long tick, InputContainer inputContainer) {
 		};
 
-		public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, TickContainer tickContainer) {
+		public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
 			return null;
 		}
 
-		public PlaybackFileCommandContainer onSerialiseEndlineComment(long currentTick, TickContainer tickContainer) {
+		public PlaybackFileCommandContainer onSerialiseEndlineComment(long currentTick, InputContainer inputContainer) {
 			return null;
 		}
 
-		public void onDeserialiseInlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+		public void onDeserialiseInlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
 		}
 
-		public void onDeserialiseEndlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+		public void onDeserialiseEndlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
 		}
 
 		public boolean isEnabled() {

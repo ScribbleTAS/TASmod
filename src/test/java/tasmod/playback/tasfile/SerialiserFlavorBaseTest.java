@@ -8,14 +8,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
@@ -38,7 +40,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		this.currentTick = 0;
 		this.currentSubtick = 0;
-		this.previousTickContainer = null;
+		this.previousInputContainer = null;
 	}
 
 	@Override
@@ -192,7 +194,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	}
 
 	/**
-	 * Test serialising a {@link TickContainer}.<br>
+	 * Test serialising a {@link InputContainer}.<br>
 	 * This container contains a keyboard, mouse and camera angle,<br>
 	 * with different amounts of subticks each.
 	 */
@@ -215,7 +217,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		angle.updateFromEvent(1, 1);
 
 		// Create container and fill actual
-		TickContainer container = new TickContainer(keyboard, mouse, angle);
+		InputContainer container = new InputContainer(keyboard, mouse, angle);
 		BigArrayList<String> actual = new BigArrayList<>();
 		serialiseContainer(actual, container);
 
@@ -678,7 +680,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	 */
 	@Test
 	void testDeserialiseContainer() {
-		BigArrayList<TickContainer> actual = new BigArrayList<>();
+		BigArrayList<InputContainer> actual = new BigArrayList<>();
 		List<String> tick = new ArrayList<>();
 		tick.add("55|W,LCONTROL;w|;0,887,626|17.85;-202.74799");
 		tick.add("\t1||RC;-15,1580,658|11.85;-2.74799");
@@ -686,22 +688,29 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		deserialiseContainer(actual, tick);
 
-		BigArrayList<TickContainer> expected = new BigArrayList<>();
+		BigArrayList<InputContainer> expected = new BigArrayList<>();
 
 		VirtualKeyboard keyboard = new VirtualKeyboard();
-		keyboard.updateFromState(new int[] { VirtualKey.W.getKeycode(), VirtualKey.LCONTROL.getKeycode() }, new char[] { 'w' });
+		Set<Integer> keyboardKeycodes = new HashSet<>();
+		keyboardKeycodes.add(VirtualKey.W.getKeycode());
+		keyboardKeycodes.add(VirtualKey.LCONTROL.getKeycode());
+		keyboard.updateFromState(keyboardKeycodes, new char[] { 'w' });
 
 		VirtualMouse mouse = new VirtualMouse();
-		mouse.updateFromState(new int[] { VirtualKey.MOUSEMOVED.getKeycode() }, 0, 887, 626);
-		mouse.updateFromState(new int[] { VirtualKey.RC.getKeycode() }, -15, 1580, 658);
-		mouse.updateFromState(new int[] { VirtualKey.MOUSEMOVED.getKeycode() }, 0, 1580, 658);
+		Set<Integer> mouseKeycodes1 = new HashSet<>();
+		Set<Integer> mouseKeycodes2 = new HashSet<>();
+		mouseKeycodes2.add(VirtualKey.RC.getKeycode());
+		Set<Integer> mouseKeycodes3 = new HashSet<>();
+		mouse.updateFromState(mouseKeycodes1, 0, 887, 626);
+		mouse.updateFromState(mouseKeycodes2, -15, 1580, 658);
+		mouse.updateFromState(mouseKeycodes3, 0, 1580, 658);
 
 		VirtualCameraAngle cameraAngle = new VirtualCameraAngle();
 		cameraAngle.updateFromState(-202.74799F, 17.85F);
 		cameraAngle.updateFromState(-2.74799F, 11.85F);
 		cameraAngle.updateFromState(-22.799F, 45F);
 
-		expected.add(new TickContainer(keyboard, mouse, cameraAngle));
+		expected.add(new InputContainer(keyboard, mouse, cameraAngle));
 
 		assertBigArrayList(expected, actual);
 	}

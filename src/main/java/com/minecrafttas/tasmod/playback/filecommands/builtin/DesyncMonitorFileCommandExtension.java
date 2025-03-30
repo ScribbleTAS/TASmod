@@ -12,7 +12,7 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
@@ -75,7 +75,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	}
 
 	@Override
-	public void onRecord(long tick, TickContainer tickContainer) {
+	public void onRecord(long tick, InputContainer inputContainer) {
 		EntityPlayerSP player = Minecraft.getMinecraft().player;
 		MonitorContainer values = null;
 		if (player != null) {
@@ -97,7 +97,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	}
 
 	@Override
-	public PlaybackFileCommandContainer onSerialiseEndlineComment(long currentTick, TickContainer tickContainer) {
+	public PlaybackFileCommandContainer onSerialiseEndlineComment(long currentTick, InputContainer inputContainer) {
 		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
 		MonitorContainer monitoredValues = monitorContainer.get(currentTick);
 		PlaybackFileCommand command = new PlaybackFileCommand("desyncMonitor", monitoredValues.toStringArray());
@@ -108,7 +108,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	}
 
 	@Override
-	public void onDeserialiseEndlineComment(long tick, TickContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+	public void onDeserialiseEndlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
 		List<PlaybackFileCommand> commandsEndline = fileCommandContainer.get("desyncMonitor");
 		if (commandsEndline == null || commandsEndline.isEmpty()) {
 			recordNull(tick);
@@ -128,7 +128,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	}
 
 	@Override
-	public void onPlayback(long tick, TickContainer tickContainer) {
+	public void onPlayback(long tick, InputContainer inputContainer) {
 		currentValues = get(tick - 1);
 	}
 

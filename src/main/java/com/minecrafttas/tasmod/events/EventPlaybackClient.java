@@ -3,7 +3,7 @@ package com.minecrafttas.tasmod.events;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 
 public interface EventPlaybackClient {
 
@@ -53,9 +53,9 @@ public interface EventPlaybackClient {
 		 * Fired when a tick is being recorded
 		 * 
 		 * @param index     The index of the tick that is being recorded
-		 * @param container The {@link TickContainer} that is being recorded
+		 * @param container The {@link InputContainer} that is being recorded
 		 */
-		public void onRecordTick(long index, TickContainer container);
+		public void onRecordTick(long index, InputContainer container);
 	}
 
 	/**
@@ -68,9 +68,9 @@ public interface EventPlaybackClient {
 		 * Fired when a tick is being recorded
 		 * 
 		 * @param index     The index of the tick that is being recorded
-		 * @param container The {@link TickContainer} that is being recorded
+		 * @param container The {@link InputContainer} that is being recorded
 		 */
-		public void onPlaybackTick(long index, TickContainer container);
+		public void onPlaybackTick(long index, InputContainer container);
 	}
 
 	/**

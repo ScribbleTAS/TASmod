@@ -11,12 +11,14 @@ import static com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMet
 import static com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension.StartPositionFields.Z;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 import com.dselent.bigarraylist.BigArrayList;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
@@ -403,7 +405,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 				String[] keys = matcher.group(1).split(",");
 				char[] chars = matcher.group(2).toCharArray();
 
-				int[] keycodes = deserialiseVirtualKeyboardKey(keys);
+				Set<Integer> keycodes = deserialiseVirtualKeyboardKey(keys);
 				out.updateFromState(keycodes, chars);
 			} else {
 				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Keyboard could not be read. Probably a missing semicolon: %s", line);
@@ -414,8 +416,8 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 	}
 
 	@Override
-	public BigArrayList<TickContainer> deserialise(BigArrayList<String> lines, long startPos) {
-		BigArrayList<TickContainer> out = new BigArrayList<>();
+	public BigArrayList<InputContainer> deserialise(BigArrayList<String> lines, long startPos) {
+		BigArrayList<InputContainer> out = new BigArrayList<>();
 		for (long i = startPos; i < lines.size(); i++) {
 
 			if (lines.get(i).startsWith("#")) {
@@ -429,7 +431,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 			deserialiseContainer(out, container);
 			currentTick++;
 		}
-		previousTickContainer = null;
+		previousInputContainer = null;
 		return out;
 	}
 
@@ -450,8 +452,8 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 
 			//Splitting multiple buttons
 			String[] splitButtons = buttons.split(",");
-			int[] keys = deserialiseVirtualMouseKey(splitButtons);
-			mouse.updateFromState(keys, 0, 0, 0);
+			Set<Integer> keycodes = deserialiseVirtualMouseKey(splitButtons);
+			mouse.updateFromState(keycodes, 0, 0, 0);
 		}
 		readPath(path, mouse);
 
@@ -479,7 +481,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 			} catch (ArrayIndexOutOfBoundsException e) {
 				throw new PlaybackLoadException("'" + pathNode + "' couldn't be read in line " + currentLine + ": Something is missing or is too much");
 			}
-			List<Integer> keyList = new ArrayList<>();
+			Set<Integer> keyList = new HashSet<>();
 			for (int i = 0; i < length - 3; i++) {
 				String key = split[i];
 				Integer keyCode = VirtualKey.getKeycode(key);
@@ -488,11 +490,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 				}
 				keyList.add(keyCode);
 			}
-			int[] keyListArray = new int[keyList.size()];
-			for (int i = 0; i < keyList.size(); i++) {
-				keyListArray[i] = keyList.get(i);
-			}
-			mouse.updateFromState(keyListArray, scrollWheel, cursorX, cursorY);
+			mouse.updateFromState(keyList, scrollWheel, cursorX, cursorY);
 		}
 	}
 
@@ -501,8 +499,8 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 		VirtualCameraAngle out = new VirtualCameraAngle();
 
 		currentSubtick = 0;
-		Float previousPitch = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getPitch();
-		Float previousYaw = previousTickContainer == null ? null : previousTickContainer.getCameraAngle().getYaw();
+		Float previousPitch = previousInputContainer == null ? null : previousInputContainer.getCameraAngle().getPitch();
+		Float previousYaw = previousInputContainer == null ? null : previousInputContainer.getCameraAngle().getYaw();
 
 		for (String line : cameraAngleStrings) {
 			Matcher matcher = extract("Camera:(.+?);(.+)", line);

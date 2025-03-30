@@ -271,7 +271,7 @@ public class VirtualInput {
 		 * Used to load {@link #nextKeyboard} into {@link #currentKeyboard}, creating
 		 * {@link VirtualKeyboardEvent}s in the process.
 		 * 
-		 * @see MixinMinecraft#playback_injectRunTickKeyboard(org.spongepowered.asm.mixin.injection.callback.CallbackInfo)
+		 * @see MixinMinecraft#playback_injectRunTick(CallbackInfo)
 		 */
 		public void nextKeyboardTick() {
 			nextKeyboard.deepCopyFrom((VirtualKeyboard) EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualKeyboardTick.class, nextKeyboard));
@@ -431,7 +431,7 @@ public class VirtualInput {
 		 * Used to load {@link #nextMouse} into {@link #currentMouse}, creating
 		 * {@link VirtualMouseEvent}s in the process.
 		 * 
-		 * @see MixinMinecraft#playback_injectRunTickMouse(org.spongepowered.asm.mixin.injection.callback.CallbackInfo)
+		 * @see MixinMinecraft#playback_injectRunTick(CallbackInfo)
 		 */
 		public void nextMouseTick() {
 			nextMouse.deepCopyFrom((VirtualMouse) EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualMouseTick.class, nextMouse));

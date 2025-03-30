@@ -63,7 +63,7 @@ public class AlphaFlavorTest extends AlphaFlavor {
 
 		this.currentTick = 0;
 		this.currentSubtick = 0;
-		this.previousTickContainer = null;
+		this.previousInputContainer = null;
 	}
 
 	@BeforeEach

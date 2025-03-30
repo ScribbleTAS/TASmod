@@ -20,7 +20,7 @@ import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TickContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
@@ -166,7 +166,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 
 		File targetfile = new File(savestateDirectory, nameOfSavestate + ".mctas");
 
-		BigArrayList<TickContainer> savestateContainerList;
+		BigArrayList<InputContainer> savestateContainerList;
 
 		if (targetfile.exists()) {
 			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile.toPath(), state != TASstate.PLAYBACK);
@@ -254,8 +254,8 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		});
 	}
 
-	private static void preload(BigArrayList<TickContainer> containerList, long index) {
-		TickContainer containerToPreload = containerList.get(index);
+	private static void preload(BigArrayList<InputContainer> containerList, long index) {
+		InputContainer containerToPreload = containerList.get(index);
 		TASmodClient.virtual.preloadInput(containerToPreload.getKeyboard(), containerToPreload.getMouse(), containerToPreload.getCameraAngle());
 
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.onPlaybackTick(index, containerToPreload);
