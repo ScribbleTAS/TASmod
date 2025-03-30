@@ -13,13 +13,13 @@ import net.minecraft.client.settings.GameSettings;
 
 @Mixin(Minecraft.class)
 public class MixinMinecraftFullscreen {
-	
+
 	@Shadow
 	private GameSettings gameSettings;
 
 	@Inject(method = "toggleFullscreen", at = @At("RETURN"))
-	public void inject_toggleFullscreen(CallbackInfo ci) {
-		int keyF11=this.gameSettings.keyBindFullscreen.getKeyCode();
+	public void fixes_toggleFullscreen(CallbackInfo ci) {
+		int keyF11 = this.gameSettings.keyBindFullscreen.getKeyCode();
 		TASmodClient.virtual.KEYBOARD.updateNextKeyboard(keyF11, false, Character.MIN_VALUE);
 	}
 }

@@ -64,6 +64,7 @@
 		
 		// Fixes
 		"fixes.MixinMinecraftFullscreen",
-		"fixes.MixinNetworkManager"
+		"fixes.MixinNetworkManager",
+		"fixes.MixinMouseHelper"
 	]
 }
