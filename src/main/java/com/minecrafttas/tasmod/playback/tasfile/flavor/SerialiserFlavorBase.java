@@ -1383,8 +1383,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		VirtualCameraAngle out = new VirtualCameraAngle(null, null, false);
 
 		currentSubtick = 0;
-		Float previousPitch = previousInputContainer == null ? null : previousInputContainer.getCameraAngle().getPitch();
 		Float previousYaw = previousInputContainer == null ? null : previousInputContainer.getCameraAngle().getYaw();
+		Float previousPitch = previousInputContainer == null ? null : previousInputContainer.getCameraAngle().getPitch();
 
 		for (String line : cameraAngleStrings) {
 			Matcher matcher = extract("(.+?);(.+)", line);
@@ -1403,6 +1403,9 @@ public abstract class SerialiserFlavorBase implements Registerable {
 					cameraPitch = deserialiseRelativeFloat("camera pitch", cameraPitchString, previousPitch);
 
 				out.updateFromState(cameraPitch, cameraYaw);
+
+				previousYaw = cameraYaw;
+				previousPitch = cameraPitch;
 			} else {
 				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Camera is missing a semicolon");
 			}
@@ -1513,22 +1516,21 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	protected Float deserialiseRelativeFloat(String name, String floatstring, Float previous) {
-		if (floatstring == null) {
+		if (floatstring == null)
 			return null;
-		}
 
 		float out = 0;
 		if (floatstring.startsWith("~")) {
 			floatstring = floatstring.replace("~", "");
 			float relative = parseFloat(name, floatstring);
-			if (previous != null) {
+			if (previous != null)
 				out = previous + relative;
-			} else {
+			else
 				throw new PlaybackLoadException(currentLine, currentTick, currentSubtick, "Can't process relative value ~%s in %s. Previous value for comparing is not available", floatstring, name);
-			}
-		} else {
+
+		} else
 			out = parseFloat(name, floatstring);
-		}
+
 		return out;
 	}
 
