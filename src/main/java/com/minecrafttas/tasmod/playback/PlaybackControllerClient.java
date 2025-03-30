@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
 import com.dselent.bigarraylist.BigArrayList;
@@ -48,17 +49,21 @@ import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
+import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
+import com.minecrafttas.tasmod.util.PointerNormalizer;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
+import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
@@ -82,8 +87,20 @@ import net.minecraft.util.text.event.ClickEvent;
  * @author Scribble
  *
  */
-public class PlaybackControllerClient implements ClientPacketHandler, EventClientInit, EventVirtualInput.EventVirtualKeyboardTick, EventVirtualInput.EventVirtualMouseTick, EventVirtualInput.EventVirtualCameraAngleTick, EventClientTickPost {
-
+public class PlaybackControllerClient implements
+//@formatter:off
+	ClientPacketHandler,
+	
+	EventClientInit,
+	EventClientTickPost,
+	
+	EventVirtualInput.EventVirtualKeyboardTick,
+	EventVirtualInput.EventVirtualMouseTick,
+	EventVirtualInput.EventVirtualCameraAngleTick,
+	
+	EventVirtualInput.EventVirtualMouseSubtick
+	//@formatter:on
+{
 	private Logger logger = TASmod.LOGGER;
 
 	/**
@@ -380,6 +397,40 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	}
 
 	/**
+	 * Updates the cursor location on screen
+	 */
+	@Override
+	public void onVirtualMouseSubtick(VirtualMouseEvent event) {
+		if (!isPlayingback() || event == null)
+			return;
+
+		Minecraft mc = Minecraft.getMinecraft();
+		if (!mc.gameSettings.pauseOnLostFocus && !Display.isActive()) // If pause on lost focus is on and the display is not active don't set the cursor position
+			return;
+
+		GuiScreen screen = mc.currentScreen;
+		if (screen == null)
+			return;
+
+		GuiScreenDuck duckedScreen = (GuiScreenDuck) mc.currentScreen;
+		//@formatter:off
+		Mouse.setCursorPosition(
+				duckedScreen.rescaleX(
+						PointerNormalizer.reapplyScalingX(
+								event.getCursorX()
+								)
+						),
+				duckedScreen.rescaleY(
+						PointerNormalizer.reapplyScalingY(
+								event.getCursorY()
+								)
+						
+						)
+				);
+		//@formatter:on
+	}
+
+	/**
 	 * Updates the input container.<br>
 	 * <br>
 	 * During a recording this adds the {@linkplain #keyboard}, {@linkplain #mouse}
@@ -431,9 +482,9 @@ public class PlaybackControllerClient implements ClientPacketHandler, EventClien
 	}
 
 	private void playbackNextTick() {
-
-		if (!Display.isActive()) { // Stops the playback when you tab out of minecraft, for once as a failsafe,
-									// secondly as potential exploit protection
+		Minecraft mc = Minecraft.getMinecraft();
+		if (!Display.isActive() && mc.gameSettings.pauseOnLostFocus) { // Stops the playback when you tab out of minecraft, for once as a failsafe,
+																		// secondly as potential exploit protection
 			LOGGER.info(LoggerMarkers.Playback, "Stopping a {} since the user tabbed out of the game", state);
 			setTASState(TASstate.NONE);
 		}

@@ -287,7 +287,9 @@ public class VirtualInput {
 		 * @return If a keyboard event is in {@link #keyboardEventQueue}
 		 */
 		public boolean nextKeyboardSubtick() {
-			return (currentKeyboardEvent = keyboardEventQueue.poll()) != null;
+			boolean isPolled = (currentKeyboardEvent = keyboardEventQueue.poll()) != null;
+			EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualKeyboardSubtick.class, currentKeyboardEvent);
+			return isPolled;
 		}
 
 		/**
@@ -447,7 +449,9 @@ public class VirtualInput {
 		 * @return If a mouse event is in {@link #mouseEventQueue}
 		 */
 		public boolean nextMouseSubtick() {
-			return (currentMouseEvent = mouseEventQueue.poll()) != null;
+			boolean isPolled = (currentMouseEvent = mouseEventQueue.poll()) != null;
+			EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualMouseSubtick.class, currentMouseEvent);
+			return isPolled;
 		}
 
 		/**

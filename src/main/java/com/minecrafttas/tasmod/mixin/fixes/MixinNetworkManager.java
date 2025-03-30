@@ -24,7 +24,7 @@ public class MixinNetworkManager {
 	 * @param manager
 	 */
 	@Redirect(method = "processReceivedPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/ITickable;update()V"))
-	public void redirect_processReceivedPackets(ITickable manager) {
+	public void fixes_processReceivedPackets(ITickable manager) {
 		if (TASmod.tickratechanger.ticksPerSecond == 0) {
 			if (!(packetListener instanceof NetHandlerPlayServer) || TASmodClient.loadingScreenHandler.isLoading()) {
 				manager.update();
