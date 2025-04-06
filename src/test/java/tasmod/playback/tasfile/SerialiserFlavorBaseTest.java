@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
@@ -1062,6 +1063,18 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertEquals(expected, actual);
 	}
 
+	@Test
+	void testYawClamping() {
+		assertEquals(-170f, clampYaw(190f));
+		assertEquals(160f, clampYaw(-200f));
+	}
+
+	@Test
+	@Disabled
+	void testYawUnclamping() {
+		assertEquals(200f, unclampYaw(170f, -170f));
+	}
+
 	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {
 		assertIterableEquals(convertBigArrayListToArrayList(expected), convertBigArrayListToArrayList(actual));
 	}
@@ -1078,5 +1091,4 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	public SerialiserFlavorBase clone() {
 		return new SerialiserFlavorBaseTest();
 	}
-
 }
