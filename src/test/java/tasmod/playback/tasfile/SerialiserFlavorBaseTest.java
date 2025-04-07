@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.dselent.bigarraylist.BigArrayList;
@@ -1063,6 +1062,9 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertEquals(expected, actual);
 	}
 
+	/**
+	 * Testing {@link #clampYaw(Float)} to force the yaw between -180 and 180
+	 */
 	@Test
 	void testYawClamping() {
 		assertEquals(-170f, clampYaw(190f));
@@ -1070,9 +1072,8 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	}
 
 	@Test
-	@Disabled
 	void testYawUnclamping() {
-		assertEquals(200f, unclampYaw(170f, -170f));
+		assertEquals(-190f, unclampYaw(170f, -170f));
 	}
 
 	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {

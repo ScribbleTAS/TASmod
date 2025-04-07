@@ -1756,6 +1756,11 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return charString;
 	}
 
+	/**
+	 * <p>Clamps the yaw to a value between -180 and 180
+	 * @param yaw The yaw to clamp
+	 * @return The clamped yaw
+	 */
 	protected Float clampYaw(Float yaw) {
 		if (yaw == null)
 			return yaw;
@@ -1765,9 +1770,16 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		while (yaw < -180)
 			yaw += 360;
 		return yaw;
-
 	}
 
+	/**
+	 * <p>Unclamping the yaw from a clamped value
+	 * <p>Makes it so 170 and a previous value of -170 will return -190,<br>
+	 * removing the -180 180 clamp. Uses {@link #yawRotations}
+	 * @param yaw The yaw to unclamp
+	 * @param previous The previous yaw to compare against.
+	 * @return The unclamped yaw
+	 */
 	protected Float unclampYaw(Float yaw, Float previous) {
 		if (previous == null || yaw == null)
 			return yaw;
