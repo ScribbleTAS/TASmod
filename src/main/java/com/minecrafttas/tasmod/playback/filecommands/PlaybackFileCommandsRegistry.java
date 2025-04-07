@@ -180,4 +180,8 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		config.set(TASmodConfig.EnabledFileCommands, String.join(", ", nameList));
 		config.saveToXML();
 	}
+
+	public static class FileCommandsInComment extends ArrayList<PlaybackFileCommand> {
+
+	}
 }
