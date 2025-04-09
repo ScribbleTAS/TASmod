@@ -318,9 +318,9 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 *     │   ├── {@link #serialiseInlineComment(String)}
 	 *     │   └── {@link #serialiseFileCommandsInline(List)}
 	 *     │       └── {@link #serialiseFileCommand(PlaybackFileCommand)}
-	 *     ├── {@link #serialiseEndlineComments(List, List)}	// Same as serialiseInlineComments
+	 *     ├── {@link #serialiseEndlineComments(List, UnsortedFileCommandContainer)}	// Same as serialiseInlineComments
 	 *     │   ├── {@link #serialiseEndlineComment(String)}
-	 *     │   └── {@link #serialiseFileCommandsEndline(List)}	// Unused
+	 *     │   └── {@link #serialiseFileCommandsEndline(FileCommandsInCommentList)}	// Unused
 	 *     │       └── {@link #serialiseFileCommand(PlaybackFileCommand)}
 	 *     └── {@link #mergeInputs(BigArrayList, List, List, List, List)}
 	 *         ├── {@link #mergeInput(long, String, String, String, String)}
@@ -1011,12 +1011,12 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * deserialise
 	 * ├── {@link #extractContainer(List, BigArrayList, long)}
 	 * └── {@link #deserialiseContainer(BigArrayList, List)}
-	 *     ├── {@link #deserialiseMultipleInlineComments(List, List)}
-	 *     │   └── {@link #deserialiseInlineComment(String, List)}
-	 *     │       └── {@link #deserialiseFileCommandsInline(String, List)}
+	 *     ├── {@link #deserialiseMultipleInlineComments(List, UnsortedFileCommandContainer)}
+	 *     │   └── {@link #deserialiseInlineComment(String, FileCommandsInCommentList)}
+	 *     │       └── {@link #deserialiseFileCommandsInline(String, FileCommandsInCommentList)}
 	 *     ├── {@link #splitInputs(List, List, List, List, List, List)}
-	 *     │   └── {@link #deserialiseEndlineComment(String, List)}
-	 *     │       └── {@link #deserialiseFileCommandsEndline(String, List)}
+	 *     │   └── {@link #deserialiseEndlineComment(String, FileCommandsInCommentList)}
+	 *     │       └── {@link #deserialiseFileCommandsEndline(String, FileCommandsInCommentList)}
 	 *     ├── {@link #deserialiseKeyboard(List)}
 	 *     ├── {@link #deserialiseMouse(List)}
 	 *     └── {@link #deserialiseCameraAngle(List)}
