@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.dselent.bigarraylist.BigArrayList;
@@ -13,6 +12,7 @@ import com.minecrafttas.mctcommon.file.AbstractDataFile;
 import com.minecrafttas.mctcommon.registry.Registerable;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 
 public class PlaybackFileCommand {
 
@@ -105,18 +105,18 @@ public class PlaybackFileCommand {
 		public void onPlayback(long tick, InputContainer inputContainer) {
 		};
 
-		public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
+		public SortedFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
 			return null;
 		}
 
-		public PlaybackFileCommandContainer onSerialiseEndlineComment(long currentTick, InputContainer inputContainer) {
+		public SortedFileCommandContainer onSerialiseEndlineComment(long currentTick, InputContainer inputContainer) {
 			return null;
 		}
 
-		public void onDeserialiseInlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+		public void onDeserialiseInlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
 		}
 
-		public void onDeserialiseEndlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+		public void onDeserialiseEndlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
 		}
 
 		public boolean isEnabled() {
@@ -137,43 +137,176 @@ public class PlaybackFileCommand {
 		}
 	}
 
-	public static class PlaybackFileCommandContainer extends LinkedHashMap<String, PlaybackFileCommandLine> {
+	/**
+	 * <p>List of FileCommands in one comment.
+	 * <p>This class is the same as <code>ArrayList&lt;PlaybackFileCommand&gt;</code>
+	 * <p>In a comment, you can have multiple file commands, hence a list is needed to store them all.
+	 * <h5>Example</h5>
+	 * <pre>
+	 * // $desyncMonitor(13, 0, 1, 1, 1, 1); $hud(true);
+	 * </pre>
+	 * <p>This would translate into an ArrayList like
+	 * <pre>
+	 * [$desyncMonitor(13, 0, 1, 1, 1, 1);, $hud(true);]
+	 * </pre>
+	 * 
+	 * <p>Used in {@link UnsortedFileCommandContainer} for serialisation and deserialisation
+	 * <p>Although this class is the same as {@link FileCommandsInTickList}, their use case differs slightly,<br>
+	 * hence I created 2 classes for the sake of clarity.
+	 * 
+	 * @author Scribble
+	 */
+	public static class FileCommandsInCommentList extends ArrayList<PlaybackFileCommand> {
+	}
 
-		public PlaybackFileCommandContainer() {
-		}
+	/**
+	 * <p>An ArrayList for storing {@link FileCommandsInCommentList} sorted by order of appearence in the {@link InputContainer}
+	 * <p>This stands in contrast to the {@link SortedFileCommandContainer}, which can be obtained by calling {@link UnsortedFileCommandContainer#sort() sort()}
+	 * <p>This is technically a 2 dimensional List for storing file commands for multiple comments, where {@link FileCommandsInCommentList} is one row of file commands
+	 * <p>Used in {@link SerialiserFlavorBase} as this format makes it easier to deal with serialisation and deserialisation
+	 * <h5>Example</h5>
+	 * <pre>
+	 * // $desyncMonitor(13, 0, 1, 1, 1, 1); $hud(true);
+	 * // $desyncMonitor(16, 3, 1, 1, 1, 1); $hud(false);
+	 * // $label(Test); $hud(false);
+	 * </pre>
+	 * <p>This would translate into an ArrayList like
+	 * <pre>
+	 * [
+	 * 	[$desyncMonitor(13, 0, 1, 1, 1, 1);, $hud(true);]	&lt;- One {@link FileCommandsInCommentList}
+	 * 	[$desyncMonitor(16, 3, 1, 1, 1, 1);, $hud(false);]
+	 * 	[$label(Test);, $hud(false);]
+	 * ]
+	 * </pre>
+	 * @author Scribble
+	 * @see SortedFileCommandContainer
+	 */
+	public static class UnsortedFileCommandContainer extends ArrayList<FileCommandsInCommentList> {
 
-		public PlaybackFileCommandContainer(List<List<PlaybackFileCommand>> list) {
-			for (List<PlaybackFileCommand> lists : list) {
-				if (lists != null) {
-					for (PlaybackFileCommand command : lists) {
-						this.put(command.getName(), new PlaybackFileCommandLine());
+		/**
+		 * <p>Sorts this array list by the file command names
+		 * @return A {@link SortedFileCommandContainer}
+		 */
+		public SortedFileCommandContainer sort() {
+			SortedFileCommandContainer out = new SortedFileCommandContainer();
+
+			/*
+			 *  Fill the HashMap in SortedFileCommandContainer with empty FileCommandsInCommentList
+			 *  for each different FileCommand name found in this UnsortedFileCommandContainer.
+			 */
+			for (FileCommandsInCommentList unsortedFileCommandsList : this) {
+				if (unsortedFileCommandsList != null) {
+					for (PlaybackFileCommand command : unsortedFileCommandsList) {
+						out.put(command.getName(), new FileCommandsInTickList());
 					}
 				}
 			}
 
-			for (List<PlaybackFileCommand> lists : list) {
-				for (Map.Entry<String, PlaybackFileCommandLine> entry : this.entrySet()) {
-					String key = entry.getKey();
-					List<PlaybackFileCommand> val = entry.getValue();
+			/**
+			 * Add the FileCommands to the previously created FileCommandsInCommentLists
+			 */
+			for (FileCommandsInCommentList unsortedFileCommandsList : this) {
+				/*
+				 * If the file command is not present in the comment, we have to add
+				 * null to the sortedFileCommandsList.
+				 * 
+				 * To do that, we iterate through all entries in the HashMap
+				 */
+				for (Map.Entry<String, FileCommandsInTickList> entry : out.entrySet()) {
+
+					String sortedKey = entry.getKey();
+					FileCommandsInTickList sortedFileCommandsList = entry.getValue();
 
 					boolean valuePresent = false;
-					if (lists != null) {
-						for (PlaybackFileCommand command : lists) {
-							if (key.equals(command.getName())) {
+					if (unsortedFileCommandsList != null) {
+						/**
+						 * Iterates through all filecommands in a comment
+						 * and adds it to the sorted list if found
+						 */
+						for (PlaybackFileCommand command : unsortedFileCommandsList) {
+							if (sortedKey.equals(command.getName())) {
 								valuePresent = true;
-								val.add(command);
+								sortedFileCommandsList.add(command);
 							}
 						}
 					}
+					/**
+					 * If the value is not found,
+					 * add null to indicate that the
+					 * file command is missing from this comment
+					 */
 					if (!valuePresent) {
-						val.add(null);
+						sortedFileCommandsList.add(null);
 					}
 				}
 			}
+			return out;
 		}
+	}
 
+	/**
+	 * <p>List of FileCommands in one tick.
+	 * <p>This class is the same as <code>ArrayList&lt;PlaybackFileCommand&gt;</code>
+	 * <p>In a tick, you can have multiple file commands for each subtick, hence a list is needed to store them all.
+	 * <p>Used in {@link PlaybackFileCommandExtension PlaybackFileCommandExtensions} as this format makes it easier to deal with processing FileCommands during playback or recording
+	 * <h5>Example</h5>
+	 * <pre>
+	 * // $desyncMonitor(13, 0, 1, 1, 1, 1);
+	 * // $desyncMonitor(13, 0, 1, 2, 1, 1);
+	 * // $desyncMonitor(13, 0, 1, 10, 1, 1);
+	 * </pre>
+	 * <p>This would translate into an ArrayList like
+	 * <pre>
+	 * [$desyncMonitor(13, 0, 1, 1, 1, 1);, $desyncMonitor(13, 0, 1, 2, 1, 1);, $desyncMonitor(13, 0, 1, 10, 1, 1);]
+	 * </pre>
+	 * 
+	 * <p>Used in {@link SortedFileCommandContainer} for processing file commands, either playing back or recording
+	 * <p>Although this class is the same as {@link FileCommandsInCommentList}, their use case differs slightly,<br>
+	 * hence I created 2 classes for the sake of clarity.
+	 * 
+	 * @author Scribble
+	 */
+	public static class FileCommandsInTickList extends ArrayList<PlaybackFileCommand> {
+	}
+
+	/**
+	 * <p>A LinkedHashMap for storing {@link FileCommandsInCommentList} sorted by the name of the FileCommand name.
+	 * <p>The key represents the FileCommand name, while the elements are the {@link FileCommandsInTickList}
+	 * <p>This stands in contrast to the {@link UnsortedFileCommandContainer}, which can be obtained by calling {@link SortedFileCommandContainer#unsort() unsort()}
+	 * <h5>Example</h5>
+	 * <pre>
+	 * // $desyncMonitor(13, 0, 1, 1, 1, 1); $hud(true);
+	 * // $desyncMonitor(16, 3, 1, 1, 1, 1); $hud(false);
+	 * // $label(Test); $hud(false);
+	 * </pre>
+	 * <p>This would translate into a LinkedHashMap like
+	 * <pre>
+	 * {
+	 * "desyncMonitor":
+	 * 	[$desyncMonitor(13, 0, 1, 1, 1, 1);, $desyncMonitor(16, 3, 1, 1, 1, 1);, null],
+	 * 
+	 * "hud":
+	 * 	[$hud(true);, $hud(false), $hud(false)],	&lt;- One {@link FileCommandsInTickList}
+	 * 
+	 * "label":
+	 * 	[null, null, $label(Test)]
+	 * }
+	 * <p>While null being the subticks that have no file commands of that type
+	 * 
+	 * <p>Additionally, these entries can be {@link SortedFileCommandContainer#split(Iterable) split} into multiple containers.
+	 * </pre>
+	 * @author Scribble
+	 */
+	public static class SortedFileCommandContainer extends LinkedHashMap<String, FileCommandsInTickList> {
+
+		/**
+		 * <p>Adds a new {@link PlaybackFileCommand} to the specified key.
+		 * <p>Creates a new {@link FileCommandsInTickList} if it's not already present
+		 * @param key The key for the list to add
+		 * @param fileCommand The {@link PlaybackFileCommand} to add to the list
+		 */
 		public void add(String key, PlaybackFileCommand fileCommand) {
-			PlaybackFileCommandLine toAdd = getOrDefault(key, new PlaybackFileCommandLine());
+			FileCommandsInTickList toAdd = getOrDefault(key, new FileCommandsInTickList());
 			if (toAdd.isEmpty()) {
 				put(key, toAdd);
 			}
@@ -181,39 +314,53 @@ public class PlaybackFileCommand {
 			toAdd.add(fileCommand);
 		}
 
-		public PlaybackFileCommandContainer split(String... keys) {
+		/**
+		 * <p>Creates a new {@link SortedFileCommandContainer} with only the keys present
+		 * @param keys The keys to split into
+		 * @return A new {@link SortedFileCommandContainer} with only the keys present
+		 */
+		public SortedFileCommandContainer split(String... keys) {
 			return split(Arrays.asList(keys));
 		}
 
-		public PlaybackFileCommandContainer split(Iterable<String> keys) {
-			PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
+		/**
+		 * <p>Creates a new {@link SortedFileCommandContainer} with only the keys present
+		 * @param keys The keys to split into
+		 * @return A new {@link SortedFileCommandContainer} with only the keys present
+		 */
+		public SortedFileCommandContainer split(Iterable<String> keys) {
+			SortedFileCommandContainer out = new SortedFileCommandContainer();
 			for (String key : keys) {
 				out.put(key, this.get(key));
 			}
 			return out;
 		}
 
-		public List<List<PlaybackFileCommand>> valuesBySubtick() {
-			List<List<PlaybackFileCommand>> out = new ArrayList<>();
+		/**
+		 * Sorts this HashMap by order of appeareance and merges filecommands into one line
+		 * @return An {@link UnsortedFileCommandContainer}
+		 */
+		public UnsortedFileCommandContainer unsort() {
+			UnsortedFileCommandContainer out = new UnsortedFileCommandContainer();
 
 			int biggestSize = 0;
-			for (PlaybackFileCommandLine list : values()) {
+			for (FileCommandsInTickList list : values()) {
 				if (list.size() > biggestSize) {
 					biggestSize = list.size();
 				}
 			}
 
 			for (int i = 0; i < biggestSize; i++) {
-				List<PlaybackFileCommand> commandListForOneLine = new ArrayList<>();
-				for (PlaybackFileCommandLine list : values()) {
+				FileCommandsInCommentList unsortedFileCommandsList = new FileCommandsInCommentList();
+				for (FileCommandsInTickList list : values()) {
 					if (i < list.size()) {
-						PlaybackFileCommand fc = list.get(i);
-						commandListForOneLine.add(fc);
+						PlaybackFileCommand fileCommand = list.get(i);
+						unsortedFileCommandsList.add(fileCommand);
 					} else {
-						commandListForOneLine.add(null);
+						unsortedFileCommandsList.add(null);
 					}
 				}
-				out.add(commandListForOneLine);
+				out.add(unsortedFileCommandsList);
 			}
 
 			return out;
@@ -221,11 +368,11 @@ public class PlaybackFileCommand {
 
 		@Override
 		public boolean equals(Object o) {
-			if (o instanceof PlaybackFileCommandContainer) {
-				PlaybackFileCommandContainer other = (PlaybackFileCommandContainer) o;
-				for (java.util.Map.Entry<String, PlaybackFileCommandLine> entry : other.entrySet()) {
+			if (o instanceof SortedFileCommandContainer) {
+				SortedFileCommandContainer other = (SortedFileCommandContainer) o;
+				for (java.util.Map.Entry<String, FileCommandsInTickList> entry : other.entrySet()) {
 					String key = entry.getKey();
-					PlaybackFileCommandLine val = entry.getValue();
+					FileCommandsInTickList val = entry.getValue();
 
 					if (!this.containsKey(key) && !this.get(key).equals(val))
 						return false;
@@ -234,9 +381,5 @@ public class PlaybackFileCommand {
 			}
 			return super.equals(o);
 		}
-	}
-
-	public static class PlaybackFileCommandLine extends ArrayList<PlaybackFileCommand> {
-
 	}
 }

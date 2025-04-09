@@ -20,6 +20,7 @@ import java.util.regex.Matcher;
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.FileCommandsInCommentList;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
@@ -239,7 +240,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 	}
 
 	@Override
-	protected String serialiseFileCommandsInline(List<PlaybackFileCommand> fileCommands) {
+	protected String serialiseFileCommandsInline(FileCommandsInCommentList fileCommands) {
 		if (fileCommands == null) {
 			return null;
 		}
@@ -256,7 +257,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 	}
 
 	@Override
-	protected String serialiseFileCommandsEndline(List<PlaybackFileCommand> fileCommands) {
+	protected String serialiseFileCommandsEndline(FileCommandsInCommentList fileCommands) {
 		if (fileCommands == null) {
 			return null;
 		}
@@ -345,7 +346,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 	}
 
 	@Override
-	protected String deserialiseFileCommandsInline(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+	protected String deserialiseFileCommandsInline(String comment, FileCommandsInCommentList deserialisedFileCommands) {
 		Matcher matcher = extract("\\$(.+?) (.+?)", comment);
 
 		// Iterate through all file commands and add each to the list
@@ -371,7 +372,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 	}
 
 	@Override
-	protected String deserialiseFileCommandsEndline(String comment, List<PlaybackFileCommand> deserialisedFileCommands) {
+	protected String deserialiseFileCommandsEndline(String comment, FileCommandsInCommentList deserialisedFileCommands) {
 		Matcher matcher = extract("Monitoring:(.+)", comment);
 
 		// Iterate through all file commands and add each to the list
@@ -528,7 +529,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 	}
 
 	@Override
-	protected void deserialiseFileCommandNames(List<String> headerLines) {
+	protected void deserialiseEnabledFileCommandNames(List<String> headerLines) {
 		/*
 		 * Alpha has these file commands hardcoded
 		 */

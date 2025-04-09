@@ -23,7 +23,7 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.CommentContainer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
-import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.SortedFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
@@ -89,8 +89,8 @@ public class PlaybackSerialiserTest {
 
 	private static class TestFileCommand extends PlaybackFileCommandExtension {
 
-		List<PlaybackFileCommandContainer> inline = new ArrayList<>();
-		List<PlaybackFileCommandContainer> endline = new ArrayList<>();
+		List<SortedFileCommandContainer> inline = new ArrayList<>();
+		List<SortedFileCommandContainer> endline = new ArrayList<>();
 
 		@Override
 		public String getExtensionName() {
@@ -98,12 +98,12 @@ public class PlaybackSerialiserTest {
 		}
 
 		@Override
-		public void onDeserialiseInlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+		public void onDeserialiseInlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
 			inline.add(fileCommandContainer.split("testKey"));
 		}
 
 		@Override
-		public void onDeserialiseEndlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+		public void onDeserialiseEndlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
 			endline.add(fileCommandContainer.split("endlineKey"));
 		}
 
@@ -282,11 +282,11 @@ public class PlaybackSerialiserTest {
 
 		assertEquals("Wat", testMetadata.actual);
 
-		List<PlaybackFileCommandContainer> fclist = new ArrayList<>();
-		PlaybackFileCommandContainer fccontainer = new PlaybackFileCommandContainer();
+		List<SortedFileCommandContainer> fclist = new ArrayList<>();
+		SortedFileCommandContainer fccontainer = new SortedFileCommandContainer();
 		fccontainer.add("testKey", new PlaybackFileCommand("testKey", "test"));
 
-		PlaybackFileCommandContainer fccontainerempty = new PlaybackFileCommandContainer();
+		SortedFileCommandContainer fccontainerempty = new SortedFileCommandContainer();
 		fccontainerempty.put("testKey", null);
 
 		fclist.add(fccontainer);
@@ -294,12 +294,12 @@ public class PlaybackSerialiserTest {
 		fclist.add(fccontainerempty);
 		assertIterableEquals(fclist, testFileCommand.inline);
 
-		List<PlaybackFileCommandContainer> fclistEnd = new ArrayList<>();
-		PlaybackFileCommandContainer fccontainerEnd = new PlaybackFileCommandContainer();
+		List<SortedFileCommandContainer> fclistEnd = new ArrayList<>();
+		SortedFileCommandContainer fccontainerEnd = new SortedFileCommandContainer();
 		fccontainerEnd.add("endlineKey", null);
 		fccontainerEnd.add("endlineKey", new PlaybackFileCommand("endlineKey"));
 
-		PlaybackFileCommandContainer fccontainerEndEmpty = new PlaybackFileCommandContainer();
+		SortedFileCommandContainer fccontainerEndEmpty = new SortedFileCommandContainer();
 		fccontainerEndEmpty.put("endlineKey", null);
 
 		fclistEnd.add(fccontainerEnd);

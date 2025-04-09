@@ -14,7 +14,7 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
-import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.SortedFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 
@@ -97,8 +97,8 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	}
 
 	@Override
-	public PlaybackFileCommandContainer onSerialiseEndlineComment(long currentTick, InputContainer inputContainer) {
-		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
+	public SortedFileCommandContainer onSerialiseEndlineComment(long currentTick, InputContainer inputContainer) {
+		SortedFileCommandContainer out = new SortedFileCommandContainer();
 		MonitorContainer monitoredValues = monitorContainer.get(currentTick);
 		PlaybackFileCommand command = new PlaybackFileCommand("desyncMonitor", monitoredValues.toStringArray());
 
@@ -108,7 +108,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	}
 
 	@Override
-	public void onDeserialiseEndlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+	public void onDeserialiseEndlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
 		List<PlaybackFileCommand> commandsEndline = fileCommandContainer.get("desyncMonitor");
 		if (commandsEndline == null || commandsEndline.isEmpty()) {
 			recordNull(tick);

@@ -7,16 +7,16 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
-import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.FileCommandsInTickList;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
-import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandLine;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.SortedFileCommandContainer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 
 	private boolean shouldRenderHud = true;
 
-	BigArrayList<PlaybackFileCommandContainer> hud;
+	BigArrayList<SortedFileCommandContainer> hud;
 
 	public OptionsFileCommandExtension() {
 		this("hud");
@@ -45,8 +45,8 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	}
 
 	@Override
-	public PlaybackFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
-		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer();
+	public SortedFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
+		SortedFileCommandContainer fileCommandContainer = new SortedFileCommandContainer();
 		if (hud.size() != 0 && hud.get(tick).get("hud") != null) {
 			fileCommandContainer = hud.get(tick);
 		}
@@ -54,7 +54,7 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	}
 
 	@Override
-	public void onDeserialiseInlineComment(long tick, InputContainer container, PlaybackFileCommandContainer fileCommandContainer) {
+	public void onDeserialiseInlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
 		if (fileCommandContainer.containsKey("hud")) {
 			hud.add(fileCommandContainer.split("hud"));
 		}
@@ -65,12 +65,12 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 		if (hud.size() <= tick) {
 			return;
 		}
-		PlaybackFileCommandContainer containerInTick = hud.get(tick);
+		SortedFileCommandContainer containerInTick = hud.get(tick);
 		if (containerInTick == null) {
 			return;
 		}
 
-		PlaybackFileCommandLine line = containerInTick.get("hud");
+		FileCommandsInTickList line = containerInTick.get("hud");
 		if (line == null) {
 			return;
 		}

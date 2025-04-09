@@ -19,7 +19,9 @@ import org.junit.jupiter.api.Test;
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.FileCommandsInCommentList;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.UnsortedFileCommandContainer;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
@@ -184,7 +186,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled("tasmod_testFileCommand", true);
 
 		List<String> actual = new ArrayList<>();
-		serialiseFileCommandNames(actual);
+		serialiseEnabledFileCommandNames(actual);
 
 		List<String> expected = new ArrayList<>();
 		expected.add("FileCommand-Extensions: tasmod_testFileCommand");
@@ -244,7 +246,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		inlineComments.add("Test2");
 		inlineComments.add(""); // Should result in "// "
 
-		List<String> actual = serialiseInlineComments(inlineComments, new ArrayList<>());
+		List<String> actual = serialiseInlineComments(inlineComments, new UnsortedFileCommandContainer());
 
 		List<String> expected = new ArrayList<>();
 		expected.add("// Test");
@@ -262,18 +264,18 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 	@Test
 	void testSerialiseFileCommands() {
-		List<List<PlaybackFileCommand>> fileCommands = new ArrayList<>();
-		List<PlaybackFileCommand> fcInLine = new ArrayList<>();
+		UnsortedFileCommandContainer fileCommands = new UnsortedFileCommandContainer();
+		FileCommandsInCommentList fcInLine = new FileCommandsInCommentList();
 		fcInLine.add(new PlaybackFileCommand("test"));
 		fcInLine.add(new PlaybackFileCommand("testing2", "true", "false"));
 
-		List<PlaybackFileCommand> fcInLine2 = new ArrayList<>();
+		FileCommandsInCommentList fcInLine2 = new FileCommandsInCommentList();
 		fcInLine2.add(new PlaybackFileCommand("interpolation", "true"));
 
 		fileCommands.add(fcInLine);
 		fileCommands.add(null);
 		fileCommands.add(fcInLine2);
-		fileCommands.add(new ArrayList<>());
+		fileCommands.add(new FileCommandsInCommentList());
 
 		List<String> actual = serialiseInlineComments(null, fileCommands);
 
@@ -288,22 +290,22 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 	@Test
 	void testMergingCommentsAndCommands() {
-		List<List<PlaybackFileCommand>> fileCommands = new ArrayList<>();
-		List<PlaybackFileCommand> fcInLine = new ArrayList<>();
+		UnsortedFileCommandContainer fileCommands = new UnsortedFileCommandContainer();
+		FileCommandsInCommentList fcInLine = new FileCommandsInCommentList();
 		fcInLine.add(new PlaybackFileCommand("test"));
 		fcInLine.add(new PlaybackFileCommand("testing2", "true", "false"));
 
 		fileCommands.add(fcInLine);
 		fileCommands.add(null);
 		fileCommands.add(null);
-		fileCommands.add(new ArrayList<>());
+		fileCommands.add(new FileCommandsInCommentList());
 
-		List<PlaybackFileCommand> fcInLine2 = new ArrayList<>();
+		FileCommandsInCommentList fcInLine2 = new FileCommandsInCommentList();
 		fcInLine2.add(new PlaybackFileCommand("interpolation", "true"));
 
 		fileCommands.add(fcInLine2);
 
-		List<PlaybackFileCommand> fcInLine3 = new ArrayList<>();
+		FileCommandsInCommentList fcInLine3 = new FileCommandsInCommentList();
 		fcInLine3.add(new PlaybackFileCommand("info", "Scribble"));
 		fcInLine3.add(new PlaybackFileCommand("info", "Dribble"));
 
@@ -521,7 +523,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		List<String> lines = new ArrayList<>();
 		lines.add("FileCommand-Extensions: tasmod_test1, tasmod_test2");
 
-		deserialiseFileCommandNames(lines);
+		deserialiseEnabledFileCommandNames(lines);
 
 		assertTrue(test1.isEnabled());
 		assertTrue(test2.isEnabled());
@@ -529,7 +531,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		lines = new ArrayList<>();
 		lines.add("FileCommand-Extensions: ");
 
-		deserialiseFileCommandNames(lines);
+		deserialiseEnabledFileCommandNames(lines);
 
 		assertFalse(test1.isEnabled());
 		assertFalse(test2.isEnabled());
@@ -537,7 +539,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		lines = new ArrayList<>();
 		lines.add("FileCommand-Extensions: tasmod_test1,tasmod_test2");
 
-		deserialiseFileCommandNames(lines);
+		deserialiseEnabledFileCommandNames(lines);
 
 		assertTrue(test1.isEnabled());
 		assertTrue(test2.isEnabled());
@@ -546,7 +548,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		lines2.add("FileCommand-Extensions tasmod_test1,tasmod_test2");
 
 		Throwable t = assertThrows(PlaybackLoadException.class, () -> {
-			deserialiseFileCommandNames(lines2);
+			deserialiseEnabledFileCommandNames(lines2);
 		});
 
 		assertEquals("FileCommand-Extensions value was not found in the header", t.getMessage());
@@ -729,7 +731,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		List<String> actualMouse = new ArrayList<>();
 		List<String> actualCameraAngle = new ArrayList<>();
 		List<String> actualComment = new ArrayList<>();
-		List<List<PlaybackFileCommand>> actualFileCommand = new ArrayList<>();
+		UnsortedFileCommandContainer actualFileCommand = new UnsortedFileCommandContainer();
 
 		splitInputs(tick, actualKeyboard, actualMouse, actualCameraAngle, actualComment, actualFileCommand);
 
@@ -737,7 +739,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		List<String> expectedMouse = new ArrayList<>();
 		List<String> expectedCameraAngle = new ArrayList<>();
 		List<String> expectedComment = new ArrayList<>();
-		List<List<PlaybackFileCommand>> expectedFileCommand = new ArrayList<>();
+		UnsortedFileCommandContainer expectedFileCommand = new UnsortedFileCommandContainer();
 
 		expectedKeyboard.add("W,LCONTROL;w");
 
@@ -756,7 +758,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		expectedFileCommand.add(null);
 		expectedFileCommand.add(null);
 
-		List<PlaybackFileCommand> lineCommand = new ArrayList<>();
+		FileCommandsInCommentList lineCommand = new FileCommandsInCommentList();
 		lineCommand.add(new PlaybackFileCommand("test", "true"));
 
 		expectedFileCommand.add(lineCommand);
@@ -784,7 +786,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		List<String> actualTick = new ArrayList<>();
 		splitContainer(lines, actualComments, actualTick);
 
-		List<List<PlaybackFileCommand>> actualInlineFileCommands = new ArrayList<>();
+		UnsortedFileCommandContainer actualInlineFileCommands = new UnsortedFileCommandContainer();
 		deserialiseMultipleInlineComments(actualComments, actualInlineFileCommands);
 
 		List<String> expectedComments = new ArrayList<>();
@@ -796,8 +798,8 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		expectedTicks.add("\t1||RC;-15,1580,658|11.85;-2.74799");
 		expectedTicks.add("\t2||;0,1580,658|45;-22.799");
 
-		List<List<PlaybackFileCommand>> expectedInlineFileCommands = new ArrayList<>();
-		List<PlaybackFileCommand> commands = new ArrayList<>();
+		UnsortedFileCommandContainer expectedInlineFileCommands = new UnsortedFileCommandContainer();
+		FileCommandsInCommentList commands = new FileCommandsInCommentList();
 		commands.add(new PlaybackFileCommand("interpolation", "on"));
 		expectedInlineFileCommands.add(commands);
 		expectedInlineFileCommands.add(null);
