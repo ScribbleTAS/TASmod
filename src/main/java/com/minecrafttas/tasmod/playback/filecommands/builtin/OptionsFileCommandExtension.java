@@ -103,6 +103,12 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	}
 
 	@Override
+	public void onRecord(long tick, InputContainer inputContainer) {
+		// TODO Auto-generated method stub
+		super.onRecord(tick, inputContainer);
+	}
+
+	@Override
 	public void onClear() {
 		try {
 			hud.clearMemory();

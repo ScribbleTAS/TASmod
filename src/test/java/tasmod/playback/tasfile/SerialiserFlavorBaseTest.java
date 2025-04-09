@@ -1062,6 +1062,20 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		assertEquals(expected, actual);
 	}
 
+	/**
+	 * Testing {@link #clampYaw(Float)} to force the yaw between -180 and 180
+	 */
+	@Test
+	void testYawClamping() {
+		assertEquals(-170f, clampYaw(190f));
+		assertEquals(160f, clampYaw(-200f));
+	}
+
+	@Test
+	void testYawUnclamping() {
+		assertEquals(-190f, unclampYaw(170f, -170f));
+	}
+
 	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {
 		assertIterableEquals(convertBigArrayListToArrayList(expected), convertBigArrayListToArrayList(actual));
 	}
@@ -1078,5 +1092,4 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	public SerialiserFlavorBase clone() {
 		return new SerialiserFlavorBaseTest();
 	}
-
 }

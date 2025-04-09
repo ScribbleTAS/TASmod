@@ -105,6 +105,11 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 */
 	protected boolean processExtensions = true;
 
+	/**
+	 * Rotation counter for clamping the yaw
+	 */
+	protected int yawRotations = 0;
+
 	/*==============================================
 		   _____           _       _ _          
 		  / ____|         (_)     | (_)         
@@ -488,7 +493,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * @return The serialised camera angle subtick
 	 */
 	protected String serialiseCameraAngleSubtick(VirtualCameraAngle cameraAngleSubtick) {
-		return String.format("%s;%s", cameraAngleSubtick.getYaw(), cameraAngleSubtick.getPitch());
+		return String.format("%s;%s", clampYaw(cameraAngleSubtick.getYaw()), cameraAngleSubtick.getPitch());
 	}
 
 	/**
@@ -1402,6 +1407,8 @@ public abstract class SerialiserFlavorBase implements Registerable {
 				if (!"null".equals(cameraPitchString))
 					cameraPitch = deserialiseRelativeFloat("camera pitch", cameraPitchString, previousPitch);
 
+				cameraYaw = unclampYaw(cameraYaw, previousYaw);
+
 				out.updateFromState(cameraPitch, cameraYaw);
 
 				previousYaw = cameraYaw;
@@ -1747,6 +1754,44 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			charString = StringUtils.replace(charString, "\n", "\\n");
 		}
 		return charString;
+	}
+
+	/**
+	 * <p>Clamps the yaw to a value between -180 and 180
+	 * @param yaw The yaw to clamp
+	 * @return The clamped yaw
+	 */
+	protected Float clampYaw(Float yaw) {
+		if (yaw == null)
+			return yaw;
+
+		while (yaw >= 180)
+			yaw -= 360;
+		while (yaw < -180)
+			yaw += 360;
+		return yaw;
+	}
+
+	/**
+	 * <p>Unclamping the yaw from a clamped value
+	 * <p>Makes it so 170 and a previous value of -170 will return -190,<br>
+	 * removing the -180 180 clamp. Uses {@link #yawRotations}
+	 * @param yaw The yaw to unclamp
+	 * @param previous The previous yaw to compare against.
+	 * @return The unclamped yaw
+	 */
+	protected Float unclampYaw(Float yaw, Float previous) {
+		if (previous == null || yaw == null)
+			return yaw;
+
+		float clampedPrevious = clampYaw(previous);
+		if (clampedPrevious >= 0 && (clampedPrevious - yaw) > 180) {
+			yawRotations++;
+		}
+		if (clampedPrevious < 0 && (clampedPrevious - yaw) < -180) {
+			yawRotations--;
+		}
+		return yaw + (360 * yawRotations);
 	}
 
 	@Override
