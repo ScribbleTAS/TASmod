@@ -150,9 +150,13 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 	}
 
 	@Override
+	public void onRecordingClear() {
+		onClear();
+	}
+
 	public void onClear() {
-		REGISTRY.values().forEach(fc -> {
-			fc.onClear();
+		REGISTRY.values().forEach(fileCommandExtension -> {
+			fileCommandExtension.onClear();
 		});
 	}
 

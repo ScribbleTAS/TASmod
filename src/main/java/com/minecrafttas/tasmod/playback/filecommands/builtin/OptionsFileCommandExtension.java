@@ -1,9 +1,7 @@
 package com.minecrafttas.tasmod.playback.filecommands.builtin;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
-import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
@@ -16,21 +14,17 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 
 	private boolean shouldRenderHud = true;
 
-	BigArrayList<SortedFileCommandContainer> hud;
-
 	public OptionsFileCommandExtension() {
 		this("hud");
 	}
 
 	public OptionsFileCommandExtension(String tempDirName) {
 		super(tempDirName);
-		hud = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
 
 	public OptionsFileCommandExtension(Path tempDir) {
 		super(tempDir);
-		this.hud = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
 
@@ -45,27 +39,11 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	}
 
 	@Override
-	public SortedFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
-		SortedFileCommandContainer fileCommandContainer = new SortedFileCommandContainer();
-		if (hud.size() != 0 && hud.get(tick).get("hud") != null) {
-			fileCommandContainer = hud.get(tick);
-		}
-		return fileCommandContainer;
-	}
-
-	@Override
-	public void onDeserialiseInlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
-		if (fileCommandContainer.containsKey("hud")) {
-			hud.add(fileCommandContainer.split("hud"));
-		}
-	}
-
-	@Override
 	public void onPlayback(long tick, InputContainer inputContainer) {
-		if (hud.size() <= tick) {
+		if (inlineFileCommandStorage.size() <= tick) {
 			return;
 		}
-		SortedFileCommandContainer containerInTick = hud.get(tick);
+		SortedFileCommandContainer containerInTick = inlineFileCommandStorage.get(tick);
 		if (containerInTick == null) {
 			return;
 		}
@@ -76,6 +54,8 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 		}
 
 		for (PlaybackFileCommand command : line) {
+			if (command == null)
+				continue;
 			String[] args = command.getArgs();
 			if (args.length == 1) {
 				/*
@@ -103,20 +83,8 @@ public class OptionsFileCommandExtension extends PlaybackFileCommandExtension {
 	}
 
 	@Override
-	public void onRecord(long tick, InputContainer inputContainer) {
-		// TODO Auto-generated method stub
-		super.onRecord(tick, inputContainer);
-	}
-
-	@Override
 	public void onClear() {
-		try {
-			hud.clearMemory();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		hud = new BigArrayList<>();
+		super.onClear();
 		shouldRenderHud = true;
 	}
 

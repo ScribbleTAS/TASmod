@@ -52,7 +52,7 @@ public class PlaybackMetadataRegistry extends AbstractRegistry<PlaybackMetadataE
 	}
 	
 	@Override
-	public void onClear() {
+	public void onRecordingClear() {
 		REGISTRY.forEach((key, extension) ->{
 			extension.onClear();
 		});

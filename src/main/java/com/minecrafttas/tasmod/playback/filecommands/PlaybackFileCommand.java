@@ -54,10 +54,32 @@ public class PlaybackFileCommand {
 		return String.format("$%s(%s);", name, String.join(", ", args));
 	}
 
+	/**
+	 * <p>Abstract class for a FileCommandExtension.
+	 * <p>Allows for creating custom FileCommands that can be stored within the TASfile<br>
+	 * to trigger custom behaviour when a playback is reaching that point
+	
+	 * @author Scribble
+	 */
 	public static abstract class PlaybackFileCommandExtension implements Registerable {
-
+		/**
+		 * The temporary directory of the {@link #fileCommandStorage}
+		 */
 		protected final Path tempDir;
 
+		/**
+		 * The list where all filecommands for this extension are stored
+		 */
+		protected BigArrayList<SortedFileCommandContainer> inlineFileCommandStorage;
+
+		/**
+		 * The list where all filecommands for this extension are stored
+		 */
+		protected BigArrayList<SortedFileCommandContainer> endlineFileCommandStorage;
+
+		/**
+		 * Creates a new extension with the default {@link #tempDir}
+		 */
 		public PlaybackFileCommandExtension() {
 			this((Path) null);
 		}
@@ -75,6 +97,8 @@ public class PlaybackFileCommand {
 		public PlaybackFileCommandExtension(Path tempDirectory) {
 			if (tempDirectory == null) {
 				tempDir = null;
+				inlineFileCommandStorage = new BigArrayList<>();
+				endlineFileCommandStorage = new BigArrayList<>();
 				return;
 			}
 
@@ -84,6 +108,8 @@ public class PlaybackFileCommand {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			inlineFileCommandStorage = new BigArrayList<>(tempDir.toString());
+			endlineFileCommandStorage = new BigArrayList<>(tempDir.toString());
 		}
 
 		protected boolean enabled = false;
@@ -97,6 +123,14 @@ public class PlaybackFileCommand {
 		};
 
 		public void onClear() {
+			try {
+				inlineFileCommandStorage.clearMemory();
+				endlineFileCommandStorage.clearMemory();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			inlineFileCommandStorage = new BigArrayList<>();
+			endlineFileCommandStorage = new BigArrayList<>();
 		};
 
 		public void onRecord(long tick, InputContainer inputContainer) {
@@ -106,17 +140,49 @@ public class PlaybackFileCommand {
 		};
 
 		public SortedFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
-			return null;
+			SortedFileCommandContainer out = new SortedFileCommandContainer();
+			if (tick >= inlineFileCommandStorage.size())
+				return out;
+
+			SortedFileCommandContainer currentTick = inlineFileCommandStorage.get(tick);
+			if (currentTick == null)
+				return out;
+
+			for (String name : getFileCommandNames()) {
+				if (currentTick.get(name) != null)
+					out.putAll(currentTick.split(name));
+			}
+			return out;
 		}
 
-		public SortedFileCommandContainer onSerialiseEndlineComment(long currentTick, InputContainer inputContainer) {
-			return null;
+		public SortedFileCommandContainer onSerialiseEndlineComment(long tick, InputContainer inputContainer) {
+			SortedFileCommandContainer out = new SortedFileCommandContainer();
+			if (tick >= endlineFileCommandStorage.size())
+				return out;
+
+			SortedFileCommandContainer currentTick = endlineFileCommandStorage.get(tick);
+			if (currentTick == null)
+				return out;
+
+			for (String name : getFileCommandNames()) {
+				if (currentTick.get(name) != null)
+					out.putAll(currentTick.split(name));
+			}
+			return out;
 		}
 
 		public void onDeserialiseInlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
+			if (fileCommandContainer == null)
+				return;
+
+			inlineFileCommandStorage.add(fileCommandContainer);
 		}
 
 		public void onDeserialiseEndlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
+			if (fileCommandContainer == null)
+				return;
+
+			endlineFileCommandStorage.add(fileCommandContainer);
 		}
 
 		public boolean isEnabled() {
@@ -331,7 +397,8 @@ public class PlaybackFileCommand {
 		public SortedFileCommandContainer split(Iterable<String> keys) {
 			SortedFileCommandContainer out = new SortedFileCommandContainer();
 			for (String key : keys) {
-				out.put(key, this.get(key));
+				if (this.containsKey(key))
+					out.put(key, this.get(key));
 			}
 			return out;
 		}

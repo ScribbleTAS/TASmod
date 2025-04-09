@@ -667,7 +667,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		for (PlaybackFileCommand command : fileCommands) {
 			serialisedCommands.add(serialiseFileCommand(command));
 		}
-		return String.join(" ", serialisedCommands);
+		return joinNotEmpty(" ", serialisedCommands);
 	}
 
 	/**
@@ -698,7 +698,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * @return The serialised file command, empty if {@link #processExtensions} is false
 	 */
 	protected String serialiseFileCommand(PlaybackFileCommand fileCommand) {
-		if (!processExtensions)
+		if (!processExtensions || fileCommand == null)
 			return "";
 		return String.format("$%s(%s);", fileCommand.getName(), String.join(", ", fileCommand.getArgs()));
 	}
@@ -1027,6 +1027,10 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 */
 	public BigArrayList<InputContainer> deserialise(BigArrayList<String> lines, long startPos) {
 		BigArrayList<InputContainer> out = new BigArrayList<>();
+
+		if (processExtensions)
+			TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.onClear();
+
 		for (long i = startPos; i < lines.size(); i++) {
 			List<String> container = new ArrayList<>();
 			// Extract the tick and set the index
@@ -1255,15 +1259,15 @@ public abstract class SerialiserFlavorBase implements Registerable {
 
 	protected void deserialiseMultipleInlineComments(List<String> inlineComments, UnsortedFileCommandContainer inlineFileCommands) {
 		for (int i = 0; i < inlineComments.size(); i++) {
-			FileCommandsInCommentList deserialisedFileCommand = new FileCommandsInCommentList();
+			FileCommandsInCommentList deserialisedFileCommands = new FileCommandsInCommentList();
 			String comment = inlineComments.get(i);
 
-			inlineComments.set(i, deserialiseInlineComment(comment, deserialisedFileCommand));
+			inlineComments.set(i, deserialiseInlineComment(comment, deserialisedFileCommands));
 
-			if (deserialisedFileCommand.isEmpty()) {
-				deserialisedFileCommand = null;
+			if (deserialisedFileCommands.isEmpty()) {
+				deserialisedFileCommands = null;
 			}
-			inlineFileCommands.add(deserialisedFileCommand);
+			inlineFileCommands.add(deserialisedFileCommands);
 		}
 	}
 

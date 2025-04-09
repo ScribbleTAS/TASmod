@@ -1,9 +1,7 @@
 package com.minecrafttas.tasmod.playback.filecommands.builtin;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
-import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.FileCommandsInTickList;
@@ -14,21 +12,17 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 
 	private String labelText = "";
 
-	BigArrayList<SortedFileCommandContainer> label = new BigArrayList<>();
-
 	public LabelFileCommandExtension() {
 		this("label");
 	}
 
 	public LabelFileCommandExtension(String tempDirName) {
 		super(tempDirName);
-		this.label = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
 
 	public LabelFileCommandExtension(Path tempDir) {
 		super(tempDir);
-		this.label = new BigArrayList<>(tempDir.toString());
 		enabled = true;
 	}
 
@@ -43,27 +37,11 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 	}
 
 	@Override
-	public SortedFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
-		SortedFileCommandContainer fileCommandContainer = new SortedFileCommandContainer();
-		if (label.size() != 0 && label.get(tick).get("label") != null) {
-			fileCommandContainer = label.get(tick);
-		}
-		return fileCommandContainer;
-	}
-
-	@Override
-	public void onDeserialiseInlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
-		if (fileCommandContainer.containsKey("label")) {
-			label.add(fileCommandContainer.split("label"));
-		}
-	}
-
-	@Override
 	public void onPlayback(long tick, InputContainer inputContainer) {
-		if (label.size() <= tick) {
+		if (inlineFileCommandStorage.size() <= tick) {
 			return;
 		}
-		SortedFileCommandContainer containerInTick = label.get(tick);
+		SortedFileCommandContainer containerInTick = inlineFileCommandStorage.get(tick);
 		if (containerInTick == null) {
 			return;
 		}
@@ -74,19 +52,15 @@ public class LabelFileCommandExtension extends PlaybackFileCommandExtension {
 		}
 
 		for (PlaybackFileCommand command : line) {
+			if (command == null)
+				continue;
 			labelText = String.join(", ", command.getArgs());
 		}
 	}
 
 	@Override
 	public void onClear() {
-		try {
-			label.clearMemory();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		label = new BigArrayList<>();
+		super.onClear();
 		labelText = "";
 	}
 
