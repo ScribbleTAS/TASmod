@@ -437,6 +437,8 @@ public class PlaybackFileCommand {
 		public boolean equals(Object o) {
 			if (o instanceof SortedFileCommandContainer) {
 				SortedFileCommandContainer other = (SortedFileCommandContainer) o;
+				if (this.size() != other.size())
+					return false;
 				for (java.util.Map.Entry<String, FileCommandsInTickList> entry : other.entrySet()) {
 					String key = entry.getKey();
 					FileCommandsInTickList val = entry.getValue();

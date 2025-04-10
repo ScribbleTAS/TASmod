@@ -23,8 +23,8 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.CommentContainer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand;
-import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.SortedFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.SortedFileCommandContainer;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata.PlaybackMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
@@ -89,22 +89,9 @@ public class PlaybackSerialiserTest {
 
 	private static class TestFileCommand extends PlaybackFileCommandExtension {
 
-		List<SortedFileCommandContainer> inline = new ArrayList<>();
-		List<SortedFileCommandContainer> endline = new ArrayList<>();
-
 		@Override
 		public String getExtensionName() {
 			return "tasmod_testFileExtension";
-		}
-
-		@Override
-		public void onDeserialiseInlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
-			inline.add(fileCommandContainer.split("testKey"));
-		}
-
-		@Override
-		public void onDeserialiseEndlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
-			endline.add(fileCommandContainer.split("endlineKey"));
 		}
 
 		@Override
@@ -112,10 +99,12 @@ public class PlaybackSerialiserTest {
 			return new String[] { "testKey", "endlineKey" };
 		}
 
-		@Override
-		public void onClear() {
-			inline.clear();
-			endline.clear();
+		public BigArrayList<SortedFileCommandContainer> getInlineStorage() {
+			return this.inlineFileCommandStorage;
+		}
+
+		public BigArrayList<SortedFileCommandContainer> getEndlineStorage() {
+			return this.endlineFileCommandStorage;
 		}
 	}
 
@@ -282,30 +271,26 @@ public class PlaybackSerialiserTest {
 
 		assertEquals("Wat", testMetadata.actual);
 
-		List<SortedFileCommandContainer> fclist = new ArrayList<>();
+		BigArrayList<SortedFileCommandContainer> fclist = new BigArrayList<>();
 		SortedFileCommandContainer fccontainer = new SortedFileCommandContainer();
 		fccontainer.add("testKey", new PlaybackFileCommand("testKey", "test"));
 
-		SortedFileCommandContainer fccontainerempty = new SortedFileCommandContainer();
-		fccontainerempty.put("testKey", null);
-
 		fclist.add(fccontainer);
-		fclist.add(fccontainerempty);
-		fclist.add(fccontainerempty);
-		assertIterableEquals(fclist, testFileCommand.inline);
+		fclist.add(new SortedFileCommandContainer());
+		fclist.add(new SortedFileCommandContainer());
+		assertBigArrayList(fclist, testFileCommand.getInlineStorage());
 
-		List<SortedFileCommandContainer> fclistEnd = new ArrayList<>();
+		BigArrayList<SortedFileCommandContainer> fclistEnd = new BigArrayList<>();
 		SortedFileCommandContainer fccontainerEnd = new SortedFileCommandContainer();
 		fccontainerEnd.add("endlineKey", null);
 		fccontainerEnd.add("endlineKey", new PlaybackFileCommand("endlineKey"));
-
-		SortedFileCommandContainer fccontainerEndEmpty = new SortedFileCommandContainer();
-		fccontainerEndEmpty.put("endlineKey", null);
+		fccontainerEnd.add("testKey", null);
+		fccontainerEnd.add("testKey", new PlaybackFileCommand("testKey"));
 
 		fclistEnd.add(fccontainerEnd);
-		fclistEnd.add(fccontainerEndEmpty);
-		fclistEnd.add(fccontainerEndEmpty);
-		assertIterableEquals(fclistEnd, testFileCommand.endline);
+		fclistEnd.add(new SortedFileCommandContainer());
+		fclistEnd.add(new SortedFileCommandContainer());
+		assertBigArrayList(fclistEnd, testFileCommand.getEndlineStorage());
 	}
 
 	@Test
@@ -372,8 +357,8 @@ public class PlaybackSerialiserTest {
 
 		assertEquals("e", testMetadata.actual);
 
-		assertTrue(testFileCommand.inline.isEmpty());
-		assertTrue(testFileCommand.endline.isEmpty());
+		assertTrue(testFileCommand.getInlineStorage().isEmpty());
+		assertTrue(testFileCommand.getEndlineStorage().isEmpty());
 	}
 
 	@Test
