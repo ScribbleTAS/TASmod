@@ -1,6 +1,7 @@
 package tasmod.playback.filecommands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -159,5 +160,74 @@ class PlaybackFileCommandTest {
 		expected.add("multi2", new PlaybackFileCommand("multi2"));
 
 		assertEquals(expected, actual);
+	}
+
+	@Test
+	void testInlineSerialisation() {
+		// Actual
+		SortedFileCommandContainer container = new SortedFileCommandContainer();
+		container.add("test", new PlaybackFileCommand("test"));
+
+		test.getInlineStorage().add(container);
+
+		UnsortedFileCommandContainer actual = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseInline(0, null);
+
+		// Expected
+		UnsortedFileCommandContainer expected = new UnsortedFileCommandContainer();
+		FileCommandsInCommentList commentList = new FileCommandsInCommentList();
+
+		commentList.add(new PlaybackFileCommand("test"));
+		expected.add(commentList);
+
+		assertIterableEquals(expected, actual);
+	}
+
+	@Test
+	void testEndlineSerialisation() {
+		// Actual
+		SortedFileCommandContainer container = new SortedFileCommandContainer();
+		container.add("test", new PlaybackFileCommand("test"));
+
+		test.getEndlineStorage().add(container);
+
+		UnsortedFileCommandContainer actual = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseEndline(0, null);
+
+		// Expected
+		UnsortedFileCommandContainer expected = new UnsortedFileCommandContainer();
+		FileCommandsInCommentList commentList = new FileCommandsInCommentList();
+
+		commentList.add(new PlaybackFileCommand("test"));
+		expected.add(commentList);
+
+		assertIterableEquals(expected, actual);
+	}
+
+	@Test
+	void testMultiInlineSerialisation() {
+		// Actual
+		SortedFileCommandContainer container = new SortedFileCommandContainer();
+		container.add("multi1", new PlaybackFileCommand("multi1"));
+		container.add("multi1", null);
+
+		container.add("multi2", null);
+		container.add("multi2", new PlaybackFileCommand("multi2"));
+
+		multi.getInlineStorage().add(container);
+
+		UnsortedFileCommandContainer actual = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnSerialiseInline(0, null);
+
+		// Expected
+		UnsortedFileCommandContainer expected = new UnsortedFileCommandContainer();
+		FileCommandsInCommentList commentList1 = new FileCommandsInCommentList();
+		FileCommandsInCommentList commentList2 = new FileCommandsInCommentList();
+
+		commentList1.add(new PlaybackFileCommand("multi1"));
+		commentList1.add(null);
+		commentList2.add(null);
+		commentList2.add(new PlaybackFileCommand("multi2"));
+		expected.add(commentList1);
+		expected.add(commentList2);
+
+		assertIterableEquals(expected, actual);
 	}
 }
