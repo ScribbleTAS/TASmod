@@ -5,7 +5,6 @@ import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_CLEAR_IN
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLPLAY;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLRECORD;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_LOAD;
-import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_PLAYUNTIL;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_SAVE;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE;
@@ -141,8 +140,6 @@ public class PlaybackControllerClient implements
 //	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 
 	// =====================================================================================================
-
-	private Integer playUntil = null; // TODO Replace with event
 
 	public PlaybackControllerClient() {
 		tasFileDirectory = TASmodClient.tasfiledirectory;
@@ -491,19 +488,6 @@ public class PlaybackControllerClient implements
 
 		index++; // Increase the index and load the next inputs
 
-		/* Playuntil logic */
-		if (playUntil != null && playUntil == index) {
-			TASmodClient.tickratechanger.pauseGame(true);
-			playUntil = null;
-			setTASState(TASstate.NONE);
-			for (long i = inputs.size() - 1; i >= index; i--) {
-				inputs.remove(i);
-			}
-			index--;
-			setTASState(TASstate.RECORDING);
-			return;
-		}
-
 		/* Stop condition */
 		if (index == inputs.size() || inputs.isEmpty()) {
 			unpressContainer();
@@ -620,12 +604,6 @@ public class PlaybackControllerClient implements
 		LOGGER.trace(LoggerMarkers.Playback, "Unpressing container");
 		keyboard.clear();
 		mouse.clear();
-	}
-
-	// ==============================================================
-
-	public void setPlayUntil(int until) {
-		this.playUntil = until;
 	}
 
 	// ==============================================================
@@ -837,7 +815,6 @@ public class PlaybackControllerClient implements
 				PLAYBACK_FULLPLAY,
 				PLAYBACK_FULLRECORD,
 				PLAYBACK_RESTARTANDPLAY,
-				PLAYBACK_PLAYUNTIL,
 				PLAYBACK_CLEAR_INPUTS,
 				PLAYBACK_STATE
 
@@ -947,11 +924,6 @@ public class PlaybackControllerClient implements
 					TASmodClient.config.set(TASmodConfig.FileToOpen, finalname);
 					System.exit(0);
 				});
-				break;
-
-			case PLAYBACK_PLAYUNTIL:
-				int until = ByteBufferBuilder.readInt(buf);
-				TASmodClient.controller.setPlayUntil(until);
 				break;
 
 			case PLAYBACK_CLEAR_INPUTS:
