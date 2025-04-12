@@ -2,8 +2,8 @@ package com.minecrafttas.tasmod.events;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 
 public interface EventPlaybackClient {
 
@@ -83,5 +83,19 @@ public interface EventPlaybackClient {
 		 * Fired when a recording is cleared
 		 */
 		public void onRecordingClear();
+	}
+
+	/**
+	 * Fired when an input is deleted
+	 */
+	@FunctionalInterface
+	public interface EventInputDelete extends EventBase {
+
+		/**
+		 * Fired when an input is deleted
+		 * 
+		 * @param The index of the input
+		 */
+		public void onInputDelete(long index);
 	}
 }

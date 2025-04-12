@@ -490,6 +490,7 @@ public class PlaybackControllerClient implements
 
 		/* Stop condition */
 		if (index == inputs.size() || inputs.isEmpty()) {
+			index--;
 			unpressContainer();
 			setTASState(TASstate.NONE);
 		}
@@ -501,7 +502,6 @@ public class PlaybackControllerClient implements
 			this.camera = container.getCameraAngle().clone();
 			EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
 		}
-
 	}
 	// =====================================================================================================
 	// Methods to manipulate inputs
@@ -516,6 +516,11 @@ public class PlaybackControllerClient implements
 
 	public long index() {
 		return index;
+	}
+
+	public void remove(long index) {
+		inputs.remove(index);
+		EventListenerRegistry.fireEvent(EventPlaybackClient.EventInputDelete.class, index);
 	}
 
 	public BigArrayList<InputContainer> getInputs() {

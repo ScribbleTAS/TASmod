@@ -28,7 +28,7 @@ import net.minecraft.util.text.TextFormatting;
  * 
  * @author Scribble
  */
-public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtension implements EventPlaybackClient.EventControllerStateChange {
+public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtension implements EventPlaybackClient.EventControllerStateChange, EventPlaybackClient.EventInputDelete {
 
 	/**
 	 * List containing {@link MonitorContainer MonitorContainers} in a TASfile 
@@ -364,5 +364,10 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		lastStatus = TextFormatting.GRAY + "Empty";
 		lastPos = "";
 		lastMotion = "";
+	}
+
+	@Override
+	public void onInputDelete(long index) {
+		monitorContainer.remove(index);
 	}
 }
