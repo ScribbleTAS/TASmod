@@ -210,7 +210,7 @@ public class AlphaFlavorTest extends AlphaFlavor {
 
 	@Test
 	void testDeserialiseFileCommandNames() {
-		deserialiseFileCommandNames(new ArrayList<>());
+		deserialiseEnabledFileCommandNames(new ArrayList<>());
 
 		List<PlaybackFileCommandExtension> fcList = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.getEnabled();
 		assertTrue(fcList.get(0) instanceof LabelFileCommandExtension);

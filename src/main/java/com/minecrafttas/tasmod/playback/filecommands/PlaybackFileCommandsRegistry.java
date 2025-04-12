@@ -9,8 +9,9 @@ import com.minecrafttas.mctcommon.Configuration;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
-import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.SortedFileCommandContainer;
+import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.UnsortedFileCommandContainer;
 import com.minecrafttas.tasmod.registries.TASmodConfig;
 
 public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick, EventPlaybackClient.EventRecordClear {
@@ -110,48 +111,52 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		});
 	}
 
-	public PlaybackFileCommandContainer handleOnSerialiseInline(long currentTick, InputContainer container) {
-		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
+	public UnsortedFileCommandContainer handleOnSerialiseInline(long currentTick, InputContainer container) {
+		SortedFileCommandContainer out = new SortedFileCommandContainer();
 		for (PlaybackFileCommandExtension extension : enabledExtensions) {
-			PlaybackFileCommandContainer extensionContainer = extension.onSerialiseInlineComment(currentTick, container);
+			SortedFileCommandContainer extensionContainer = extension.onSerialiseInlineComment(currentTick, container);
 			if (extensionContainer != null) {
 				out.putAll(extensionContainer);
 			}
 		}
-		return out;
+		return out.unsort();
 	}
 
-	public PlaybackFileCommandContainer handleOnSerialiseEndline(long currentTick, InputContainer container) {
-		PlaybackFileCommandContainer out = new PlaybackFileCommandContainer();
+	public UnsortedFileCommandContainer handleOnSerialiseEndline(long currentTick, InputContainer container) {
+		SortedFileCommandContainer out = new SortedFileCommandContainer();
 		for (PlaybackFileCommandExtension extension : enabledExtensions) {
-			PlaybackFileCommandContainer extensionContainer = extension.onSerialiseEndlineComment(currentTick, container);
+			SortedFileCommandContainer extensionContainer = extension.onSerialiseEndlineComment(currentTick, container);
 			if (extensionContainer != null) {
 				out.putAll(extensionContainer);
 			}
 		}
-		return out;
+		return out.unsort();
 	}
 
-	public void handleOnDeserialiseInline(long currentTick, InputContainer deserialisedContainer, List<List<PlaybackFileCommand>> inlineFileCommands) {
-		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer(inlineFileCommands);
+	public void handleOnDeserialiseInline(long currentTick, InputContainer deserialisedContainer, UnsortedFileCommandContainer unsortedInlineFileCommands) {
+		SortedFileCommandContainer fileCommandContainer = unsortedInlineFileCommands.sort();
 		for (PlaybackFileCommandExtension extension : enabledExtensions) {
 			String[] fileCommandNames = extension.getFileCommandNames();
 			extension.onDeserialiseInlineComment(currentTick, deserialisedContainer, fileCommandContainer.split(fileCommandNames));
 		}
 	}
 
-	public void handleOnDeserialiseEndline(long currentTick, InputContainer deserialisedContainer, List<List<PlaybackFileCommand>> endlineFileCommands) {
-		PlaybackFileCommandContainer fileCommandContainer = new PlaybackFileCommandContainer(endlineFileCommands);
+	public void handleOnDeserialiseEndline(long currentTick, InputContainer deserialisedContainer, UnsortedFileCommandContainer unsortedEndlineFileCommands) {
+		SortedFileCommandContainer sortedEndlineFileCommands = unsortedEndlineFileCommands.sort();
 		for (PlaybackFileCommandExtension extension : enabledExtensions) {
 			String[] fileCommandNames = extension.getFileCommandNames();
-			extension.onDeserialiseEndlineComment(currentTick, deserialisedContainer, fileCommandContainer.split(fileCommandNames));
+			extension.onDeserialiseEndlineComment(currentTick, deserialisedContainer, sortedEndlineFileCommands.split(fileCommandNames));
 		}
 	}
 
 	@Override
+	public void onRecordingClear() {
+		onClear();
+	}
+
 	public void onClear() {
-		REGISTRY.values().forEach(fc -> {
-			fc.onClear();
+		REGISTRY.values().forEach(fileCommandExtension -> {
+			fileCommandExtension.onClear();
 		});
 	}
 

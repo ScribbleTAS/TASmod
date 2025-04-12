@@ -82,6 +82,6 @@ public interface EventPlaybackClient {
 		/**
 		 * Fired when a recording is cleared
 		 */
-		public void onClear();
+		public void onRecordingClear();
 	}
 }
