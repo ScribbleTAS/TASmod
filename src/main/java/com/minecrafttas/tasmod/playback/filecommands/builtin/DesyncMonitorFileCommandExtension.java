@@ -72,6 +72,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		if (newstate == TASstate.RECORDING && monitorContainer.isEmpty()) {
 			recordNull(0);
 		}
+		currentValues = null;
 	}
 
 	@Override
@@ -89,6 +90,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		} else {
 			monitorContainer.set(tick, values);
 		}
+		System.out.println(String.format("Tick %s, Controller %s, Monitor %s", tick, TASmodClient.controller.size(), monitorContainer.size()));
 	}
 
 	@Override
@@ -130,6 +132,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	@Override
 	public void onPlayback(long tick, InputContainer inputContainer) {
 		currentValues = get(tick - 1);
+		System.out.println(String.format("Tick %s, Controller %s, Monitor %s", tick, TASmodClient.controller.size(), monitorContainer.size()));
 	}
 
 	private MonitorContainer loadFromFile(long tick, String[] args) throws PlaybackLoadException {
@@ -189,7 +192,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private String lastPos = "";
 
 	public String getPos() {
-		if (currentValues != null && !TASmodClient.controller.isNothingPlaying()) {
+		if (currentValues != null && TASmodClient.controller.isPlayingback()) {
 			EntityPlayerSP player = Minecraft.getMinecraft().player;
 			String[] values = new String[3];
 			values[0] = getFormattedString(player.posX - currentValues.values[0]);
@@ -204,7 +207,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private String lastMotion = "";
 
 	public String getMotion() {
-		if (currentValues != null && !TASmodClient.controller.isNothingPlaying()) {
+		if (currentValues != null && TASmodClient.controller.isPlayingback()) {
 			EntityPlayerSP player = Minecraft.getMinecraft().player;
 			String[] values = new String[3];
 			values[0] = getFormattedString(player.motionX - currentValues.values[3]);

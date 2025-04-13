@@ -137,6 +137,12 @@ public class PlaybackControllerClient implements
 	 */
 	private BigArrayList<InputContainer> inputs;
 
+	/**
+	 * If true, doesn't clear the virtual inputs<br>
+	 * when stopping a recording or playback
+	 */
+	private boolean dontZwonkel = false;
+
 //	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 
 	// =====================================================================================================
@@ -283,7 +289,12 @@ public class PlaybackControllerClient implements
 
 	private void stopRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
-		TASmodClient.virtual.clear();
+
+		if (dontZwonkel)
+			dontZwonkel = false;
+		else {
+			TASmodClient.virtual.clear();
+		}
 	}
 
 	private void startPlayback() {
@@ -296,7 +307,11 @@ public class PlaybackControllerClient implements
 	private void stopPlayback() {
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
 		Minecraft.getMinecraft().gameSettings.chatLinks = true;
-		TASmodClient.virtual.clear();
+		if (dontZwonkel)
+			dontZwonkel = false;
+		else {
+			TASmodClient.virtual.clear();
+		}
 	}
 
 	/**
@@ -609,6 +624,13 @@ public class PlaybackControllerClient implements
 		LOGGER.trace(LoggerMarkers.Playback, "Unpressing container");
 		keyboard.clear();
 		mouse.clear();
+	}
+
+	/**
+	 * @param dontClear {@link #dontZwonkel}
+	 */
+	public void setDontClearOnStop(boolean dontClear) {
+		this.dontZwonkel = dontClear;
 	}
 
 	// ==============================================================
