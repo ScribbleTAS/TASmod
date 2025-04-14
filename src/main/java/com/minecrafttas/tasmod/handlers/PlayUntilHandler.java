@@ -14,7 +14,6 @@ import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 
@@ -23,7 +22,7 @@ import com.minecrafttas.tasmod.registries.TASmodPackets;
  * 
  * @author Scribble
  */
-public class PlayUntilHandler implements ClientPacketHandler, ServerPacketHandler, EventPlaybackClient.EventPlaybackTick {
+public class PlayUntilHandler implements ClientPacketHandler, ServerPacketHandler, EventPlaybackClient.EventPlaybackTickPre {
 
 	/**
 	 * If not null, play until a certain point
@@ -31,12 +30,11 @@ public class PlayUntilHandler implements ClientPacketHandler, ServerPacketHandle
 	private Integer playUntil = null;
 
 	@Override
-	public void onPlaybackTick(long index, InputContainer container) {
+	public void onPlaybackTickPre(long index) {
 		/* Playuntil logic */
 		if (playUntil != null && playUntil == index) {
 			TASmodClient.tickratechanger.pauseGame(true);
 			PlaybackControllerClient controller = TASmodClient.controller;
-			controller.setDontClearOnStop(true);
 			controller.setTASState(TASstate.NONE);
 			controller.setIndex(controller.index() - 1);
 			for (long i = controller.size() - 1; i >= index; i--) {

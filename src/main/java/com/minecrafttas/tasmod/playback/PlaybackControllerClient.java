@@ -42,6 +42,7 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTick;
+import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTickPre;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
@@ -140,12 +141,6 @@ public class PlaybackControllerClient implements
 	 * The place where all inputs get stored
 	 */
 	private BigArrayList<InputContainer> inputs;
-
-	/**
-	 * If true, doesn't clear the virtual inputs<br>
-	 * when stopping a recording or playback
-	 */
-	private boolean dontZwonkel = false;
 
 //	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 
@@ -293,12 +288,7 @@ public class PlaybackControllerClient implements
 
 	private void stopRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
-
-		if (dontZwonkel)
-			dontZwonkel = false;
-		else {
-			TASmodClient.virtual.clear();
-		}
+		TASmodClient.virtual.clear();
 	}
 
 	private void startPlayback() {
@@ -311,11 +301,7 @@ public class PlaybackControllerClient implements
 	private void stopPlayback() {
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
 		Minecraft.getMinecraft().gameSettings.chatLinks = true;
-		if (dontZwonkel)
-			dontZwonkel = false;
-		else {
-			TASmodClient.virtual.clear();
-		}
+		TASmodClient.virtual.clear();
 	}
 
 	/**
@@ -507,6 +493,8 @@ public class PlaybackControllerClient implements
 
 		index++; // Increase the index and load the next inputs
 
+		EventListenerRegistry.fireEvent(EventPlaybackTickPre.class, index);
+
 		/* Stop condition */
 		if (index == inputs.size() || inputs.isEmpty()) {
 			index--;
@@ -629,13 +617,6 @@ public class PlaybackControllerClient implements
 		LOGGER.trace(LoggerMarkers.Playback, "Unpressing container");
 		keyboard.clear();
 		mouse.clear();
-	}
-
-	/**
-	 * @param dontClear {@link #dontZwonkel}
-	 */
-	public void setDontClearOnStop(boolean dontClear) {
-		this.dontZwonkel = dontClear;
 	}
 
 	// ==============================================================
