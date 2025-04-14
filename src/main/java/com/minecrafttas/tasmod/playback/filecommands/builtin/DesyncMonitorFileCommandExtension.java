@@ -90,7 +90,6 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		} else {
 			monitorContainer.set(tick, values);
 		}
-		System.out.println(String.format("Tick %s, Controller %s, Monitor %s", tick, TASmodClient.controller.size(), monitorContainer.size()));
 	}
 
 	@Override
@@ -132,7 +131,6 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	@Override
 	public void onPlayback(long tick, InputContainer inputContainer) {
 		currentValues = get(tick - 1);
-		System.out.println(String.format("Tick %s, Controller %s, Monitor %s", tick, TASmodClient.controller.size(), monitorContainer.size()));
 	}
 
 	private MonitorContainer loadFromFile(long tick, String[] args) throws PlaybackLoadException {

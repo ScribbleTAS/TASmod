@@ -39,7 +39,7 @@ public enum TASmodKeybinds {
 		//			} catch (Exception e) {
 		//				e.printStackTrace();
 		//			}
-		TASmodClient.controller.setTASState(TASstate.PLAYBACK);
+//		TASmodClient.controller.setTASState(TASstate.PLAYBACK);
 	}, VirtualKeybindings::isKeyDown);
 
 	private Keybind keybind;

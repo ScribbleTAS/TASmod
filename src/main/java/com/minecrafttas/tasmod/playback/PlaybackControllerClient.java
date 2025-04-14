@@ -16,7 +16,11 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Mouse;
@@ -601,18 +605,19 @@ public class PlaybackControllerClient implements
 	}
 
 	/**
-	 * Used for serializing the input container
+	 * Used for displaying the rought contents of the input container
 	 */
 	@Override
 	public String toString() {
 		if (inputs.isEmpty()) {
 			return "null";
 		}
-		String out = "";
+		List<String> out = new LinkedList<>();
 		for (int i = 0; i < inputs.size(); i++) {
-			out = out.concat(inputs.get(i).toString() + "\n");
+			InputContainer input = inputs.get(i);
+			out.add(input.toString(i));
 		}
-		return out;
+		return String.join("\n", out);
 	}
 
 	// ==============================================================
@@ -668,8 +673,48 @@ public class PlaybackControllerClient implements
 
 		@Override
 		public String toString() {
-			String.join("\n// ", comments.inlineComments);
-			return keyboard.toString() + "|" + mouse.toString() + "|" + cameraAngle.toString() + "\t\t// " + comments.endlineComments;
+			return toString(-1);
+		}
+
+		public String toString(int tick) {
+			List<String> out = new LinkedList<>();
+			out.addAll(comments.inlineComments);
+
+			Queue<String> keyboardQueue = new LinkedBlockingQueue<>(Arrays.asList(keyboard.toString().split("\n")));
+			Queue<String> mouseQueue = new LinkedBlockingQueue<>(Arrays.asList(mouse.toString().split("\n")));
+			Queue<String> cameraAngleQueue = new LinkedBlockingQueue<>(Arrays.asList(cameraAngle.toString().split("\n")));
+			Queue<String> endlineCommentQueue = new LinkedBlockingQueue<>(comments.endlineComments);
+
+			String kb = getOrEmpty(keyboardQueue.poll());
+			String ms = getOrEmpty(mouseQueue.poll());
+			String ca = getOrEmpty(cameraAngleQueue.poll());
+
+			String elc = getOrEmpty(endlineCommentQueue.poll());
+			if (!elc.isEmpty()) {
+				elc = "\t\t" + elc;
+			}
+
+			out.add(String.format("%s|%s|%s|%s%s", tick == -1 ? "undefined" : tick, kb, ms, ca, elc));
+
+			// Add subtick lines, indented
+			int currentSubtick = 0;
+			while (!keyboardQueue.isEmpty() || !mouseQueue.isEmpty() || !cameraAngleQueue.isEmpty()) {
+				currentSubtick++;
+				kb = getOrEmpty(keyboardQueue.poll());
+				ms = getOrEmpty(mouseQueue.poll());
+				ca = getOrEmpty(cameraAngleQueue.poll());
+				elc = getOrEmpty(endlineCommentQueue.poll());
+				if (!elc.isEmpty()) {
+					elc = "\t\t" + elc;
+				}
+
+				out.add(String.format("\t%s|%s|%s|%s%s", currentSubtick, kb, ms, ca, elc));
+			}
+			return String.join("\n", out);
+		}
+
+		private String getOrEmpty(String string) {
+			return string != null ? string : "";
 		}
 
 		public VirtualKeyboard getKeyboard() {

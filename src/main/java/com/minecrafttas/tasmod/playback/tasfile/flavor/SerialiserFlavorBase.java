@@ -751,7 +751,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		// Add tick line, not indented
 		out.add(mergeInput(currentTick, kb, ms, ca, elc));
 
-		// Add subtick lines, not indented
+		// Add subtick lines, indented
 		currentSubtick = 0;
 		while (!keyboardQueue.isEmpty() || !mouseQueue.isEmpty() || !cameraAngleQueue.isEmpty()) {
 			currentSubtick++;
