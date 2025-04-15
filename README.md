@@ -1,30 +1,12 @@
-> [!WARNING]
-> This mod is in **early-development** and is not ready for use yet. If you wish to download the early testing releases, be prepared to encounter various bugs and desyncs!  
-> For a more stable mod, without input recording and playback, check [LoTAS](https://github.com/MinecraftTAS/LoTAS)
-# TASmod  
-A Tool-Assisted Speedrun-Mod for Minecraft 1.12.2.  
-Is able to capture inputs and play them back, by pretending to be a keyboard.
+<p align="center"><img src="https://minecrafttas.com/images/TASmodLogo.svg" alt="Logo" width="500"></p>
 
-To reduce complexity, all aspects of RNG-Manipulation have been externalized to a repository called [KillTheRNG](https://github.com/MinecraftTAS/KillTheRNG). It is now available as an optional dependency and a [standalone mod](https://maven.mgnet.work/#/main/com/minecrafttas/killtherng-full)
+A [Tool-Assisted Speedrun](https://tasvideos.org/WelcomeToTASVideos) mod for Minecraft.  
+Adds tools such as input playback, slowdown and savestates for creating TASes,  
+which aim to beat the game as fast as possible.
 
-> [!IMPORTANT]
-> We are currently shifting over to **[Legacy-Fabric 1.12.2](https://legacyfabric.net/)**. The development branch currently works with Legacy-Fabric while the release branch is on **Forge** 1.12.2
->
-> This means all **Alpha** releases only work for Forge.
->
-> Future **Beta** releases will be on Legacy-Fabric.
-
-# Credits  
-Author of the original mod: [tr7zw](https://github.com/tr7zw/MC-TASmod)  
-Main Mod Author: Scribble  
-  
-Contributions by: famous1622, Pancake  
-  
-Tickratechanger: [Guichaguri](https://github.com/Guichaguri/TickrateChanger)  
-Tickrate 0 idea: [Cubitect](https://github.com/Cubitect/Cubitick)  
-Savestate idea: [bspkrs, MightyPork](https://github.com/bspkrs-mods/WorldStateCheckpoints), although implementation is totally different now
-  
-Special thanks: Darkmoon, The Minecraft TAS Community  
+# Installation
+This mod uses the modloader [LegacyFabric](https://legacyfabric.net/), a fork of [Fabric](https://fabricmc.net/) for versions below 1.14.4.  
+**Does NOT need LegacyFabric-API**
 # Features  
 ## Playback
 This mod can record and play back
@@ -66,24 +48,23 @@ This mod can record and play back
 Record TASes with friends! Needs operator permissions to run tasmod related commands.  
 /savestate can be used to manage savestates.
 
-> **Note:** /fullrecord, /fullplay and /restartandplay are not guaranteed to work in multiplayer at this time.
+> [!Note]
+> /fullrecord, /fullplay and /restartandplay are not guaranteed to work in multiplayer at this time.
 
 ## HUD
 When ingame, hitting <kbd>F6</kbd> will show you options for customising your HUD, with monitoring options and more. Even more options are available when KillTheRNG is installed. 
 
+# Credits  
+Author of the original prototype: [tr7zw](https://github.com/tr7zw/MC-TASmod)  
+Main Mod Author: Scribble  
+
+Contributions by: famous1622, Pancake  
+  
+Initial Tickratechanger: [Guichaguri](https://github.com/Guichaguri/TickrateChanger)  
+Tickrate 0 idea: [Cubitect](https://github.com/Cubitect/Cubitick)  
+Savestate idea: [bspkrs, MightyPork](https://github.com/bspkrs-mods/WorldStateCheckpoints)
+
+Special thanks: Darkmoon, notz23, The Minecraft TAS Community  
+
 # Development
-## Setup
-1. Clone this repository and put it in your workspace directory (where you open eclipse or idea)
-2. Import gradle project
-	- Use gradle version 4.10.3
-	- Use [JDK 8](https://adoptium.net/en/temurin/releases/?version=8)
-3. Run gradle tasks `setupDecompWorkspace` then `eclipse`.
-4. *Optional but recommended:* Run gradle task `downloadKTRNG` (in the "tasmod" category) to download KillTheRNG to the run/mods folder.
-
-## Running
-The task `eclipse` should've generated to launch configs: `TASmod_Client.launch` and `TASmod_Server.launch`. Select it, then click the run or debug button in your IDE.
-
-> **Note:** Additional setup is required for the server to actually start, like changing the eula.txt and setting `online-mode` to false in server.properties.
-
-## Building
-Build the mod using the gradle task `build` (or alternatively `shadowJar`).
+For setting up and building the mod, check [CONTRIBUTING.md](https://github.com/MinecraftTAS/TASmod/blob/develop/CONTRIBUTING.md)
