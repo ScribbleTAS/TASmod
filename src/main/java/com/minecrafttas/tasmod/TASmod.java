@@ -25,6 +25,7 @@ import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.commands.TabCompletionUtils;
+import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
@@ -78,6 +79,8 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 	public static final CommandFileCommand commandFileCommand = new CommandFileCommand();
 
+	public static final PlayUntilHandler playUntil = new PlayUntilHandler();
+
 	@Override
 	public void onInitialize() {
 
@@ -117,6 +120,8 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		SavestateMotionStorage motionStorage = new SavestateMotionStorage();
 		PacketHandlerRegistry.register(motionStorage);
 		EventListenerRegistry.register(motionStorage);
+		PacketHandlerRegistry.register(playUntil);
+		EventListenerRegistry.register(playUntil);
 	}
 
 	@Override

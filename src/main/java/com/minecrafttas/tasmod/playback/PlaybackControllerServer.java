@@ -5,7 +5,6 @@ import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_CLEAR_IN
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLPLAY;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLRECORD;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_LOAD;
-import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_PLAYUNTIL;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_SAVE;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE;
@@ -36,6 +35,7 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
+		//@formatter:off
 		return new TASmodPackets[] 
 				{ 
 				PLAYBACK_STATE,
@@ -43,10 +43,10 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 				PLAYBACK_FULLPLAY,
 				PLAYBACK_FULLRECORD,
 				PLAYBACK_RESTARTANDPLAY,
-				PLAYBACK_PLAYUNTIL,
 				PLAYBACK_SAVE,
 				PLAYBACK_LOAD
 				};
+		//@formatter:on
 	}
 
 	@Override
@@ -67,12 +67,11 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 			case PLAYBACK_FULLPLAY:
 			case PLAYBACK_FULLRECORD:
 			case PLAYBACK_RESTARTANDPLAY:
-			case PLAYBACK_PLAYUNTIL:
 			case PLAYBACK_SAVE:
 			case PLAYBACK_LOAD:
 				TASmod.server.sendToAll(new TASmodBufferBuilder(buf));
 				break;
-				
+
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.SERVER);
 		}

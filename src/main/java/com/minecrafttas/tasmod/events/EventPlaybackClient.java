@@ -2,8 +2,8 @@ package com.minecrafttas.tasmod.events;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 
 public interface EventPlaybackClient {
 
@@ -65,10 +65,10 @@ public interface EventPlaybackClient {
 	public interface EventPlaybackTick extends EventBase {
 
 		/**
-		 * Fired when a tick is being recorded
+		 * Fired when a tick is played back
 		 * 
-		 * @param index     The index of the tick that is being recorded
-		 * @param container The {@link InputContainer} that is being recorded
+		 * @param index     The index of the tick that is played back
+		 * @param container The {@link InputContainer} that is played back
 		 */
 		public void onPlaybackTick(long index, InputContainer container);
 	}
@@ -83,5 +83,34 @@ public interface EventPlaybackClient {
 		 * Fired when a recording is cleared
 		 */
 		public void onRecordingClear();
+	}
+
+	/**
+	 * Fired when an input is deleted
+	 */
+	@FunctionalInterface
+	public interface EventInputDelete extends EventBase {
+
+		/**
+		 * Fired when an input is deleted
+		 * 
+		 * @param The index of the input
+		 */
+		public void onInputDelete(long index);
+	}
+
+	/**
+	 * Fired when a tick is being played back before reading the inputs
+	 */
+	@FunctionalInterface
+	public interface EventPlaybackTickPre extends EventBase {
+
+		/**
+		 * Fired when a tick is being played back before reading the inputs
+		 * 
+		 * @param index     The index of the tick that is played back
+		 * @param container The {@link InputContainer} that is played back
+		 */
+		public void onPlaybackTickPre(long index);
 	}
 }

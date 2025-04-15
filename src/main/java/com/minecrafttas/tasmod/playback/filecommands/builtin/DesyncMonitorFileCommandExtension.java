@@ -28,7 +28,7 @@ import net.minecraft.util.text.TextFormatting;
  * 
  * @author Scribble
  */
-public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtension implements EventPlaybackClient.EventControllerStateChange {
+public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtension implements EventPlaybackClient.EventControllerStateChange, EventPlaybackClient.EventInputDelete {
 
 	/**
 	 * List containing {@link MonitorContainer MonitorContainers} in a TASfile 
@@ -72,6 +72,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		if (newstate == TASstate.RECORDING && monitorContainer.isEmpty()) {
 			recordNull(0);
 		}
+		currentValues = null;
 	}
 
 	@Override
@@ -189,7 +190,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private String lastPos = "";
 
 	public String getPos() {
-		if (currentValues != null && !TASmodClient.controller.isNothingPlaying()) {
+		if (currentValues != null && TASmodClient.controller.isPlayingback()) {
 			EntityPlayerSP player = Minecraft.getMinecraft().player;
 			String[] values = new String[3];
 			values[0] = getFormattedString(player.posX - currentValues.values[0]);
@@ -204,7 +205,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	private String lastMotion = "";
 
 	public String getMotion() {
-		if (currentValues != null && !TASmodClient.controller.isNothingPlaying()) {
+		if (currentValues != null && TASmodClient.controller.isPlayingback()) {
 			EntityPlayerSP player = Minecraft.getMinecraft().player;
 			String[] values = new String[3];
 			values[0] = getFormattedString(player.motionX - currentValues.values[3]);
@@ -364,5 +365,10 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 		lastStatus = TextFormatting.GRAY + "Empty";
 		lastPos = "";
 		lastMotion = "";
+	}
+
+	@Override
+	public void onInputDelete(long index) {
+		monitorContainer.remove(index);
 	}
 }

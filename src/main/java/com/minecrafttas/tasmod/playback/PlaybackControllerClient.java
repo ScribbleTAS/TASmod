@@ -5,7 +5,6 @@ import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_CLEAR_IN
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLPLAY;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLRECORD;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_LOAD;
-import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_PLAYUNTIL;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_SAVE;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE;
@@ -17,7 +16,11 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Mouse;
@@ -39,6 +42,7 @@ import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTick;
+import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackTickPre;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordTick;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
@@ -141,8 +145,6 @@ public class PlaybackControllerClient implements
 //	private long startSeed = TASmod.ktrngHandler.getGlobalSeedClient(); // TODO Replace with Metadata extension
 
 	// =====================================================================================================
-
-	private Integer playUntil = null; // TODO Replace with event
 
 	public PlaybackControllerClient() {
 		tasFileDirectory = TASmodClient.tasfiledirectory;
@@ -491,21 +493,11 @@ public class PlaybackControllerClient implements
 
 		index++; // Increase the index and load the next inputs
 
-		/* Playuntil logic */
-		if (playUntil != null && playUntil == index) {
-			TASmodClient.tickratechanger.pauseGame(true);
-			playUntil = null;
-			setTASState(TASstate.NONE);
-			for (long i = inputs.size() - 1; i >= index; i--) {
-				inputs.remove(i);
-			}
-			index--;
-			setTASState(TASstate.RECORDING);
-			return;
-		}
+		EventListenerRegistry.fireEvent(EventPlaybackTickPre.class, index);
 
 		/* Stop condition */
 		if (index == inputs.size() || inputs.isEmpty()) {
+			index--;
 			unpressContainer();
 			setTASState(TASstate.NONE);
 		}
@@ -517,7 +509,6 @@ public class PlaybackControllerClient implements
 			this.camera = container.getCameraAngle().clone();
 			EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
 		}
-
 	}
 	// =====================================================================================================
 	// Methods to manipulate inputs
@@ -532,6 +523,11 @@ public class PlaybackControllerClient implements
 
 	public long index() {
 		return index;
+	}
+
+	public void remove(long index) {
+		inputs.remove(index);
+		EventListenerRegistry.fireEvent(EventPlaybackClient.EventInputDelete.class, index);
 	}
 
 	public BigArrayList<InputContainer> getInputs() {
@@ -597,18 +593,19 @@ public class PlaybackControllerClient implements
 	}
 
 	/**
-	 * Used for serializing the input container
+	 * Used for displaying the rought contents of the input container
 	 */
 	@Override
 	public String toString() {
 		if (inputs.isEmpty()) {
 			return "null";
 		}
-		String out = "";
+		List<String> out = new LinkedList<>();
 		for (int i = 0; i < inputs.size(); i++) {
-			out = out.concat(inputs.get(i).toString() + "\n");
+			InputContainer input = inputs.get(i);
+			out.add(input.toString(i));
 		}
-		return out;
+		return String.join("\n", out);
 	}
 
 	// ==============================================================
@@ -620,12 +617,6 @@ public class PlaybackControllerClient implements
 		LOGGER.trace(LoggerMarkers.Playback, "Unpressing container");
 		keyboard.clear();
 		mouse.clear();
-	}
-
-	// ==============================================================
-
-	public void setPlayUntil(int until) {
-		this.playUntil = until;
 	}
 
 	// ==============================================================
@@ -663,8 +654,48 @@ public class PlaybackControllerClient implements
 
 		@Override
 		public String toString() {
-			String.join("\n// ", comments.inlineComments);
-			return keyboard.toString() + "|" + mouse.toString() + "|" + cameraAngle.toString() + "\t\t// " + comments.endlineComments;
+			return toString(-1);
+		}
+
+		public String toString(int tick) {
+			List<String> out = new LinkedList<>();
+			out.addAll(comments.inlineComments);
+
+			Queue<String> keyboardQueue = new LinkedBlockingQueue<>(Arrays.asList(keyboard.toString().split("\n")));
+			Queue<String> mouseQueue = new LinkedBlockingQueue<>(Arrays.asList(mouse.toString().split("\n")));
+			Queue<String> cameraAngleQueue = new LinkedBlockingQueue<>(Arrays.asList(cameraAngle.toString().split("\n")));
+			Queue<String> endlineCommentQueue = new LinkedBlockingQueue<>(comments.endlineComments);
+
+			String kb = getOrEmpty(keyboardQueue.poll());
+			String ms = getOrEmpty(mouseQueue.poll());
+			String ca = getOrEmpty(cameraAngleQueue.poll());
+
+			String elc = getOrEmpty(endlineCommentQueue.poll());
+			if (!elc.isEmpty()) {
+				elc = "\t\t" + elc;
+			}
+
+			out.add(String.format("%s|%s|%s|%s%s", tick == -1 ? "undefined" : tick, kb, ms, ca, elc));
+
+			// Add subtick lines, indented
+			int currentSubtick = 0;
+			while (!keyboardQueue.isEmpty() || !mouseQueue.isEmpty() || !cameraAngleQueue.isEmpty()) {
+				currentSubtick++;
+				kb = getOrEmpty(keyboardQueue.poll());
+				ms = getOrEmpty(mouseQueue.poll());
+				ca = getOrEmpty(cameraAngleQueue.poll());
+				elc = getOrEmpty(endlineCommentQueue.poll());
+				if (!elc.isEmpty()) {
+					elc = "\t\t" + elc;
+				}
+
+				out.add(String.format("\t%s|%s|%s|%s%s", currentSubtick, kb, ms, ca, elc));
+			}
+			return String.join("\n", out);
+		}
+
+		private String getOrEmpty(String string) {
+			return string != null ? string : "";
 		}
 
 		public VirtualKeyboard getKeyboard() {
@@ -837,7 +868,6 @@ public class PlaybackControllerClient implements
 				PLAYBACK_FULLPLAY,
 				PLAYBACK_FULLRECORD,
 				PLAYBACK_RESTARTANDPLAY,
-				PLAYBACK_PLAYUNTIL,
 				PLAYBACK_CLEAR_INPUTS,
 				PLAYBACK_STATE
 
@@ -947,11 +977,6 @@ public class PlaybackControllerClient implements
 					TASmodClient.config.set(TASmodConfig.FileToOpen, finalname);
 					System.exit(0);
 				});
-				break;
-
-			case PLAYBACK_PLAYUNTIL:
-				int until = ByteBufferBuilder.readInt(buf);
-				TASmodClient.controller.setPlayUntil(until);
 				break;
 
 			case PLAYBACK_CLEAR_INPUTS:

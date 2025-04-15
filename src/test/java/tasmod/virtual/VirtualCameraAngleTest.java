@@ -118,26 +118,26 @@ public class VirtualCameraAngleTest {
 		test.updateFromEvent(1f, 1f);
 		test.updateFromEvent(1f, 1f);
 		test.updateFromEvent(1f, 1f);
-		
+
 		List<VirtualCameraAngle> actual = new ArrayList<>();
-		
+
 		// Test get states on a subtick, should result in an empty array
 		VirtualCameraAngle test2 = new VirtualCameraAngle(0f, 0f);
-		
+
 		test2.getStates(actual);
-		
+
 		assertTrue(actual.isEmpty());
-		
+
 		actual.clear();
-		
+
 		test.getStates(actual);
-		
+
 		List<VirtualCameraAngle> expected = new ArrayList<>();
-		
+
 		expected.add(new VirtualCameraAngle(1f, 1f));
 		expected.add(new VirtualCameraAngle(2f, 2f));
 		expected.add(new VirtualCameraAngle(3f, 3f));
-		
+
 		assertIterableEquals(expected, actual);
 	}
 
@@ -149,26 +149,26 @@ public class VirtualCameraAngleTest {
 		VirtualCameraAngle expected = new VirtualCameraAngle(0f, 0f, true);
 		expected.updateFromEvent(1f, 2f);
 		expected.updateFromEvent(3f, 4f);
-		
+
 		VirtualCameraAngle actual = new VirtualCameraAngle(0f, 0f, true);
-		
+
 		actual.moveFrom(expected);
-		
+
 		// Test pitch and yaw
 		assertEquals(expected.getPitch(), actual.getPitch());
 		assertEquals(expected.getYaw(), actual.getYaw());
-		
+
 		// Test subticks
 		List<VirtualCameraAngle> expected2 = new ArrayList<>();
 		expected2.add(new VirtualCameraAngle(1f, 2f));
 		expected2.add(new VirtualCameraAngle(4f, 6f));
-		
+
 		assertIterableEquals(expected2, actual.getAll());
 		// Test expected subticks being cleared
-		
+
 		assertTrue(expected.getSubticks().isEmpty());
 	}
-	
+
 	/**
 	 * Test clearing the camera angle
 	 */
@@ -179,9 +179,9 @@ public class VirtualCameraAngleTest {
 		actual.updateFromEvent(1f, 1f);
 		actual.updateFromEvent(1f, 1f);
 		actual.updateFromEvent(1f, 1f);
-		
+
 		actual.clear();
-		
+
 		assertNull(actual.getPitch());
 		assertNull(actual.getYaw());
 		assertTrue(actual.getSubticks().isEmpty());
@@ -197,7 +197,7 @@ public class VirtualCameraAngleTest {
 
 		VirtualCameraAngle actual = new VirtualCameraAngle(x, y);
 
-		assertEquals("1.0;2.0", actual.toString());
+		assertEquals("2.0;1.0", actual.toString());
 	}
 
 	/**
@@ -210,7 +210,7 @@ public class VirtualCameraAngleTest {
 		actual.updateFromEvent(3f, 4f);
 		actual.updateFromEvent(5f, 6f);
 
-		assertEquals("1.0;2.0\n4.0;6.0\n9.0;12.0", actual.toString());
+		assertEquals("2.0;1.0\n6.0;4.0\n12.0;9.0", actual.toString());
 	}
 
 	/**
@@ -228,7 +228,7 @@ public class VirtualCameraAngleTest {
 		assertEquals(1f, actual.getPitch());
 		assertEquals(2f, actual.getYaw());
 	}
-	
+
 	// DeepCloning
 
 	/**
