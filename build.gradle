@@ -106,8 +106,8 @@ spotless {
   encoding 'UTF-8'
   lineEndings 'UNIX'
   java {
-  	importOrderFile('TASmodImportorder.txt')
-  	eclipse().configFile('TASmodFormatter.xml')
+  	importOrderFile('formatter/TASmodImportorder.txt')
+  	eclipse().configFile('formatter/TASmodFormatter.xml')
   }
   enforceCheck false
 }
