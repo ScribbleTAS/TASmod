@@ -70,7 +70,8 @@ public class CommandSaveTAS extends CommandBase {
 		List<String> tab = null;
 		if (args.length == 1) {
 			if (!check) {
-				sender.sendMessage(new TextComponentString(TextFormatting.BOLD + "" + TextFormatting.RED + "WARNING!" + TextFormatting.RESET + TextFormatting.RED + " Existing filenames will be overwritten! /fail to abort the recording if you accidentally started one"));
+				sender.sendMessage(new TextComponentString(TextFormatting.BOLD + "" + TextFormatting.RED + "WARNING!" + TextFormatting.RESET + TextFormatting.RED
+						+ " Existing filenames will be overwritten! /fail to abort the recording if you accidentally started one"));
 				check = true;
 			}
 			try {
@@ -90,7 +91,7 @@ public class CommandSaveTAS extends CommandBase {
 				return super.getTabCompletions(server, sender, args, targetPos);
 			}
 			return getListOfStringsMatchingLastWord(args, tab);
-			
+
 		} else if (args.length == 2) {
 			try {
 				tab = TASmod.tabCompletionUtils.getFlavorList(getCommandSenderAsPlayer(sender).getName());
@@ -104,7 +105,7 @@ public class CommandSaveTAS extends CommandBase {
 				return super.getTabCompletions(server, sender, args, targetPos);
 			}
 			return getListOfStringsMatchingLastWord(args, tab);
-			
+
 		} else
 			return super.getTabCompletions(server, sender, args, targetPos);
 	}

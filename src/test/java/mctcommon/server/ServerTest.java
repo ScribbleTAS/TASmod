@@ -17,10 +17,10 @@ import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.mctcommon.networking.ByteBufferBuilder;
 import com.minecrafttas.mctcommon.networking.Client;
+import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
 import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
 import com.minecrafttas.mctcommon.networking.Server;
-import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;

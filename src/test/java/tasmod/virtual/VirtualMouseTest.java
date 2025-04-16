@@ -15,10 +15,10 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import com.minecrafttas.tasmod.virtual.VirtualMouse;
 import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.tasmod.virtual.VirtualKey;
+import com.minecrafttas.tasmod.virtual.VirtualMouse;
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
 
 class VirtualMouseTest {

@@ -13,21 +13,21 @@ import com.minecrafttas.mctcommon.registry.AbstractRegistry;
  * 
  * @author Scribble
  */
-public class SerialiserFlavorRegistry extends AbstractRegistry<SerialiserFlavorBase>{
+public class SerialiserFlavorRegistry extends AbstractRegistry<SerialiserFlavorBase> {
 
 	public SerialiserFlavorRegistry() {
 		super("FLAVOR_REGISTRY", new LinkedHashMap<>());
 	}
-	
-	public Set<String> getFlavorNames(){
+
+	public Set<String> getFlavorNames() {
 		return REGISTRY.keySet();
 	}
-	
+
 	public SerialiserFlavorBase getFlavor(String name) {
 		SerialiserFlavorBase out = REGISTRY.get(name);
 		return out == null ? null : out.clone();
 	}
-	
+
 	public List<SerialiserFlavorBase> getFlavors() {
 		return new ArrayList<>(REGISTRY.values());
 	}

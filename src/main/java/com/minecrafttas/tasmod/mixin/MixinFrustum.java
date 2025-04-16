@@ -26,5 +26,5 @@ public class MixinFrustum {
 		cir.setReturnValue(true);
 		cir.cancel();
 	}
-	
+
 }

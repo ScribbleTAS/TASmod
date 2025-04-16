@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import net.minecraft.client.settings.KeyBinding;
 
 @Mixin(KeyBinding.class)
-public interface AccessorKeyBinding{
-	
+public interface AccessorKeyBinding {
+
 	@Accessor("CATEGORY_ORDER")
 	public static Map<String, Integer> getCategoryOrder() {
 		throw new NotImplementedException("WEE WOO");

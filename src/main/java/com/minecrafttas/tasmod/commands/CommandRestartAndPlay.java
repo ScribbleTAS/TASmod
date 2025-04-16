@@ -21,7 +21,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 
-public class CommandRestartAndPlay extends CommandBase{
+public class CommandRestartAndPlay extends CommandBase {
 
 	@Override
 	public String getName() {
@@ -43,9 +43,9 @@ public class CommandRestartAndPlay extends CommandBase{
 				String spacer = " ";
 				for (int i = 0; i < args.length; i++) {
 					if (i == args.length - 1) {
-						spacer="";
+						spacer = "";
 					}
-					name=name.concat(args[i]+spacer);
+					name = name.concat(args[i] + spacer);
 				}
 				try {
 					TASmod.savestateHandlerServer.loadState(0, false);

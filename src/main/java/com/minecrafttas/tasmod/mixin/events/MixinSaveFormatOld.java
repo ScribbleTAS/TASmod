@@ -12,7 +12,7 @@ import net.minecraft.world.storage.SaveFormatOld;
 
 @Mixin(SaveFormatOld.class)
 public class MixinSaveFormatOld {
-	
+
 	@ModifyArgs(method = "getWorldData", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/datafix/DataFixer;process(Lnet/minecraft/util/datafix/FixTypes;Lnet/minecraft/nbt/NBTTagCompound;)Lnet/minecraft/nbt/NBTTagCompound;"))
 	public NBTTagCompound modifyargs_getWorldData(NBTTagCompound compound) {
 		EventListenerRegistry.fireEvent(EventNBT.EventWorldRead.class, compound);

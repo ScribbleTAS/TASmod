@@ -8,7 +8,7 @@ import net.minecraft.world.gen.ChunkProviderServer;
 
 @Mixin(ChunkProviderServer.class)
 public interface AccessorChunkLoader {
-	
+
 	@Accessor
 	public IChunkLoader getChunkLoader();
 }

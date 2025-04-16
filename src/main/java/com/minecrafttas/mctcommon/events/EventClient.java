@@ -14,7 +14,7 @@ import net.minecraft.client.gui.GuiScreen;
  * @author Scribble
  */
 public interface EventClient {
-	
+
 	/**
 	 * Fired when a gui is opened (Minecraft#displayGuiScreen)
 	 * @author Scribble
@@ -22,7 +22,7 @@ public interface EventClient {
 	 */
 	@FunctionalInterface
 	public static interface EventOpenGui extends EventBase {
-		
+
 		/**
 		 * Fired when a gui is opened (Minecraft#displayGuiScreen)
 		 * @param gui The gui that is opened
@@ -30,7 +30,7 @@ public interface EventClient {
 		 */
 		public GuiScreen onOpenGui(GuiScreen gui);
 	}
-	
+
 	/**
 	 * Fired when the integrated server is launched
 	 * @author Scribble
@@ -38,7 +38,7 @@ public interface EventClient {
 	 */
 	@FunctionalInterface
 	public static interface EventLaunchIntegratedServer extends EventBase {
-		
+
 		/**
 		 * Fired when the integrated server is launched
 		 */
@@ -58,7 +58,7 @@ public interface EventClient {
 		 */
 		public void onDoneLoadingWorld();
 	}
-	
+
 	/**
 	 * Fired when the client ticks
 	 * @author Scribble
@@ -66,14 +66,14 @@ public interface EventClient {
 	 */
 	@FunctionalInterface
 	public static interface EventClientTick extends EventBase {
-		
+
 		/**
 		 * Fired when the client ticks
 		 * @param mc The ticking Minecraft instance
 		 */
 		public void onClientTick(Minecraft mc);
 	}
-	
+
 	/**
 	 * Fires after the client is initialised
 	 * @author Scribble
@@ -81,7 +81,7 @@ public interface EventClient {
 	 */
 	@FunctionalInterface
 	public static interface EventClientInit extends EventBase {
-		
+
 		/**
 		 * Fires after the client is initialised
 		 * @param mc The initialized Minecraft instance
@@ -96,7 +96,7 @@ public interface EventClient {
 	 */
 	@FunctionalInterface
 	public static interface EventClientGameLoop extends EventBase {
-		
+
 		/**
 		 * Fired when when the client runs a game loop, which is tick independent
 		 * @param mc The Minecraft instance that is looping
@@ -111,32 +111,32 @@ public interface EventClient {
 	 */
 	@FunctionalInterface
 	public static interface EventCamera extends EventBase {
-		
+
 		/**
 		 * Fired when the camera is updated
 		 * @param dataIn The pitch and yaw of the camera
 		 * @return The changed camera data. Can be changed during the event
 		 */
 		public CameraData onCameraEvent(CameraData dataIn);
-		
-		public static class CameraData{
+
+		public static class CameraData {
 			public float pitch;
 			public float yaw;
 			public float roll;
-			
+
 			public CameraData(float pitch, float yaw) {
 				this(pitch, yaw, 0f);
 			}
-			
+
 			public CameraData(float pitch, float yaw, float roll) {
 				this.pitch = pitch;
 				this.yaw = yaw;
 				this.roll = roll;
 			}
-			
+
 			@Override
 			public boolean equals(Object obj) {
-				if(obj instanceof CameraData) {
+				if (obj instanceof CameraData) {
 					CameraData b = (CameraData) obj;
 					return b.pitch == pitch && b.yaw == yaw;
 				}
@@ -152,14 +152,14 @@ public interface EventClient {
 	 */
 	@FunctionalInterface
 	public static interface EventPlayerLeaveClientSide extends EventBase {
-		
+
 		/**
 		 * Fired when a player leaves a server or a world
 		 * @param player The player that leaves the server or the world
 		 */
 		public void onPlayerLeaveClientSide(EntityPlayerSP player);
 	}
-	
+
 	/**
 	 * Fired when a player joins a server or a world
 	 * @author Scribble
@@ -189,13 +189,13 @@ public interface EventClient {
 		 */
 		public void onOtherPlayerJoinedClientSide(GameProfile profile);
 	}
-	
+
 	/**
 	 * Fired when the connection to the custom server was closed on the client side.
 	 */
 	@FunctionalInterface
 	public static interface EventDisconnectClient extends EventBase {
-		
+
 		/**
 		 * Fired when the connection to the custom server was closed on the client side.
 		 * @param client The client that is disconnecting

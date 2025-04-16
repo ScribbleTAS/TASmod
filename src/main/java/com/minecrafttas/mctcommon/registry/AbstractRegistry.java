@@ -16,7 +16,7 @@ public abstract class AbstractRegistry<V extends Registerable> {
 
 	public void register(V registryObject) {
 		if (registryObject == null) {
-			throw new NullPointerException("Tried to register an object to "+name+" with value null");
+			throw new NullPointerException("Tried to register an object to " + name + " with value null");
 		}
 
 		if (containsClass(registryObject)) {
@@ -24,11 +24,11 @@ public abstract class AbstractRegistry<V extends Registerable> {
 			return;
 		}
 
-		if(REGISTRY.containsKey(registryObject.getExtensionName())) {
+		if (REGISTRY.containsKey(registryObject.getExtensionName())) {
 			TASmod.LOGGER.warn("Trying to register the an object in {}, but an extension with the same name is already registered: {}", registryObject.getExtensionName());
 			return;
 		}
-		
+
 		REGISTRY.put(registryObject.getExtensionName(), registryObject);
 	}
 
@@ -36,7 +36,7 @@ public abstract class AbstractRegistry<V extends Registerable> {
 	public final void register(V... registryObjects) {
 		this.register(Arrays.asList(registryObjects));
 	}
-	
+
 	public final void register(Iterable<V> registryObjects) {
 		for (V registryObject : registryObjects) {
 			this.register(registryObject);
@@ -45,7 +45,7 @@ public abstract class AbstractRegistry<V extends Registerable> {
 
 	public void unregister(V registryObject) {
 		if (registryObject == null) {
-			throw new NullPointerException("Tried to unregister an object from "+name+" with value null");
+			throw new NullPointerException("Tried to unregister an object from " + name + " with value null");
 		}
 		if (REGISTRY.containsKey(registryObject.getExtensionName())) {
 			REGISTRY.remove(registryObject.getExtensionName());
@@ -58,13 +58,13 @@ public abstract class AbstractRegistry<V extends Registerable> {
 	public final void unregister(V... registryObjects) {
 		this.unregister(Arrays.asList(registryObjects));
 	}
-	
+
 	public final void unregister(Iterable<V> registryObjects) {
 		for (V registryObject : registryObjects) {
 			this.unregister(registryObject);
 		}
 	}
-	
+
 	public void clear() {
 		REGISTRY.clear();
 	}
@@ -72,7 +72,7 @@ public abstract class AbstractRegistry<V extends Registerable> {
 	protected boolean containsClass(V newExtension) {
 		return containsClazz(newExtension, REGISTRY.values());
 	}
-	
+
 	public static <W> boolean containsClazz(W newExtension, Iterable<W> iterable) {
 		for (W extension : iterable) {
 			if (extension.getClass().equals(newExtension.getClass())) {
