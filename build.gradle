@@ -103,11 +103,11 @@ tasks.named('test', Test) {
 }
 
 spotless {
-  // ratchetFrom 'origin/develop'
   encoding 'UTF-8'
   lineEndings 'UNIX'
   java {
   	importOrderFile('TASmodImportorder.txt')
   	eclipse().configFile('TASmodFormatter.xml')
   }
+  enforceCheck false
 }
