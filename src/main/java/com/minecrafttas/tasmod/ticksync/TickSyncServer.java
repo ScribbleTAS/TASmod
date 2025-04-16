@@ -19,11 +19,10 @@ import com.minecrafttas.tasmod.registries.TASmodPackets;
 import net.minecraft.server.MinecraftServer;
 
 /**
- * This class manages tick sync
- * German: https://1drv.ms/p/s!Av_ysXerhm5CphLvLvguvL5QYe1A?e=MHPldP
- * English: https://1drv.ms/p/s!Av_ysXerhm5Cpha7Qq2tiVebd4DY?e=pzxOva
- *
+ * <p>Synchronizes the server tickrate with all clients
+ * 
  * @author Pancake
+ * @see TickSyncClient
  */
 public class TickSyncServer implements ServerPacketHandler, EventServerTickPost, EventClientCompleteAuthentication {
 	

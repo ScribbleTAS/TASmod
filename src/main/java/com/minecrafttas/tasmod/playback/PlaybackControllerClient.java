@@ -103,7 +103,7 @@ public class PlaybackControllerClient implements
 	EventVirtualInput.EventVirtualCameraAngleTick,
 	
 	EventVirtualInput.EventVirtualMouseSubtick
-	//@formatter:on
+//@formatter:on
 {
 	private Logger logger = TASmod.LOGGER;
 
