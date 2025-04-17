@@ -40,7 +40,7 @@ public class CommandLoadTAS extends CommandBase {
 			if (sender.canUseCommand(2, "load")) {
 				if (args.length < 1) {
 					sender.sendMessage(new TextComponentString(TextFormatting.RED + "Please add a filename, " + getUsage(sender)));
-				} else if(args.length == 1) {
+				} else if (args.length == 1) {
 					String filename = args[0];
 					try {
 						TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.PLAYBACK_LOAD).writeString(filename).writeString(""));
@@ -61,7 +61,7 @@ public class CommandLoadTAS extends CommandBase {
 			}
 		}
 	}
-	
+
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
 		List<String> tab;
@@ -83,7 +83,7 @@ public class CommandLoadTAS extends CommandBase {
 				return super.getTabCompletions(server, sender, args, targetPos);
 			}
 			return getListOfStringsMatchingLastWord(args, tab);
-			
+
 		} else if (args.length == 2) {
 			try {
 				tab = TASmod.tabCompletionUtils.getFlavorList(getCommandSenderAsPlayer(sender).getName());
@@ -97,7 +97,7 @@ public class CommandLoadTAS extends CommandBase {
 				return super.getTabCompletions(server, sender, args, targetPos);
 			}
 			return getListOfStringsMatchingLastWord(args, tab);
-			
+
 		} else
 			return super.getTabCompletions(server, sender, args, targetPos);
 	}

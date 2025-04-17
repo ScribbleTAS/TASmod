@@ -10,8 +10,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
 import com.minecrafttas.mctcommon.networking.Client.Side;
+import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 
@@ -27,12 +27,12 @@ class TASmodByteBufferBuilderTest {
 
 		private TestPacketIDs() {
 		}
-		
+
 		private TestPacketIDs(Side side, CompactPacketHandler lambda) {
 			this.side = side;
 			this.lambda = lambda;
 		}
-		
+
 		@Override
 		public int getID() {
 			return this.ordinal();
@@ -62,38 +62,38 @@ class TASmodByteBufferBuilderTest {
 		public String getExtensionName() {
 			return "TestPacketIds";
 		}
-		
+
 	}
-	
+
 	/**
 	 * Test if NBTTagCompounds get correctly stored in a ByteBuffer
 	 */
 	@Test
 	void testNBT() {
-		
+
 		NBTTagCompound tag = new NBTTagCompound();
 		NBTTagCompound tag2 = new NBTTagCompound();
-		
+
 		tag.setString("String", "What");
 		tag.setShort("Short", (short) 3);
 		tag.setLong("Long", 8008132L);
 		tag.setInteger("Int", -5);
-		tag.setIntArray("IntArray", new int[] {1, 2, 3});
+		tag.setIntArray("IntArray", new int[] { 1, 2, 3 });
 		tag.setDouble("Double", 1.2D);
 		tag.setByte("Byte", (byte) 1);
 		tag.setUniqueId("UUID", UUID.fromString("b8abdafc-5002-40df-ab68-63206ea4c7e8"));
 		tag.setFloat("Float", 1.0F);
 		tag.setBoolean("Boolean", true);
-		tag.setByteArray("ByteArray", new byte[] {1, 0, 0});
-		
+		tag.setByteArray("ByteArray", new byte[] { 1, 0, 0 });
+
 		tag2.setTag("Data", tag);
-		
+
 		TASmodBufferBuilder bufferBuilder = new TASmodBufferBuilder(TestPacketIDs.TESTID_1).writeNBTTagCompound(tag2);
-		
+
 		ByteBuffer buf = bufferBuilder.build();
-		
+
 		buf.position(4);
-		
+
 		NBTTagCompound tag3 = null;
 		try {
 			tag3 = TASmodBufferBuilder.readNBTTagCompound(buf);
@@ -101,20 +101,20 @@ class TASmodByteBufferBuilderTest {
 			fail(e);
 			return;
 		}
-		
+
 		NBTTagCompound tag4 = tag3.getCompoundTag("Data");
-		
+
 		assertEquals("What", tag4.getString("String"));
-		assertEquals((short)3, tag4.getShort("Short"));
+		assertEquals((short) 3, tag4.getShort("Short"));
 		assertEquals(8008132L, tag4.getLong("Long"));
 		assertEquals(-5, tag4.getInteger("Int"));
-		assertArrayEquals(new int[] {1, 2, 3}, tag4.getIntArray("IntArray"));
+		assertArrayEquals(new int[] { 1, 2, 3 }, tag4.getIntArray("IntArray"));
 		assertEquals(1.2D, tag4.getDouble("Double"));
 		assertEquals((byte) 1, tag4.getByte("Byte"));
 		assertEquals(UUID.fromString("b8abdafc-5002-40df-ab68-63206ea4c7e8"), tag4.getUniqueId("UUID"));
 		assertEquals(1.0F, tag4.getFloat("Float"));
 		assertEquals(true, tag4.getBoolean("Boolean"));
-		assertArrayEquals(new byte[] {1, 0, 0}, tag4.getByteArray("ByteArray"));
+		assertArrayEquals(new byte[] { 1, 0, 0 }, tag4.getByteArray("ByteArray"));
 	}
 
 }

@@ -58,7 +58,7 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 //		if (isLoaded()) {
 //			return KillTheRNG.commonRandom.nextSeed();
 //		} else {
-			return 0;
+		return 0;
 //		}
 	}
 
@@ -66,7 +66,7 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 //		if (isLoaded()) {
 //			return KillTheRNG.commonRandom.GlobalServer.getSeed();
 //		} else {
-			return 0;
+		return 0;
 //		}
 	}
 
@@ -83,7 +83,7 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 //		if (isLoaded())
 //			return KillTheRNG.clientRandom.GlobalClient.getSeed();
 //		else
-			return 0;
+		return 0;
 	}
 
 	/**

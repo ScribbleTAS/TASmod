@@ -4,6 +4,7 @@ plugins {
     // legacy looming (loom plugin improvements)
     id 'legacy-looming' version "${loom_version}"
     id 'com.palantir.git-version' version '3.1.0'
+    id 'com.diffplug.spotless' version '7.0.3'
 }
 
 
@@ -99,4 +100,14 @@ tasks.named('test', Test) {
 	testLogging {
 		events "passed", "skipped", "failed"
 	}
+}
+
+spotless {
+  encoding 'UTF-8'
+  lineEndings 'UNIX'
+  java {
+  	importOrderFile('formatter/TASmodImportorder.txt')
+  	eclipse().configFile('formatter/TASmodFormatter.xml')
+  }
+  enforceCheck false
 }

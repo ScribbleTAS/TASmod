@@ -6,6 +6,6 @@ public interface PacketHandlerBase {
 	 * <br>
 	 * or {@link ServerPacketHandler#onServerPacket(PacketID, java.nio.ByteBuffer, java.util.UUID)} methods.
 	 */
-    public PacketID[] getAcceptedPacketIDs();
- 
+	public PacketID[] getAcceptedPacketIDs();
+
 }

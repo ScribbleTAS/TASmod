@@ -29,3 +29,16 @@ Run the gradle task `runClient`
 ./gradlew build
 ```
 2. The generated jar is in `build/libs`
+
+# Formatting
+The formatting configuration can be found in the [formatting directory](https://github.com/MinecraftTAS/TASmod/tree/develop/formatter) and can be imported into your IDE
+
+Alternatively you can run the task
+```sh
+./gradlew spotlessCheck
+```
+To see if it fails and
+```sh
+./gradlew spotlessApply
+```
+to fix any formatting issues.

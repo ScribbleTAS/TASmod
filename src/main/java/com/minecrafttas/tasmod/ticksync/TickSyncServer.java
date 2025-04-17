@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.ticksync;
 
-
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.nio.ByteBuffer;
@@ -25,14 +24,14 @@ import net.minecraft.server.MinecraftServer;
  * @see TickSyncClient
  */
 public class TickSyncServer implements ServerPacketHandler, EventServerTickPost, EventClientCompleteAuthentication {
-	
+
 	private static List<String> synchronizedList = Collections.synchronizedList(new ArrayList<>());
-	
+
 	private boolean enabled = true;
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new TASmodPackets[]{TASmodPackets.TICKSYNC};
+		return new TASmodPackets[] { TASmodPackets.TICKSYNC };
 	}
 
 	/**
@@ -46,11 +45,11 @@ public class TickSyncServer implements ServerPacketHandler, EventServerTickPost,
 	@Override
 	public void onServerPacket(PacketID id, ByteBuffer buf, String username) {
 		synchronized (synchronizedList) {
-			if(!synchronizedList.contains(username)) {
+			if (!synchronizedList.contains(username)) {
 				synchronizedList.add(username);
 			}
 		}
-		if(TASmod.getServerInstance()==null) { // If the server is null, keep the clients ticking
+		if (TASmod.getServerInstance() == null) { // If the server is null, keep the clients ticking
 			sendToClients();
 		}
 	}
@@ -59,14 +58,14 @@ public class TickSyncServer implements ServerPacketHandler, EventServerTickPost,
 		synchronized (synchronizedList) {
 			int acknowledged = synchronizedList.size();
 			int totalConnections = TASmod.server.getClients().size();
-			if(acknowledged >= totalConnections) {
+			if (acknowledged >= totalConnections) {
 				return true;
-			}else {
+			} else {
 				return false;
 			}
 		}
 	}
-	
+
 	public static void clearList() {
 		synchronizedList.clear();
 	}
@@ -80,21 +79,21 @@ public class TickSyncServer implements ServerPacketHandler, EventServerTickPost,
 	public void onClientCompleteAuthentication(String username) {
 		sendToClients();
 	}
-	
+
 	private void sendToClients() {
 		try {
 			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKSYNC));
 		} catch (Exception e) {
 			LOGGER.error("Unable to send packet to all clients:", e);
 		}
-		if(synchronizedList.size()>0)
+		if (synchronizedList.size() > 0)
 			synchronizedList.clear();
 	}
 
 	public boolean isEnabled() {
 		return enabled;
 	}
-	
+
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}

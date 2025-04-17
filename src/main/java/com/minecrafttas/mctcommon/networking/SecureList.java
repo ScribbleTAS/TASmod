@@ -39,7 +39,7 @@ public class SecureList {
 				return i;
 		return -1;
 	}
-	
+
 	/**
 	 * Lock and return byte buffer
 	 * @param i Index to lock
@@ -52,7 +52,7 @@ public class SecureList {
 		this.locked[i] = true;
 		return (ByteBuffer) this.buffers[i].clear();
 	}
-	
+
 	/**
 	 * Unlocke byte buffer
 	 * @param index Index to unlock
@@ -60,5 +60,5 @@ public class SecureList {
 	public void unlock(int index) {
 		this.locked[index] = false;
 	}
-	
+
 }

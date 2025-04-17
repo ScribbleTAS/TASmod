@@ -30,7 +30,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
-import com.minecrafttas.tasmod.savestates.storage.SavestateMotionStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.SavestateMotionStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -43,7 +43,7 @@ import net.minecraft.server.MinecraftServer;
 
 /**
  * ModContainer for TASmod
- * 
+ *
  * @author Scribble
  */
 public class TASmod implements ModInitializer, EventServerInit, EventServerStop {
@@ -54,7 +54,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 	private static MinecraftServer serverInstance;
 
-	public static PlaybackControllerServer playbackControllerServer = new PlaybackControllerServer();;
+	public static PlaybackControllerServer playbackControllerServer = new PlaybackControllerServer();
 
 	public static SavestateHandlerServer savestateHandlerServer;
 
@@ -172,7 +172,6 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 					server.close();
 			} catch (IOException e) {
 				LOGGER.error("Unable to close TASmod server: {}", e);
-				e.printStackTrace();
 			}
 		}
 

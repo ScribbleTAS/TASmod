@@ -10,7 +10,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 
-public class CommandClearInputs extends CommandBase{
+public class CommandClearInputs extends CommandBase {
 
 	@Override
 	public String getName() {
@@ -24,7 +24,7 @@ public class CommandClearInputs extends CommandBase{
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		if(sender instanceof EntityPlayer) {
+		if (sender instanceof EntityPlayer) {
 			try {
 				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.PLAYBACK_CLEAR_INPUTS));
 			} catch (Exception e) {
@@ -32,6 +32,7 @@ public class CommandClearInputs extends CommandBase{
 			}
 		}
 	}
+
 	@Override
 	public int getRequiredPermissionLevel() {
 		return 2;

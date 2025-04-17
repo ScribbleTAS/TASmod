@@ -91,7 +91,7 @@ public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHand
 				String flavornames = String.join("|", TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavorNames());
 				TASmodClient.client.send(new TASmodBufferBuilder(COMMAND_FLAVORLIST).writeString(flavornames));
 				break;
-				
+
 			default:
 				break;
 		}

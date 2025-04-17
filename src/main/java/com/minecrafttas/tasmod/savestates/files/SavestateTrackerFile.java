@@ -13,8 +13,7 @@ import com.minecrafttas.tasmod.TASmod;
  *
  */
 public class SavestateTrackerFile extends AbstractDataFile {
-	
-	
+
 	// This shouldn't matter... static is fine!
 
 	public SavestateTrackerFile(Path saveLocation) throws IOException {

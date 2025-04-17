@@ -48,22 +48,22 @@ public class Server {
 
 			@Override
 			public void completed(AsynchronousSocketChannel clientSocket, Object attachment) {
-				
+
 				ClientCallback callback = (client) -> {
 					EventListenerRegistry.fireEvent(EventDisconnectServer.class, client);
 					clients.remove(client);
 					LOGGER.debug(Server, "Disconnecting player from server");
 				};
-				
+
 				Client newclient = new Client(clientSocket, packetIDs, callback);
 				clients.add(newclient);
-				
+
 				serverSocket.accept(null, this);
 			}
 
 			@Override
 			public void failed(Throwable exc, Object attachment) {
-				if(exc instanceof AsynchronousCloseException) {
+				if (exc instanceof AsynchronousCloseException) {
 					LOGGER.info(Server, "Connection to the player was closed!");
 				} else {
 					LOGGER.error(Server, "Unable to accept client!", exc);
@@ -96,7 +96,7 @@ public class Server {
 	 */
 	public void sendTo(String username, ByteBufferBuilder builder) throws Exception {
 		Client client = getClient(username);
-		if(client != null && !client.isClosed()) {
+		if (client != null && !client.isClosed()) {
 			client.send(builder);
 		} else {
 			MCTCommon.LOGGER.warn(Server, "Buffer with id {} could not be sent to the client {}: The client is closed", builder.getPacketID(), username);
@@ -117,22 +117,21 @@ public class Server {
 		sendTo(player.getName(), builder);
 	}
 
-	
 	public void disconnect(String username) {
 		Client client = getClient(username);
 		client.disconnect();
 	}
-	
+
 	public void disconnect(EntityPlayer player) {
 		disconnect(player.getName());
 	}
-	
+
 	public void disconnectAll() {
 		for (Client client : getClients()) {
 			client.disconnect();
 		}
 	}
-	
+
 	/**
 	 * Try to close socket
 	 * 

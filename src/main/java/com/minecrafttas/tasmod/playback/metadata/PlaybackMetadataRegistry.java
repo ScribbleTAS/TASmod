@@ -31,29 +31,29 @@ public class PlaybackMetadataRegistry extends AbstractRegistry<PlaybackMetadataE
 
 	public List<PlaybackMetadata> handleOnStore() {
 		List<PlaybackMetadata> metadataList = new ArrayList<>();
-		for(PlaybackMetadataExtension extension : REGISTRY.values()) {
+		for (PlaybackMetadataExtension extension : REGISTRY.values()) {
 			metadataList.add(extension.onStore());
 		}
 		return metadataList;
 	}
 
 	public void handleOnLoad(List<PlaybackMetadata> meta) {
-		if(meta.isEmpty())
+		if (meta.isEmpty())
 			return;
-		for(PlaybackMetadata metadata : meta) {
-			if(REGISTRY.containsKey(metadata.getExtensionName())) {
+		for (PlaybackMetadata metadata : meta) {
+			if (REGISTRY.containsKey(metadata.getExtensionName())) {
 				PlaybackMetadataExtension extension = REGISTRY.get(metadata.getExtensionName());
-				
+
 				extension.onLoad(metadata);
 			} else {
 				TASmod.LOGGER.warn("The metadata extension {} was not found while loading the TASfile. Things might not be correctly loaded!", metadata.getExtensionName());
 			}
 		}
 	}
-	
+
 	@Override
 	public void onRecordingClear() {
-		REGISTRY.forEach((key, extension) ->{
+		REGISTRY.forEach((key, extension) -> {
 			extension.onClear();
 		});
 	}

@@ -11,13 +11,14 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
+
 /**
  * Command to change the tickrate of client and server
  * @author ScribbleLP
  *
  */
 public class CommandTickrate extends CommandBase {
-	
+
 	@Override
 	public String getName() {
 		return "tickrate";
@@ -41,7 +42,7 @@ public class CommandTickrate extends CommandBase {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if (args.length == 0) {
-			sender.sendMessage(new TextComponentString( I18n.format("tickratechanger.tasmod.command.show", TASmod.tickratechanger.ticksPerSecond))); //"Current tickrate: "
+			sender.sendMessage(new TextComponentString(I18n.format("tickratechanger.tasmod.command.show", TASmod.tickratechanger.ticksPerSecond))); //"Current tickrate: "
 			return;
 		}
 		float tickrate;

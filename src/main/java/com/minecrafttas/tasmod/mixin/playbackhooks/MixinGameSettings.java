@@ -11,7 +11,7 @@ import net.minecraft.client.settings.KeyBinding;
 
 @Mixin(GameSettings.class)
 public class MixinGameSettings {
-	
+
 	/**
 	 * Redirect Mouse.isButtonDown in keybindings
 	 * @param i The keycode

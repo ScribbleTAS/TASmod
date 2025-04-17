@@ -25,13 +25,13 @@ public interface EventServer {
 		 */
 		public void onServerInit(MinecraftServer server);
 	}
-	
+
 	/**
 	 * Fired when the server ticks.
 	 */
 	@FunctionalInterface
 	public static interface EventServerTick extends EventBase {
-		
+
 		/**
 		 * Fired when the server ticks.
 		 * @param server The ticking server
@@ -79,7 +79,7 @@ public interface EventServer {
 		 */
 		public void onPlayerJoinedServerSide(EntityPlayerMP player);
 	}
-	
+
 	/**
 	 * Fired when a player leaves the server.
 	 */
@@ -92,26 +92,26 @@ public interface EventServer {
 		 */
 		public void onPlayerLeaveServerSide(EntityPlayerMP player);
 	}
-	
+
 	/**
 	 * Fired when  authentication was successful on the server side
 	 */
 	@FunctionalInterface
 	public static interface EventClientCompleteAuthentication extends EventBase {
-		
+
 		/**
 		 * Fired when  authentication was successful on the server side
 		 * @param username The username of the client that is connecting
 		 */
 		public void onClientCompleteAuthentication(String username);
 	}
-	
+
 	/**
 	 * Fired when the connection to the custom server was closed on the server side.
 	 */
 	@FunctionalInterface
 	public static interface EventDisconnectServer extends EventBase {
-		
+
 		/**
 		 * Fired when the connection to the custom server was closed on the server side.
 		 * @param client The client that is disconnecting
