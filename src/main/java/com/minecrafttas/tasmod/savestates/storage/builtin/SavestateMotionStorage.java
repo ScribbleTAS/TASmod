@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.savestates.storage;
+package com.minecrafttas.tasmod.savestates.storage.builtin;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_REQUEST_MOTION;
@@ -37,6 +37,7 @@ import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
+import com.minecrafttas.tasmod.savestates.storage.AbstractExtendStorage;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.fabricmc.api.EnvType;
