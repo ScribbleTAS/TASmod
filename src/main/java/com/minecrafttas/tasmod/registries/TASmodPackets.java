@@ -3,7 +3,6 @@ package com.minecrafttas.tasmod.registries;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
-import com.minecrafttas.tasmod.commands.CommandFolder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
@@ -184,29 +183,6 @@ public enum TASmodPackets implements PacketID {
 	 * boolean enable Whether the extensions should be enabled or disabled
 	 */
 	PLAYBACK_FILECOMMAND_ENABLE,
-	/**
-	 * <p>Opens a TASmod related folder on the file system
-	 * <p>The action describes which folder to open:
-	 * <ol start=0>
-	 * <li>Savestate-Folder</li>
-	 * <li>TASFiles-Folder</li>
-	 * </ol>
-	 * 
-	 * <p>Side: CLIENT<br>
-	 * ARGS: short action
-	 */
-	OPEN_FOLDER(Side.CLIENT, (buf, clientID) -> {
-		short action = buf.getShort();
-		switch (action) {
-			case 0:
-				CommandFolder.openSavestates();
-				break;
-			case 1:
-				CommandFolder.openTASFolder();
-			default:
-				break;
-		}
-	}),
 	/**
 	 * <p>Clears the current gui screen on the client
 	 * 

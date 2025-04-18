@@ -44,6 +44,9 @@
 		"events.MixinGuiIngame",
 		"events.MixinEntityRenderer",
 		
+		"clientcommands.MixinEntityPlayerSP",
+		"clientcommands.MixinTabCompleter",
+		
 		// Playbackhooks
 		"playbackhooks.MixinMinecraft",
 		"playbackhooks.MixinEntityRenderer",
