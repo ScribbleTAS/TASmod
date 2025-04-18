@@ -22,6 +22,7 @@ import com.minecrafttas.mctcommon.file.AbstractDataFile;
 import com.minecrafttas.mctcommon.networking.Client;
 import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
 import com.minecrafttas.mctcommon.networking.Server;
+import com.minecrafttas.tasmod.commands.client.CommandFolder;
 import com.minecrafttas.tasmod.gui.InfoHud;
 import com.minecrafttas.tasmod.handlers.LoadingScreenHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
@@ -140,6 +141,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		desyncMonitorFileCommandExtension = new DesyncMonitorFileCommandExtension();
 		optionsFileCommandExtension = new OptionsFileCommandExtension();
 		labelFileCommandExtension = new LabelFileCommandExtension();
+
+		TASmodAPIRegistry.CLIENT_COMMANDS.register(new CommandFolder());
 
 		registerEventListeners();
 

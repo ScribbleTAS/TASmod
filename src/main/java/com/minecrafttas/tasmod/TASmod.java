@@ -13,7 +13,6 @@ import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
 import com.minecrafttas.mctcommon.networking.Server;
 import com.minecrafttas.tasmod.commands.CommandClearInputs;
 import com.minecrafttas.tasmod.commands.CommandFileCommand;
-import com.minecrafttas.tasmod.commands.CommandFolder;
 import com.minecrafttas.tasmod.commands.CommandFullPlay;
 import com.minecrafttas.tasmod.commands.CommandFullRecord;
 import com.minecrafttas.tasmod.commands.CommandLoadTAS;
@@ -136,7 +135,6 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		CommandRegistry.registerServerCommand(new CommandPlay(), server);
 		CommandRegistry.registerServerCommand(new CommandSaveTAS(), server);
 		CommandRegistry.registerServerCommand(new CommandLoadTAS(), server);
-		CommandRegistry.registerServerCommand(new CommandFolder(), server);
 		CommandRegistry.registerServerCommand(new CommandClearInputs(), server);
 		CommandRegistry.registerServerCommand(new CommandSavestate(), server);
 		CommandRegistry.registerServerCommand(new CommandFullRecord(), server);

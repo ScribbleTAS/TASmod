@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.commands;
+package com.minecrafttas.tasmod.commands.client;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
@@ -8,19 +8,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
-import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.registries.TASmodPackets;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 
-public class CommandFolder extends CommandBase {
+public class CommandFolder extends ClientCommandBase {
 
 	@Override
 	public String getName() {
@@ -40,16 +35,10 @@ public class CommandFolder extends CommandBase {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if (args.length == 1) {
-			short action = 0;
 			if (args[0].equalsIgnoreCase("savestates")) {
-				action = 0;
+				openSavestates();
 			} else if (args[0].equalsIgnoreCase("tasfiles")) {
-				action = 1;
-			}
-			try {
-				TASmod.server.sendTo((EntityPlayerMP) sender, new TASmodBufferBuilder(TASmodPackets.OPEN_FOLDER).writeShort(action));
-			} catch (Exception e) {
-				e.printStackTrace();
+				openTASFolder();
 			}
 		}
 	}
@@ -65,7 +54,7 @@ public class CommandFolder extends CommandBase {
 		return tab;
 	}
 
-	public static void openTASFolder() {
+	private void openTASFolder() {
 		Path file = TASmodClient.tasfiledirectory;
 		try {
 			TASmodClient.createTASfileDir();
@@ -76,7 +65,7 @@ public class CommandFolder extends CommandBase {
 		}
 	}
 
-	public static void openSavestates() {
+	private void openSavestates() {
 		Path file = TASmodClient.savestatedirectory;
 		try {
 			TASmodClient.createSavestatesDir();
