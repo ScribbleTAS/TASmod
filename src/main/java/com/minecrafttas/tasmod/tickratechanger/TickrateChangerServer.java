@@ -208,7 +208,7 @@ public class TickrateChangerServer implements EventServerStop, EventClientComple
 	 */
 	@Override
 	public void onClientCompleteAuthentication(String username) {
-		if (TASmod.getServerInstance().isDedicatedServer()) {
+		if (TASmod.getServerInstance() != null && TASmod.getServerInstance().isDedicatedServer()) {
 			log("Sending the current tickrate (" + ticksPerSecond + ") to " + username);
 
 			try {
