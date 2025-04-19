@@ -112,6 +112,10 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 
 			NBTTagCompound nbttagcompound = server.getPlayerList().readPlayerDataFromFile(player);
 
+			if (nbttagcompound == null) {
+				continue;
+			}
+
 			int dimensionTo = 0;
 			if (nbttagcompound.hasKey("Dimension")) {
 				dimensionTo = nbttagcompound.getInteger("Dimension");
@@ -210,7 +214,7 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 					compound = TASmodBufferBuilder.readNBTTagCompound(buf);
 				} catch (IOException e) {
 					e.printStackTrace();
-					return;
+					break;
 				}
 				/*
 				 * Fair warning: Do NOT read the buffer inside an addScheduledTask. Read it
