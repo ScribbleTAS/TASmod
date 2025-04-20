@@ -199,11 +199,11 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			long index = savestateContainerList.size() - 1;
 
 			controller.setInputs(savestateContainerList, index);
-
-			/*
-			 * When loading a savestate during a playback 2 different scenarios can happen.
-			 * */
-		} else if (state == TASstate.PLAYBACK) {
+		}
+		/*
+		 * When loading a savestate during a playback 2 different scenarios can happen.
+		 */
+		else if (state == TASstate.PLAYBACK) {
 
 			/*
 			 * Scenario 1:
@@ -254,10 +254,12 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 	}
 
 	private static void createClientSavestateDirectory() throws IOException {
+		LOGGER.trace(LoggerMarkers.Savestate, "Creating savestate directory at {}", clientSavestateDirectory);
 		Files.createDirectories(clientSavestateDirectory);
 	}
 
 	private static void preload(BigArrayList<InputContainer> containerList, long index) {
+		LOGGER.trace(LoggerMarkers.Savestate, "Preloading container at index {}", index);
 		InputContainer containerToPreload = containerList.get(index);
 		TASmodClient.virtual.preloadInput(containerToPreload.getKeyboard(), containerToPreload.getMouse(), containerToPreload.getCameraAngle());
 

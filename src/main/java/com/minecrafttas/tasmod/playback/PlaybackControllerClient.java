@@ -539,12 +539,7 @@ public class PlaybackControllerClient implements
 	}
 
 	public void setInputs(BigArrayList<InputContainer> inputs, long index) {
-		try {
-			this.inputs.clearMemory();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		this.inputs = new BigArrayList<InputContainer>(tasFileDirectory + File.separator + "temp");
+		clearInputList();
 		SerialiserFlavorBase.addAll(this.inputs, inputs);
 		setIndex(index);
 	}
@@ -582,14 +577,19 @@ public class PlaybackControllerClient implements
 
 	public void clear() {
 		LOGGER.info(LoggerMarkers.Playback, "Clearing playback controller");
+		clearInputList();
 		EventListenerRegistry.fireEvent(EventPlaybackClient.EventRecordClear.class);
+
+		index = 0;
+	}
+
+	private void clearInputList() {
 		try {
 			inputs.clearMemory();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		inputs = new BigArrayList<InputContainer>(tasFileDirectory + File.separator + "temp");
-		index = 0;
 	}
 
 	/**
