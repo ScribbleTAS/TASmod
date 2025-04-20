@@ -222,7 +222,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			 * 
 			 * We expect to start at tick 10 WITHOUT clearing the controller.
 			 * If we were to replace the controller, everything above tick 10 would be lost.
-			 * So we only set the index to 10, preload and preload the inputs.
+			 * So we only set the index to 10 and preload the inputs.
 			 * 
 			 *            VV
 			 *  0         10       20

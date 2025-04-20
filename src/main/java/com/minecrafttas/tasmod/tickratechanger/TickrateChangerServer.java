@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import org.apache.logging.log4j.Logger;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
-import com.minecrafttas.mctcommon.events.EventServer.EventPlayerJoinedServerSide;
+import com.minecrafttas.mctcommon.events.EventServer.EventClientCompleteAuthentication;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerStop;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
@@ -18,7 +18,6 @@ import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 
 /**
@@ -39,7 +38,7 @@ import net.minecraft.server.MinecraftServer;
  * @author Scribble
  *
  */
-public class TickrateChangerServer implements EventServerStop, EventPlayerJoinedServerSide, ServerPacketHandler {
+public class TickrateChangerServer implements EventServerStop, EventClientCompleteAuthentication, ServerPacketHandler {
 
 	/**
 	 * The current tickrate of the client
@@ -208,12 +207,12 @@ public class TickrateChangerServer implements EventServerStop, EventPlayerJoined
 	 * @param player The player that joins the server
 	 */
 	@Override
-	public void onPlayerJoinedServerSide(EntityPlayerMP player) {
-		if (TASmod.getServerInstance().isDedicatedServer()) {
-			log("Sending the current tickrate (" + ticksPerSecond + ") to " + player.getName());
+	public void onClientCompleteAuthentication(String username) {
+		if (TASmod.getServerInstance() != null && TASmod.getServerInstance().isDedicatedServer()) {
+			log("Sending the current tickrate (" + ticksPerSecond + ") to " + username);
 
 			try {
-				TASmod.server.sendTo(player, new TASmodBufferBuilder(TASmodPackets.TICKRATE_CHANGE).writeFloat(ticksPerSecond));
+				TASmod.server.sendTo(username, new TASmodBufferBuilder(TASmodPackets.TICKRATE_CHANGE).writeFloat(ticksPerSecond));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -292,5 +291,4 @@ public class TickrateChangerServer implements EventServerStop, EventPlayerJoined
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.SERVER);
 		}
 	}
-
 }

@@ -112,6 +112,10 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 
 			NBTTagCompound nbttagcompound = server.getPlayerList().readPlayerDataFromFile(player);
 
+			if (nbttagcompound == null) {
+				continue;
+			}
+
 			int dimensionTo = 0;
 			if (nbttagcompound.hasKey("Dimension")) {
 				dimensionTo = nbttagcompound.getInteger("Dimension");
@@ -148,7 +152,6 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 	public void changeDimensionDangerously(EntityPlayerMP player, int dimensionTo) {
 		int dimensionFrom = player.dimension;
 		WorldServer worldServerFrom = this.server.getWorld(dimensionFrom);
-//		WorldServer worldServerTo = this.server.getWorld(dimensionTo);
 
 		//@formatter:off
 		player.connection
@@ -163,10 +166,6 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 		//@formatter:on
 		worldServerFrom.removeEntityDangerously(player);
 		player.isDead = false;
-//		worldServerTo.spawnEntity(player);
-//		worldServerTo.updateEntityWithOptionalForce(player, false);
-//		player.setWorld(worldServerTo);
-//		player.interactionManager.setWorld(worldServerTo);
 	}
 
 	public void clearScoreboard() {
@@ -210,7 +209,7 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 					compound = TASmodBufferBuilder.readNBTTagCompound(buf);
 				} catch (IOException e) {
 					e.printStackTrace();
-					return;
+					break;
 				}
 				/*
 				 * Fair warning: Do NOT read the buffer inside an addScheduledTask. Read it
