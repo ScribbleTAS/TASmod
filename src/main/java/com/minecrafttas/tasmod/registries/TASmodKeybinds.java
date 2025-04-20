@@ -30,7 +30,12 @@ public enum TASmodKeybinds {
 			e.printStackTrace();
 		}
 	}),
-	INFO_GUI("Open InfoGui Editor", "TASmod", Keyboard.KEY_F6, () -> Minecraft.getMinecraft().displayGuiScreen(TASmodClient.hud)),
+	INFO_GUI("Open InfoGui Editor", "TASmod", Keyboard.KEY_F6, () -> {
+		Minecraft mc = Minecraft.getMinecraft();
+		if (mc.currentScreen == null) {
+			mc.displayGuiScreen(TASmodClient.hud);
+		}
+	}),
 	TEST1("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
 	}, VirtualKeybindings::isKeyDown),
 	TEST2("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {

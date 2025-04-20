@@ -587,5 +587,4 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 	private int getBBDown(int y) {
 		return y + 14;
 	}
-
 }
