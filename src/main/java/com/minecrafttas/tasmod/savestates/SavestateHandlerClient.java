@@ -156,6 +156,9 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		TASstate state = controller.getState();
 
 		if (state == TASstate.NONE) {
+			TASmodClient.tickSchedulerClient.add(() -> {
+				EventListenerRegistry.fireEvent(EventSavestate.EventClientCompleteLoadstate.class);
+			});
 			return;
 		}
 
