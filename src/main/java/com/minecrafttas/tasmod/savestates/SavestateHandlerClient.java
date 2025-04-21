@@ -294,8 +294,8 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		double z = player.motionZ;
 
 		float rx = player.moveForward;
-		float ry = player.moveStrafing;
-		float rz = player.moveVertical;
+		float ry = player.moveVertical;
+		float rz = player.moveStrafing;
 
 		boolean sprinting = player.isSprinting();
 		float jumpVector = player.jumpMovementFactor;
