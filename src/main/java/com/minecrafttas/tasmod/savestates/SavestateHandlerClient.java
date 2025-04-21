@@ -201,7 +201,9 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		if (state == TASstate.RECORDING) {
 			long index = savestateContainerList.size() - 1;
 
-			controller.setInputs(savestateContainerList, index);
+			preload(savestateContainerList, index - 1);
+			controller.setInputs(savestateContainerList, index - 1);
+			TASmodClient.virtual.clear();
 		}
 		/*
 		 * When loading a savestate during a playback 2 different scenarios can happen.
