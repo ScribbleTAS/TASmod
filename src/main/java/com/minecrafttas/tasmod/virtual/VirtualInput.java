@@ -702,8 +702,10 @@ public class VirtualInput {
 			if (enable && !cameraAngleInterpolationStates.isEmpty()) {
 				int index = (int) MathHelper.clampedLerp(0, cameraAngleInterpolationStates.size() - 1, partialTick); // Get interpolate index
 
-				interpolatedPitch = cameraAngleInterpolationStates.get(index).getPitch();
-				interpolatedYaw = cameraAngleInterpolationStates.get(index).getYaw() + 180;
+				VirtualCameraAngle interpolatedCamera = cameraAngleInterpolationStates.get(index);
+
+				interpolatedPitch = interpolatedCamera.getPitch();
+				interpolatedYaw = interpolatedCamera.getYaw() + 180;
 
 			}
 			return Triple.of(interpolatedPitch, interpolatedYaw, 0f);
