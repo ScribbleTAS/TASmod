@@ -237,6 +237,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 
 				preload(controller.getInputs(), index);
 				controller.setIndex(index);
+				TASmodClient.virtual.clear();
 			}
 			/*
 			 * Scenario 2:
