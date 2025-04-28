@@ -7,6 +7,7 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.network.NetHandlerPlayClient;
 
 /**
  * Contains all events fired on the client side
@@ -57,6 +58,21 @@ public interface EventClient {
 		 * Fired when the world is done loading, before the player joined the world
 		 */
 		public void onDoneLoadingWorld();
+	}
+
+	/**
+	 * Fired when the player is done loading, after the position has been loaded from the server side
+	 * @author Scribble
+	 * @see NetHandlerPlayClient#handlePlayerPosLook(net.minecraft.network.play.server.SPacketPlayerPosLook)
+	 */
+	@FunctionalInterface
+	public static interface EventDoneLoadingPlayer extends EventBase {
+
+		/**
+		 * Fired when the player is done loading, after the position has been loaded from the server side
+		 * @see NetHandlerPlayClient#handlePlayerPosLook(net.minecraft.network.play.server.SPacketPlayerPosLook)
+		 */
+		public void onDoneLoadingPlayer();
 	}
 
 	/**

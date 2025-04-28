@@ -3,12 +3,15 @@ package com.minecrafttas.tasmod.handlers;
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import com.minecrafttas.mctcommon.events.EventClient.EventClientGameLoop;
+import com.minecrafttas.mctcommon.events.EventClient.EventDoneLoadingPlayer;
 import com.minecrafttas.mctcommon.events.EventClient.EventDoneLoadingWorld;
 import com.minecrafttas.mctcommon.events.EventClient.EventLaunchIntegratedServer;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
+import com.minecrafttas.tasmod.virtual.VirtualInput;
 
 import net.minecraft.client.Minecraft;
 
@@ -17,7 +20,7 @@ import net.minecraft.client.Minecraft;
  * 
  * @author Scribble
  */
-public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventClientGameLoop, EventDoneLoadingWorld {
+public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventClientGameLoop, EventDoneLoadingWorld, EventDoneLoadingPlayer {
 
 	private boolean waszero;
 	private boolean isLoading;
@@ -62,12 +65,32 @@ public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventC
 			LOGGER.debug(LoggerMarkers.Event, "Finished loading the world on the client");
 			loadingScreenDelay = 1;
 
-			TASmodClient.virtual.clear();
 		}
 	}
 
 	public boolean isLoading() {
 		return isLoading;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * <p>Fixes an issue, where the look position of the player is reset to 0 -180,<br>
+	 * As well as removing any keyboard inputs present in the main menu
+	 * 
+	 * <p>{@link MixinEntityRenderer#runUpdate(float)} rewrites the camera input,<br>
+	 * So that it can be used with interpolation. <br>
+	 * However, when you start the game, this camera input needs to be initialised with the current look position from the server.<br>
+	 * So a special condition is set, that if the {@link VirtualInput#CAMERA_ANGLE} is null,<br>
+	 * it intialises the {@link VirtualInput#CAMERA_ANGLE CAMERA_ANGLE} with the current player camera angle.
+	 * 
+	 * <p>So {@link VirtualInput#clear()} has to be called at the right moment in the player initialisation<br>
+	 * to set the correct values. Before that, the playerRotation defaults to 0 -180
+	 */
+	@Override
+	public void onDoneLoadingPlayer() {
+		LOGGER.debug(LoggerMarkers.Event, "Finished loading the player position on the client");
+		TASmodClient.virtual.clear();
 	}
 
 }
