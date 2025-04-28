@@ -239,6 +239,7 @@ public class SavestateWorldHandler {
 			}
 
 			server.worlds[i].addEventListener(new ServerWorldEventHandler(server, server.worlds[i]));
+			server.worlds[i].tick();	// TODO I give up...
 		}
 
 		server.getPlayerList().setPlayerManager(server.worlds);
