@@ -133,7 +133,7 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	public void getStates(List<VirtualCameraAngle> reference) {
 		if (isParent()) {
 			reference.addAll(subtickList);
-			reference.add(this);
+			reference.add(this.shallowClone());		// Fixes a crash where "this" can become null in the reference.
 		}
 	}
 

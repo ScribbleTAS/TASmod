@@ -2,9 +2,10 @@ package com.minecrafttas.tasmod.savestates;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
@@ -50,7 +51,7 @@ import net.minecraft.world.chunk.Chunk;
  */
 public class SavestateHandlerClient implements ClientPacketHandler, EventSavestate.EventClientCompleteLoadstate, EventSavestate.EventClientLoadPlayer {
 
-	public final static File savestateDirectory = TASmodClient.savestatedirectory.toFile(); //TODO Change to path... don't want to deal with this rn ._.
+	public final static Path clientSavestateDirectory = TASmodClient.tasfiledirectory.resolve("savestates");
 
 	/**
 	 * A bug occurs when unloading the client world. The client world has a
@@ -122,15 +123,15 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			return;
 		}
 
-		SavestateHandlerClient.savestateDirectory.mkdir();
+		createClientSavestateDirectory();
 
-		File targetfile = new File(SavestateHandlerClient.savestateDirectory, nameOfSavestate + ".mctas");
+		Path targetfile = clientSavestateDirectory.resolve(nameOfSavestate + ".mctas");
 
 		PlaybackControllerClient container = TASmodClient.controller;
 		if (container.isRecording()) {
-			PlaybackSerialiser.saveToFile(targetfile.toPath(), container, ""); // If the container is recording, store it entirely
+			PlaybackSerialiser.saveToFile(targetfile, container, ""); // If the container is recording, store it entirely
 		} else if (container.isPlayingback()) {
-			PlaybackSerialiser.saveToFile(targetfile.toPath(), container, "", container.index()); // If the container is playing, store it until the current index
+			PlaybackSerialiser.saveToFile(targetfile, container, "", container.index()); // If the container is playing, store it until the current index
 		}
 	}
 
@@ -150,13 +151,14 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			return;
 		}
 
-		savestateDirectory.mkdir();
-
 		PlaybackControllerClient controller = TASmodClient.controller;
 
 		TASstate state = controller.getState();
 
 		if (state == TASstate.NONE) {
+			TASmodClient.tickSchedulerClient.add(() -> {
+				EventListenerRegistry.fireEvent(EventSavestate.EventClientCompleteLoadstate.class);
+			});
 			return;
 		}
 
@@ -164,12 +166,12 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			state = controller.getStateAfterPause();
 		}
 
-		File targetfile = new File(savestateDirectory, nameOfSavestate + ".mctas");
+		Path targetfile = clientSavestateDirectory.resolve(nameOfSavestate + ".mctas");
 
 		BigArrayList<InputContainer> savestateContainerList;
 
-		if (targetfile.exists()) {
-			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile.toPath(), state != TASstate.PLAYBACK);
+		if (Files.exists(targetfile)) {
+			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile, state != TASstate.PLAYBACK);
 		} else {
 			controller.setTASStateClient(TASstate.NONE, false);
 			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "Inputs could not be loaded for this savestate,"));
@@ -199,12 +201,14 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		if (state == TASstate.RECORDING) {
 			long index = savestateContainerList.size() - 1;
 
+			preload(savestateContainerList, index);
 			controller.setInputs(savestateContainerList, index);
-
-			/*
-			 * When loading a savestate during a playback 2 different scenarios can happen.
-			 * */
-		} else if (state == TASstate.PLAYBACK) {
+			TASmodClient.virtual.clear();
+		}
+		/*
+		 * When loading a savestate during a playback 2 different scenarios can happen.
+		 */
+		else if (state == TASstate.PLAYBACK) {
 
 			/*
 			 * Scenario 1:
@@ -233,6 +237,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 
 				preload(controller.getInputs(), index);
 				controller.setIndex(index);
+				TASmodClient.virtual.clear();
 			}
 			/*
 			 * Scenario 2:
@@ -254,7 +259,13 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		});
 	}
 
+	private static void createClientSavestateDirectory() throws IOException {
+		LOGGER.trace(LoggerMarkers.Savestate, "Creating savestate directory at {}", clientSavestateDirectory);
+		Files.createDirectories(clientSavestateDirectory);
+	}
+
 	private static void preload(BigArrayList<InputContainer> containerList, long index) {
+		LOGGER.trace(LoggerMarkers.Savestate, "Preloading container at index {}", index);
 		InputContainer containerToPreload = containerList.get(index);
 		TASmodClient.virtual.preloadInput(containerToPreload.getKeyboard(), containerToPreload.getMouse(), containerToPreload.getCameraAngle());
 
@@ -289,8 +300,8 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		double z = player.motionZ;
 
 		float rx = player.moveForward;
-		float ry = player.moveStrafing;
-		float rz = player.moveVertical;
+		float ry = player.moveVertical;
+		float rz = player.moveStrafing;
 
 		boolean sprinting = player.isSprinting();
 		float jumpVector = player.jumpMovementFactor;

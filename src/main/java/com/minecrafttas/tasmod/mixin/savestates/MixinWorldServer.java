@@ -17,7 +17,7 @@ import net.minecraft.world.chunk.Chunk;
  * @author Scribble
  */
 @Mixin(WorldServer.class)
-public abstract class MixinWorldServer implements WorldServerDuck {
+public class MixinWorldServer implements WorldServerDuck {
 
 	@Shadow
 	private PlayerChunkMap playerChunkMap;

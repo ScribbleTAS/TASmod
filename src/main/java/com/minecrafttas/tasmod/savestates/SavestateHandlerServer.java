@@ -410,12 +410,17 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			TASmod.tickratechanger.pauseGame(false);
 		}
 
+		// Unlock savestating
+		state = SavestateState.NONE;
+
+		/*
+		 *  TODO Savestates can be reloaded without a tick passing...
+		 *  And since this scheduler is not cleared, it would execute the same task multiple times in the next tick
+		 *  Rn it's not a problem, but this should be looked at...
+		 */
 		TASmod.tickSchedulerServer.add(() -> {
 			EventListenerRegistry.fireEvent(EventSavestate.EventServerCompleteLoadstate.class);
 			onLoadstateComplete();
-
-			// Unlock savestating
-			state = SavestateState.NONE;
 		});
 	}
 

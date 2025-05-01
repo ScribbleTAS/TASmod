@@ -141,11 +141,19 @@ public class VirtualInput {
 	}
 
 	public void preloadInput(VirtualKeyboard keyboardToPreload, VirtualMouse mouseToPreload, VirtualCameraAngle angleToPreload) {
+		// Preload the nextKeyboard
 		KEYBOARD.nextKeyboard.deepCopyFrom(keyboardToPreload);
 		MOUSE.nextMouse.deepCopyFrom(mouseToPreload);
 		CAMERA_ANGLE.nextCameraAngle.deepCopyFrom(angleToPreload);
+
+		// Preload the currentKeyboard
+		KEYBOARD.nextKeyboardTick();
+		MOUSE.nextMouseTick();
+
+		// Preload vanilla inputs
 		Minecraft.getMinecraft().runTickKeyboard(); // Letting mouse and keyboard tick once to load inputs into the "currentKeyboard"
 		Minecraft.getMinecraft().runTickMouse();
+
 		SubtickDuck entityRenderer = (SubtickDuck) Minecraft.getMinecraft().entityRenderer;
 		entityRenderer.runUpdate(0);
 	}
@@ -262,7 +270,7 @@ public class VirtualInput {
 		 * @param repeatEventsEnabled If repeat events are enabled
 		 */
 		public void updateNextKeyboard(int keycode, boolean keystate, char character, boolean repeatEventsEnabled) {
-			LOGGER.debug(LoggerMarkers.Keyboard, "Update: {}, {}, {}, {}", keycode, keystate, character); // Activate with -Dtasmod.marker.keyboard=ACCEPT in VM arguments (and -Dtasmod.log.level=debug)
+			LOGGER.debug(LoggerMarkers.Keyboard, "Update: {}, {}, {}", keycode, keystate, character); // Activate with -Dtasmod.marker.keyboard=ACCEPT in VM arguments (and -Dtasmod.log.level=debug)
 			nextKeyboard.updateFromEvent(keycode, keystate, character, repeatEventsEnabled);
 		}
 
@@ -277,6 +285,7 @@ public class VirtualInput {
 			nextKeyboard.deepCopyFrom((VirtualKeyboard) EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualKeyboardTick.class, nextKeyboard));
 			currentKeyboard.getVirtualEvents(nextKeyboard, keyboardEventQueue);
 			currentKeyboard.moveFrom(nextKeyboard);
+			LOGGER.debug(LoggerMarkers.Keyboard, "KeyboardTick: {}", currentKeyboard); // Activate with -Dtasmod.marker.keyboard=ACCEPT in VM arguments (and -Dtasmod.log.level=debug)
 		}
 
 		/**
@@ -693,8 +702,10 @@ public class VirtualInput {
 			if (enable && !cameraAngleInterpolationStates.isEmpty()) {
 				int index = (int) MathHelper.clampedLerp(0, cameraAngleInterpolationStates.size() - 1, partialTick); // Get interpolate index
 
-				interpolatedPitch = cameraAngleInterpolationStates.get(index).getPitch();
-				interpolatedYaw = cameraAngleInterpolationStates.get(index).getYaw() + 180;
+				VirtualCameraAngle interpolatedCamera = cameraAngleInterpolationStates.get(index);
+
+				interpolatedPitch = interpolatedCamera.getPitch();
+				interpolatedYaw = interpolatedCamera.getYaw() + 180;
 
 			}
 			return Triple.of(interpolatedPitch, interpolatedYaw, 0f);
