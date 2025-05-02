@@ -454,7 +454,8 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "PlaybackIndex";
-						return Long.toString(TASmodClient.controller.index());
+
+						return String.format("%s/%s", TASmodClient.controller.index(), Math.max(TASmodClient.controller.size() - 1, 0L));
 					}));
 
 			y = height - 14;
