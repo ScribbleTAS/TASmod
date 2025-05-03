@@ -52,7 +52,7 @@ public class CommandFileCommand extends CommandBase implements ClientPacketHandl
 
 	@Override
 	public String getUsage(ICommandSender iCommandSender) {
-		return "/filecommand <filecommandname> [enable|disable]";
+		return "/filecommand <filecommandname>";
 	}
 
 	@Override
