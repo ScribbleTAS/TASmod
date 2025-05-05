@@ -25,6 +25,9 @@ This mod can record and play back
 
 `/fullrecord, /fullplay` - Same as record/play however it will quit to the main menu first.  
 `/restartandplay <filename>` - Quits Minecraft completely. When restarting, the specified file will be loaded and played back, when the menu appears.
+
+`/filecommand <filecommandname>` - Enables/Disables certain FileCommands in the TASfile, which are special lines in the TASfile that will trigger actions, when the playback reaches over that point.  
+`/folder <tasfiles|savestates>` - Opens the folder for tasfiles or savestates in the file explorer
 ### Keybinds
 <kbd>F10</kbd> - Stops either a playback or a recording.  
 
