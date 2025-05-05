@@ -157,7 +157,8 @@ public class SavestateWorldHandler {
 		} else {
 			playerChunkMap.addPlayer(player);
 		}
-		world.getChunkProvider().provideChunk(playerChunkPosX, playerChunkPosY);
+		Chunk chunk = world.getChunkProvider().provideChunk(playerChunkPosX, playerChunkPosY);
+		chunk.addEntity(player);
 
 		world.spawnEntity(player);
 	}
@@ -239,7 +240,6 @@ public class SavestateWorldHandler {
 			}
 
 			server.worlds[i].addEventListener(new ServerWorldEventHandler(server, server.worlds[i]));
-			server.worlds[i].tick();	// TODO I give up...
 		}
 
 		server.getPlayerList().setPlayerManager(server.worlds);
