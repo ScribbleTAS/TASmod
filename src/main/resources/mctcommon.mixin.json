@@ -12,6 +12,7 @@
     	"MixinMinecraft",
     	"MixinNetHandlerPlayClient",
     	"MixinWorldClient",
-        "MixinLocale"
+        "MixinLocale",
+		"MixinGameSettings"
 	]
 }

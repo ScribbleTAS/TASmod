@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.settings.GameSettings;
 
 /**
  * Contains all events fired on the client side
@@ -217,5 +218,17 @@ public interface EventClient {
 		 * @param client The client that is disconnecting
 		 */
 		public void onDisconnectClient(Client client);
+	}
+
+	/**
+	 * Fired just before the vanilla options are loaded from the file
+	 */
+	@FunctionalInterface
+	public static interface EventOptionsInit extends EventBase {
+
+		/**
+		 * Fired just before the vanilla options are loaded from the file
+		 */
+		public void onOptionsInit(GameSettings options);
 	}
 }

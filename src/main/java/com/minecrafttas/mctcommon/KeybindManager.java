@@ -92,13 +92,12 @@ public class KeybindManager implements EventClientGameLoop {
 	 * Register new keybind
 	 * 
 	 * @param keybind Keybind to register
+	 * @param options 
 	 */
-	public void registerKeybind(Keybind keybind) {
+	public void registerKeybind(Keybind keybind, GameSettings options) {
 		this.keybindings.add(keybind);
 		KeyBinding keyBinding = keybind.vanillaKeyBinding;
 
-		// add category
-		GameSettings options = Minecraft.getMinecraft().gameSettings;
 		if (!AccessorKeyBinding.getCategoryOrder().containsKey(keybind.category))
 			AccessorKeyBinding.getCategoryOrder().put(keybind.category, AccessorKeyBinding.getCategoryOrder().size() + 1);
 

@@ -16,6 +16,7 @@ import com.minecrafttas.mctcommon.KeybindManager;
 import com.minecrafttas.mctcommon.LanguageManager;
 import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
 import com.minecrafttas.mctcommon.events.EventClient.EventOpenGui;
+import com.minecrafttas.mctcommon.events.EventClient.EventOptionsInit;
 import com.minecrafttas.mctcommon.events.EventClient.EventPlayerJoinedClientSide;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.file.AbstractDataFile;
@@ -55,9 +56,10 @@ import net.minecraft.client.gui.GuiControls;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.server.MinecraftServer;
 
-public class TASmodClient implements ClientModInitializer, EventClientInit, EventPlayerJoinedClientSide, EventOpenGui {
+public class TASmodClient implements ClientModInitializer, EventClientInit, EventPlayerJoinedClientSide, EventOpenGui, EventOptionsInit {
 
 	public static VirtualInput virtual;
 
@@ -200,7 +202,6 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 	@Override
 	public void onClientInit(Minecraft mc) {
-		registerKeybindings(mc);
 		registerPlaybackMetadata(mc);
 		registerSerialiserFlavors(mc);
 		registerFileCommands();
@@ -308,8 +309,9 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		}
 	}
 
-	private void registerKeybindings(Minecraft mc) {
-		Arrays.stream(TASmodKeybinds.valuesKeybind()).forEach(keybindManager::registerKeybind);
+	@Override
+	public void onOptionsInit(GameSettings options) {
+		Arrays.stream(TASmodKeybinds.valuesKeybind()).forEach((keybind) -> keybindManager.registerKeybind(keybind, options));
 		Arrays.stream(TASmodKeybinds.valuesVanillaKeybind()).forEach(VirtualKeybindings::registerBlockedKeyBinding);
 	}
 
