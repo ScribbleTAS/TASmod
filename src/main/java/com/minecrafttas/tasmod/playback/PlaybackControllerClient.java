@@ -466,6 +466,10 @@ public class PlaybackControllerClient implements
 		} else if (state == TASstate.PLAYBACK) {
 			playbackNextTick();
 		}
+
+//		if (TASmod.isDevEnvironment) {
+//			DebugWriter.writeDebugFile(this);
+//		}
 	}
 
 	private void recordNextTick() {
