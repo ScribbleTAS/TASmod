@@ -237,7 +237,10 @@ public class PlaybackControllerClient implements
 				case PLAYBACK:
 					return TextFormatting.RED + "Please report this message to the mod author, because you should never be able to see this (Error: Playback)";
 				case RECORDING:
-					return verbose ? TextFormatting.RED + "A playback is currently running. Please stop the playback first before starting a recording" : "";
+					stopPlayback(false);
+					startRecording();
+					state = TASstate.RECORDING;
+					return verbose ? TextFormatting.GREEN + "Switching from playback to recording" : "";
 				case PAUSED:
 					LOGGER.debug(LoggerMarkers.Playback, "Pausing a playback");
 					state = TASstate.PAUSED;
@@ -245,7 +248,7 @@ public class PlaybackControllerClient implements
 					TASmodClient.virtual.clear();
 					return verbose ? TextFormatting.GREEN + "Pausing a playback" : "";
 				case NONE:
-					stopPlayback();
+					stopPlayback(true);
 					state = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Stopping the playback" : "";
 			}
@@ -298,10 +301,12 @@ public class PlaybackControllerClient implements
 //		TASmod.ktrngHandler.setInitialSeed(startSeed);
 	}
 
-	private void stopPlayback() {
+	private void stopPlayback(boolean clearInputs) {
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
 		Minecraft.getMinecraft().gameSettings.chatLinks = true;
-		TASmodClient.virtual.clear();
+		if (clearInputs) {
+			TASmodClient.virtual.clear();
+		}
 	}
 
 	/**
