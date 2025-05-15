@@ -88,7 +88,7 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 
 	public void setServerState(TASstate stateIn) {
 		if (state != stateIn) {
-			if (state == TASstate.RECORDING && stateIn == TASstate.PLAYBACK || state == TASstate.PLAYBACK && stateIn == TASstate.RECORDING)
+			if (state == TASstate.RECORDING && stateIn == TASstate.PLAYBACK)
 				return;
 			if (state == TASstate.NONE && state == TASstate.PAUSED) {
 				return;

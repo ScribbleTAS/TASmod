@@ -35,12 +35,11 @@ public class PlayUntilHandler implements ClientPacketHandler, ServerPacketHandle
 		if (playUntil != null && playUntil == index) {
 			TASmodClient.tickratechanger.pauseGame(true);
 			PlaybackControllerClient controller = TASmodClient.controller;
-			controller.setTASState(TASstate.NONE);
+			controller.setTASState(TASstate.RECORDING);
 			controller.setIndex(controller.index() - 1);
 			for (long i = controller.size() - 1; i >= index; i--) {
 				controller.remove(i);
 			}
-			controller.setTASState(TASstate.RECORDING);
 			playUntil = null;
 		}
 	}
