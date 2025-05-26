@@ -394,9 +394,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToLoad + " loaded"));
 
 		// Add players to the chunk
-		server.getPlayerList().getPlayers().forEach(player -> {
-			worldHandler.addPlayerToServerChunk(player);
-		});
+		worldHandler.addPlayersToServerChunks();
 
 		worldHandler.sendChunksToClient();
 

@@ -1,5 +1,11 @@
 package com.minecrafttas.tasmod.util;
 
+import java.util.List;
+
+import com.minecrafttas.tasmod.mixin.savestates.MixinPlayerChunkMap;
+
+import net.minecraft.entity.player.EntityPlayerMP;
+
 /**
  * Oh boy, ducks! I can't help but quack up when they waddle their way into the code. :duck:
  * But let me tell you a little secret: I have a love-hate relationship with ducks. Not the adorable feathered creatures, mind you, but those sneaky little programming devils that swim in the deep waters of out-of-scope variables.
@@ -128,5 +134,25 @@ public class Ducks {
 		 * Clear entitylist on the client
 		 */
 		public void clearEntityList();
+	}
+
+	/**
+	 * Quacks the {@link MixinPlayerChunkMap}
+	 */
+	public static interface PlayerChunkMapDuck {
+		/**
+		 * @return The list of players of this chunk map
+		 */
+		public List<EntityPlayerMP> getPlayers();
+
+		/**
+		 * <p>Forces a tick in the chunk map without being dependent on the world time.
+		 * <p>The chunk map is responsible for sending the necessary chunks to the client.<br>
+		 * However, to properly do that, the chunks have to be sorted first, which happens every few world ticks.
+		 * 
+		 * <p>This method sorts and sends the chunks to the clients, without waiting for the world time
+		 * @see MixinPlayerChunkMap#forceTick()
+		 */
+		public void forceTick();
 	}
 }

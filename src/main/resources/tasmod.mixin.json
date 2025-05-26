@@ -12,7 +12,7 @@
 		"savestates.AccessorAnvilChunkLoader",
 		"savestates.AccessorChunkLoader",
 		"savestates.AccessorEntityLivingBase",
-		"savestates.AccessorPlayerChunkMap",
+		"savestates.MixinPlayerChunkMap",
 		"savestates.MixinChunkProviderServer",
 		"savestates.MixinNetHandlerPlayServer",
 		"savestates.MixinScoreboard",

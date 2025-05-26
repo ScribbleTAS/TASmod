@@ -39,12 +39,6 @@ public enum TASmodKeybinds {
 	TEST1("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
 	}, VirtualKeybindings::isKeyDown),
 	TEST2("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
-		//			try {
-		//				TASmodClient.client = new Client("localhost", TASmod.networkingport - 1, TASmodPackets.values(), mc.getSession().getProfile().getName(), true);
-		//			} catch (Exception e) {
-		//				e.printStackTrace();
-		//			}
-//		TASmodClient.controller.setTASState(TASstate.PLAYBACK);
 	}, VirtualKeybindings::isKeyDown);
 
 	private Keybind keybind;
