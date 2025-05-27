@@ -1,5 +1,11 @@
 package com.minecrafttas.tasmod.util;
 
+import java.util.List;
+
+import com.minecrafttas.tasmod.mixin.savestates.MixinPlayerChunkMap;
+
+import net.minecraft.entity.player.EntityPlayerMP;
+
 /**
  * Oh boy, ducks! I can't help but quack up when they waddle their way into the code. :duck:
  * But let me tell you a little secret: I have a love-hate relationship with ducks. Not the adorable feathered creatures, mind you, but those sneaky little programming devils that swim in the deep waters of out-of-scope variables.
@@ -30,20 +36,6 @@ public class Ducks {
 		 * @see com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderClient#unloadAllChunks() MixinChunkProviderClient#unloadAllChunks()
 		 */
 		public void unloadAllChunks();
-	}
-
-	/**
-	 * Quacks the worldserver to implement custom chunk ticking behavior
-	 * 
-	 * @author Scribble
-	 */
-	public static interface WorldServerDuck {
-
-		/**
-		 * Sends the chunks to the client
-		 * @see com.minecrafttas.tasmod.mixin.savestates.MixinWorldServer#sendChunksToClient() MixinWorldServer#sendChunksToClient()
-		 */
-		public void sendChunksToClient();
 	}
 
 	/**
@@ -128,5 +120,26 @@ public class Ducks {
 		 * Clear entitylist on the client
 		 */
 		public void clearEntityList();
+	}
+
+	/**
+	 * Quacks the {@link MixinPlayerChunkMap}
+	 */
+	public static interface PlayerChunkMapDuck {
+		/**
+		 * @return The list of players of this chunk map
+		 */
+		public List<EntityPlayerMP> getPlayers();
+
+		/**
+		 * <p>Forces a tick in the chunk map without being dependent on the world time.
+		 * <p>The chunk map is responsible for sending the necessary chunks to the client.<br>
+		 * However, to properly do that, the chunks have to be sorted first, which happens every few world ticks.
+		 * <p>Under normal circumstances, WorldServer#tick() would update the world time to make this happen,
+		 * but our goal with savestates is to load the chunks without advancing the world time.
+		 * Hence why this method sorts and ticks the chunk map, without waiting for the world time
+		 * @see MixinPlayerChunkMap#forceTick()
+		 */
+		public void forceTick();
 	}
 }

@@ -4,11 +4,10 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.util.List;
 
-import com.minecrafttas.tasmod.mixin.savestates.AccessorPlayerChunkMap;
 import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
-import com.minecrafttas.tasmod.util.Ducks.WorldServerDuck;
+import com.minecrafttas.tasmod.util.Ducks.PlayerChunkMapDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.minecraft.client.Minecraft;
@@ -53,6 +52,15 @@ public class SavestateWorldHandler {
 		for (WorldServer world : server.worlds) {
 			world.disableLevelSaving = false;
 		}
+	}
+
+	/**
+	 * Add players to their respective chunks
+	 */
+	public void addPlayersToServerChunks() {
+		server.getPlayerList().getPlayers().forEach(player -> {
+			addPlayerToServerChunk(player);
+		});
 	}
 
 	/**
@@ -150,15 +158,14 @@ public class SavestateWorldHandler {
 		int playerChunkPosY = (int) player.posZ >> 4;
 		PlayerChunkMap playerChunkMap = world.getPlayerChunkMap();
 
-		List<EntityPlayerMP> players = ((AccessorPlayerChunkMap) playerChunkMap).getPlayers();
+		List<EntityPlayerMP> players = ((PlayerChunkMapDuck) playerChunkMap).getPlayers();
 
 		if (players.contains(player)) {
 			LOGGER.debug(LoggerMarkers.Savestate, "Not adding player {} to chunkmap, player already exists", player.getName());
 		} else {
 			playerChunkMap.addPlayer(player);
 		}
-		Chunk chunk = world.getChunkProvider().provideChunk(playerChunkPosX, playerChunkPosY);
-		chunk.addEntity(player);
+		world.getChunkProvider().provideChunk(playerChunkPosX, playerChunkPosY);
 
 		world.spawnEntity(player);
 	}
@@ -205,8 +212,8 @@ public class SavestateWorldHandler {
 		WorldServer[] worlds = server.worlds;
 
 		for (WorldServer world : worlds) {
-			WorldServerDuck worldTick = (WorldServerDuck) world;
-			worldTick.sendChunksToClient();
+			PlayerChunkMapDuck chunkMap = (PlayerChunkMapDuck) world.getPlayerChunkMap();
+			chunkMap.forceTick();
 		}
 	}
 
