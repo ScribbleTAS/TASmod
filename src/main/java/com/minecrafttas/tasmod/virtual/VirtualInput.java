@@ -137,7 +137,6 @@ public class VirtualInput {
 	public void clear() {
 		KEYBOARD.nextKeyboard.clear();
 		MOUSE.nextMouse.clear();
-		CAMERA_ANGLE.nextCameraAngle.clear();
 	}
 
 	public void preloadInput(VirtualKeyboard keyboardToPreload, VirtualMouse mouseToPreload, VirtualCameraAngle angleToPreload) {
@@ -709,6 +708,10 @@ public class VirtualInput {
 
 			}
 			return Triple.of(interpolatedPitch, interpolatedYaw, 0f);
+		}
+
+		public void clear() {
+			nextCameraAngle.clear();
 		}
 	}
 }

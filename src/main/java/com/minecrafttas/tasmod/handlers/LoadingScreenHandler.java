@@ -6,21 +6,24 @@ import com.minecrafttas.mctcommon.events.EventClient.EventClientGameLoop;
 import com.minecrafttas.mctcommon.events.EventClient.EventDoneLoadingPlayer;
 import com.minecrafttas.mctcommon.events.EventClient.EventDoneLoadingWorld;
 import com.minecrafttas.mctcommon.events.EventClient.EventLaunchIntegratedServer;
+import com.minecrafttas.mctcommon.events.EventClient.EventPlayerLeaveClientSide;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
+import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 
 /**
  * Handles logic during a loading screen to transition between states.
  * 
  * @author Scribble
  */
-public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventClientGameLoop, EventDoneLoadingWorld, EventDoneLoadingPlayer {
+public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventClientGameLoop, EventDoneLoadingWorld, EventDoneLoadingPlayer, EventPlayerLeaveClientSide {
 
 	private boolean waszero;
 	private boolean isLoading;
@@ -90,7 +93,21 @@ public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventC
 	@Override
 	public void onDoneLoadingPlayer() {
 		LOGGER.debug(LoggerMarkers.Event, "Finished loading the player position on the client");
-		TASmodClient.virtual.clear();
+		VirtualCameraAngleInput cameraAngle = TASmodClient.virtual.CAMERA_ANGLE;
+		if (cameraAngle.getCurrentPitch() == null || cameraAngle.getCurrentYaw() == null) {
+			LOGGER.debug("Setting the initial pitch and yaw");
+			Minecraft mc = Minecraft.getMinecraft();
+			EntityPlayerSP player = mc.player;
+			cameraAngle.setCamera(player.rotationPitch, player.rotationYaw);
+			TASmodClient.virtual.clear();
+		}
+	}
+
+	@Override
+	public void onPlayerLeaveClientSide(EntityPlayerSP player) {
+		LOGGER.debug(LoggerMarkers.Event, "Finished leaving on the on the client side");
+		LOGGER.debug("Resetting pitch and yaw");
+		TASmodClient.virtual.CAMERA_ANGLE.clear();
 	}
 
 }

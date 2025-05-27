@@ -118,7 +118,8 @@ public class MixinEntityRenderer implements SubtickDuck {
 		// set nextCameraAngle to the current absolute camera coordinates.
 		// This ensures that the camera position is loaded correctly
 		if (newPitch == null || newYaw == null) {
-			TASmodClient.virtual.CAMERA_ANGLE.setCamera(prevPitch, prevYaw);
+//			TASmod.LOGGER.warn("Pitch and Yaw is null! This is not good!");
+//			TASmodClient.virtual.CAMERA_ANGLE.setCamera(prevPitch, prevYaw);
 			return;
 		}
 
