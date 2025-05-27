@@ -8,7 +8,6 @@ import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
 import com.minecrafttas.tasmod.util.Ducks.PlayerChunkMapDuck;
-import com.minecrafttas.tasmod.util.Ducks.WorldServerDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.minecraft.client.Minecraft;
@@ -147,11 +146,6 @@ public class SavestateWorldHandler {
 					break;
 			}
 		}
-
-		// Tick the player chunk map to send the chunks to the clients
-		for (WorldServer world : worlds) {
-			((PlayerChunkMapDuck) world.getPlayerChunkMap()).forceTick();
-		}
 	}
 
 	/**
@@ -218,8 +212,8 @@ public class SavestateWorldHandler {
 		WorldServer[] worlds = server.worlds;
 
 		for (WorldServer world : worlds) {
-			WorldServerDuck worldTick = (WorldServerDuck) world;
-			worldTick.sendChunksToClient();
+			PlayerChunkMapDuck chunkMap = (PlayerChunkMapDuck) world.getPlayerChunkMap();
+			chunkMap.forceTick();
 		}
 	}
 

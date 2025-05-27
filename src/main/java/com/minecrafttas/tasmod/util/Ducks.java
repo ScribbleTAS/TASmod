@@ -39,20 +39,6 @@ public class Ducks {
 	}
 
 	/**
-	 * Quacks the worldserver to implement custom chunk ticking behavior
-	 * 
-	 * @author Scribble
-	 */
-	public static interface WorldServerDuck {
-
-		/**
-		 * Sends the chunks to the client
-		 * @see com.minecrafttas.tasmod.mixin.savestates.MixinWorldServer#sendChunksToClient() MixinWorldServer#sendChunksToClient()
-		 */
-		public void sendChunksToClient();
-	}
-
-	/**
 	 * Quacks the gui screen to spit out mouse positions independent of the display size
 	 */
 	public static interface GuiScreenDuck {
@@ -149,8 +135,9 @@ public class Ducks {
 		 * <p>Forces a tick in the chunk map without being dependent on the world time.
 		 * <p>The chunk map is responsible for sending the necessary chunks to the client.<br>
 		 * However, to properly do that, the chunks have to be sorted first, which happens every few world ticks.
-		 * 
-		 * <p>This method sorts and sends the chunks to the clients, without waiting for the world time
+		 * <p>Under normal circumstances, WorldServer#tick() would update the world time to make this happen,
+		 * but our goal with savestates is to load the chunks without advancing the world time.
+		 * Hence why this method sorts and ticks the chunk map, without waiting for the world time
 		 * @see MixinPlayerChunkMap#forceTick()
 		 */
 		public void forceTick();

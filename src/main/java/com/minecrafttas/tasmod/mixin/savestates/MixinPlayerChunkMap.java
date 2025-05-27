@@ -18,9 +18,10 @@ import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
 
 @Mixin(PlayerChunkMap.class)
-public class MixinPlayerChunkMap implements PlayerChunkMapDuck {
+public abstract class MixinPlayerChunkMap implements PlayerChunkMapDuck {
 
 	@Shadow
 	@Final
@@ -54,6 +55,20 @@ public class MixinPlayerChunkMap implements PlayerChunkMapDuck {
 	 */
 	@Override
 	public void forceTick() {
+
+		/*
+		 * Update the chunks to make them eligible to be sent to the client
+		 * 
+		 * In the #sendToPlayers() method is a check where the chunk is not sent,
+		 * when Chunk#isPopulated() is false. This would normally happen during the WorldServer#updateBlocks() method,
+		 * but we want to send the chunks without updating the blocks, hence this is circumvented like this.
+		 */
+		for (Iterator<Chunk> iterator2 = this.getChunkIterator(); iterator2.hasNext();) {
+			Chunk chunk = (Chunk) iterator2.next();
+			chunk.enqueueRelightChecks();
+			chunk.onTick(false);
+		}
+
 		this.sortMissingChunks = false;
 		Collections.sort(this.entriesWithoutChunks, new Comparator<PlayerChunkMapEntry>() {
 			public int compare(PlayerChunkMapEntry playerChunkMapEntry, PlayerChunkMapEntry playerChunkMapEntry2) {
@@ -92,4 +107,7 @@ public class MixinPlayerChunkMap implements PlayerChunkMapDuck {
 			}
 		}
 	}
+
+	@Shadow
+	protected abstract Iterator<Chunk> getChunkIterator();
 }
