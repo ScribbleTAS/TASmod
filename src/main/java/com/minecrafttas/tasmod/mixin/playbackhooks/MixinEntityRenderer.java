@@ -11,12 +11,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.events.EventClient.EventDrawHotbarAlways;
 import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 
@@ -114,11 +117,19 @@ public class MixinEntityRenderer implements SubtickDuck {
 		Float newPitch = TASmodClient.virtual.CAMERA_ANGLE.getCurrentPitch();
 		Float newYaw = TASmodClient.virtual.CAMERA_ANGLE.getCurrentYaw();
 
-		// If the pitch or yaw is null (usually on initialize or when the player joins the world),
-		// set nextCameraAngle to the current absolute camera coordinates.
-		// This ensures that the camera position is loaded correctly
+		/* 
+		 * If the pitch or yaw is null, 
+		 * usually on initialize or when the player joins the world),
+		 * do not update the camera angle.
+		 * 
+		 * This is called during the loading screen for 2 game loops,
+		 * at which point the player is not initialized, 
+		 * hence we do not have the correct camera angle yet.
+		 * 
+		 * The angle is instead initialized in LoadingScreenHandler#onDoneLoadingPlayer.
+		 */
 		if (newPitch == null || newYaw == null) {
-			TASmodClient.virtual.CAMERA_ANGLE.setCamera(prevPitch, prevYaw);
+//			TASmodClient.virtual.CAMERA_ANGLE.setCamera(prevPitch, prevYaw);
 			return;
 		}
 
@@ -138,7 +149,7 @@ public class MixinEntityRenderer implements SubtickDuck {
 	 * @return 0f for disabeling this method
 	 */
 	@ModifyArg(method = "orientCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;rotate(FFFF)V", ordinal = 8), index = 0)
-	public float redirect_orientCameraPitch(float pitch, @Share("pitch") LocalFloatRef sharedPitch) {
+	public float playback_orientCameraPitch(float pitch, @Share("pitch") LocalFloatRef sharedPitch) {
 		sharedPitch.set(pitch);
 		return 0f;
 	}
@@ -150,7 +161,7 @@ public class MixinEntityRenderer implements SubtickDuck {
 	 * @return The redirected yaw
 	 */
 	@ModifyArg(method = "orientCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;rotate(FFFF)V", ordinal = 9), index = 0)
-	public float redirect_orientCameraYawAnimal(float yawAnimal, @Share("pitch") LocalFloatRef sharedPitch) {
+	public float playback_orientCameraYawAnimal(float yawAnimal, @Share("pitch") LocalFloatRef sharedPitch) {
 		return redirectCam(sharedPitch.get(), yawAnimal);
 	}
 
@@ -161,8 +172,25 @@ public class MixinEntityRenderer implements SubtickDuck {
 	 * @return The redirected yaw
 	 */
 	@ModifyArg(method = "orientCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;rotate(FFFF)V", ordinal = 10), index = 0)
-	public float redirect_orientCameraYaw(float yaw, @Share("pitch") LocalFloatRef sharedPitch) {
+	public float playback_orientCameraYaw(float yaw, @Share("pitch") LocalFloatRef sharedPitch) {
 		return redirectCam(sharedPitch.get(), yaw);
+	}
+
+	/**
+	 * Updates the game overlay and adds an event
+	 * @param ci CallBackInfo
+	 */
+	@Inject(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/profiler/Profiler;endStartSection(Ljava/lang/String;)V"))
+	public void playback_updateOverlay(CallbackInfo ci) {
+		ScaledResolution scaledResolution = new ScaledResolution(this.mc);
+		GlStateManager.clear(256);
+		GlStateManager.matrixMode(5889);
+		GlStateManager.loadIdentity();
+		GlStateManager.ortho(0.0, scaledResolution.getScaledWidth_double(), scaledResolution.getScaledHeight_double(), 0.0, 1000.0, 3000.0);
+		GlStateManager.matrixMode(5888);
+		GlStateManager.loadIdentity();
+		GlStateManager.translate(0.0F, 0.0F, -2000.0F);
+		EventListenerRegistry.fireEvent(EventDrawHotbarAlways.class);
 	}
 
 	/**

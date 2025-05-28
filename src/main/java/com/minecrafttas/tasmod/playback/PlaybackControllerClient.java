@@ -245,7 +245,7 @@ public class PlaybackControllerClient implements
 					LOGGER.debug(LoggerMarkers.Playback, "Pausing a playback");
 					state = TASstate.PAUSED;
 					stateAfterPause = TASstate.PLAYBACK;
-					TASmodClient.virtual.clear();
+					TASmodClient.virtual.clearKeys();
 					return verbose ? TextFormatting.GREEN + "Pausing a playback" : "";
 				case NONE:
 					stopPlayback(true);
@@ -291,7 +291,7 @@ public class PlaybackControllerClient implements
 
 	private void stopRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
-		TASmodClient.virtual.clear();
+		TASmodClient.virtual.clearKeys();
 	}
 
 	private void startPlayback() {
@@ -305,7 +305,7 @@ public class PlaybackControllerClient implements
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
 		Minecraft.getMinecraft().gameSettings.chatLinks = true;
 		if (clearInputs) {
-			TASmodClient.virtual.clear();
+			TASmodClient.virtual.clearKeys();
 		}
 	}
 

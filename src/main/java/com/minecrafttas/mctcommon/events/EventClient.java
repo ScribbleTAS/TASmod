@@ -62,7 +62,9 @@ public interface EventClient {
 	}
 
 	/**
-	 * Fired when the player is done loading, after the position has been loaded from the server side
+	 * Fired when the player is done loading, after the position has been loaded from the server side.<br>
+	 * This also fires every time the player switches dimensions.
+	 * 
 	 * @author Scribble
 	 * @see NetHandlerPlayClient#handlePlayerPosLook(net.minecraft.network.play.server.SPacketPlayerPosLook)
 	 */
@@ -70,7 +72,9 @@ public interface EventClient {
 	public static interface EventDoneLoadingPlayer extends EventBase {
 
 		/**
-		 * Fired when the player is done loading, after the position has been loaded from the server side
+		 * Fired when the player is done loading, after the position has been loaded from the server side.<br>
+		 * This also fires every time the player switches dimensions.
+		 * 
 		 * @see NetHandlerPlayClient#handlePlayerPosLook(net.minecraft.network.play.server.SPacketPlayerPosLook)
 		 */
 		public void onDoneLoadingPlayer();
