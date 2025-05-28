@@ -41,7 +41,6 @@
 		
 		// Events
 		"events.MixinGuiIngame",
-		"events.MixinEntityRenderer",
 		"events.MixinNetHandlerPlayClient",
 		
 		"clientcommands.MixinEntityPlayerSP",
