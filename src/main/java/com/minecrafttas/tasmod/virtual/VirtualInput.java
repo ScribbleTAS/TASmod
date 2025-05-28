@@ -134,9 +134,9 @@ public class VirtualInput {
 	/**
 	 * Unpresses all keys in {@link VirtualKeyboardInput#nextKeyboard} and {@link VirtualMouseInput#nextMouse}
 	 */
-	public void clear() {
-		KEYBOARD.nextKeyboard.clear();
-		MOUSE.nextMouse.clear();
+	public void clearKeys() {
+		KEYBOARD.clearNext();
+		MOUSE.clearNext();
 	}
 
 	public void preloadInput(VirtualKeyboard keyboardToPreload, VirtualMouse mouseToPreload, VirtualCameraAngle angleToPreload) {
@@ -339,6 +339,13 @@ public class VirtualInput {
 		public boolean willKeyBeDown(int keycode) {
 			return nextKeyboard.isKeyDown(keycode);
 		}
+
+		/**
+		 * Clears the {@link #nextKeyboard}
+		 */
+		public void clearNext() {
+			nextKeyboard.clear();
+		}
 	}
 
 	/**
@@ -530,6 +537,12 @@ public class VirtualInput {
 			return nextMouse.isKeyDown(keycode);
 		}
 
+		/**
+		 * Clears the {@link #nextMouse}
+		 */
+		public void clearNext() {
+			nextMouse.clear();
+		}
 	}
 
 	/**
@@ -710,7 +723,10 @@ public class VirtualInput {
 			return Triple.of(interpolatedPitch, interpolatedYaw, 0f);
 		}
 
-		public void clear() {
+		/**
+		 * Clears the {@link #nextCameraAngle}
+		 */
+		public void clearNext() {
 			nextCameraAngle.clear();
 		}
 	}

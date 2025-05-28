@@ -6,13 +6,12 @@ import com.minecrafttas.mctcommon.events.EventClient.EventClientGameLoop;
 import com.minecrafttas.mctcommon.events.EventClient.EventDoneLoadingPlayer;
 import com.minecrafttas.mctcommon.events.EventClient.EventDoneLoadingWorld;
 import com.minecrafttas.mctcommon.events.EventClient.EventLaunchIntegratedServer;
+import com.minecrafttas.mctcommon.events.EventClient.EventPlayerJoinedClientSide;
 import com.minecrafttas.mctcommon.events.EventClient.EventPlayerLeaveClientSide;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
-import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
-import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput;
 
 import net.minecraft.client.Minecraft;
@@ -23,7 +22,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
  * 
  * @author Scribble
  */
-public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventClientGameLoop, EventDoneLoadingWorld, EventDoneLoadingPlayer, EventPlayerLeaveClientSide {
+public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventClientGameLoop, EventDoneLoadingWorld, EventDoneLoadingPlayer, EventPlayerJoinedClientSide, EventPlayerLeaveClientSide {
 
 	private boolean waszero;
 	private boolean isLoading;
@@ -78,17 +77,7 @@ public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventC
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * <p>Fixes an issue, where the look position of the player is reset to 0 -180,<br>
-	 * As well as removing any keyboard inputs present in the main menu
-	 * 
-	 * <p>{@link MixinEntityRenderer#runUpdate(float)} rewrites the camera input,<br>
-	 * So that it can be used with interpolation. <br>
-	 * However, when you start the game, this camera input needs to be initialised with the current look position from the server.<br>
-	 * So a special condition is set, that if the {@link VirtualInput#CAMERA_ANGLE} is null,<br>
-	 * it intialises the {@link VirtualInput#CAMERA_ANGLE CAMERA_ANGLE} with the current player camera angle.
-	 * 
-	 * <p>So {@link VirtualInput#clear()} has to be called at the right moment in the player initialisation<br>
-	 * to set the correct values. Before that, the playerRotation defaults to 0 -180
+	 * <p>Initializes the virtual camera to be in line with the vanilla camera.
 	 */
 	@Override
 	public void onDoneLoadingPlayer() {
@@ -99,15 +88,29 @@ public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventC
 			Minecraft mc = Minecraft.getMinecraft();
 			EntityPlayerSP player = mc.player;
 			cameraAngle.setCamera(player.rotationPitch, player.rotationYaw);
-			TASmodClient.virtual.clear();
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * <p>Fixes stuck keys when loading the world  
+	 */
+	@Override
+	public void onPlayerJoinedClientSide(EntityPlayerSP player) {
+		TASmodClient.virtual.clearKeys();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * <p>Resets the camera angle when leaving the world.
+	 * <p>If you later rejoin the world {@link #onDoneLoadingPlayer()} will re-initialise the camera angle
+	 */
 	@Override
 	public void onPlayerLeaveClientSide(EntityPlayerSP player) {
 		LOGGER.debug(LoggerMarkers.Event, "Finished leaving on the on the client side");
-		LOGGER.debug("Resetting pitch and yaw");
-		TASmodClient.virtual.CAMERA_ANGLE.clear();
+		LOGGER.debug("Resetting the camera angle on leaving the world");
+		TASmodClient.virtual.CAMERA_ANGLE.clearNext();
 	}
-
 }
