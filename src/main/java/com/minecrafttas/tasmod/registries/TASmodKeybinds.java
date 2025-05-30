@@ -14,16 +14,18 @@ import net.minecraft.client.settings.KeyBinding;
 
 public enum TASmodKeybinds {
 	TICKRATE_0("Tickrate 0 Key", "TASmod", Keyboard.KEY_F8, () -> TASmodClient.tickratechanger.togglePause(), VirtualKeybindings::isKeyDown),
-	ADVANCE("Advance Tick", "TASmod", Keyboard.KEY_F9, () -> TASmodClient.tickratechanger.advanceTick(), VirtualKeybindings::isKeyDown),
-	STOP("Recording/Playback Stop", "TASmod", Keyboard.KEY_F10, () -> TASmodClient.controller.setTASState(TASstate.NONE), VirtualKeybindings::isKeyDown),
-	SAVESTATE("Create Savestate", "TASmod", Keyboard.KEY_J, () -> {
+	TICKRATE_ADVANCE("Advance Tick", "TASmod", Keyboard.KEY_F9, () -> TASmodClient.tickratechanger.advanceTick(), VirtualKeybindings::isKeyDown),
+	TICKRATE_INCREASE("Increase Tickrate", "TASmod", Keyboard.KEY_PERIOD, () -> TASmodClient.tickratechanger.increaseTickrate(), VirtualKeybindings::isKeyDown),
+	TICKRATE_DECREASE("Decrease Tickrate", "TASmod", Keyboard.KEY_COMMA, () -> TASmodClient.tickratechanger.decreaseTickrate(), VirtualKeybindings::isKeyDown),
+	PLAYBACK_STOP("Recording/Playback Stop", "TASmod", Keyboard.KEY_F10, () -> TASmodClient.controller.setTASState(TASstate.NONE), VirtualKeybindings::isKeyDown),
+	SAVESTATE_SAVE("Create Savestate", "TASmod", Keyboard.KEY_J, () -> {
 		try {
 			TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SAVE).writeInt(-1));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}),
-	LOADSTATE("Load Latest Savestate", "TASmod", Keyboard.KEY_K, () -> {
+	SAVESTATE_LOAD("Load Latest Savestate", "TASmod", Keyboard.KEY_K, () -> {
 		try {
 			TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOAD).writeInt(-1));
 		} catch (Exception e) {
@@ -36,6 +38,7 @@ public enum TASmodKeybinds {
 			mc.displayGuiScreen(TASmodClient.hud);
 		}
 	}),
+
 	TEST1("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
 	}, VirtualKeybindings::isKeyDown),
 	TEST2("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
