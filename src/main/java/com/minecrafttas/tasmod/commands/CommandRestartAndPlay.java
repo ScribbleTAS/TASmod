@@ -10,6 +10,7 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 
 import net.minecraft.client.Minecraft;
@@ -50,9 +51,21 @@ public class CommandRestartAndPlay extends CommandBase {
 				try {
 					TASmod.savestateHandlerServer.loadState(0, false);
 				} catch (LoadstateException e) {
-					e.printStackTrace();
+					TASmod.LOGGER.catching(e);
+					if (e.getMessage() != null) {
+						sender.sendMessage(new TextComponentString(TextFormatting.RED + "Could not load the initial savestate: " + e.getMessage()));
+					}
+					TASmod.savestateHandlerServer.state = SavestateState.NONE;
+					TASmod.tickratechanger.pauseGame(false);
+					return;
 				} catch (IOException e) {
-					e.printStackTrace();
+					TASmod.LOGGER.catching(e);
+					if (e.getMessage() != null) {
+						sender.sendMessage(new TextComponentString(TextFormatting.RED + "Could not load the initial savestate: " + e.getMessage()));
+					}
+					TASmod.savestateHandlerServer.state = SavestateState.NONE;
+					TASmod.tickratechanger.pauseGame(false);
+					return;
 				}
 				TASmod.playbackControllerServer.setServerState(TASstate.PLAYBACK);
 				try {
