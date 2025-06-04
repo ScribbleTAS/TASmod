@@ -145,7 +145,7 @@ public class TickrateChangerServer implements EventServerStop, EventClientComple
 	}
 
 	/**
-	 * Enables tickrate 0
+	 * Enables/Disables tickrate 0 on both client and server
 	 * 
 	 * @param pause True if the game should be paused, false if unpause
 	 */
