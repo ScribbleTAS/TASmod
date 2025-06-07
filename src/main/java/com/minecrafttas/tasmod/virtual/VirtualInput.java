@@ -172,6 +172,14 @@ public class VirtualInput {
 	public List<String> getNextKeyboardPresses() {
 		return KEYBOARD.nextKeyboard.getCurrentPresses();
 	}
+	
+	public int getPointerX() {
+		return MOUSE.nextMouse.getCursorX();
+	}
+	
+	public int getPointerY() {
+		return MOUSE.nextMouse.getCursorY();
+	}
 
 	/**
 	 * Subclass of {@link VirtualInput} handling keyboard logic.<br>

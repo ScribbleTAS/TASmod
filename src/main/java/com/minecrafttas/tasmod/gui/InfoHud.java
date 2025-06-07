@@ -378,13 +378,24 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 						}
 					}));
 
-			//			title = "cursor";
-			//			y += 14;
-			//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
-			//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-			//				if (Minecraft.getMinecraft().currentScreen == this) return "Mouse Position";
-			//				return String.format("Mouse Cursor: " + TASmodClient.virtual.getNextMouse().getPath().get(0).cursorX + " " + TASmodClient.virtual.getNextMouse().getPath().get(0).cursorY);
-			//			})); TODO Remove?
+			title = "cursor";
+			y += 14;
+			if (configuration.getProperty(title + "_x", "err").equals("err"))
+				setDefaults(title, y);
+			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
+					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+						if (Minecraft.getMinecraft().currentScreen == this)
+							return "Mouse Position";
+
+						Integer xCursor = TASmodClient.virtual.getPointerX();
+						Integer yCursor = TASmodClient.virtual.getPointerY();
+
+						if (Minecraft.getMinecraft().currentScreen != null)
+							return String.format("Mouse Cursor: %s %s", xCursor == null ? "null" : xCursor, yCursor == null ? "null" : yCursor);
+						else
+							return "Mouse Cursor: 0 0";
+
+					}));
 
 			//			title = "trajectories";
 			//			y += 14;
