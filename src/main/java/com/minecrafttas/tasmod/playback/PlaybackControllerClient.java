@@ -55,14 +55,12 @@ import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
-import com.minecrafttas.tasmod.util.PointerNormalizer;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
-import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -100,9 +98,8 @@ public class PlaybackControllerClient implements
 	
 	EventVirtualInput.EventVirtualKeyboardTick,
 	EventVirtualInput.EventVirtualMouseTick,
-	EventVirtualInput.EventVirtualCameraAngleTick,
+	EventVirtualInput.EventVirtualCameraAngleTick
 	
-	EventVirtualInput.EventVirtualMouseSubtick
 //@formatter:on
 {
 	private Logger logger = TASmod.LOGGER;
@@ -406,35 +403,16 @@ public class PlaybackControllerClient implements
 	/**
 	 * Updates the cursor location on screen
 	 */
-	@Override
-	public void onVirtualMouseSubtick(VirtualMouseEvent event) {
-		if (!isPlayingback() || event == null)
+	public void onDrawScreen(GuiScreen screen, int x, int y) {
+		if (!isPlayingback())
 			return;
 
 		Minecraft mc = Minecraft.getMinecraft();
 		if (!mc.gameSettings.pauseOnLostFocus && !Display.isActive()) // If pause on lost focus is on and the display is not active don't set the cursor position
 			return;
 
-		GuiScreen screen = mc.currentScreen;
-		if (screen == null)
-			return;
-
-		GuiScreenDuck duckedScreen = (GuiScreenDuck) mc.currentScreen;
-		//@formatter:off
-		Mouse.setCursorPosition(
-				duckedScreen.rescaleX(
-						PointerNormalizer.reapplyScalingX(
-								event.getCursorX()
-								)
-						),
-				duckedScreen.rescaleY(
-						PointerNormalizer.reapplyScalingY(
-								event.getCursorY()
-								)
-						
-						)
-				);
-		//@formatter:on
+		GuiScreenDuck duckedScreen = (GuiScreenDuck) screen;
+		Mouse.setCursorPosition(duckedScreen.rescaleX(x), duckedScreen.rescaleY(y));
 	}
 
 	/**

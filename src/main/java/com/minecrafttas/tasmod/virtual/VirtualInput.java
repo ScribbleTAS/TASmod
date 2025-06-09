@@ -16,6 +16,7 @@ import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinMinecraft;
 import com.minecrafttas.tasmod.util.Ducks;
+import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
 import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.PointerNormalizer;
@@ -172,14 +173,6 @@ public class VirtualInput {
 	public List<String> getNextKeyboardPresses() {
 		return KEYBOARD.nextKeyboard.getCurrentPresses();
 	}
-	
-	public int getPointerX() {
-		return MOUSE.nextMouse.getCursorX();
-	}
-	
-	public int getPointerY() {
-		return MOUSE.nextMouse.getCursorY();
-	}
 
 	/**
 	 * Subclass of {@link VirtualInput} handling keyboard logic.<br>
@@ -303,7 +296,11 @@ public class VirtualInput {
 		 * @return If a keyboard event is in {@link #keyboardEventQueue}
 		 */
 		public boolean nextKeyboardSubtick() {
-			boolean isPolled = (currentKeyboardEvent = keyboardEventQueue.poll()) != null;
+			VirtualKeyboardEvent newKeyboardEvent = keyboardEventQueue.poll();
+			boolean isPolled = newKeyboardEvent != null;
+			if (isPolled) {
+				currentKeyboardEvent = newKeyboardEvent;
+			}
 			EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualKeyboardSubtick.class, currentKeyboardEvent);
 			return isPolled;
 		}
@@ -428,6 +425,8 @@ public class VirtualInput {
 		 */
 		private VirtualMouseEvent currentMouseEvent = new VirtualMouseEvent();
 
+		private final List<VirtualMouse> mousePointerInterpolationStates = new ArrayList<>();
+
 		/**
 		 * Constructor to preload the {@link #currentMouse} with an existing mouse
 		 * @param preloadedMouse The new {@link #currentMouse}
@@ -460,6 +459,8 @@ public class VirtualInput {
 		 */
 		public void nextMouseTick() {
 			nextMouse.deepCopyFrom((VirtualMouse) EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualMouseTick.class, nextMouse));
+			mousePointerInterpolationStates.clear();
+			nextMouse.getStates(mousePointerInterpolationStates);
 			currentMouse.getVirtualEvents(nextMouse, mouseEventQueue);
 			currentMouse.moveFrom(nextMouse);
 		}
@@ -472,7 +473,11 @@ public class VirtualInput {
 		 * @return If a mouse event is in {@link #mouseEventQueue}
 		 */
 		public boolean nextMouseSubtick() {
-			boolean isPolled = (currentMouseEvent = mouseEventQueue.poll()) != null;
+			VirtualMouseEvent newMouseEvent = mouseEventQueue.poll();
+			boolean isPolled = newMouseEvent != null;
+			if (isPolled) {
+				currentMouseEvent = newMouseEvent;
+			}
 			EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualMouseSubtick.class, currentMouseEvent);
 			return isPolled;
 		}
@@ -543,6 +548,60 @@ public class VirtualInput {
 		 */
 		public boolean willKeyBeDown(int keycode) {
 			return nextMouse.isKeyDown(keycode);
+		}
+
+		/**
+		 * Gets the absolute coordinates of the camera angle
+		 * 
+		 * @param partialTick The partial ticks of the timer
+		 * @param pitch The original pitch of the camera
+		 * @param yaw The original yaw of the camera
+		 * @param enable Whether the custom interpolation is enabled. Enabled during playback.
+		 * @return A triple of pitch, yaw and roll, as left, middle and right respectively 
+		 */
+		public int getInterpolatedX(float partialTick, boolean enable) {
+
+			int interpolatedPointerX = nextMouse.getCursorX();
+
+			if (enable && !mousePointerInterpolationStates.isEmpty()) {
+				int index = (int) MathHelper.clampedLerp(0, mousePointerInterpolationStates.size() - 1, partialTick); // Get interpolate index
+
+				VirtualMouse interpolatedCamera = mousePointerInterpolationStates.get(index);
+
+				interpolatedPointerX = interpolatedCamera.getCursorX();
+
+			}
+			Minecraft mc = Minecraft.getMinecraft();
+			GuiScreenDuck gui = (GuiScreenDuck) mc.currentScreen;
+
+			if (gui != null) {
+				interpolatedPointerX = gui.rescaleX(PointerNormalizer.reapplyScalingX(interpolatedPointerX));
+			}
+
+			return interpolatedPointerX;
+		}
+
+		public int getInterpolatedY(float partialTick, boolean enable) {
+
+			int interpolatedPointerY = nextMouse.getCursorY();
+
+			if (enable && !mousePointerInterpolationStates.isEmpty()) {
+				int index = (int) MathHelper.clampedLerp(0, mousePointerInterpolationStates.size() - 1, partialTick); // Get interpolate index
+
+				VirtualMouse interpolatedCamera = mousePointerInterpolationStates.get(index);
+
+				interpolatedPointerY = interpolatedCamera.getCursorY();
+
+			}
+
+			Minecraft mc = Minecraft.getMinecraft();
+			GuiScreenDuck gui = (GuiScreenDuck) mc.currentScreen;
+
+			if (gui != null) {
+				interpolatedPointerY = gui.rescaleY(PointerNormalizer.reapplyScalingY(interpolatedPointerY));
+			}
+
+			return interpolatedPointerY;
 		}
 
 		/**

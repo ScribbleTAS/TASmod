@@ -358,4 +358,11 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 	public boolean isEmpty() {
 		return super.isEmpty() && scrollWheel == 0 && cursorX == 0 && cursorY == 0;
 	}
+
+	public void getStates(List<VirtualMouse> reference) {
+		if (isParent()) {
+			reference.addAll(subtickList);
+			reference.add(this.shallowClone());
+		}
+	}
 }

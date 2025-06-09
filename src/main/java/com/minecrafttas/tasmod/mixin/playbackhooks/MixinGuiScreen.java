@@ -3,7 +3,9 @@ package com.minecrafttas.tasmod.mixin.playbackhooks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
@@ -102,6 +104,11 @@ public class MixinGuiScreen implements GuiScreenDuck {
 	}
 
 	// =====================================================================================================================================
+
+	@Inject(method = "drawScreen", at = @At("HEAD"))
+	private void injectDrawScreen(int i, int j, float f, CallbackInfo ci) {
+		TASmodClient.controller.onDrawScreen((GuiScreen) (Object) this, i, j); // TODO Replace with event
+	}
 
 	@Shadow
 	private int width;
