@@ -371,16 +371,6 @@ public class PlaybackControllerClient implements
 	// running
 
 	@Override
-	public VirtualMouse onVirtualMouseTick(VirtualMouse vmouse) {
-		if (state == TASstate.RECORDING) {
-			this.mouse.deepCopyFrom(vmouse);
-		} else if (state == TASstate.PLAYBACK) {
-			vmouse.deepCopyFrom(this.mouse);
-		}
-		return vmouse.clone();
-	}
-
-	@Override
 	public VirtualKeyboard onVirtualKeyboardTick(VirtualKeyboard vkeyboard) {
 		if (state == TASstate.RECORDING) {
 			this.keyboard.deepCopyFrom(vkeyboard);
@@ -388,6 +378,16 @@ public class PlaybackControllerClient implements
 			vkeyboard.deepCopyFrom(this.keyboard);
 		}
 		return vkeyboard.clone();
+	}
+
+	@Override
+	public VirtualMouse onVirtualMouseTick(VirtualMouse vmouse) {
+		if (state == TASstate.RECORDING) {
+			this.mouse.deepCopyFrom(vmouse);
+		} else if (state == TASstate.PLAYBACK) {
+			vmouse.deepCopyFrom(this.mouse);
+		}
+		return vmouse.clone();
 	}
 
 	@Override

@@ -212,13 +212,13 @@ public class MixinEntityRenderer implements SubtickDuck {
 		return yaw2;
 	}
 
-	@Redirect(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getX()I"))
+	@Redirect(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getX()I", remap = false))
 	public int redirect_updateCameraAndRendererX() {
 		int interpolatedX = TASmodClient.virtual.MOUSE.getInterpolatedX(Minecraft.getMinecraft().timer.renderPartialTicks, TASmodClient.controller.isPlayingback());
 		return interpolatedX;
 	}
 
-	@Redirect(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getY()I"))
+	@Redirect(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getY()I", remap = false))
 	public int redirect_updateCameraAndRendererY() {
 		int interpolatedY = TASmodClient.virtual.MOUSE.getInterpolatedY(Minecraft.getMinecraft().timer.renderPartialTicks, TASmodClient.controller.isPlayingback());
 		return interpolatedY;
