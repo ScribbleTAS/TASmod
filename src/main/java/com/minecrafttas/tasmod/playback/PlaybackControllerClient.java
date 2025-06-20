@@ -119,12 +119,40 @@ public class PlaybackControllerClient implements
 	 */
 	private long index;
 
-	private VirtualKeyboard keyboard = new VirtualKeyboard();
+	/**
+	 * <p>The current keyboard used in the {@link PlaybackControllerClient PlaybackController}
+	 * <p>Used during recording to store incoming inputs from the {@link VirtualInput#KEYBOARD}<br>
+	 * or stores inputs that are sent to the {@link VirtualInput#KEYBOARD} during playback
+	 */
+	private VirtualKeyboard currentPlaybackKeyboard = new VirtualKeyboard();
+	/**
+	 * <p>The current mouse used in the {@link PlaybackControllerClient PlaybackController}
+	 * <p>Used during recording to store incoming inputs from the {@link VirtualInput#MOUSE}<br>
+	 * or stores inputs that are sent to the {@link VirtualInput#MOUSE} during playback
+	 */
+	private VirtualMouse currentPlaybackMouse = new VirtualMouse();
+	/**
+	 * <p>The current camera angle used in the {@link PlaybackControllerClient PlaybackController}
+	 * <p>Used during recording to store incoming inputs from the {@link VirtualInput#CAMERA_ANGLE}<br>
+	 * or stores inputs that are sent to the {@link VirtualInput#CAMERA_ANGLE} during playback
+	 */
+	private VirtualCameraAngle currentPlaybackCameraAngle = new VirtualCameraAngle();
 
-	private VirtualMouse mouse = new VirtualMouse();
-
-	private VirtualCameraAngle camera = new VirtualCameraAngle();
-
+	/**
+	 * <p>The keyboard in the next playback tick
+	 * <p>These inputs will be fed into {@link #currentPlaybackKeyboard} after a tick
+	 */
+	private VirtualKeyboard nextPlaybackKeyboard = new VirtualKeyboard();
+	/**
+	 * <p>The mouse in the next playback tick
+	 * <p>These inputs will be fed into {@link #currentPlaybackMouse} after a tick
+	 */
+	private VirtualMouse nextPlaybackMouse = new VirtualMouse();
+	/**
+	 * <p>The camera angle in the next playback tick
+	 * <p>These inputs will be fed into {@link #currentPlaybackCameraAngle} after a tick
+	 */
+	private VirtualCameraAngle nextPlaybackCameraAngle = new VirtualCameraAngle();
 	/**
 	 * The directory where to store the tasfiles
 	 */
@@ -280,7 +308,7 @@ public class PlaybackControllerClient implements
 			VirtualCameraAngleInput CAMERA_ANGLE = TASmodClient.virtual.CAMERA_ANGLE;
 			Float pitch = CAMERA_ANGLE.getCurrentPitch();
 			Float yaw = CAMERA_ANGLE.getCurrentYaw();
-			this.camera.set(pitch, yaw);
+			this.currentPlaybackCameraAngle.set(pitch, yaw);
 
 			inputs.add(new InputContainer());
 		}
@@ -373,9 +401,9 @@ public class PlaybackControllerClient implements
 	@Override
 	public VirtualKeyboard onVirtualKeyboardTick(VirtualKeyboard vkeyboard) {
 		if (state == TASstate.RECORDING) {
-			this.keyboard.deepCopyFrom(vkeyboard);
+			this.currentPlaybackKeyboard.deepCopyFrom(vkeyboard);
 		} else if (state == TASstate.PLAYBACK) {
-			vkeyboard.deepCopyFrom(this.keyboard);
+			vkeyboard.deepCopyFrom(this.currentPlaybackKeyboard);
 		}
 		return vkeyboard.clone();
 	}
@@ -383,9 +411,9 @@ public class PlaybackControllerClient implements
 	@Override
 	public VirtualMouse onVirtualMouseTick(VirtualMouse vmouse) {
 		if (state == TASstate.RECORDING) {
-			this.mouse.deepCopyFrom(vmouse);
+			this.currentPlaybackMouse.deepCopyFrom(vmouse);
 		} else if (state == TASstate.PLAYBACK) {
-			vmouse.deepCopyFrom(this.mouse);
+			vmouse.deepCopyFrom(this.currentPlaybackMouse);
 		}
 		return vmouse.clone();
 	}
@@ -393,9 +421,9 @@ public class PlaybackControllerClient implements
 	@Override
 	public VirtualCameraAngle onVirtualCameraTick(VirtualCameraAngle vcamera) {
 		if (state == TASstate.RECORDING) {
-			this.camera.deepCopyFrom(vcamera);
+			this.currentPlaybackCameraAngle.deepCopyFrom(vcamera);
 		} else if (state == TASstate.PLAYBACK) {
-			vcamera.deepCopyFrom(this.camera);
+			vcamera.deepCopyFrom(this.currentPlaybackCameraAngle);
 		}
 		return vcamera.clone();
 	}
@@ -418,25 +446,24 @@ public class PlaybackControllerClient implements
 	/**
 	 * Updates the input container.<br>
 	 * <br>
-	 * During a recording this adds the {@linkplain #keyboard}, {@linkplain #mouse}
-	 * and {@linkplain #camera} to {@linkplain #inputs} and increases the
+	 * During a recording this adds the {@linkplain #currentPlaybackKeyboard}, {@linkplain #currentPlaybackMouse}
+	 * and {@linkplain #currentPlaybackCameraAngle} to {@linkplain #inputs} and increases the
 	 * {@linkplain #index}.<br>
 	 * <br>
 	 * During playback the opposite is happening, getting the inputs from
-	 * {@linkplain #inputs} and temporarily storing them in {@linkplain #keyboard},
-	 * {@linkplain #mouse} and {@linkplain #camera}.<br>
+	 * {@linkplain #inputs} and temporarily storing them in {@linkplain #currentPlaybackKeyboard},
+	 * {@linkplain #currentPlaybackMouse} and {@linkplain #currentPlaybackCameraAngle}.<br>
 	 * <br>
-	 * Then in {@linkplain VirtualInput}, {@linkplain #keyboard},
-	 * {@linkplain #mouse} and {@linkplain #camera} are retrieved and emulated as
+	 * Then in {@linkplain VirtualInput}, {@linkplain #currentPlaybackKeyboard},
+	 * {@linkplain #currentPlaybackMouse} and {@linkplain #currentPlaybackCameraAngle} are retrieved and emulated as
 	 * the next inputs
 	 */
 	@Override
 	public void onClientTickPost(Minecraft mc) {
 		/* Stop the playback while player is still loading */
 		EntityPlayerSP player = mc.player;
-
 		if (player != null && player.addedToChunk) {
-			if (isPaused() && stateAfterPause != TASstate.NONE) {
+			if (isPaused() && stateAfterPause != TASstate.NONE) { // TODO Find a better solution...
 				setTASState(stateAfterPause); // The recording is paused in LoadWorldEvents#startLaunchServer
 				pause(false);
 				EventListenerRegistry.fireEvent(EventPlaybackJoinedWorld.class, state);
@@ -457,7 +484,7 @@ public class PlaybackControllerClient implements
 
 	private void recordNextTick() {
 		index++;
-		InputContainer container = new InputContainer(keyboard.clone(), mouse.clone(), camera.clone());
+		InputContainer container = new InputContainer(currentPlaybackKeyboard.clone(), currentPlaybackMouse.clone(), currentPlaybackCameraAngle.clone());
 		if (inputs.size() <= index) {
 			if (inputs.size() < index) {
 				LOGGER.warn("Index is {} inputs bigger than the container!", index - inputs.size());
@@ -490,10 +517,24 @@ public class PlaybackControllerClient implements
 		}
 		/* Continue condition */
 		else {
-			InputContainer container = inputs.get(index); // Loads the new inputs from the container
-			this.keyboard = container.getKeyboard().clone();
-			this.mouse = container.getMouse().clone();
-			this.camera = container.getCameraAngle().clone();
+			InputContainer container = null;
+			if (index + 1 < inputs.size()) {
+				container = inputs.get(index + 1); // Loads the new inputs from the container
+
+				this.currentPlaybackKeyboard = this.nextPlaybackKeyboard.clone();
+				this.currentPlaybackMouse = this.nextPlaybackMouse.clone();
+				this.currentPlaybackCameraAngle = this.nextPlaybackCameraAngle.clone();
+
+				this.nextPlaybackKeyboard = container.getKeyboard().clone();
+				this.nextPlaybackMouse = container.getMouse().clone();
+				this.nextPlaybackCameraAngle = container.getCameraAngle().clone();
+			} else {
+				container = inputs.get(index); // Loads the new inputs from the container
+				this.currentPlaybackKeyboard = container.getKeyboard().clone();
+				this.currentPlaybackMouse = container.getMouse().clone();
+				this.currentPlaybackCameraAngle = container.getCameraAngle().clone();
+			}
+
 			EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
 		}
 	}
@@ -536,9 +577,9 @@ public class PlaybackControllerClient implements
 			this.index = index;
 			if (state == TASstate.PLAYBACK) {
 				InputContainer inputcontainer = inputs.get(index);
-				this.keyboard = inputcontainer.getKeyboard();
-				this.mouse = inputcontainer.getMouse();
-				this.camera = inputcontainer.getCameraAngle();
+				this.currentPlaybackKeyboard = inputcontainer.getKeyboard();
+				this.currentPlaybackMouse = inputcontainer.getMouse();
+				this.currentPlaybackCameraAngle = inputcontainer.getCameraAngle();
 			}
 		} else {
 			throw new IndexOutOfBoundsException("Index is bigger than the container");
@@ -579,6 +620,26 @@ public class PlaybackControllerClient implements
 		inputs = new BigArrayList<InputContainer>(tasFileDirectory + File.separator + "temp");
 	}
 
+	public VirtualKeyboard getNextPlaybackKeyboard() {
+		return nextPlaybackKeyboard;
+	}
+
+	public VirtualMouse getNextPlaybackMouse() {
+		return nextPlaybackMouse;
+	}
+
+	public VirtualCameraAngle getNextPlaybackCameraAngle() {
+		return nextPlaybackCameraAngle;
+	}
+
+	public List<String> getNextKeyboardPresses() {
+		return nextPlaybackKeyboard.getCurrentPresses();
+	}
+
+	public List<String> getNextMousePresses() {
+		return nextPlaybackMouse.getCurrentPresses();
+	}
+
 	/**
 	 * Used for displaying the rought contents of the input container
 	 */
@@ -598,12 +659,12 @@ public class PlaybackControllerClient implements
 	// ==============================================================
 
 	/**
-	 * Clears {@link #keyboard} and {@link #mouse}
+	 * Clears {@link #currentPlaybackKeyboard} and {@link #currentPlaybackMouse}
 	 */
 	public void unpressContainer() {
 		LOGGER.trace(LoggerMarkers.Playback, "Unpressing container");
-		keyboard.clear();
-		mouse.clear();
+		currentPlaybackKeyboard.clear();
+		currentPlaybackMouse.clear();
 	}
 
 	// ==============================================================

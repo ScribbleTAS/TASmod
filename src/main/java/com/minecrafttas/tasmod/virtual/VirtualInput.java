@@ -557,7 +557,7 @@ public class VirtualInput {
 		 * @param pitch The original pitch of the camera
 		 * @param yaw The original yaw of the camera
 		 * @param enable Whether the custom interpolation is enabled. Enabled during playback.
-		 * @return A triple of pitch, yaw and roll, as left, middle and right respectively 
+		 * @return Integer coordinate of 
 		 */
 		public int getInterpolatedX(float partialTick, boolean enable) {
 
@@ -783,8 +783,8 @@ public class VirtualInput {
 
 				VirtualCameraAngle interpolatedCamera = cameraAngleInterpolationStates.get(index);
 
-				interpolatedPitch = interpolatedCamera.getPitch();
-				interpolatedYaw = interpolatedCamera.getYaw() + 180;
+				interpolatedPitch = interpolatedCamera.getPitch() == null ? 0 : interpolatedCamera.getPitch();
+				interpolatedYaw = interpolatedCamera.getYaw() == null ? 0 : interpolatedCamera.getYaw() + 180;
 
 			}
 			return Triple.of(interpolatedPitch, interpolatedYaw, 0f);
