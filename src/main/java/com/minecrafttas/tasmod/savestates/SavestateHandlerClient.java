@@ -330,6 +330,9 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		SubtickDuck entityRenderer = (SubtickDuck) Minecraft.getMinecraft().entityRenderer;
 		entityRenderer.runUpdate(0);
 
+		// Clear boss bars on savestate load
+		mc.ingameGUI.getBossOverlay().clearBossInfos();
+
 		EventListenerRegistry.fireEvent(EventSavestate.EventClientLoadPlayer.class, player);
 	}
 
