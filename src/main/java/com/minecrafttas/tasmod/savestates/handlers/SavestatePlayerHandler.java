@@ -225,4 +225,13 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 				break;
 		}
 	}
+
+	public void updateServerResourcePack() {
+		if (!this.server.getResourcePackUrl().isEmpty()) {
+			List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+			for (EntityPlayerMP player : players) {
+				player.loadResourcePack(this.server.getResourcePackUrl(), this.server.getResourcePackHash());
+			}
+		}
+	}
 }

@@ -398,6 +398,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		worldHandler.sendChunksToClient();
 
+		playerHandler.updateServerResourcePack();
+
 		try {
 			TASmod.server.sendToAll(new TASmodBufferBuilder(CLEAR_SCREEN));
 		} catch (Exception e) {

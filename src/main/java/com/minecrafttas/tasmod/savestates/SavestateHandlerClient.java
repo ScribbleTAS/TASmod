@@ -28,6 +28,7 @@ import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
+import com.minecrafttas.tasmod.util.Ducks.ResourcePackRepositoryDuck;
 import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 import com.minecrafttas.tasmod.util.Ducks.WorldClientDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -150,6 +151,8 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			LOGGER.error(LoggerMarkers.Savestate, "No recording savestate loaded since the name of savestate is empty");
 			return;
 		}
+
+		((ResourcePackRepositoryDuck) Minecraft.getMinecraft().getResourcePackRepository()).clearServerResourcePackBlocking();
 
 		PlaybackControllerClient controller = TASmodClient.controller;
 
