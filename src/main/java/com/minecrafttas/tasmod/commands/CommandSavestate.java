@@ -42,17 +42,41 @@ public class CommandSavestate extends CommandBase {
 		} else if (args.length >= 1) {
 			if ("save".equals(args[0])) {
 				if (args.length == 1) {
-					saveLatest();
+					TASmod.gameLoopSchedulerServer.add(() -> {
+						try {
+							saveLatest();
+						} catch (CommandException e) {
+							e.printStackTrace();
+						}
+					});
 				} else if (args.length == 2) {
-					saveWithIndex(args);
+					TASmod.gameLoopSchedulerServer.add(() -> {
+						try {
+							saveWithIndex(args);
+						} catch (CommandException e) {
+							e.printStackTrace();
+						}
+					});
 				} else {
 					throw new CommandException("Too many arguments!", new Object[] {});
 				}
 			} else if ("load".equals(args[0])) {
 				if (args.length == 1) {
-					loadLatest();
+					TASmod.gameLoopSchedulerServer.add(() -> {
+						try {
+							loadLatest();
+						} catch (CommandException e) {
+							e.printStackTrace();
+						}
+					});
 				} else if (args.length == 2) {
-					loadLatest(args);
+					TASmod.gameLoopSchedulerServer.add(() -> {
+						try {
+							loadLatest(args);
+						} catch (CommandException e) {
+							e.printStackTrace();
+						}
+					});
 				} else {
 					throw new CommandException("Too many arguments!", new Object[] {});
 				}

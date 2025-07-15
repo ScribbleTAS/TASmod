@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -30,6 +31,8 @@ import net.minecraft.server.MinecraftServer;
 public class SavestateResourcePackHandler implements EventSavestate.EventServerLoadstate, ServerPacketHandler, ClientPacketHandler {
 
 	private CompletableFuture<String> future;
+
+	public static CountDownLatch clientRPLatch;
 
 	@Override
 	public void onServerLoadstate(MinecraftServer server, int index, Path target, Path current) {
@@ -70,8 +73,16 @@ public class SavestateResourcePackHandler implements EventSavestate.EventServerL
 		switch (packetId) {
 			case SAVESTATE_CLEAR_RESOURCEPACK:
 				mc.addScheduledTask(() -> {
+					clientRPLatch = new CountDownLatch(1);
 					ResourcePackRepositoryDuck duck = (ResourcePackRepositoryDuck) mc.getResourcePackRepository();
 					duck.clearServerResourcePackBlocking();
+
+					try {
+						clientRPLatch.await(30, TimeUnit.SECONDS);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
 					try {
 						TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_CLEAR_RESOURCEPACK));
 					} catch (Exception e) {
