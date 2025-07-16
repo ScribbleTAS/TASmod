@@ -21,6 +21,7 @@ import com.minecrafttas.tasmod.events.EventSavestate;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
+import com.minecrafttas.tasmod.savestates.gui.GuiResourcepackWarn;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.fabricmc.api.EnvType;
@@ -88,6 +89,8 @@ public class SavestateResourcePackHandler implements EventSavestate.EventServerL
 			case SAVESTATE_CLEAR_RESOURCEPACK:
 
 				TASmod.LOGGER.debug(LoggerMarkers.Savestate, "Clearing server resource pack");
+
+				mc.displayGuiScreen(new GuiResourcepackWarn());
 
 				/**
 				 * Using a countdown latch here, which is counted down in

@@ -15,7 +15,6 @@ public class MixinMinecraft {
 	@Inject(method = "refreshResources", at = @At(value = "RETURN"))
 	public void inject_refreshResources(CallbackInfo ci) {
 		if (SavestateResourcePackHandler.clientRPLatch != null && SavestateResourcePackHandler.clientRPLatch.getCount() > 0) {
-			System.out.println("Countdown");
 			SavestateResourcePackHandler.clientRPLatch.countDown();
 		}
 	}
