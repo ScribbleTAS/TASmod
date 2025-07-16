@@ -40,6 +40,7 @@ import com.minecrafttas.tasmod.savestates.files.SavestateDataFile;
 import com.minecrafttas.tasmod.savestates.files.SavestateDataFile.DataValues;
 import com.minecrafttas.tasmod.savestates.files.SavestateTrackerFile;
 import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandler;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
@@ -385,6 +386,9 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Reenable level saving
 		worldHandler.enableLevelSaving();
+
+		// Refresh server resourcepacks on the client
+		SavestateResourcePackHandler.refreshServerResourcepack(server);
 
 		// Incrementing info file
 		SavestateTrackerFile tracker = new SavestateTrackerFile(savestateDirectory.resolve(worldname + "-info.txt"));
@@ -753,9 +757,9 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	public PacketID[] getAcceptedPacketIDs() {
 		return new TASmodPackets[] {
 				//@formatter:off
-				TASmodPackets.SAVESTATE_SAVE, 
-				TASmodPackets.SAVESTATE_LOAD, 
-				TASmodPackets.SAVESTATE_SCREEN, 
+				TASmodPackets.SAVESTATE_SAVE,
+				TASmodPackets.SAVESTATE_LOAD,
+				TASmodPackets.SAVESTATE_SCREEN,
 				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS
 				//@formatter:on
 		};
@@ -770,7 +774,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		switch (packet) {
 			case SAVESTATE_SAVE:
-				Integer index = TASmodBufferBuilder.readInt(buf);
+				int index = TASmodBufferBuilder.readInt(buf);
 
 				Task savestateTask = () -> {
 					try {

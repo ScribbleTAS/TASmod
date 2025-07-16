@@ -1,4 +1,5 @@
 {
-  "tickratechanger.tasmod.command.show": "Current tickrate: %s",
-  "tickratechanger.tasmod.command.usage": "/tickrate <ticks per second>"
+  "tickratechanger.tasmod.command.show":"Current tickrate: %s",
+  "tickratechanger.tasmod.command.usage":"/tickrate <ticks per second>",
+  "gui.tasmod.savestate.resourcepack":"You have a resource pack (resources.zip) in your world folder.\nLoadstating will take severely longer!"
 }

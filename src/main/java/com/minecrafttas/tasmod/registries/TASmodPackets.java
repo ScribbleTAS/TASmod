@@ -105,6 +105,12 @@ public enum TASmodPackets implements PacketID {
 		((ScoreboardDuck) mc.world.getScoreboard()).clearScoreboard();
 	}),
 	/**
+	 * <p>Clears the resourcepack on the client side
+	 * <p>SIDE: Client<br>
+	 * ARGS: none
+	 */
+	SAVESTATE_CLEAR_RESOURCEPACK,
+	/**
 	 * <p>Notifies the client to clear all inputs from the input buffer in {@link PlaybackControllerClient}
 	 * <p>SIDE: Both<br>
 	 * ARGS: none
