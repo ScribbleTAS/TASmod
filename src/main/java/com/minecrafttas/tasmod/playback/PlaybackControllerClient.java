@@ -640,6 +640,10 @@ public class PlaybackControllerClient implements
 		return nextPlaybackMouse.getCurrentPresses();
 	}
 
+	public VirtualMouse getNextMouse() {
+		return nextPlaybackMouse;
+	}
+
 	/**
 	 * Used for displaying the rought contents of the input container
 	 */

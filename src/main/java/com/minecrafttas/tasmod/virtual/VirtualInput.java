@@ -12,6 +12,7 @@ import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
+import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinMinecraft;
@@ -460,7 +461,7 @@ public class VirtualInput {
 		public void nextMouseTick() {
 			nextMouse.deepCopyFrom((VirtualMouse) EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualMouseTick.class, nextMouse));
 			mousePointerInterpolationStates.clear();
-			nextMouse.getStates(mousePointerInterpolationStates);
+			TASmodClient.controller.getNextMouse().getStates(mousePointerInterpolationStates);
 			currentMouse.getVirtualEvents(nextMouse, mouseEventQueue);
 			currentMouse.moveFrom(nextMouse);
 		}
