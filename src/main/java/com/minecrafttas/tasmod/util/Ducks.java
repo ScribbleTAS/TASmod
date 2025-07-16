@@ -142,8 +142,4 @@ public class Ducks {
 		 */
 		public void forceTick();
 	}
-
-	public static interface ResourcePackRepositoryDuck {
-		public void clearServerResourcePackBlocking();
-	}
 }

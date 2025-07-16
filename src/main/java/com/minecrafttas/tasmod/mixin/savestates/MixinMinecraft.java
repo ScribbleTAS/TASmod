@@ -7,13 +7,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.client.Minecraft;
 
-@Mixin(MinecraftServer.class)
-public class MixinMinecraftServer {
+@Mixin(Minecraft.class)
+public class MixinMinecraft {
 
-	@Inject(method = "reload", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;reloadResources()V"))
-	public void inject_reload(CallbackInfo ci) {
+	@Inject(method = "refreshResources", at = @At(value = "RETURN"))
+	public void inject_refreshResources(CallbackInfo ci) {
 		if (SavestateResourcePackHandler.clientRPLatch != null && SavestateResourcePackHandler.clientRPLatch.getCount() > 0) {
 			System.out.println("Countdown");
 			SavestateResourcePackHandler.clientRPLatch.countDown();

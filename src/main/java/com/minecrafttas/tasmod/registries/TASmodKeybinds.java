@@ -7,6 +7,7 @@ import com.minecrafttas.mctcommon.KeybindManager.Keybind;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.savestates.gui.GuiResourcepackWarn;
 import com.minecrafttas.tasmod.virtual.VirtualKeybindings;
 
 import net.minecraft.client.Minecraft;
@@ -40,6 +41,7 @@ public enum TASmodKeybinds {
 	}),
 
 	TEST1("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
+		Minecraft.getMinecraft().displayGuiScreen(new GuiResourcepackWarn());
 	}, VirtualKeybindings::isKeyDown),
 	TEST2("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
 	}, VirtualKeybindings::isKeyDown);
