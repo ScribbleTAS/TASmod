@@ -390,8 +390,8 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "Mouse Position";
 
-						Integer xCursor = TASmodClient.virtual.MOUSE.getInterpolatedX(0, false);
-						Integer yCursor = TASmodClient.virtual.MOUSE.getInterpolatedY(0, false);
+						Integer xCursor = TASmodClient.virtual.interpolationHandler.getInterpolatedX(0, false);
+						Integer yCursor = TASmodClient.virtual.interpolationHandler.getInterpolatedY(0, false);
 
 						if (Minecraft.getMinecraft().currentScreen != null)
 							return String.format("Mouse Cursor: %s %s", xCursor == null ? "null" : xCursor, yCursor == null ? "null" : yCursor);

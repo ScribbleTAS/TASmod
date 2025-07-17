@@ -201,7 +201,7 @@ public class MixinEntityRenderer implements SubtickDuck {
 	 * @return The redirected yaw
 	 */
 	private float redirectCam(float pitch, float yaw) {
-		Triple<Float, Float, Float> interpolated = TASmodClient.virtual.CAMERA_ANGLE.getInterpolatedState(Minecraft.getMinecraft().timer.renderPartialTicks, pitch, yaw, TASmodClient.controller.isPlayingback());
+		Triple<Float, Float, Float> interpolated = TASmodClient.virtual.interpolationHandler.getInterpolatedState(Minecraft.getMinecraft().timer.renderPartialTicks, pitch, yaw, TASmodClient.controller.isPlayingback());
 		float pitch2 = interpolated.getLeft();
 		float yaw2 = interpolated.getMiddle();
 		// Update pitch
@@ -214,13 +214,13 @@ public class MixinEntityRenderer implements SubtickDuck {
 
 	@Redirect(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getX()I", remap = false))
 	public int redirect_updateCameraAndRendererX() {
-		int interpolatedX = TASmodClient.virtual.MOUSE.getInterpolatedX(Minecraft.getMinecraft().timer.renderPartialTicks, TASmodClient.controller.isPlayingback());
+		int interpolatedX = TASmodClient.virtual.interpolationHandler.getInterpolatedX(Minecraft.getMinecraft().timer.renderPartialTicks, TASmodClient.controller.isPlayingback());
 		return interpolatedX;
 	}
 
 	@Redirect(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getY()I", remap = false))
 	public int redirect_updateCameraAndRendererY() {
-		int interpolatedY = TASmodClient.virtual.MOUSE.getInterpolatedY(Minecraft.getMinecraft().timer.renderPartialTicks, TASmodClient.controller.isPlayingback());
+		int interpolatedY = TASmodClient.virtual.interpolationHandler.getInterpolatedY(Minecraft.getMinecraft().timer.renderPartialTicks, TASmodClient.controller.isPlayingback());
 		return interpolatedY;
 	}
 }
