@@ -22,6 +22,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.builtin.DesyncMonitorFileCommandExtension;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
+import com.minecrafttas.tasmod.virtual.VirtualInterpolationHandler.MouseInterpolation;
 import com.mojang.realmsclient.gui.ChatFormatting;
 
 import net.minecraft.client.Minecraft;
@@ -390,8 +391,9 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "Mouse Position";
 
-						Integer xCursor = TASmodClient.virtual.interpolationHandler.getInterpolatedX(0, false);
-						Integer yCursor = TASmodClient.virtual.interpolationHandler.getInterpolatedY(0, false);
+						MouseInterpolation mouseInterpolation = TASmodClient.virtual.interpolationHandler.getInterpolatedMouseCursor(0, false);
+						Integer xCursor = mouseInterpolation.getX();
+						Integer yCursor = mouseInterpolation.getY();
 
 						if (Minecraft.getMinecraft().currentScreen != null)
 							return String.format("Mouse Cursor: %s %s", xCursor == null ? "null" : xCursor, yCursor == null ? "null" : yCursor);

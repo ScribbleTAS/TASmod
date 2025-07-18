@@ -235,8 +235,7 @@ public class EventListenerRegistry {
 			// Iterate through all methods
 			for (Method method : methodsInListener) {
 
-				// Check if the current method has the same name as the method we are looking
-				// for
+				// Check if the current method has the same name as the method we are looking for
 				if (!checkName(method, methodToFind.getName())) {
 					continue;
 				}

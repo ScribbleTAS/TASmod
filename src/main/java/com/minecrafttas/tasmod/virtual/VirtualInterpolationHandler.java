@@ -3,10 +3,9 @@ package com.minecrafttas.tasmod.virtual;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Triple;
-
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
 import com.minecrafttas.tasmod.util.PointerNormalizer;
 
@@ -15,26 +14,66 @@ import net.minecraft.util.math.MathHelper;
 
 public class VirtualInterpolationHandler implements EventVirtualInput.EventVirtualMouseTick, EventVirtualInput.EventVirtualCameraAngleTick {
 
-	private final List<VirtualMouse> mousePointerInterpolationStates = new ArrayList<>();
 	/**
-	 * States of the {@link #nextCameraAngle} made during the tick.<br>
-	 * Is updated in {@link #nextCameraTick()}
+	 * Copy of the {@link PlaybackControllerClient#nextPlaybackMouse}
 	 */
-	private final List<VirtualCameraAngle> cameraAngleInterpolationStates = new ArrayList<>();
-
 	private VirtualMouse nextMouse = new VirtualMouse();
+	/**
+	 * Copy of the {@link VirtualInput#CAMERA_ANGLE#nextCameraAngle}
+	 */
 	private VirtualCameraAngle nextCameraAngle = new VirtualCameraAngle();
 
-	public int getInterpolatedX(float partialTick, boolean enable) {
+	/**
+	 * States of the {@link #nextMouse} made during the tick.<br>
+	 * Is updated in {@link #onVirtualMouseTick()}
+	 */
+	private final List<VirtualMouse> mousePointerStates = new ArrayList<>();
+	/**
+	 * States of the {@link #nextCameraAngle} made during the tick.<br>
+	 * Is updated in {@link #onVirtualCameraTick()}
+	 */
+	private final List<VirtualCameraAngle> cameraAngleStates = new ArrayList<>();
+//	private int debugFinalIndex = 0;
+
+	@Override
+	public VirtualMouse onVirtualMouseTick(VirtualMouse vmouse) {
+		this.nextMouse = vmouse;
+//		if (TASmodClient.controller.isPlayingback()) {
+//			System.out.println(debugFinalIndex == mousePointerInterpolationStates.size() - 1);
+//		}
+		mousePointerStates.clear();
+		TASmodClient.controller.getNextMouse().getStates(mousePointerStates);
+		return null;
+	}
+
+	@Override
+	public VirtualCameraAngle onVirtualCameraTick(VirtualCameraAngle vcamera) {
+		this.nextCameraAngle = vcamera;
+		cameraAngleStates.clear();
+		nextCameraAngle.getStates(cameraAngleStates);
+		return null;
+	}
+
+	/**
+	 * Interpolates the mouse cursor inbetween ticks based on the data from the next tick
+	 * 
+	 * @param partialTick The partial ticks used for interpolating
+	 * @param enable If the interpolation should be enabled. Basically if {@link PlaybackControllerClient#isPlayingback()}
+	 * @return A {@link MouseInterpolation} object with x and y coordinates
+	 */
+	public MouseInterpolation getInterpolatedMouseCursor(float partialTick, boolean enable) {
 
 		int interpolatedPointerX = nextMouse.getCursorX();
+		int interpolatedPointerY = nextMouse.getCursorY();
 
-		if (enable && !mousePointerInterpolationStates.isEmpty()) {
-			int index = (int) MathHelper.clampedLerp(0, mousePointerInterpolationStates.size() - 1, partialTick); // Get interpolate index
-
-			VirtualMouse interpolatedCamera = mousePointerInterpolationStates.get(index);
+		if (enable && !mousePointerStates.isEmpty()) {
+			partialTick = dynamicallyRound(partialTick, TASmodClient.tickratechanger.ticksPerSecond);
+			int index = (int) MathHelper.clampedLerp(0, mousePointerStates.size() - 1, partialTick); // Get interpolate index
+//			debugFinalIndex = index;
+			VirtualMouse interpolatedCamera = mousePointerStates.get(index);
 
 			interpolatedPointerX = interpolatedCamera.getCursorX();
+			interpolatedPointerY = interpolatedCamera.getCursorY();
 
 		}
 		Minecraft mc = Minecraft.getMinecraft();
@@ -42,36 +81,34 @@ public class VirtualInterpolationHandler implements EventVirtualInput.EventVirtu
 
 		if (gui != null) {
 			interpolatedPointerX = gui.rescaleX(PointerNormalizer.reapplyScalingX(interpolatedPointerX));
-		}
-
-		return interpolatedPointerX;
-	}
-
-	public int getInterpolatedY(float partialTick, boolean enable) {
-
-		int interpolatedPointerY = nextMouse.getCursorY();
-
-		if (enable && !mousePointerInterpolationStates.isEmpty()) {
-			int index = (int) MathHelper.clampedLerp(0, mousePointerInterpolationStates.size() - 1, partialTick); // Get interpolate index
-
-			VirtualMouse interpolatedCamera = mousePointerInterpolationStates.get(index);
-
-			interpolatedPointerY = interpolatedCamera.getCursorY();
-
-		}
-
-		Minecraft mc = Minecraft.getMinecraft();
-		GuiScreenDuck gui = (GuiScreenDuck) mc.currentScreen;
-
-		if (gui != null) {
 			interpolatedPointerY = gui.rescaleY(PointerNormalizer.reapplyScalingY(interpolatedPointerY));
 		}
 
-		return interpolatedPointerY;
+		return new MouseInterpolation(interpolatedPointerX, interpolatedPointerY);
 	}
 
 	/**
-	 * Gets the absolute coordinates of the camera angle
+	 * Rounds the partial tick to 1 depending on the tickrate
+	 * 
+	 * To correctly play back the mouse cursor, the partial ticks have to reach 1 at some point.
+	 * However this is not the case in higher tickrates.
+	 * The solution is to round the partial ticks to 1 after a certain threshold.
+	 * 
+	 * The higher the tps, the lower the threshold for rounding.
+	 * 
+	 * @param partialTick The partial ticks to round
+	 * @param tps The ticks per second used for setting the threshold
+	 * @return The rounded partial ticks
+	 */
+	private float dynamicallyRound(float partialTick, float tps) {
+		float percent = tps / 100;
+		if (partialTick > 1 - percent)
+			partialTick = 1;
+		return partialTick;
+	}
+
+	/**
+	 * Gets the interpolated coordinates of the camera angle
 	 * 
 	 * @param partialTick The partial ticks of the timer
 	 * @param pitch The original pitch of the camera
@@ -79,36 +116,74 @@ public class VirtualInterpolationHandler implements EventVirtualInput.EventVirtu
 	 * @param enable Whether the custom interpolation is enabled. Enabled during playback.
 	 * @return A triple of pitch, yaw and roll, as left, middle and right respectively 
 	 */
-	public Triple<Float, Float, Float> getInterpolatedState(float partialTick, float pitch, float yaw, boolean enable) {
+	public CameraInterpolation getInterpolatedState(float partialTick, float pitch, float yaw, boolean enable) {
 
 		float interpolatedPitch = nextCameraAngle.getPitch() == null ? pitch : nextCameraAngle.getPitch();
 		float interpolatedYaw = nextCameraAngle.getYaw() == null ? yaw : nextCameraAngle.getYaw() + 180;
 
-		if (enable && !cameraAngleInterpolationStates.isEmpty()) {
-			int index = (int) MathHelper.clampedLerp(0, cameraAngleInterpolationStates.size() - 1, partialTick); // Get interpolate index
+		if (enable && !cameraAngleStates.isEmpty()) {
+			int index = (int) MathHelper.clampedLerp(0, cameraAngleStates.size() - 1, partialTick); // Get interpolate index
 
-			VirtualCameraAngle interpolatedCamera = cameraAngleInterpolationStates.get(index);
+			VirtualCameraAngle interpolatedCamera = cameraAngleStates.get(index);
 
 			interpolatedPitch = interpolatedCamera.getPitch() == null ? 0 : interpolatedCamera.getPitch();
 			interpolatedYaw = interpolatedCamera.getYaw() == null ? 0 : interpolatedCamera.getYaw() + 180;
 
 		}
-		return Triple.of(interpolatedPitch, interpolatedYaw, 0f);
+		return new CameraInterpolation(interpolatedPitch, interpolatedYaw);
 	}
 
-	@Override
-	public VirtualMouse onVirtualMouseTick(VirtualMouse vmouse) {
-		this.nextMouse = vmouse;
-		mousePointerInterpolationStates.clear();
-		TASmodClient.controller.getNextMouse().getStates(mousePointerInterpolationStates);
-		return null;
+	public static class MouseInterpolation {
+		final Integer x;
+		final Integer y;
+
+		public MouseInterpolation(Integer x, Integer y) {
+			this.x = x;
+			this.y = y;
+		}
+
+		public Integer getX() {
+			return x;
+		}
+
+		public Integer getY() {
+			return y;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof MouseInterpolation) {
+				MouseInterpolation other = (MouseInterpolation) obj;
+				return this.x.equals(other.x) && this.y.equals(other.y);
+			}
+			return super.equals(obj);
+		}
 	}
 
-	@Override
-	public VirtualCameraAngle onVirtualCameraTick(VirtualCameraAngle vcamera) {
-		this.nextCameraAngle = vcamera;
-		cameraAngleInterpolationStates.clear();
-		nextCameraAngle.getStates(cameraAngleInterpolationStates);
-		return null;
+	public static class CameraInterpolation {
+		final Float pitch;
+		final Float yaw;
+
+		public CameraInterpolation(Float pitch, Float yaw) {
+			this.pitch = pitch;
+			this.yaw = yaw;
+		}
+
+		public Float getPitch() {
+			return pitch;
+		}
+
+		public Float getYaw() {
+			return yaw;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof CameraInterpolation) {
+				CameraInterpolation other = (CameraInterpolation) obj;
+				return this.pitch.equals(other.pitch) && this.yaw.equals(other.yaw);
+			}
+			return super.equals(obj);
+		}
 	}
 }
