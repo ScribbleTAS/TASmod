@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.mixin.playbackhooks;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,11 +10,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
+import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventDrawHotbarAlways;
 import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
+import com.minecrafttas.tasmod.virtual.VirtualInterpolationHandler.CameraInterpolation;
+import com.minecrafttas.tasmod.virtual.VirtualInterpolationHandler.MouseInterpolation;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -193,21 +195,31 @@ public class MixinEntityRenderer implements SubtickDuck {
 		EventListenerRegistry.fireEvent(EventDrawHotbarAlways.class);
 	}
 
+	@Redirect(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getX()I", remap = false))
+	public int redirect_updateCameraAndRendererX(@Share(value = "interpolatedY") LocalIntRef shared) {
+		MouseInterpolation interpolated = TASmodClient.virtual.interpolationHandler.getInterpolatedMouseCursor(Minecraft.getMinecraft().timer.renderPartialTicks, TASmodClient.controller.isPlayingback());
+		shared.set(interpolated.getY());
+		return interpolated.getX();
+	}
+
+	@Redirect(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getY()I", remap = false))
+	public int redirect_updateCameraAndRendererY(@Share(value = "interpolatedY") LocalIntRef shared) {
+		return shared.get();
+	}
+
 	/**
 	 * Turns the camera via GLStateManager
-	 * @param pitch The pi
+	 * @param pitch The pitch
 	 * @param yaw The yaw
-	 * @see com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput#getInterpolatedState(float, float, float, boolean)
+	 * @see com.minecrafttas.tasmod.virtual.VirtualInterpolationHandler#getInterpolatedState(float, float, float, boolean)
 	 * @return The redirected yaw
 	 */
 	private float redirectCam(float pitch, float yaw) {
-		Triple<Float, Float, Float> interpolated = TASmodClient.virtual.CAMERA_ANGLE.getInterpolatedState(Minecraft.getMinecraft().timer.renderPartialTicks, pitch, yaw, TASmodClient.controller.isPlayingback());
-		float pitch2 = interpolated.getLeft();
-		float yaw2 = interpolated.getMiddle();
+		CameraInterpolation interpolated = TASmodClient.virtual.interpolationHandler.getInterpolatedState(Minecraft.getMinecraft().timer.renderPartialTicks, pitch, yaw, TASmodClient.controller.isPlayingback());
+		float pitch2 = interpolated.getPitch();
+		float yaw2 = interpolated.getYaw();
 		// Update pitch
 		GlStateManager.rotate(pitch2, 1.0f, 0.0f, 0.0f);
-		// Update roll
-		GlStateManager.rotate(interpolated.getRight(), 0.0f, 0.0f, 1.0f);
 		// Update yaw
 		return yaw2;
 	}

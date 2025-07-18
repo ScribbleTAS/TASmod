@@ -198,6 +198,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		EventListenerRegistry.register(TASmodAPIRegistry.PLAYBACK_FILE_COMMAND);
 		EventListenerRegistry.register(new LoggerMarkers());
 		EventListenerRegistry.register(savestateHandlerClient);
+
+		EventListenerRegistry.register(virtual.interpolationHandler);
 	}
 
 	@Override

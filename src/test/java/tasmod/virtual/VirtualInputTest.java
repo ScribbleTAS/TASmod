@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,6 +14,7 @@ import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
+import com.minecrafttas.tasmod.virtual.VirtualInterpolationHandler.CameraInterpolation;
 import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
@@ -274,15 +274,18 @@ class VirtualInputTest {
 	@Test
 	void testInterpolationDisabled() {
 		VirtualInput virtual = new VirtualInput(LOGGER);
+		EventListenerRegistry.register(virtual.interpolationHandler);
 
 		virtual.CAMERA_ANGLE.setCamera(0f, 0f);
 		virtual.CAMERA_ANGLE.updateNextCameraAngle(10f, 20f);
 		virtual.CAMERA_ANGLE.updateNextCameraAngle(20f, 30f);
+		virtual.CAMERA_ANGLE.nextCameraTick();
 
-		Triple<Float, Float, Float> expected = Triple.of(30f, 50f + 180f, 0f);
-		Triple<Float, Float, Float> actual = virtual.CAMERA_ANGLE.getInterpolatedState(0f, 1f, 2f, false);
+		CameraInterpolation expected = new CameraInterpolation(30f, 50f + 180f);
+		CameraInterpolation actual = virtual.interpolationHandler.getInterpolatedState(0f, 1f, 2f, false);
 
 		assertEquals(expected, actual);
+		EventListenerRegistry.unregister(virtual.interpolationHandler);
 	}
 
 	/**
@@ -291,6 +294,7 @@ class VirtualInputTest {
 	@Test
 	void testInterpolationEnabled() {
 		VirtualInput virtual = new VirtualInput(LOGGER);
+		EventListenerRegistry.register(virtual.interpolationHandler);
 
 		virtual.CAMERA_ANGLE.setCamera(0f, 0f);
 		virtual.CAMERA_ANGLE.updateNextCameraAngle(0f, 0f);
@@ -306,36 +310,38 @@ class VirtualInputTest {
 
 		virtual.CAMERA_ANGLE.nextCameraTick();
 
-		Triple<Float, Float, Float> expected = Triple.of(0f, 180f, 0f);
-		Triple<Float, Float, Float> actual = virtual.CAMERA_ANGLE.getInterpolatedState(0f, 0f, 0f, true);
+		CameraInterpolation expected = new CameraInterpolation(0f, 180f);
+		CameraInterpolation actual = virtual.interpolationHandler.getInterpolatedState(0f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(0f, 180f, 0f);
-		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.1f, 0f, 0f, true);
+		expected = new CameraInterpolation(0f, 180f);
+		actual = virtual.interpolationHandler.getInterpolatedState(0.1f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(10f, 190f, 0f);
-		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.199f, 0f, 0f, true);
+		expected = new CameraInterpolation(10f, 190f);
+		actual = virtual.interpolationHandler.getInterpolatedState(0.199f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(10f, 190f, 0f);
-		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.2f, 0f, 0f, true);
+		expected = new CameraInterpolation(10f, 190f);
+		actual = virtual.interpolationHandler.getInterpolatedState(0.2f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(20f, 200f, 0f);
-		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.3f, 0f, 0f, true);
+		expected = new CameraInterpolation(20f, 200f);
+		actual = virtual.interpolationHandler.getInterpolatedState(0.3f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(30f, 210f, 0f);
-		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.4f, 0f, 0f, true);
+		expected = new CameraInterpolation(30f, 210f);
+		actual = virtual.interpolationHandler.getInterpolatedState(0.4f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(40f, 220f, 0f);
-		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.5f, 0f, 0f, true);
+		expected = new CameraInterpolation(40f, 220f);
+		actual = virtual.interpolationHandler.getInterpolatedState(0.5f, 0f, 0f, true);
 		assertEquals(expected, actual);
 
-		expected = Triple.of(50f, 230f, 0f);
-		actual = virtual.CAMERA_ANGLE.getInterpolatedState(0.6f, 0f, 0f, true);
+		expected = new CameraInterpolation(50f, 230f);
+		actual = virtual.interpolationHandler.getInterpolatedState(0.6f, 0f, 0f, true);
 		assertEquals(expected, actual);
+
+		EventListenerRegistry.unregister(virtual.interpolationHandler);
 	}
 }

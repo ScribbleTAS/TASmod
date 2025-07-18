@@ -56,7 +56,8 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.legacyfabric:yarn:${project.minecraft_version}+build.mcp"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 // task for downloading KillTheRng

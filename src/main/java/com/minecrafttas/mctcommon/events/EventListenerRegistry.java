@@ -235,8 +235,7 @@ public class EventListenerRegistry {
 			// Iterate through all methods
 			for (Method method : methodsInListener) {
 
-				// Check if the current method has the same name as the method we are looking
-				// for
+				// Check if the current method has the same name as the method we are looking for
 				if (!checkName(method, methodToFind.getName())) {
 					continue;
 				}
@@ -252,7 +251,9 @@ public class EventListenerRegistry {
 					toThrow = null; // Reset toThrow as the correct method was found
 					method.setAccessible(true);
 					try {
-						returnValue = method.invoke(eventListener, eventParams); // Call the method
+						Object newReturnValue = method.invoke(eventListener, eventParams); // Call the method
+						if (newReturnValue != null)
+							returnValue = newReturnValue;
 					} catch (IllegalAccessException | InvocationTargetException e) {
 						throw new EventException(eventClass, e);
 					} catch (IllegalArgumentException e) {

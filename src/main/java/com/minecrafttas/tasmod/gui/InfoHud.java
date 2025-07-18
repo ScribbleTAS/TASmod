@@ -18,14 +18,18 @@ import com.minecrafttas.mctcommon.events.EventClient.EventClientTick;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventDrawHotbar;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.builtin.DesyncMonitorFileCommandExtension;
+import com.minecrafttas.tasmod.virtual.VirtualInput;
+import com.minecrafttas.tasmod.virtual.VirtualInterpolationHandler.MouseInterpolation;
 import com.mojang.realmsclient.gui.ChatFormatting;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.TextFormatting;
 
 /**
  * The info hud is a hud that is always being rendered ontop of the screen, it can show some stuff such as coordinates, etc.,
@@ -378,13 +382,25 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 						}
 					}));
 
-			//			title = "cursor";
-			//			y += 14;
-			//			if (configuration.getProperty(title + "_x", "err").equals("err")) setDefaults(title, y);
-			//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title + "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-			//				if (Minecraft.getMinecraft().currentScreen == this) return "Mouse Position";
-			//				return String.format("Mouse Cursor: " + TASmodClient.virtual.getNextMouse().getPath().get(0).cursorX + " " + TASmodClient.virtual.getNextMouse().getPath().get(0).cursorY);
-			//			})); TODO Remove?
+			title = "cursor";
+			y += 14;
+			if (configuration.getProperty(title + "_x", "err").equals("err"))
+				setDefaults(title, y);
+			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
+					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+						if (Minecraft.getMinecraft().currentScreen == this)
+							return "Mouse Position";
+
+						MouseInterpolation mouseInterpolation = TASmodClient.virtual.interpolationHandler.getInterpolatedMouseCursor(0, false);
+						Integer xCursor = mouseInterpolation.getX();
+						Integer yCursor = mouseInterpolation.getY();
+
+						if (Minecraft.getMinecraft().currentScreen != null)
+							return String.format("Mouse Cursor: %s %s", xCursor == null ? "null" : xCursor, yCursor == null ? "null" : yCursor);
+						else
+							return "Mouse Cursor: 0 0";
+
+					}));
 
 			//			title = "trajectories";
 			//			y += 14;
@@ -537,29 +553,27 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 	}
 
 	private String keystrokes() {
+		boolean isPlayingBack = TASmodClient.controller.isPlayingback();
+		VirtualInput virtual = TASmodClient.virtual;
+		PlaybackControllerClient controller = TASmodClient.controller;
 
-		String out1 = "" + ChatFormatting.WHITE;
-		for (String mouse : TASmodClient.virtual.getCurrentMousePresses()) {
-			out1 = out1.concat(mouse + " ");
-		}
-		if (Display.isActive() || TASmodClient.controller.isPlayingback()) {
-			out1 = out1.concat("" + ChatFormatting.GREEN);
-			for (String mouse : TASmodClient.virtual.getNextMousePresses()) {
-				out1 = out1.concat(mouse + " ");
-			}
+		String currentMousePresses = String.join(" ", virtual.getCurrentMousePresses());
+
+		String nextMousePresses = "";
+		if (Display.isActive() || isPlayingBack) {
+			List<String> mousePresses = isPlayingBack ? controller.getNextMousePresses() : virtual.getNextMousePresses();
+			nextMousePresses = String.join(" ", mousePresses);
 		}
 
-		String out2 = "" + ChatFormatting.WHITE;
-		for (String key : TASmodClient.virtual.getCurrentKeyboardPresses()) {
-			out2 = out2.concat(key + " ");
+		String currentKeyboardPresses = String.join(" ", TASmodClient.virtual.getCurrentKeyboardPresses());
+
+		String nextKeyboardPresses = "";
+		if (Display.isActive() || isPlayingBack) {
+			List<String> keyboardPresses = isPlayingBack ? controller.getNextKeyboardPresses() : virtual.getNextKeyboardPresses();
+			nextKeyboardPresses = String.join(" ", keyboardPresses);
 		}
-		if (Display.isActive() || TASmodClient.controller.isPlayingback()) {
-			out2 = out2.concat("" + ChatFormatting.GREEN);
-			for (String key : TASmodClient.virtual.getNextKeyboardPresses()) {
-				out2 = out2.concat(key + " ");
-			}
-		}
-		return out1 + out2;
+
+		return String.format("%s%s %s%s %s%s %s%s", TextFormatting.WHITE, currentMousePresses, TextFormatting.GREEN, nextMousePresses, TextFormatting.WHITE, currentKeyboardPresses, TextFormatting.GREEN, nextKeyboardPresses);
 	}
 
 	private Pair<Integer, Integer> getScreenOffset(int x, int y, InfoLabel label) {
