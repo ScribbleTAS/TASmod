@@ -38,6 +38,7 @@ import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
+import com.minecrafttas.tasmod.events.EventClient.EventDrawScreen;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventPlaybackJoinedWorld;
@@ -95,6 +96,7 @@ public class PlaybackControllerClient implements
 	
 	EventClientInit,
 	EventClientTickPost,
+	EventDrawScreen,
 	
 	EventVirtualInput.EventVirtualKeyboardTick,
 	EventVirtualInput.EventVirtualMouseTick,
@@ -429,8 +431,10 @@ public class PlaybackControllerClient implements
 	}
 
 	/**
-	 * Updates the cursor location on screen
+	 * {@inheritDoc}
+	 * <p>Updates the cursor location on screen
 	 */
+	@Override
 	public void onDrawScreen(GuiScreen screen, int x, int y) {
 		if (!isPlayingback())
 			return;

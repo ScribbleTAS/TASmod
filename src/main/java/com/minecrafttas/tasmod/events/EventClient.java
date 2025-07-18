@@ -3,6 +3,7 @@ package com.minecrafttas.tasmod.events;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 
 /**
  * TASmod specific events fired on the client side
@@ -20,6 +21,17 @@ public interface EventClient {
 		 * Fired when the hotbar is drawn on screen
 		 */
 		public void onDrawHotbar();
+	}
+
+	/**
+	 * Fired when a screen in a gui is drawn
+	 */
+	@FunctionalInterface
+	public static interface EventDrawScreen extends EventBase {
+		/**
+		 * Fired when a screen in a gui is drawn
+		 */
+		public void onDrawScreen(GuiScreen screen, int xCoordinate, int yCoordinate);
 	}
 
 	/**
