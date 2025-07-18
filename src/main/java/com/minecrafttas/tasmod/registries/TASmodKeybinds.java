@@ -15,8 +15,8 @@ import net.minecraft.client.settings.KeyBinding;
 public enum TASmodKeybinds {
 	TICKRATE_0("Tickrate 0 Key", "TASmod", Keyboard.KEY_F8, () -> TASmodClient.tickratechanger.togglePause(), VirtualKeybindings::isKeyDown),
 	TICKRATE_ADVANCE("Advance Tick", "TASmod", Keyboard.KEY_F9, () -> TASmodClient.tickratechanger.advanceTick(), VirtualKeybindings::isKeyDown),
-	TICKRATE_INCREASE("Increase Tickrate", "TASmod", Keyboard.KEY_PERIOD, () -> TASmodClient.tickratechanger.increaseTickrate(), VirtualKeybindings::isKeyDown),
-	TICKRATE_DECREASE("Decrease Tickrate", "TASmod", Keyboard.KEY_COMMA, () -> TASmodClient.tickratechanger.decreaseTickrate(), VirtualKeybindings::isKeyDown),
+	TICKRATE_INCREASE("Increase Tickrate", "TASmod", Keyboard.KEY_PERIOD, () -> TASmodClient.tickratechanger.increaseTickrate(), VirtualKeybindings::isKeyDownExceptTextfield),
+	TICKRATE_DECREASE("Decrease Tickrate", "TASmod", Keyboard.KEY_COMMA, () -> TASmodClient.tickratechanger.decreaseTickrate(), VirtualKeybindings::isKeyDownExceptTextfield),
 	PLAYBACK_STOP("Recording/Playback Stop", "TASmod", Keyboard.KEY_F10, () -> TASmodClient.controller.setTASState(TASstate.NONE), VirtualKeybindings::isKeyDown),
 	SAVESTATE_SAVE("Create Savestate", "TASmod", Keyboard.KEY_J, () -> {
 		try {
