@@ -239,7 +239,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToSave + " saved"));
 
 		try {
-			// close GuiSavestateScreen
+			// Close GuiSavestateScreen
 			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -700,8 +700,10 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			file.load(savestateDat);
 
 			index = Integer.parseInt(file.get(DataValues.INDEX));
-
-			setCurrentIndex(index);
+			if (index != 0)
+				setCurrentIndex(index);
+			else
+				setCurrentIndex(latestIndex);
 		}
 	}
 
