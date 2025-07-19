@@ -38,7 +38,12 @@ public enum TASmodKeybinds {
 			mc.displayGuiScreen(TASmodClient.hud);
 		}
 	}),
-
+	TURN_LEFT("Rotate 45 degrees left", "TASmod", Keyboard.KEY_NONE, () -> {
+		TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle(0, -45);
+	}),
+	TURN_RIGHT("Rotate 45 degrees right", "TASmod", Keyboard.KEY_NONE, () -> {
+		TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle(0, 45);
+	}),
 	TEST1("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
 	}, VirtualKeybindings::isKeyDown),
 	TEST2("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
