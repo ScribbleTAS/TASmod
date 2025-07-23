@@ -42,6 +42,8 @@ This mod can record and play back
 ### Commands
 `/tickrate <ticks/second>` - Changes the game speed. Default is 20, anthing below will slow the game down, anything above will speed it up.
 ### Keybinds
+<kbd>.</kbd> - Increases the tickrate in steps  
+<kbd>,</kbd> - Decreases the tickrate in steps  
 <kbd>F8</kbd> - Enter "Tickrate 0". The game is paused but you can still look around.  
 <kbd>F9</kbd> - While in tickrate 0, advance the tick by 1. By holding keyboardkeys, you can make inputs while tickadvancing.
 
