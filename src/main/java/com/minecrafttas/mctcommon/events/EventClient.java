@@ -62,22 +62,20 @@ public interface EventClient {
 	}
 
 	/**
-	 * Fired when the player is done loading, after the position has been loaded from the server side.<br>
-	 * This also fires every time the player switches dimensions.
+	 * Fired when the server sends a packet to the client telling him to set the position
 	 * 
 	 * @author Scribble
 	 * @see NetHandlerPlayClient#handlePlayerPosLook(net.minecraft.network.play.server.SPacketPlayerPosLook)
 	 */
 	@FunctionalInterface
-	public static interface EventDoneLoadingPlayer extends EventBase {
+	public static interface EventSetCameraAngle extends EventBase {
 
 		/**
-		 * Fired when the player is done loading, after the position has been loaded from the server side.<br>
-		 * This also fires every time the player switches dimensions.
+		 * Fired when the server sends a packet to the client telling him to set the position
 		 * 
 		 * @see NetHandlerPlayClient#handlePlayerPosLook(net.minecraft.network.play.server.SPacketPlayerPosLook)
 		 */
-		public void onDoneLoadingPlayer();
+		public void onSetCameraAngle();
 	}
 
 	/**
