@@ -3,11 +3,11 @@ package com.minecrafttas.tasmod.handlers;
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import com.minecrafttas.mctcommon.events.EventClient.EventClientGameLoop;
-import com.minecrafttas.mctcommon.events.EventClient.EventDoneLoadingPlayer;
 import com.minecrafttas.mctcommon.events.EventClient.EventDoneLoadingWorld;
 import com.minecrafttas.mctcommon.events.EventClient.EventLaunchIntegratedServer;
 import com.minecrafttas.mctcommon.events.EventClient.EventPlayerJoinedClientSide;
 import com.minecrafttas.mctcommon.events.EventClient.EventPlayerLeaveClientSide;
+import com.minecrafttas.mctcommon.events.EventClient.EventSetCameraAngle;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
@@ -22,7 +22,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
  * 
  * @author Scribble
  */
-public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventClientGameLoop, EventDoneLoadingWorld, EventDoneLoadingPlayer, EventPlayerJoinedClientSide, EventPlayerLeaveClientSide {
+public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventClientGameLoop, EventDoneLoadingWorld, EventSetCameraAngle, EventPlayerJoinedClientSide, EventPlayerLeaveClientSide {
 
 	private boolean waszero;
 	private boolean isLoading;
@@ -80,15 +80,12 @@ public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventC
 	 * <p>Initializes the virtual camera to be in line with the vanilla camera.
 	 */
 	@Override
-	public void onDoneLoadingPlayer() {
-		LOGGER.debug(LoggerMarkers.Event, "Finished loading the player position on the client");
+	public void onSetCameraAngle() {
+		LOGGER.debug(LoggerMarkers.Event, "Setting the camera angle");
 		VirtualCameraAngleInput cameraAngle = TASmodClient.virtual.CAMERA_ANGLE;
-		if (cameraAngle.getCurrentPitch() == null || cameraAngle.getCurrentYaw() == null) {
-			LOGGER.debug("Setting the initial pitch and yaw");
-			Minecraft mc = Minecraft.getMinecraft();
-			EntityPlayerSP player = mc.player;
-			cameraAngle.setCamera(player.rotationPitch, player.rotationYaw);
-		}
+		Minecraft mc = Minecraft.getMinecraft();
+		EntityPlayerSP player = mc.player;
+		cameraAngle.setCamera(player.rotationPitch, player.rotationYaw);
 	}
 
 	/**
@@ -105,7 +102,7 @@ public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventC
 	 * {@inheritDoc}
 	 * 
 	 * <p>Resets the camera angle when leaving the world.
-	 * <p>If you later rejoin the world {@link #onDoneLoadingPlayer()} will re-initialise the camera angle
+	 * <p>If you later rejoin the world {@link #onSetCameraAngle()} will re-initialise the camera angle
 	 */
 	@Override
 	public void onPlayerLeaveClientSide(EntityPlayerSP player) {
