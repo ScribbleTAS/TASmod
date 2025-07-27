@@ -14,7 +14,6 @@ import com.minecrafttas.tasmod.savestates.storage.builtin.SavestateMotionStorage
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 
 import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class TASmodBufferBuilder extends ByteBufferBuilder {
@@ -43,7 +42,7 @@ public class TASmodBufferBuilder extends ByteBufferBuilder {
 		DataOutputStream dataout = new DataOutputStream(out);
 
 		try {
-			CompressedStreamTools.write(compound, dataout);
+			CompressedStreamTools.writeCompressed(compound, dataout);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -86,7 +85,7 @@ public class TASmodBufferBuilder extends ByteBufferBuilder {
 
 		DataInputStream datain = new DataInputStream(input);
 
-		NBTTagCompound compound = CompressedStreamTools.read(datain, NBTSizeTracker.INFINITE);
+		NBTTagCompound compound = CompressedStreamTools.readCompressed(datain);
 
 		input.close();
 		datain.close();
