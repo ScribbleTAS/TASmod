@@ -3,7 +3,12 @@
 
 name: Build and Upload to Discord
 
-on: [push]
+on:
+  push:
+    branches:
+      - develop
+    tags-ignore:
+      - '**'
 
 jobs:
   build:
