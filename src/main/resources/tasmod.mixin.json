@@ -68,6 +68,9 @@
 		// Fixes
 		"fixes.MixinMinecraftFullscreen",
 		"fixes.MixinNetworkManager",
-		"fixes.MixinMouseHelper"
+		"fixes.MixinMouseHelper",
+		
+		// KTRNG
+		"killtherng.MixinRenderLivingBase"
 	]
 }
