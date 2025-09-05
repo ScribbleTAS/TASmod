@@ -1,10 +1,10 @@
 plugins {
 	// loom plugin
-    id 'fabric-loom' version "${loom_version}"
+    id "fabric-loom" version "${loom_version}"
     // legacy looming (loom plugin improvements)
-    id 'legacy-looming' version "${loom_version}"
-    id 'com.palantir.git-version' version '3.1.0'
-    id 'com.diffplug.spotless' version '7.0.3'
+    id "legacy-looming" version "${loom_version}"
+    id "com.palantir.git-version" version "3.1.0"
+    id "com.diffplug.spotless" version "7.0.3"
 }
 
 
@@ -23,18 +23,18 @@ java {
 
 loom {
 	// set access widener
-	accessWidenerPath = file('src/main/resources/tasmod.accesswidener')
+	accessWidenerPath = file("src/main/resources/tasmod.accesswidener")
 	// add log4jconfig
-	log4jConfigs.from(file('src/main/resources/log4j.xml'))
+	log4jConfigs.from(file("src/main/resources/log4j.xml"))
 }
 
 // dependency repositories
 repositories {
     mavenCentral()
     maven { url = "https://maven.minecrafttas.com/main" }
-    maven { url = 'https://raw.githubusercontent.com/BleachDev/cursed-mappings/main/' }
+    maven { url = "https://raw.githubusercontent.com/BleachDev/cursed-mappings/main/" }
     maven { url = "https://jitpack.io" }
-    maven { url = 'https://repo.spongepowered.org/maven' }
+    maven { url = "https://repo.spongepowered.org/maven" }
 }
 
 // dependency configurations
@@ -55,8 +55,8 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	
 	// testing dependencies
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.3'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation "org.junit.jupiter:junit-jupiter:5.13.3"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 
@@ -70,7 +70,7 @@ processResources {
     inputs.property "mcversion", project.minecraft_version
     
     filesMatching("fabric.mod.json") {
-        expand 'mod_url': project.mod_url, 'name': project.mod_name, 'mod_version': project.version, 'mod_description': project.mod_description, 'mod_sources': project.mod_sources, 'mod_email': project.mod_email
+        expand "mod_url": project.mod_url, "name": project.mod_name, "mod_version": project.version, "mod_description": project.mod_description, "mod_sources": project.mod_sources, "mod_email": project.mod_email
     }
 }
 
@@ -87,7 +87,7 @@ jar {
 }
 
 // configure testing
-tasks.named('test', Test) {
+tasks.named("test", Test) {
     useJUnitPlatform()
 
 	testLogging {
@@ -96,11 +96,11 @@ tasks.named('test', Test) {
 }
 
 spotless {
-	encoding 'UTF-8'
-	lineEndings 'UNIX'
+	encoding "UTF-8"
+	lineEndings "UNIX"
 	java {
-	importOrderFile('formatter/TASmodImportorder.txt')
-	eclipse().configFile('formatter/TASmodFormatter.xml')
+	importOrderFile("formatter/TASmodImportorder.txt")
+	eclipse().configFile("formatter/TASmodFormatter.xml")
 	}
 	enforceCheck false
 }
