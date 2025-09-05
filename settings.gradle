@@ -2,7 +2,7 @@
 pluginManagement {
     // add repositories for plugins
     repositories {
-        maven { url = 'https://maven.mgnet.work/main' }
+		maven { url = "https://maven.minecrafttas.com/main" }
         maven { url = 'https://maven.fabricmc.net/' }
         maven { url = 'https://repo.legacyfabric.net/repository/legacyfabric/' }
         mavenCentral()
