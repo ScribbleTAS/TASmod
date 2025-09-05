@@ -16,6 +16,7 @@ import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.util.FileThread;
 
 /**
@@ -25,6 +26,10 @@ import com.minecrafttas.tasmod.util.FileThread;
  */
 public class PlaybackSerialiser {
 
+	/**
+	 * The default flavor name used for saving TASfiles when no flavor is specified,<br>
+	 * used in {@link #saveToFile(Path, BigArrayList, String, long)}
+	 */
 	private static String defaultFlavor = "beta1";
 
 	/**
@@ -112,8 +117,8 @@ public class PlaybackSerialiser {
 		}
 
 		BigArrayList<String> tickLines = flavor.serialise(container, stopIndex);
-		for (long i = 0; i < tickLines.size(); i++) {
-			writerThread.addLine(tickLines.get(i));
+		for (String tickLine : tickLines) {
+			writerThread.addLine(tickLine);
 		}
 
 		writerThread.close();
@@ -132,6 +137,19 @@ public class PlaybackSerialiser {
 		return loadFromFile(file, true);
 	}
 
+	/**
+	 * Loads a BigArrayList of {@link InputContainer InputContainers} from a file.<br>
+	 * Tries to determine the {@link SerialiserFlavorBase flavor} by reading the header of the TASfile
+	 * 
+	 * <p>Has a parameter to stop processing extension data, usually used when
+	 * {@link SavestateHandlerClient#loadstate(String) loading savestates} to prevent loadstates from overwriting data
+	 * 
+	 * @param file The file to load from
+	 * @param processExtensions Sets {@link SerialiserFlavorBase#processExtensions}
+	 * @return The loaded BigArrayList of {@link InputContainer InputContainers}
+	 * @throws PlaybackLoadException If the file contains errors
+	 * @throws IOException If the file could not be read
+	 */
 	public static BigArrayList<InputContainer> loadFromFile(Path file, boolean processExtensions) throws PlaybackLoadException, IOException {
 		if (file == null) {
 			throw new PlaybackLoadException("Load from file failed. No file specified");
@@ -160,6 +178,19 @@ public class PlaybackSerialiser {
 		return loadFromFile(file, flavorName, true);
 	}
 
+	/**
+	 * Loads a BigArrayList of {@link InputContainer InputContainers} from a file, with a specific flavor
+	 * 
+	 * <p>Has a parameter to stop processing extension data, usually used when
+	 * {@link SavestateHandlerClient#loadstate(String) loading savestates} to prevent loadstates from overwriting data
+	 * 
+	 * @param file The file to load from
+	 * @param flavorName The name of the {@link SerialiserFlavorBase flavor} to use. If the detected flavor in the TASfile mismatches, a {@link PlaybackLoadException} is thrown
+	 * @param processExtensions Sets {@link SerialiserFlavorBase#processExtensions}
+	 * @return The loaded BigArrayList of {@link InputContainer InputContainers}
+	 * @throws PlaybackLoadException If the file contains errors
+	 * @throws IOException If the file could not be read
+	 */
 	public static BigArrayList<InputContainer> loadFromFile(Path file, String flavorName, boolean processExtensions) throws PlaybackLoadException, IOException {
 
 		// If the flavor is null or empty, try to determine the flavor by reading the header

@@ -1014,7 +1014,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 *     ├── {@link #deserialiseMultipleInlineComments(List, UnsortedFileCommandContainer)}
 	 *     │   └── {@link #deserialiseInlineComment(String, FileCommandsInCommentList)}
 	 *     │       └── {@link #deserialiseFileCommandsInline(String, FileCommandsInCommentList)}
-	 *     ├── {@link #splitInputs(List, List, List, List, List, List)}
+	 *     ├── {@link #splitTickLines(List, List, List, List, List, List)}
 	 *     │   └── {@link #deserialiseEndlineComment(String, FileCommandsInCommentList)}
 	 *     │       └── {@link #deserialiseFileCommandsEndline(String, FileCommandsInCommentList)}
 	 *     ├── {@link #deserialiseKeyboard(List)}
@@ -1092,8 +1092,9 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	/**
 	 * <p>
 	 * Extracts all the lines corresponding to one tick+subticks a.k.a one
-	 * "container" from the incoming lines.<br>
-	 * The extracted ticks are easier to process than using a huge list.<br>
+	 * {@link InputContainer "InputcContainer"} from the incoming lines.<br>
+	 * The extracted containers are easier to process than using a huge list.<br>
+	 * Furthermore, this method ensures the correct formatting of the lines.
 	 * <p>
 	 * A container has multiple parts to it, that are split into
 	 * {@link ExtractPhases}<br>
@@ -1147,6 +1148,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	 * @param lines     The line list
 	 * @param startPos  The start position of this tick
 	 * @return The updated index for the next tick
+	 * @throws PlaybackLoadException When the order of phases is wrong
 	 */
 	protected long extractContainer(List<String> extracted, BigArrayList<String> lines, long startPos) {
 		ExtractPhases phase = ExtractPhases.NONE;
@@ -1206,37 +1208,67 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return startPos + counter - 1;
 	}
 
+	/**
+	 * Main deserialising method of a single {@link InputContainer}
+	 * 
+	 * In each step, incoming lines are broken down to it's components:
+	 * 
+	 * <ol>
+	 * 	<li>Lines are split in inline comments and ticks</li>
+	 * 	<li>Inline comments are processed</li>
+	 * 	<li>Tick lines are split into keyboard, mouse, cameraAngle, endlineComments, endlineFileCommands</li>
+	 * 	<li>All components from the previous step get deserialised into actual objects</li>
+	 * 	<li>Optional if {@link #processExtensions} is true: Update FileCommands</li>
+	 * </ol>
+	 * 
+	 * @param out The list of {@link InputContainers}, passed in by reference
+	 * @param containerLines The lines to deserialise
+	 */
 	protected void deserialiseContainer(BigArrayList<InputContainer> out, List<String> containerLines) {
-
+		// Split lines into comments and ticks
 		List<String> inlineComments = new ArrayList<>();
 		List<String> tickLines = new ArrayList<>();
 		splitContainer(containerLines, inlineComments, tickLines);
 
+		// Process inline comments
 		UnsortedFileCommandContainer inlineFileCommands = new UnsortedFileCommandContainer();
 		deserialiseMultipleInlineComments(inlineComments, inlineFileCommands);
 
+		// Split ticks into components 
 		List<String> keyboardStrings = new ArrayList<>();
 		List<String> mouseStrings = new ArrayList<>();
 		List<String> cameraAngleStrings = new ArrayList<>();
 		List<String> endlineComments = new ArrayList<>();
 		UnsortedFileCommandContainer endlineFileCommands = new UnsortedFileCommandContainer();
+		splitTickLines(tickLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments, endlineFileCommands);
 
-		splitInputs(tickLines, keyboardStrings, mouseStrings, cameraAngleStrings, endlineComments, endlineFileCommands);
-
+		/*
+		 * The previous step splits everything into multiple lists.
+		 * However, the process makes it so every list has the same number of elements.
+		 * While this is true for keyboard, mouse and camera,
+		 * endlineComments will have empty lines.
+		 * 
+		 * Ideally we want to remove all empty lines,
+		 * however comments do allow empty lines between ticks.
+		 * Therefore we remove empty lines, but starting from the back of the list
+		 */
 		pruneListEndNull(endlineComments);
 
+		// Deserialise each component
 		VirtualKeyboard keyboard = deserialiseKeyboard(keyboardStrings);
 		VirtualMouse mouse = deserialiseMouse(mouseStrings);
 		VirtualCameraAngle cameraAngle = deserialiseCameraAngle(cameraAngleStrings);
-		CommentContainer comments = new CommentContainer(inlineComments, endlineComments);
+		CommentContainer comments = new CommentContainer(inlineComments, endlineComments); // Comments don't need deserialisation
 
 		InputContainer deserialisedContainer = new InputContainer(keyboard, mouse, cameraAngle, comments);
 
+		// Update FileCommands
 		if (processExtensions) {
 			TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseInline(currentTick, deserialisedContainer, inlineFileCommands);
 			TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.handleOnDeserialiseEndline(currentTick, deserialisedContainer, endlineFileCommands);
 		}
 
+		// Set the previous input container, used for relative coordinates
 		previousInputContainer = deserialisedContainer;
 
 		out.add(deserialisedContainer);
@@ -1245,11 +1277,18 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	/**
 	 * Splits container into inline comments and ticks.
 	 * 
-	 * @param lines
+	 * <pre>
+	 * // This is an inline comment
+	 * 57|W,LCONTROL;w|;0,887,626|17.85;-202.74799 // This is an endline comment, but that is still part of a tick and processed later
+	 * </pre>
+	 * 
+	 * @param lines The lines to process
+	 * @param inlineComments The list to add the inline comments
+	 * @param ticks The list to add the ticks to
 	 */
 	protected void splitContainer(List<String> lines, List<String> inlineComments, List<String> ticks) {
 		for (String line : lines) {
-			if (contains(singleComment(), line)) {
+			if (contains(inlineComment(), line)) {
 				inlineComments.add(line);
 			} else {
 				ticks.add(line);
@@ -1257,6 +1296,11 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		}
 	}
 
+	/**
+	 * 
+	 * @param inlineComments
+	 * @param inlineFileCommands
+	 */
 	protected void deserialiseMultipleInlineComments(List<String> inlineComments, UnsortedFileCommandContainer inlineFileCommands) {
 		for (int i = 0; i < inlineComments.size(); i++) {
 			FileCommandsInCommentList deserialisedFileCommands = new FileCommandsInCommentList();
@@ -1546,7 +1590,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return out;
 	}
 
-	protected void splitInputs(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd, UnsortedFileCommandContainer endlineFileCommands) {
+	protected void splitTickLines(List<String> lines, List<String> serialisedKeyboard, List<String> serialisedMouse, List<String> serialisedCameraAngle, List<String> commentsAtEnd, UnsortedFileCommandContainer endlineFileCommands) {
 
 		String previousCamera = null;
 		if (previousInputContainer != null) {
@@ -1718,12 +1762,15 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	}
 
 	/**
-	 * @return The regex used for detecting comment lines
+	 * @return The regex used for detecting inline comments
 	 */
-	protected String singleComment() {
+	protected String inlineComment() {
 		return "^//";
 	}
 
+	/**
+	 * @return The regex used for detecting endline comments
+	 */
 	protected String endlineComment() {
 		return "(//.+)";
 	}
