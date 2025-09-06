@@ -292,7 +292,7 @@ public class PlaybackSerialiser {
 		List<String> lines = new ArrayList<>();
 		String line = null;
 
-		// Reads the first 100 lines
+		// Reads the first 100 lines to search for the flavor
 		for (int i = 0; i < 100; i++) {
 
 			line = reader.readLine();

@@ -341,7 +341,7 @@ public class AlphaFlavor extends SerialiserFlavorBase {
 	}
 
 	@Override
-	protected String splitInputRegex() {
+	protected String splitTickLineRegex() {
 		return "^\\d+\\|(.*?)\\|(.*?)\\|(\\S*)~&";
 	}
 
