@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -200,7 +199,7 @@ public class PlaybackSerialiserTest {
 
 		try {
 			BigArrayList<InputContainer> actual = PlaybackSerialiser.loadFromFile(file, testFlavor);
-			assertBigArrayList(expected, actual);
+			assertIterableEquals(expected, actual);
 			assertEquals("testing", testMetadata.actual);
 		} catch (PlaybackLoadException | IOException e) {
 			fail(e);
@@ -267,7 +266,7 @@ public class PlaybackSerialiserTest {
 
 		expected.add(new InputContainer(new VirtualKeyboard(), mouse3, cameraAngle3));
 
-		assertBigArrayList(expected, actual);
+		assertIterableEquals(expected, actual);
 
 		assertEquals("Wat", testMetadata.actual);
 
@@ -278,7 +277,7 @@ public class PlaybackSerialiserTest {
 		fclist.add(fccontainer);
 		fclist.add(new SortedFileCommandContainer());
 		fclist.add(new SortedFileCommandContainer());
-		assertBigArrayList(fclist, testFileCommand.getInlineStorage());
+		assertIterableEquals(fclist, testFileCommand.getInlineStorage());
 
 		BigArrayList<SortedFileCommandContainer> fclistEnd = new BigArrayList<>();
 		SortedFileCommandContainer fccontainerEnd = new SortedFileCommandContainer();
@@ -290,7 +289,7 @@ public class PlaybackSerialiserTest {
 		fclistEnd.add(fccontainerEnd);
 		fclistEnd.add(new SortedFileCommandContainer());
 		fclistEnd.add(new SortedFileCommandContainer());
-		assertBigArrayList(fclistEnd, testFileCommand.getEndlineStorage());
+		assertIterableEquals(fclistEnd, testFileCommand.getEndlineStorage());
 	}
 
 	@Test
@@ -353,7 +352,7 @@ public class PlaybackSerialiserTest {
 
 		expected.add(new InputContainer(new VirtualKeyboard(), mouse3, cameraAngle3));
 
-		assertBigArrayList(expected, actual);
+		assertIterableEquals(expected, actual);
 
 		assertEquals("e", testMetadata.actual);
 
@@ -389,18 +388,5 @@ public class PlaybackSerialiserTest {
 		});
 
 		assertEquals("Flavor name NotAFlavor doesn't exist.", t.getMessage());
-
-	}
-
-	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {
-		assertIterableEquals(convertBigArrayListToArrayList(expected), convertBigArrayListToArrayList(actual));
-	}
-
-	private <T extends Serializable> ArrayList<T> convertBigArrayListToArrayList(BigArrayList<T> list) {
-		ArrayList<T> out = new ArrayList<>();
-		for (long i = 0; i < list.size(); i++) {
-			out.add(list.get(i));
-		}
-		return out;
 	}
 }

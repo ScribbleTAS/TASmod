@@ -11,19 +11,37 @@ import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.mctcommon.file.AbstractDataFile;
 import com.minecrafttas.mctcommon.registry.Registerable;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.commands.CommandFileCommand;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
+import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 
 public class PlaybackFileCommand {
 
+	/**
+	 * The name of the fileCommand
+	 */
 	private String name;
 
+	/**
+	 * The arguments of the fileCommand
+	 */
 	private String[] args;
 
+	/**
+	 * Creates a new FileCommand with no arguments
+	 * @param name The {@link #name}
+	 */
 	public PlaybackFileCommand(String name) {
 		this(name, (String[]) null);
 	}
 
+	/**
+	 * Creates a new FileCommand
+	 * @param name The {@link #name}
+	 * @param args The {@link #args}r
+	 */
 	public PlaybackFileCommand(String name, String... args) {
 		if (args == null) {
 			args = new String[] {};
@@ -32,10 +50,16 @@ public class PlaybackFileCommand {
 		this.args = args;
 	}
 
+	/**
+	 * @return {@link #name}
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * @return {@link #args}
+	 */
 	public String[] getArgs() {
 		return args;
 	}
@@ -94,6 +118,12 @@ public class PlaybackFileCommand {
 			this(TASmodClient.tasfiledirectory.resolve("temp").resolve(tempFolderName));
 		}
 
+		/**
+		 * <p>Creates a FileCommandExtension and creates a temp folder with<br>
+		 * at the specified path for the {@link BigArrayList} files
+		 * 
+		 * @param tempFolderName The name of the temp folder
+		 */
 		public PlaybackFileCommandExtension(Path tempDirectory) {
 			if (tempDirectory == null) {
 				tempDir = null;
@@ -112,33 +142,87 @@ public class PlaybackFileCommand {
 			endlineFileCommandStorage = new BigArrayList<>(tempDir.toString());
 		}
 
+		/**
+		 * Whether this extension is enabled.<br>
+		 * Can be changed e.g. via the {@link CommandFileCommand} command
+		 */
 		protected boolean enabled = false;
 
+		/**
+		 * <p>The names of all file commands that should be handled by this extension
+		 * <p>Imagine having the following file commands in the playback file:
+		 * <pre>
+		 * // $desyncMonitor(13, 0, 1, 1, 1, 1); $hud(true);
+		 * </pre>
+		 * And you want to support the hud file command with an extension,<br>
+		 * then you must return a string array with the name:
+		 * <pre>
+		 * public String[] getFileCommandNames() {
+		 * 	return new String[]{"hud"};
+		 * }
+		 * </pre>
+		 * Now, methods like {@link #onDeserialiseEndlineComment(long, InputContainer, SortedFileCommandContainer) onDeserialiseEndlineComment}
+		 * will only have a {@link SortedFileCommandContainer}<br>
+		 * with the "hud" {@link FileCommandsInTickList} as a parameter. "desyncMonitor" will be ignored.
+		 * <p>
+		 * To also include "desyncMonitor" in the {@link SortedFileCommandContainer}, simply add that name to the array:
+		 * <pre>
+		 * public String[] getFileCommandNames() {
+		 * 	return new String[]{"hud", "desyncMonitor"};
+		 * }
+		 * </pre>
+		 * 
+		 * @return A string array of file command names
+		 */
 		public abstract String[] getFileCommandNames();
 
+		/**
+		 * Fired when using the {@link CommandFileCommand} and setting this extension to enabled
+		 */
 		public void onEnable() {
 		};
 
+		/**
+		 * Fired when using the {@link CommandFileCommand} and setting this extension to disabled
+		 */
 		public void onDisable() {
 		};
 
+		/**
+		 * Fired when {@link PlaybackControllerClient#clear()} is called<br>
+		 * Make sure to call <code>super.onClear()</code> as it clears the {@link BigArrayLists} in this extension!  
+		 */
 		public void onClear() {
-			try {
-				inlineFileCommandStorage.clearMemory();
-				endlineFileCommandStorage.clearMemory();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			inlineFileCommandStorage = new BigArrayList<>();
-			endlineFileCommandStorage = new BigArrayList<>();
+			inlineFileCommandStorage.clear();
+			endlineFileCommandStorage.clear();
 		};
 
+		/**
+		 * Fired when the {@link PlaybackControllerClient} is recording inputs<br>
+		 * Usually used to generate new FileCommands during recording.
+		 * @param tick The current tick in the recording
+		 * @param inputContainer The current inputs in the recording
+		 */
 		public void onRecord(long tick, InputContainer inputContainer) {
 		};
 
+		/**
+		 * Fired when the {@link PlaybackControllerClient} is playing back inputs.<br>
+		 * Usually used to generate new FileCommands during playback.
+		 * @param tick The current tick in the playback
+		 * @param inputContainer The current inputs in the playback
+		 */
 		public void onPlayback(long tick, InputContainer inputContainer) {
 		};
 
+		/**
+		 * Fired when the {@link PlaybackSerialiser} writes the inputs to a file.<br>
+		 * This is used to store your inlineFileCommands into an comment.
+		 * 
+		 * @param tick The current tick that is serialised
+		 * @param inputContainer The current inputs that are being serialised
+		 * @return A {@link SortedFileCommandContainer} with your filecommands for one container that you want serialised
+		 */
 		public SortedFileCommandContainer onSerialiseInlineComment(long tick, InputContainer inputContainer) {
 			SortedFileCommandContainer out = new SortedFileCommandContainer();
 			if (tick >= inlineFileCommandStorage.size())
@@ -155,6 +239,14 @@ public class PlaybackFileCommand {
 			return out;
 		}
 
+		/**
+		 * Fired when the {@link PlaybackSerialiser} writes the inputs to a file.<br>
+		 * This is used to store your endlineFileCommands into an comment.
+		 * 
+		 * @param tick The current tick that is serialised
+		 * @param inputContainer The current inputs that are being serialised
+		 * @return A {@link SortedFileCommandContainer} with your filecommands for one container that you want serialised
+		 */
 		public SortedFileCommandContainer onSerialiseEndlineComment(long tick, InputContainer inputContainer) {
 			SortedFileCommandContainer out = new SortedFileCommandContainer();
 			if (tick >= endlineFileCommandStorage.size())
@@ -171,24 +263,47 @@ public class PlaybackFileCommand {
 			return out;
 		}
 
-		public void onDeserialiseInlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
+		/**
+		 * Fired when the {@link PlaybackSerialiser} reads the inputs from a file.<br>
+		 * This is used to load your inlineFileCommands from a comment into {@link #inlineFileCommandStorage} to be used in {@link #onPlayback(long, InputContainer)}.
+		 * 
+		 * @param tick The current tick that is deserialised
+		 * @param inputContainer The current inputs that are being deserialised
+		 * @param fileCommandContainer The {@link SortedFileCommandContainer} that was deserialised
+		 */
+		public void onDeserialiseInlineComment(long tick, InputContainer inputContainer, SortedFileCommandContainer fileCommandContainer) {
 			if (fileCommandContainer == null)
 				return;
 
 			inlineFileCommandStorage.add(fileCommandContainer);
 		}
 
-		public void onDeserialiseEndlineComment(long tick, InputContainer container, SortedFileCommandContainer fileCommandContainer) {
+		/**
+		 * Fired when the {@link PlaybackSerialiser} reads the inputs from a file.<br>
+		 * This is used to load your endlineFileCommands from a comment into {@link #endlineFileCommandStorage} to be used in {@link #onPlayback(long, InputContainer)}.
+		 * 
+		 * @param tick The current tick that is deserialised
+		 * @param inputContainer The current inputs that are being deserialised
+		 * @param fileCommandContainer The {@link SortedFileCommandContainer} that was deserialised
+		 */
+		public void onDeserialiseEndlineComment(long tick, InputContainer inputContainer, SortedFileCommandContainer fileCommandContainer) {
 			if (fileCommandContainer == null)
 				return;
 
 			endlineFileCommandStorage.add(fileCommandContainer);
 		}
 
+		/**
+		 * @return {@link #enabled}
+		 */
 		public boolean isEnabled() {
 			return enabled;
 		}
 
+		/**
+		 * Set {@link #enabled} and run {@link #onEnable()} and {@link #onDisable()}
+		 * @param enabled Sets {@link #enabled}
+		 */
 		public void setEnabled(boolean enabled) {
 			if (enabled)
 				onEnable();
@@ -239,8 +354,8 @@ public class PlaybackFileCommand {
 	 * <p>This would translate into an ArrayList like
 	 * <pre>
 	 * [
-	 * 	[$desyncMonitor(13, 0, 1, 1, 1, 1);, $hud(true);]	&lt;- One {@link FileCommandsInCommentList}
-	 * 	[$desyncMonitor(16, 3, 1, 1, 1, 1);, $hud(false);]
+	 * 	[$desyncMonitor(13, 0, 1, 1, 1, 1);, $hud(true);],	&lt;- One {@link FileCommandsInCommentList}
+	 * 	[$desyncMonitor(16, 3, 1, 1, 1, 1);, $hud(false);],
 	 * 	[$label(Test);, $hud(false);]
 	 * ]
 	 * </pre>
@@ -259,6 +374,28 @@ public class PlaybackFileCommand {
 			/*
 			 *  Fill the HashMap in SortedFileCommandContainer with empty FileCommandsInCommentList
 			 *  for each different FileCommand name found in this UnsortedFileCommandContainer.
+			 *  
+			 *  We have to do this, since absent FileCommands are set to null.
+			 *  
+			 *  Example:
+			 *  // $desyncMonitor(13, 0, 1, 1, 1, 1); $hud(true);
+			 *  // $desyncMonitor(16, 3, 1, 1, 1, 1); $hud(false);
+			 *  // $label(Test); $hud(false);
+			 *  
+			 *  In line 1, the "label" FC is missing
+			 *  In line 2, once again, "label is missing
+			 *  In line 3, desyncMonitor is missing.
+			 *  
+			 *  If it's missing, we need to set that spot to null.
+			 *  
+			 *  So first we create empty Hashmaps for each:
+			 * { 
+			 * "desyncMonitor": [],
+			 * "hud": [],	
+			 * "label": []
+			 * }
+			 * 
+			 * Then iterate through all filecommands and set null where a FileCommand is absent
 			 */
 			for (FileCommandsInCommentList unsortedFileCommandsList : this) {
 				if (unsortedFileCommandsList != null) {
@@ -268,7 +405,7 @@ public class PlaybackFileCommand {
 				}
 			}
 
-			/**
+			/*
 			 * Add the FileCommands to the previously created FileCommandsInCommentLists
 			 */
 			for (FileCommandsInCommentList unsortedFileCommandsList : this) {
@@ -285,7 +422,7 @@ public class PlaybackFileCommand {
 
 					boolean valuePresent = false;
 					if (unsortedFileCommandsList != null) {
-						/**
+						/*
 						 * Iterates through all filecommands in a comment
 						 * and adds it to the sorted list if found
 						 */
@@ -296,7 +433,7 @@ public class PlaybackFileCommand {
 							}
 						}
 					}
-					/**
+					/*
 					 * If the value is not found,
 					 * add null to indicate that the
 					 * file command is missing from this comment
@@ -336,9 +473,10 @@ public class PlaybackFileCommand {
 	}
 
 	/**
-	 * <p>A LinkedHashMap for storing {@link FileCommandsInCommentList} sorted by the name of the FileCommand name.
+	 * <p>A LinkedHashMap for storing {@link FileCommandsInTickList} sorted by the name of the FileCommand name.
 	 * <p>The key represents the FileCommand name, while the elements are the {@link FileCommandsInTickList}
 	 * <p>This stands in contrast to the {@link UnsortedFileCommandContainer}, which can be obtained by calling {@link SortedFileCommandContainer#unsort() unsort()}
+	 * <p>Used in {@link PlaybackFileCommandExtension PlaybackFileCommandExtensions} as this format makes it easier to distribute the file commands to their respective class extensions
 	 * <h5>Example</h5>
 	 * <pre>
 	 * // $desyncMonitor(13, 0, 1, 1, 1, 1); $hud(true);

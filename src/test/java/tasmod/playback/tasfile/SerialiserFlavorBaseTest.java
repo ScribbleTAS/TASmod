@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -231,7 +230,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		expected.add("\t3|||4.0;4.0");
 
 		// C o m p a r e
-		assertBigArrayList(expected, actual);
+		assertIterableEquals(expected, actual);
 	}
 
 	/**
@@ -714,7 +713,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 
 		expected.add(new InputContainer(keyboard, mouse, cameraAngle));
 
-		assertBigArrayList(expected, actual);
+		assertIterableEquals(expected, actual);
 	}
 
 	/**
@@ -733,7 +732,7 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 		List<String> actualComment = new ArrayList<>();
 		UnsortedFileCommandContainer actualFileCommand = new UnsortedFileCommandContainer();
 
-		splitInputs(tick, actualKeyboard, actualMouse, actualCameraAngle, actualComment, actualFileCommand);
+		splitTickLines(tick, actualKeyboard, actualMouse, actualCameraAngle, actualComment, actualFileCommand);
 
 		List<String> expectedKeyboard = new ArrayList<>();
 		List<String> expectedMouse = new ArrayList<>();
@@ -1076,18 +1075,6 @@ public class SerialiserFlavorBaseTest extends SerialiserFlavorBase {
 	@Test
 	void testYawUnclamping() {
 		assertEquals(-190f, unclampYaw(170f, -170f));
-	}
-
-	private <T extends Serializable> void assertBigArrayList(BigArrayList<T> expected, BigArrayList<T> actual) {
-		assertIterableEquals(convertBigArrayListToArrayList(expected), convertBigArrayListToArrayList(actual));
-	}
-
-	private <T extends Serializable> ArrayList<T> convertBigArrayListToArrayList(BigArrayList<T> list) {
-		ArrayList<T> out = new ArrayList<>();
-		for (long i = 0; i < list.size(); i++) {
-			out.add(list.get(i));
-		}
-		return out;
 	}
 
 	@Override
