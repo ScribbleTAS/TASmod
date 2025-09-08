@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.playback.tasfile.flavor;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -765,7 +764,7 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		 *  // This is an inline comment
 		 *  1|||0;0
 		 */
-		addAll(out, serialisedInlineComments);
+		out.addAll(serialisedInlineComments);
 
 		/*
 		 * Copy inputs with ticks and subticks into a queue,
@@ -1953,20 +1952,6 @@ public abstract class SerialiserFlavorBase implements Registerable {
 			spacingLine[i] = spacingChar;
 		}
 		return new String(spacingLine);
-	}
-
-	public static <T extends Serializable> void addAll(BigArrayList<T> list, BigArrayList<T> toAdd) { //TODO Add this to BigArrayList itself
-		for (int i = 0; i < toAdd.size(); i++) {
-			T element = toAdd.get(i);
-			list.add(element);
-		}
-	}
-
-	public static <T extends Serializable> void addAll(BigArrayList<T> list, List<T> toAdd) {
-		for (int i = 0; i < toAdd.size(); i++) {
-			T element = toAdd.get(i);
-			list.add(element);
-		}
 	}
 
 	/**

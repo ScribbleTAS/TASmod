@@ -32,6 +32,7 @@ loom {
 repositories {
     mavenCentral()
     maven { url = "https://maven.minecrafttas.com/main" }
+    //maven { url = "https://maven.minecrafttas.com/snapshots" }
     maven { url = "https://raw.githubusercontent.com/BleachDev/cursed-mappings/main/" }
     maven { url = "https://jitpack.io" }
     maven { url = "https://repo.spongepowered.org/maven" }
@@ -46,7 +47,7 @@ configurations {
 // dependencies
 dependencies {
     // tasmod dependencies
-    embed "com.dselent:bigarraylist:1.5"
+    embed "com.dselent:bigarraylist:1.6"
     embed "com.github.KaptainWutax:SeedUtils:b6a383113c"
 
 	// loom dependencies

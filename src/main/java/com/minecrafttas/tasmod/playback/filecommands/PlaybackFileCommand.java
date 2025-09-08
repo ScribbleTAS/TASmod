@@ -193,14 +193,8 @@ public class PlaybackFileCommand {
 		 * Make sure to call <code>super.onClear()</code> as it clears the {@link BigArrayLists} in this extension!  
 		 */
 		public void onClear() {
-			try {
-				inlineFileCommandStorage.clearMemory();
-				endlineFileCommandStorage.clearMemory();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			inlineFileCommandStorage = new BigArrayList<>();
-			endlineFileCommandStorage = new BigArrayList<>();
+			inlineFileCommandStorage.clear();
+			endlineFileCommandStorage.clear();
 		};
 
 		/**

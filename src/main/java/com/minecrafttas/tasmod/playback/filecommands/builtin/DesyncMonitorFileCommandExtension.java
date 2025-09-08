@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.playback.filecommands.builtin;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.text.NumberFormat;
@@ -356,12 +355,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	@Override
 	public void onClear() {
 		currentValues = null;
-		try {
-			monitorContainer.clearMemory();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		monitorContainer = new BigArrayList<MonitorContainer>();
+		monitorContainer.clear();
 		lastStatus = TextFormatting.GRAY + "Empty";
 		lastPos = "";
 		lastMotion = "";

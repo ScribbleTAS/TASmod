@@ -9,8 +9,6 @@ import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_RESTARTA
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_SAVE;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
@@ -51,7 +49,6 @@ import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
-import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
@@ -572,7 +569,7 @@ public class PlaybackControllerClient implements
 
 	public void setInputs(BigArrayList<InputContainer> inputs, long index) {
 		clearInputList();
-		SerialiserFlavorBase.addAll(this.inputs, inputs);
+		this.inputs.addAll(inputs);
 		setIndex(index);
 	}
 
@@ -616,12 +613,7 @@ public class PlaybackControllerClient implements
 	}
 
 	private void clearInputList() {
-		try {
-			inputs.clearMemory();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		inputs = new BigArrayList<InputContainer>(tasFileDirectory + File.separator + "temp");
+		inputs.clear();
 	}
 
 	public VirtualKeyboard getNextPlaybackKeyboard() {
