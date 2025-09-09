@@ -316,7 +316,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "Facing";
-						return String.format("%.2f %.2f", MathHelper.wrapDegrees(Minecraft.getMinecraft().player.rotationYaw), MathHelper.wrapDegrees(Minecraft.getMinecraft().player.rotationPitch));
+						return String.format("%.2f %.2f", MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getCurrentYaw()), MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getCurrentPitch()));
 					}));
 
 			title = "camera";
@@ -327,7 +327,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "Camera";
-						return String.format("%.2f %.2f", TASmodClient.virtual.CAMERA_ANGLE.getCurrentYaw(), TASmodClient.virtual.CAMERA_ANGLE.getCurrentPitch());
+						return String.format("%.2f %.2f", MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getNextYaw()), MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getNextPitch()));
 					}));
 
 			title = "cticks";
