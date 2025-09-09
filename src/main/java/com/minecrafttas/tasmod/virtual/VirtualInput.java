@@ -684,17 +684,31 @@ public class VirtualInput {
 		}
 
 		/**
-		 * @return The absolute pitch coordinate of the player. May be null when it's initialized
+		 * @return The current pitch coordinate of the player. May be null when it's initialized
 		 */
 		public Float getCurrentPitch() {
 			return currentCameraAngle.getPitch();
 		}
 
 		/**
-		 * @return The absolute yaw coordinate of the player. May be null when it's initialized
+		 * @return The current yaw coordinate of the player. May be null when it's initialized
 		 */
 		public Float getCurrentYaw() {
 			return currentCameraAngle.getYaw();
+		}
+
+		/**
+		 * @return The pitch coordinate of the player in the next tick. May be null when it's initialized
+		 */
+		public Float getNextPitch() {
+			return nextCameraAngle.getPitch();
+		}
+
+		/**
+		 * @return The yaw coordinate of the player in the next tick. May be null when it's initialized
+		 */
+		public Float getNextYaw() {
+			return nextCameraAngle.getYaw();
 		}
 
 		/**
