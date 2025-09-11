@@ -5,7 +5,7 @@ import java.util.Random;
 import kaptainwutax.seedutils.lcg.LCG;
 import kaptainwutax.seedutils.rand.JRand;
 
-public class KTRNGRandom extends Random {
+public class RandomBase extends Random {
 
 	private String name;
 	private String description;
@@ -15,12 +15,11 @@ public class KTRNGRandom extends Random {
 	private boolean enabled;
 	private boolean client;
 
-	public KTRNGRandom(String name, String description, boolean enabled, boolean client) {
-		super(0L);
-		this.name = name;
-		this.description = description;
-		this.enabled = enabled;
-		this.client = client;
+	private long initialSeed;
+
+	public RandomBase(long seed) {
+		super(seed);
+		this.initialSeed = seed;
 	}
 
 	public void setSeed(long seedIn) {
@@ -143,16 +142,16 @@ public class KTRNGRandom extends Random {
 		return thing.getSeed();
 	}
 
-	public long distance(KTRNGRandom random) {
-		return KTRNGRandom.distance(this.getSeed(), random.getSeed());
+	public long distance(RandomBase random) {
+		return RandomBase.distance(this.getSeed(), random.getSeed());
 	}
 
 	public long distance(long seed) {
-		return KTRNGRandom.distance(this.getSeed(), seed);
+		return RandomBase.distance(this.getSeed(), seed);
 	}
 
-	public static long distance(KTRNGRandom random1, KTRNGRandom random2) {
-		return KTRNGRandom.distance(random1.getSeed(), random2.getSeed());
+	public static long distance(RandomBase random1, RandomBase random2) {
+		return RandomBase.distance(random1.getSeed(), random2.getSeed());
 	}
 
 	public static long distance(long seed, long seed2) {
@@ -166,8 +165,8 @@ public class KTRNGRandom extends Random {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof KTRNGRandom) {
-			KTRNGRandom custom = (KTRNGRandom) obj;
+		if (obj instanceof RandomBase) {
+			RandomBase custom = (RandomBase) obj;
 			return custom.name.equals(name);
 		} else {
 			return super.equals(obj);
@@ -176,5 +175,9 @@ public class KTRNGRandom extends Random {
 
 	public void fireEvent(long seed, String value) {
 		// TODO Implement
+	}
+
+	public long getInitialSeed() {
+		return initialSeed;
 	}
 }

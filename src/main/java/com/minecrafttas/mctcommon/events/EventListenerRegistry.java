@@ -94,7 +94,7 @@ public class EventListenerRegistry {
 	 */
 	public static void register(EventBase eventListener) {
 		if (eventListener == null) {
-			throw new NullPointerException("Tried to register a packethandler with value null");
+			throw new NullPointerException("Tried to register an eventListener with value null");
 		}
 
 		for (Class<?> type : searchForInterfaces(eventListener.getClass())) {
@@ -153,7 +153,7 @@ public class EventListenerRegistry {
 	 */
 	public static void unregister(EventBase eventListener) {
 		if (eventListener == null) {
-			throw new NullPointerException("Tried to unregister a packethandler with value null");
+			throw new NullPointerException("Tried to unregister an eventListener with value null");
 		}
 		for (Class<?> type : searchForInterfaces(eventListener.getClass())) {
 			if (EventBase.class.isAssignableFrom(type)) {

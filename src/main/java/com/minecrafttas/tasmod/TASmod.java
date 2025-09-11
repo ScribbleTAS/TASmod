@@ -24,6 +24,7 @@ import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
+import com.minecrafttas.tasmod.ktrng.GlobalRandomnessTimer;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
@@ -84,6 +85,8 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 	public static final PlayUntilHandler playUntil = new PlayUntilHandler();
 
 	public static ClientMotionStorage motionStorage = new ClientMotionStorage();
+
+	public static GlobalRandomnessTimer globalRandomness;
 
 	@Override
 	public void onInitialize() {
@@ -158,6 +161,9 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		PacketHandlerRegistry.register(savestateHandlerServer);
 		PacketHandlerRegistry.register(savestateHandlerServer.getPlayerHandler());
 		EventListenerRegistry.register(savestateHandlerServer.getSavestateTemporaryHandler());
+
+		globalRandomness = new GlobalRandomnessTimer();
+		EventListenerRegistry.register(globalRandomness);
 
 		if (!server.isDedicatedServer()) {
 			TASmod.tickratechanger.ticksPerSecond = 0F;

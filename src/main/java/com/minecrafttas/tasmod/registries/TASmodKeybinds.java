@@ -7,7 +7,7 @@ import com.minecrafttas.mctcommon.KeybindManager.Keybind;
 import com.minecrafttas.mctcommon.KeybindManager.KeybindID;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
-import com.minecrafttas.tasmod.ktrng.KTRNGRandom;
+import com.minecrafttas.tasmod.ktrng.RandomBase;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.virtual.VirtualKeybindings;
@@ -49,7 +49,7 @@ public enum TASmodKeybinds implements KeybindID {
 	}),
 	TEST1("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
 		TASmod.getServerInstance().getEntityWorld().loadedEntityList.forEach(entity -> {
-			KTRNGRandom rand = (KTRNGRandom) entity.rand;
+			RandomBase rand = (RandomBase) entity.rand;
 			rand.setSeed(0);
 		});
 	}, VirtualKeybindings::isKeyDown),
