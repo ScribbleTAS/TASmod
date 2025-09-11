@@ -5,7 +5,9 @@ import org.lwjgl.input.Keyboard;
 import com.minecrafttas.mctcommon.KeybindManager.IsKeyDownFunc;
 import com.minecrafttas.mctcommon.KeybindManager.Keybind;
 import com.minecrafttas.mctcommon.KeybindManager.KeybindID;
+import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.ktrng.KTRNGRandom;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.virtual.VirtualKeybindings;
@@ -46,7 +48,10 @@ public enum TASmodKeybinds implements KeybindID {
 		TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle(0, 45);
 	}),
 	TEST1("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
-		Minecraft.getMinecraft().displayGuiScreen(null);
+		TASmod.getServerInstance().getEntityWorld().loadedEntityList.forEach(entity -> {
+			KTRNGRandom rand = (KTRNGRandom) entity.rand;
+			rand.setSeed(0);
+		});
 	}, VirtualKeybindings::isKeyDown),
 	TEST2("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
 	}, VirtualKeybindings::isKeyDown);

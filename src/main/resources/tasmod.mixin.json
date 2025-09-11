@@ -21,7 +21,9 @@
 		"events.MixinEntityPlayerMP",
 
 		// Fixing forge and vanilla stuff
-		"fixes.MixinDragonFightManager"
+		"fixes.MixinDragonFightManager",
+		
+		"killtherng.MixinEntity"
 		
 	],
 	"client": [
