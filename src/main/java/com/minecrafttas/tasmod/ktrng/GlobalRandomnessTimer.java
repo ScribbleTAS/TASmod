@@ -22,4 +22,9 @@ public class GlobalRandomnessTimer implements EventServer.EventServerTick {
 	public long getCurrentSeed() {
 		return currentSeed;
 	}
+
+	public void setSeed(long newSeed) {
+		globalRandomness.setSeed(newSeed);
+		currentSeed = newSeed;
+	}
 }

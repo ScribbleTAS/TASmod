@@ -33,6 +33,8 @@ import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateGuiHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.KTRNGSeedStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.SavestateMotionStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -87,6 +89,8 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 	public static ClientMotionStorage motionStorage = new ClientMotionStorage();
 
 	public static GlobalRandomnessTimer globalRandomness;
+
+	public static KTRNGSeedStorage seedStorage = new KTRNGSeedStorage();
 
 	@Override
 	public void onInitialize() {
@@ -202,6 +206,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 	private void registerSavestateStorage() {
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(motionStorage);
+		TASmodAPIRegistry.SAVESTATE_STORAGE.register(seedStorage);
 	}
 
 	public static MinecraftServer getServerInstance() {
