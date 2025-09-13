@@ -255,7 +255,7 @@ public class EventListenerRegistry {
 						if (newReturnValue != null)
 							returnValue = newReturnValue;
 					} catch (IllegalAccessException | InvocationTargetException e) {
-						throw new EventException(eventClass, e);
+						throw new EventException(eventClass, e.getCause());
 					} catch (IllegalArgumentException e) {
 						throw new EventException(String.format("Event fired with the wrong number of parameters. Expected: %s, Actual: %s", method.getParameterCount(), eventParams.length), eventClass, e);
 					}

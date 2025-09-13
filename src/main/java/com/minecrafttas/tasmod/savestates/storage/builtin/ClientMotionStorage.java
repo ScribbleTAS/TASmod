@@ -4,11 +4,7 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_REQUEST_MOTION;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_SET_MOTION;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +15,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.minecrafttas.mctcommon.networking.Client.Side;
@@ -33,11 +27,9 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
-import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
-import com.minecrafttas.tasmod.savestates.storage.AbstractExtendStorage;
+import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.fabricmc.api.EnvType;
@@ -48,20 +40,17 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
 
-public class SavestateMotionStorage extends AbstractExtendStorage implements ClientPacketHandler, ServerPacketHandler {
-
-	private static final Path fileName = Paths.get("clientMotion.json");
-	private final Gson json;
+public class ClientMotionStorage extends SavestateStorageExtensionBase implements ClientPacketHandler, ServerPacketHandler {
 
 	private final Map<EntityPlayerMP, CompletableFuture<MotionData>> futures;
 
-	public SavestateMotionStorage() {
-		json = new GsonBuilder().setPrettyPrinting().create();
+	public ClientMotionStorage() {
+		super("clientMotion.json");
 		futures = new HashMap<>();
 	}
 
 	@Override
-	public void onServerSavestate(MinecraftServer server, int index, Path target, Path current) {
+	public JsonObject onSavestate(MinecraftServer server, JsonObject dataToSave) {
 		LOGGER.trace(LoggerMarkers.Savestate, "Request motion from client");
 
 		this.futures.clear();
@@ -78,8 +67,6 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 			e.printStackTrace();
 		}
 
-		JsonObject playerJsonObject = new JsonObject();
-
 		futures.forEach((player, future) -> {
 			try {
 				MotionData data = future.get(5L, TimeUnit.SECONDS);
@@ -88,7 +75,7 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 				if (player.getName().equals(server.getServerOwner())) {
 					uuid = "singleplayer";
 				}
-				playerJsonObject.add(uuid, json.toJsonTree(data));
+				dataToSave.add(uuid, json.toJsonTree(data));
 
 			} catch (TimeoutException e) {
 				throw new SavestateException(e, "Writing client motion for %s timed out!", player.getName());
@@ -97,27 +84,14 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 			}
 		});
 
-		saveJson(current, playerJsonObject);
-	}
-
-	private void saveJson(Path current, JsonObject data) {
-		Path saveFile = current.resolve(SavestateHandlerServer.storageDir).resolve(fileName);
-
-		String out = json.toJson(data);
-
-		try {
-			Files.write(saveFile, out.getBytes());
-		} catch (IOException e) {
-			throw new SavestateException(e, "Could not write to the file system");
-		}
+		return dataToSave;
 	}
 
 	@Override
-	public void onServerLoadstate(MinecraftServer server, int index, Path target, Path current) {
-		JsonObject playerJsonObject = loadMotionData(target);
+	public void onLoadstate(MinecraftServer server, JsonObject loadedData) {
 		PlayerList list = server.getPlayerList();
 
-		for (Entry<String, JsonElement> motionDataJsonElement : playerJsonObject.entrySet()) {
+		for (Entry<String, JsonElement> motionDataJsonElement : loadedData.entrySet()) {
 			String playerUUID = motionDataJsonElement.getKey();
 			MotionData motionData = json.fromJson(motionDataJsonElement.getValue(), MotionData.class);
 
@@ -142,17 +116,6 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 				logger.catching(e);
 			}
 		}
-	}
-
-	private JsonObject loadMotionData(Path target) {
-		Path saveFile = target.resolve(SavestateHandlerServer.storageDir).resolve(fileName);
-		String in;
-		try {
-			in = new String(Files.readAllBytes(saveFile));
-		} catch (IOException e) {
-			throw new LoadstateException(e, "Could not read from the file system");
-		}
-		return json.fromJson(in, JsonObject.class);
 	}
 
 	@Override
@@ -284,5 +247,10 @@ public class SavestateMotionStorage extends AbstractExtendStorage implements Cli
 		public float getJumpMovementVector() {
 			return jumpMovementFactor;
 		}
+	}
+
+	@Override
+	public String getExtensionName() {
+		return "ClientMotionStorage";
 	}
 }

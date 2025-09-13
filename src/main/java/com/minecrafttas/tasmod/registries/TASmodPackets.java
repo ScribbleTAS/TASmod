@@ -7,7 +7,7 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
-import com.minecrafttas.tasmod.savestates.storage.builtin.SavestateMotionStorage.MotionData;
+import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 import com.minecrafttas.tasmod.util.Ducks.ScoreboardDuck;
 
