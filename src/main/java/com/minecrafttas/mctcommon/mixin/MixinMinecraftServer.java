@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerGameLoop;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerInit;
+import com.minecrafttas.mctcommon.events.EventServer.EventServerStart;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerStop;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerTick;
 
@@ -16,6 +17,11 @@ import net.minecraft.server.MinecraftServer;
 
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {
+
+	@Inject(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;init()Z"))
+	public void inject_initStart(CallbackInfo ci) {
+		EventListenerRegistry.fireEvent(EventServerStart.class, (MinecraftServer) (Object) this);
+	}
 
 	@Inject(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;init()Z", shift = Shift.AFTER))
 	public void inject_init(CallbackInfo ci) {

@@ -20,6 +20,7 @@ public class TASmodAPIRegistry {
 	 * savestate/rerecord count and category.
 	 * 
 	 * <p>Any custom class has to implement PlaybackMetadataExtension
+	 * <p><strong>Side: Client</strong></p>
 	 */
 	public static final PlaybackMetadataRegistry PLAYBACK_METADATA = new PlaybackMetadataRegistry();
 
@@ -28,7 +29,7 @@ public class TASmodAPIRegistry {
 	 * 
 	 * <p>File commands give the opportunity to run commands on each recorded tick and each played back tick.<br>
 	 * File commands also have access to the TASfile so that data can be stored and read in/from the TASfile.
-	 * 
+	 * <p><strong>Side: Client</strong></p>
 	 */
 	public static final PlaybackFileCommandsRegistry PLAYBACK_FILE_COMMAND = new PlaybackFileCommandsRegistry();
 
@@ -39,6 +40,7 @@ public class TASmodAPIRegistry {
 	 * or extend an existing flavor (like {@link Beta1Flavor}) and overwrite parts of the methods.
 	 * 
 	 * <p>The resulting flavor can be registered here and can be found as a saving option with /saveTAS
+	 * <p><strong>Side: Client</strong></p>
 	 */
 	public static final SerialiserFlavorRegistry SERIALISER_FLAVOR = new SerialiserFlavorRegistry();
 
@@ -47,6 +49,7 @@ public class TASmodAPIRegistry {
 	 * 
 	 * <p>Create a new ClientCommand by extending {@link ClientCommandBase},<br>
 	 * then create a command like normal, as it extends from the vanilla {@link CommandBase}
+	 * <p><strong>Side: Client</strong></p>
 	 */
 	public static final ClientCommandRegistry CLIENT_COMMANDS = new ClientCommandRegistry();
 

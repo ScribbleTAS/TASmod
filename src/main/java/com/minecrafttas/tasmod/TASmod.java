@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import com.minecrafttas.mctcommon.CommandRegistry;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerInit;
+import com.minecrafttas.mctcommon.events.EventServer.EventServerStart;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerStop;
 import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
 import com.minecrafttas.mctcommon.networking.Server;
@@ -34,7 +35,6 @@ import com.minecrafttas.tasmod.savestates.handlers.SavestateGuiHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.KTRNGSeedStorage;
-import com.minecrafttas.tasmod.savestates.storage.builtin.SavestateMotionStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -51,7 +51,7 @@ import net.minecraft.server.MinecraftServer;
  *
  * @author Scribble
  */
-public class TASmod implements ModInitializer, EventServerInit, EventServerStop {
+public class TASmod implements ModInitializer, EventServerStart, EventServerInit, EventServerStop {
 
 	public static final Logger LOGGER = LogManager.getLogger("TASmod");
 
@@ -135,10 +135,15 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		EventListenerRegistry.register(resourcepackHandler);
 		PacketHandlerRegistry.register(playUntil);
 		EventListenerRegistry.register(playUntil);
-
 		EventListenerRegistry.register(TASmodAPIRegistry.SAVESTATE_STORAGE);
 
 		registerSavestateStorage();
+	}
+
+	@Override
+	public void onServerStart(MinecraftServer server) {
+		globalRandomness = new GlobalRandomnessTimer();
+		EventListenerRegistry.register(globalRandomness);
 	}
 
 	@Override
@@ -165,9 +170,6 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		PacketHandlerRegistry.register(savestateHandlerServer);
 		PacketHandlerRegistry.register(savestateHandlerServer.getPlayerHandler());
 		EventListenerRegistry.register(savestateHandlerServer.getSavestateTemporaryHandler());
-
-		globalRandomness = new GlobalRandomnessTimer();
-		EventListenerRegistry.register(globalRandomness);
 
 		if (!server.isDedicatedServer()) {
 			TASmod.tickratechanger.ticksPerSecond = 0F;
