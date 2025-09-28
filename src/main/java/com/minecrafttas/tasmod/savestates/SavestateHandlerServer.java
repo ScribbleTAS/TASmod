@@ -39,7 +39,7 @@ import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.files.SavestateDataFile;
 import com.minecrafttas.tasmod.savestates.files.SavestateDataFile.DataValues;
 import com.minecrafttas.tasmod.savestates.files.SavestateTrackerFile;
-import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandler;
+import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -84,7 +84,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	private int latestIndex = 0;
 	private int currentIndex;
 
-	private final SavestatePlayerHandler playerHandler;
+	private final SavestatePlayerHandlerServer playerHandler;
 	private final SavestateWorldHandler worldHandler;
 
 	public static final Path storageDir = Paths.get("tasmod/");
@@ -100,7 +100,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	public SavestateHandlerServer(MinecraftServer server, Logger logger) {
 		this.server = server;
 		this.logger = logger;
-		this.playerHandler = new SavestatePlayerHandler(server);
+		this.playerHandler = new SavestatePlayerHandlerServer(server);
 		this.worldHandler = new SavestateWorldHandler(server);
 
 		createSavestateDirectory();
@@ -716,7 +716,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		logger.debug(LoggerMarkers.Savestate, "Setting the savestate index to {}", currentIndex);
 	}
 
-	public SavestatePlayerHandler getPlayerHandler() {
+	public SavestatePlayerHandlerServer getPlayerHandler() {
 		return playerHandler;
 	}
 
