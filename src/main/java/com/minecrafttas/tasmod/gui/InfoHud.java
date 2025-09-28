@@ -316,7 +316,9 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "Facing";
-						return String.format("%.2f %.2f", MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getCurrentYaw()), MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getCurrentPitch()));
+						if (TASmodClient.virtual.CAMERA_ANGLE.getCurrentYaw() != null)
+							return String.format("%.2f %.2f", MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getCurrentYaw()), MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getCurrentPitch()));
+						return "null";
 					}));
 
 			title = "camera";
@@ -327,7 +329,9 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "Camera";
-						return String.format("%.2f %.2f", MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getNextYaw()), MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getNextPitch()));
+						if (TASmodClient.virtual.CAMERA_ANGLE.getNextYaw() != null)
+							return String.format("%.2f %.2f", MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getNextYaw()), MathHelper.wrapDegrees(TASmodClient.virtual.CAMERA_ANGLE.getNextPitch()));
+						return "null";
 					}));
 
 			title = "cticks";
