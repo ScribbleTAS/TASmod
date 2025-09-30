@@ -4,6 +4,7 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateFlags;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 
@@ -29,7 +30,7 @@ public class CommandFullRecord extends CommandBase {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		try {
-			TASmod.savestateHandlerServer.saveState(0, false);
+			TASmod.savestateHandlerServer.saveState(0, null, SavestateFlags.BLOCK_PAUSE_TICKRATE);
 		} catch (SavestateException e) {
 			sender.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getMessage()));
 			return;

@@ -1,10 +1,11 @@
 package com.minecrafttas.tasmod.commands;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
+import com.minecrafttas.tasmod.savestates.SavestateIndexer.Savestate;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateDeleteException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
@@ -99,7 +100,7 @@ public class CommandSavestate extends CommandBase {
 				}
 			} else if ("list".equals(args[0])) {
 				sender.sendMessage(new TextComponentString(String.format("The current savestate index is %s%s", TextFormatting.AQUA, TASmod.savestateHandlerServer.getCurrentIndex())));
-				sender.sendMessage(new TextComponentString(String.format("Available indexes are %s%s", TextFormatting.AQUA, TASmod.savestateHandlerServer.getIndexesAsString().isEmpty() ? "None" : TASmod.savestateHandlerServer.getIndexesAsString())));
+//				sender.sendMessage(new TextComponentString(String.format("Available indexes are %s%s", TextFormatting.AQUA, TASmod.savestateHandlerServer.getIndexesAsString().isEmpty() ? "None" : TASmod.savestateHandlerServer.getIndexesAsString())));
 			} else if ("help".equals(args[0])) {
 				if (args.length == 1) {
 					sendHelp(sender);
@@ -165,7 +166,11 @@ public class CommandSavestate extends CommandBase {
 		if (args.length == 1) {
 			return getListOfStringsMatchingLastWord(args, new String[] { "save", "load", "delete", "list", "help" });
 		} else if (args.length == 2 && !"list".equals(args[0])) {
-			sender.sendMessage(new TextComponentString("Available indexes: " + TextFormatting.AQUA + TASmod.savestateHandlerServer.getIndexesAsString()));
+			List<String> list = new ArrayList<>();
+			for (Savestate savestate : TASmod.savestateHandlerServer.getSavestateInfo()) {
+				list.add(Integer.toString(savestate.getIndex()));
+			}
+			sender.sendMessage(new TextComponentString("Available indexes: " + TextFormatting.AQUA + String.join(",", list)));
 		}
 		return super.getTabCompletions(server, sender, args, targetPos);
 	}
@@ -174,10 +179,10 @@ public class CommandSavestate extends CommandBase {
 
 	private void saveLatest() throws CommandException {
 		try {
-			TASmod.savestateHandlerServer.saveState();
+			TASmod.savestateHandlerServer.saveState(null);
 		} catch (SavestateException e) {
 			throw new CommandException(e.getMessage(), new Object[] {});
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new CommandException(e.getMessage(), new Object[] {});
 		} finally {
@@ -191,10 +196,10 @@ public class CommandSavestate extends CommandBase {
 			if (indexToSave <= 0) { // Disallow to save on Savestate 0
 				indexToSave = -1;
 			}
-			TASmod.savestateHandlerServer.saveState(indexToSave, true);
+			TASmod.savestateHandlerServer.saveState(indexToSave, null);
 		} catch (SavestateException e) {
 			throw new CommandException(e.getMessage(), new Object[] {});
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new CommandException(e.getMessage(), new Object[] {});
 		} finally {
@@ -204,10 +209,10 @@ public class CommandSavestate extends CommandBase {
 
 	private void loadLatest() throws CommandException {
 		try {
-			TASmod.savestateHandlerServer.loadState();
+			TASmod.savestateHandlerServer.loadState(null);
 		} catch (LoadstateException e) {
 			throw new CommandException(e.getMessage(), new Object[] {});
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new CommandException(e.getMessage(), new Object[] {});
 		} finally {
@@ -217,10 +222,10 @@ public class CommandSavestate extends CommandBase {
 
 	private void loadLatest(String[] args) throws CommandException {
 		try {
-			TASmod.savestateHandlerServer.loadState(processIndex(args[1]), true);
+			TASmod.savestateHandlerServer.loadState(processIndex(args[1]), null);
 		} catch (LoadstateException e) {
 			throw new CommandException(e.getMessage(), new Object[] {});
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new CommandException(e.getMessage(), new Object[] {});
 		} finally {
@@ -239,7 +244,7 @@ public class CommandSavestate extends CommandBase {
 
 	private void deleteMultiple(String[] args) throws CommandException {
 		try {
-			TASmod.savestateHandlerServer.deleteSavestate(processIndex(args[1]), processIndex(args[2]));
+			TASmod.savestateHandlerServer.deleteSavestate(processIndex(args[1]), processIndex(args[2]), null, null);
 		} catch (SavestateDeleteException e) {
 			throw new CommandException(e.getMessage(), new Object[] {});
 		}

@@ -11,6 +11,7 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventSavestate.EventServerLoadstate;
 import com.minecrafttas.tasmod.events.EventSavestate.EventServerSavestate;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
+import com.minecrafttas.tasmod.savestates.SavestateIndexer.SavestatePaths;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.util.JsonUtils;
@@ -24,13 +25,13 @@ public class SavestateStorageExtensionRegistry extends AbstractRegistry<Savestat
 	}
 
 	@Override
-	public void onServerSavestate(MinecraftServer server, int index, Path target, Path current) {
-		Path storageDir = current.resolve(SavestateHandlerServer.storageDir);
+	public void onServerSavestate(MinecraftServer server, SavestatePaths paths) {
+		Path storageDir = paths.getSourceFolder().resolve(SavestateHandlerServer.storageDir);
 		if (!Files.exists(storageDir)) {
 			try {
 				Files.createDirectory(storageDir);
 			} catch (IOException e) {
-				throw new SavestateException(e, "Can't create directory for savestate storage in savestate %s", current.getFileName());
+				throw new SavestateException(e, "Can't create directory for savestate storage in savestate %s", paths.getSourceFolder().getFileName());
 			}
 		}
 
@@ -47,13 +48,13 @@ public class SavestateStorageExtensionRegistry extends AbstractRegistry<Savestat
 	}
 
 	@Override
-	public void onServerLoadstate(MinecraftServer server, int index, Path target, Path current) {
-		Path storageDir = target.resolve(SavestateHandlerServer.storageDir);
+	public void onServerLoadstate(MinecraftServer server, SavestatePaths paths) {
+		Path storageDir = paths.getTargetFolder().resolve(SavestateHandlerServer.storageDir);
 		if (!Files.exists(storageDir)) {
 			try {
 				Files.createDirectory(storageDir);
 			} catch (IOException e) {
-				throw new LoadstateException(e, "Can't create directory for savestate storage in savestate %s", target.getFileName());
+				throw new LoadstateException(e, "Can't create directory for savestate storage in savestate %s", paths.getTargetFolder().getFileName());
 			}
 		}
 

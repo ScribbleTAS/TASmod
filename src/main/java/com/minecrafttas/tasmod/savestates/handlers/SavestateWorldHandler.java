@@ -217,7 +217,7 @@ public class SavestateWorldHandler {
 		}
 	}
 
-	public void loadAllWorlds(String string, String string2) {
+	public void loadAllWorlds(String string) {
 		server.convertMapIfNeeded(string);
 		server.worlds = new WorldServer[3];
 		server.timeOfLastDimensionTick = new long[server.worlds.length][100];
@@ -227,7 +227,7 @@ public class SavestateWorldHandler {
 		if (worldInfo == null) {
 //			worldInfo = new WorldInfo(server.worldSettings, string2);
 		} else {
-			worldInfo.setWorldName(string2);
+			worldInfo.setWorldName(string);
 		}
 
 		for (int i = 0; i < server.worlds.length; i++) {
