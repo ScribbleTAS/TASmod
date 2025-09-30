@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
@@ -73,8 +72,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 	private final SavestatePlayerHandlerServer playerHandler;
 	private final SavestateWorldHandler worldHandler;
-
-	public static final Path storageDir = Paths.get("tasmod/");
 
 	private final Logger logger;
 

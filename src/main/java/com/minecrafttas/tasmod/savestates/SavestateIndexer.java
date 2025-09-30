@@ -43,7 +43,8 @@ public class SavestateIndexer {
 	private final LinkedHashMap<Integer, Savestate> savestateList;
 	private Savestate currentSavestate;
 
-	private static final Path savestateDatPath = Paths.get("tas/savestate.json");
+	public static final Path savestateDataDir = Paths.get("tas");
+	private static final Path savestateDatPath = savestateDataDir.resolve("savestate.json");
 
 	public SavestateIndexer(Logger logger, Path savesDir, Path savestateBaseDirectory, String worldname) {
 		this.logger = logger;

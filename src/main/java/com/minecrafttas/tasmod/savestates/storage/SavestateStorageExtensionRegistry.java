@@ -10,7 +10,7 @@ import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventSavestate.EventServerLoadstate;
 import com.minecrafttas.tasmod.events.EventSavestate.EventServerSavestate;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
+import com.minecrafttas.tasmod.savestates.SavestateIndexer;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer.SavestatePaths;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
@@ -26,7 +26,7 @@ public class SavestateStorageExtensionRegistry extends AbstractRegistry<Savestat
 
 	@Override
 	public void onServerSavestate(MinecraftServer server, SavestatePaths paths) {
-		Path storageDir = paths.getSourceFolder().resolve(SavestateHandlerServer.storageDir);
+		Path storageDir = paths.getSourceFolder().resolve(SavestateIndexer.savestateDataDir);
 		if (!Files.exists(storageDir)) {
 			try {
 				Files.createDirectory(storageDir);
@@ -49,7 +49,7 @@ public class SavestateStorageExtensionRegistry extends AbstractRegistry<Savestat
 
 	@Override
 	public void onServerLoadstate(MinecraftServer server, SavestatePaths paths) {
-		Path storageDir = paths.getTargetFolder().resolve(SavestateHandlerServer.storageDir);
+		Path storageDir = paths.getTargetFolder().resolve(SavestateIndexer.savestateDataDir);
 		if (!Files.exists(storageDir)) {
 			try {
 				Files.createDirectory(storageDir);
