@@ -84,13 +84,84 @@ public abstract class AbstractDataFile {
 		Files.createDirectories(directory);
 	}
 
-	public void load() {
-		if (Files.exists(file)) {
-			load(file);
+	public void save() {
+		this.saveToProperties();
+	}
+
+	public void save(Path file) {
+		this.saveToProperties(file);
+	}
+
+	protected void saveToProperties() {
+		this.saveToProperties(file);
+	}
+
+	protected void saveToProperties(Path file) {
+		try {
+			OutputStream fos = Files.newOutputStream(file);
+			properties.store(fos, comment);
+			fos.close();
+		} catch (IOException e) {
+			MCTCommon.LOGGER.catching(e);
 		}
 	}
 
+	/**
+	 * Saves the {@link #properties} to the {@link #file} location
+	 */
+	protected void saveToXML() {
+		this.saveToXML(file);
+	}
+
+	/**
+	 * Saves the {@link #properties} to a specified file
+	 * @param file The file to save the {@link #properties} to
+	 */
+	protected void saveToXML(Path file) {
+		try {
+			OutputStream fos = Files.newOutputStream(file);
+			properties.storeToXML(fos, comment, "UTF-8");
+			fos.close();
+		} catch (IOException e) {
+			MCTCommon.LOGGER.catching(e);
+		}
+	}
+
+	protected void saveToJson() {
+		saveToJson(file);
+	}
+
+	protected void saveToJson(Path file) {
+		//@formatter:off
+		Gson json = new GsonBuilder()
+				.registerTypeAdapter(Properties.class, new PropertiesSerializer())
+				.setPrettyPrinting()
+				.create();
+		//@formatter:on
+		try {
+			String element = json.toJson(properties);
+			element = String.format("// %s\n", comment) + element;
+			Files.write(file, element.getBytes());
+		} catch (IOException e) {
+			MCTCommon.LOGGER.catching(e);
+		}
+	}
+
+	public void load() {
+		loadFromProperties();
+	}
+
 	public void load(Path file) {
+		loadFromProperties(file);
+	}
+
+	protected void loadFromProperties() {
+		if (Files.exists(file)) {
+			loadFromProperties(file);
+		}
+	}
+
+	protected void loadFromProperties(Path file) {
 		InputStream fis;
 		Properties newProp = new Properties();
 		try {
@@ -113,7 +184,7 @@ public abstract class AbstractDataFile {
 	/**
 	 * Loads the xml {@link #file} into {@link #properties} if it exists
 	 */
-	public void loadFromXML() {
+	protected void loadFromXML() {
 		if (Files.exists(file)) {
 			loadFromXML(file);
 		}
@@ -122,7 +193,7 @@ public abstract class AbstractDataFile {
 	/**
 	 * @param file The xml file to load into {@link #properties}
 	 */
-	public void loadFromXML(Path file) {
+	protected void loadFromXML(Path file) {
 		InputStream fis;
 		Properties newProp = new Properties();
 		try {
@@ -142,11 +213,11 @@ public abstract class AbstractDataFile {
 		this.properties = newProp;
 	}
 
-	public void loadFromJson() {
+	protected void loadFromJson() {
 		loadFromJson(file);
 	}
 
-	public void loadFromJson(Path file) {
+	protected void loadFromJson(Path file) {
 		//@formatter:off
 		Gson json = new GsonBuilder()
 				.registerTypeAdapter(Properties.class, new PropertiesDeserializer())
@@ -155,7 +226,7 @@ public abstract class AbstractDataFile {
 
 		String in;
 		try {
-			in = new String(Files.readAllBytes(file));
+			in = readFile(file);
 		} catch (IOException e) {
 			MCTCommon.LOGGER.catching(e);
 			return;
@@ -164,61 +235,11 @@ public abstract class AbstractDataFile {
 		properties = json.fromJson(in, Properties.class);
 	}
 
-	public void save() {
-		this.save(file);
+	protected String readFile(Path file) throws IOException {
+		return new String(Files.readAllBytes(file));
 	}
 
-	public void save(Path file) {
-		try {
-			OutputStream fos = Files.newOutputStream(file);
-			properties.store(fos, comment);
-			fos.close();
-		} catch (IOException e) {
-			MCTCommon.LOGGER.catching(e);
-		}
-	}
-
-	/**
-	 * Saves the {@link #properties} to the {@link #file} location
-	 */
-	public void saveToXML() {
-		this.saveToXML(file);
-	}
-
-	/**
-	 * Saves the {@link #properties} to a specified file
-	 * @param file The file to save the {@link #properties} to
-	 */
-	public void saveToXML(Path file) {
-		try {
-			OutputStream fos = Files.newOutputStream(file);
-			properties.storeToXML(fos, comment, "UTF-8");
-			fos.close();
-		} catch (IOException e) {
-			MCTCommon.LOGGER.catching(e);
-		}
-	}
-
-	public void saveToJson() {
-		saveToJson(file);
-	}
-
-	public void saveToJson(Path file) {
-		//@formatter:off
-		Gson json = new GsonBuilder()
-				.registerTypeAdapter(Properties.class, new PropertiesSerializer())
-				.setPrettyPrinting()
-				.create();
-		//@formatter:on
-		try {
-			String element = json.toJson(properties);
-			Files.write(file, element.getBytes());
-		} catch (IOException e) {
-			MCTCommon.LOGGER.catching(e);
-		}
-	}
-
-	public class PropertiesSerializer implements JsonSerializer<Properties> {
+	private class PropertiesSerializer implements JsonSerializer<Properties> {
 
 		@Override
 		public JsonElement serialize(Properties src, Type typeOfSrc, JsonSerializationContext context) {
@@ -230,7 +251,7 @@ public abstract class AbstractDataFile {
 		}
 	}
 
-	public class PropertiesDeserializer implements JsonDeserializer<Properties> {
+	private class PropertiesDeserializer implements JsonDeserializer<Properties> {
 
 		@Override
 		public Properties deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {

@@ -183,6 +183,6 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 			nameList.add(element.getExtensionName());
 		});
 		config.set(TASmodConfig.EnabledFileCommands, String.join(", ", nameList));
-		config.saveToXML();
+		config.save();
 	}
 }
