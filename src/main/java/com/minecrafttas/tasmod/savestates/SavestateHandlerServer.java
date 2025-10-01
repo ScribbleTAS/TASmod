@@ -137,9 +137,9 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		logger.trace("Create new savestate index via indexer");
 		SavestatePaths paths = indexer.createSavestate(index, name, !SavestateFlags.BLOCK_CHANGE_INDEX.isBlocked(flags));
 		Path sourceFolder = paths.getSourceFolder();
-		Path targetFolder = paths.getSourceFolder();
+		Path targetFolder = paths.getTargetFolder();
 		int indexToSave = paths.getSavestate().index;
-		logger.debug("Source: {}, Target: {}", paths.getSourceFolder(), paths.getTargetFolder());
+		logger.debug("Source: {}, Target: {}", sourceFolder, targetFolder);
 
 		EventListenerRegistry.fireEvent(EventSavestate.EventServerSavestate.class, server, paths);
 

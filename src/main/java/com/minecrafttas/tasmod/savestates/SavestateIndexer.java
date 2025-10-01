@@ -26,6 +26,7 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateDeleteException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
+import com.minecrafttas.tasmod.savestates.files.SavestateTrackerFile;
 import com.minecrafttas.tasmod.util.I18n;
 
 /**
@@ -42,6 +43,7 @@ public class SavestateIndexer {
 	private final Path currentSavestateDir;
 	private final LinkedHashMap<Integer, Savestate> savestateList;
 	private Savestate currentSavestate;
+	private SavestateTrackerFile trackerfile;
 
 	public static final Path savestateDataDir = Paths.get("tas");
 	private static final Path savestateDatPath = savestateDataDir.resolve("savestate.json");
@@ -52,6 +54,7 @@ public class SavestateIndexer {
 		this.savesDir = savesDir;
 		this.worldname = worldname;
 		this.currentSavestateDir = savestateBaseDirectory.resolve(String.format("%s-Savestates", worldname));
+		this.trackerfile = new SavestateTrackerFile(currentSavestateDir.resolve(String.format(worldname + "-info.txt")));
 		savestateList = new LinkedHashMap<>();
 		createSavestateDir();
 
@@ -103,6 +106,8 @@ public class SavestateIndexer {
 
 		Savestate newSavestate = currentSavestate.clone(targetDir.resolve(savestateDatPath), targetDir);
 
+		trackerfile.increaseSavestateCount();
+
 		savestateList.put(index, newSavestate);
 		sortSavestateList();
 
@@ -137,6 +142,8 @@ public class SavestateIndexer {
 		}
 
 		SavestatePaths out = SavestatePaths.of(currentSavestate.clone(), sourceDir, targetDir);
+
+		trackerfile.increaseLoadstateCount();
 
 		if (!changeIndex)
 			currentSavestate.index = savedIndex;

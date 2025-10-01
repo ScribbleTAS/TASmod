@@ -233,7 +233,7 @@ public class SavestateHandlerServerOld implements ServerPacketHandler {
 
 		// Incrementing info file
 		SavestateTrackerFile tracker = new SavestateTrackerFile(savestateDirectory.resolve(worldname + "-info.txt"));
-		tracker.increaseSaveStateCount();
+		tracker.increaseSavestateCount();
 
 		// Send a notification that the savestate has been loaded
 		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToSave + " saved"));
