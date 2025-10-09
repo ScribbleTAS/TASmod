@@ -43,7 +43,7 @@ public class SavestateIndexer {
 	private final Path currentSavestateDir;
 	private final LinkedHashMap<Integer, Savestate> savestateList;
 	private Savestate currentSavestate;
-	private SavestateTrackerFile trackerfile;
+	private final SavestateTrackerFile trackerfile;
 
 	public static final Path savestateDataDir = Paths.get("tas");
 	private static final Path savestateDatPath = savestateDataDir.resolve("savestate.json");
@@ -576,5 +576,9 @@ public class SavestateIndexer {
 		public String toString() {
 			return super.toString().toLowerCase();
 		}
+	}
+
+	public Path getCurrentSavestateDir() {
+		return currentSavestateDir;
 	}
 }

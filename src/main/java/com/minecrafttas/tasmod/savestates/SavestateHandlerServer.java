@@ -551,4 +551,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	public int size() {
 		return indexer.size();
 	}
+
+	public Path getCurrentSavestateDir() {
+		return indexer.getCurrentSavestateDir();
+	}
 }
