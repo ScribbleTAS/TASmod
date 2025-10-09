@@ -3,7 +3,7 @@ package com.minecrafttas.mctcommon.registry;
 import java.util.Arrays;
 import java.util.Map;
 
-import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.mctcommon.MCTCommon;
 
 public abstract class AbstractRegistry<V extends Registerable> {
 	protected final Map<String, V> REGISTRY;
@@ -20,12 +20,12 @@ public abstract class AbstractRegistry<V extends Registerable> {
 		}
 
 		if (containsClass(registryObject)) {
-			TASmod.LOGGER.warn("Trying to register an object in {}, but another instance of this class is already registered: {}", name, registryObject.getClass().getName());
+			MCTCommon.LOGGER.warn("Trying to register an object in {}, but another instance of this class is already registered: {}", name, registryObject.getClass().getName());
 			return;
 		}
 
 		if (REGISTRY.containsKey(registryObject.getExtensionName())) {
-			TASmod.LOGGER.warn("Trying to register the an object in {}, but an extension with the same name is already registered: {}", registryObject.getExtensionName());
+			MCTCommon.LOGGER.warn("Trying to register the an object in {}, but an extension with the same name is already registered: {}", registryObject.getExtensionName());
 			return;
 		}
 
@@ -50,7 +50,7 @@ public abstract class AbstractRegistry<V extends Registerable> {
 		if (REGISTRY.containsKey(registryObject.getExtensionName())) {
 			REGISTRY.remove(registryObject.getExtensionName());
 		} else {
-			TASmod.LOGGER.warn("Trying to unregister an object from {}, but it was not registered: {}", name, registryObject.getClass().getName());
+			MCTCommon.LOGGER.warn("Trying to unregister an object from {}, but it was not registered: {}", name, registryObject.getClass().getName());
 		}
 	}
 
