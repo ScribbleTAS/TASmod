@@ -36,18 +36,58 @@ import com.minecrafttas.tasmod.util.I18n;
  */
 public class SavestateIndexer {
 
+	/**
+	 * The logger
+	 */
 	private final Logger logger;
-	private final Path savestateBaseDirectory;
+
+	/**
+	 * The Minecraft saves dir, usually <code>.minecraft/saves</code>
+	 */
 	private Path savesDir;
+	/**
+	 * The base directory of savestates, usually <code>.minecraft/saves/savestates</code>
+	 */
+	private final Path savestateBaseDirectory;
+	/**
+	 * The name of the world that is currently open
+	 */
 	private final String worldname;
+	/**
+	 * The name of the current savestate dir, usually <code>.minecraft/saves/savestates/worldname-Savestates</code>
+	 */
 	private final Path currentSavestateDir;
+
+	/**
+	 * The list of savestates 
+	 */
 	private final LinkedHashMap<Integer, Savestate> savestateList;
+	/**
+	 * The current savestate that is loaded
+	 */
 	private Savestate currentSavestate;
+
+	/**
+	 * The data directory within a savestate, usually <code>.minecraft/saves/savestates/worldname-Savestates/worldname-Savestate1/tas</code>
+	 */
+	public static final Path savestateDataDir = Paths.get("tas");
+	/**
+	 * The savestate file within a savestate, usually <code>.minecraft/saves/savestates/worldname-Savestates/worldname-Savestate1/tas/savestate.json</code>
+	 */
+	private static final Path savestateFilePath = savestateDataDir.resolve("savestate.json");
+
+	/**
+	 * The file keeping a tally of total savestates and loadstates
+	 */
 	private final SavestateTrackerFile trackerfile;
 
-	public static final Path savestateDataDir = Paths.get("tas");
-	private static final Path savestateDatPath = savestateDataDir.resolve("savestate.json");
-
+	/**
+	 * Creates a new savestate indexer
+	 * @param logger The logger used for logging
+	 * @param savesDir The Minecraft saves directory
+	 * @param savestateBaseDirectory The base directory of savestates
+	 * @param worldname The name of the world that is currently open
+	 */
 	public SavestateIndexer(Logger logger, Path savesDir, Path savestateBaseDirectory, String worldname) {
 		this.logger = logger;
 		this.savestateBaseDirectory = savestateBaseDirectory;
@@ -58,7 +98,7 @@ public class SavestateIndexer {
 		savestateList = new LinkedHashMap<>();
 		createSavestateDir();
 
-		Path savestateDat = savesDir.resolve(worldname).resolve(savestateDatPath);
+		Path savestateDat = savesDir.resolve(worldname).resolve(savestateFilePath);
 		if (Files.exists(savestateDat)) {
 			currentSavestate = new Savestate(savestateDat, null);
 			currentSavestate.load();
@@ -68,6 +108,9 @@ public class SavestateIndexer {
 		reload();
 	}
 
+	/**
+	 * Creates the directories leading to {@link #currentSavestateDir} 
+	 */
 	private void createSavestateDir() {
 		try {
 			Files.createDirectories(currentSavestateDir);
@@ -76,10 +119,22 @@ public class SavestateIndexer {
 		}
 	}
 
+	/**
+	 * Create a new savestate
+	 * @param index The index to save
+	 * @return The {@link SavestatePaths}
+	 */
 	public SavestatePaths createSavestate(int index) {
 		return createSavestate(index, null, true);
 	}
 
+	/**
+	 * Creates a new savestate with parameters
+	 * @param index The index to save
+	 * @param name The name of the savestate
+	 * @param changeIndex True if the index should be changed.
+	 * @return The {@link SavestatePaths}
+	 */
 	public SavestatePaths createSavestate(int index, String name, boolean changeIndex) {
 		logger.trace("Creating a savestate in indexer");
 		if (index < 0) {
@@ -104,7 +159,7 @@ public class SavestateIndexer {
 		Path sourceDir = savesDir.resolve(worldname);
 		Path targetDir = currentSavestateDir.resolve(worldname + "-Savestate" + index);
 
-		Savestate newSavestate = currentSavestate.clone(targetDir.resolve(savestateDatPath), targetDir);
+		Savestate newSavestate = currentSavestate.clone(targetDir.resolve(savestateFilePath), targetDir);
 
 		trackerfile.increaseSavestateCount();
 
@@ -114,6 +169,13 @@ public class SavestateIndexer {
 		return SavestatePaths.of(newSavestate.clone(), sourceDir, targetDir);
 	}
 
+	/**
+	 * Loads a savestate
+	 * @param index The index to load
+	 * @param changeIndex True if the index should be changed.
+	 * @return The {@link SavestatePaths}
+	 * @throws LoadstateException If it can't find the savestate
+	 */
 	public SavestatePaths loadSavestate(int index, boolean changeIndex) throws LoadstateException {
 		logger.trace("Loading a savestate in indexer");
 		if (index < 0) {
@@ -131,7 +193,7 @@ public class SavestateIndexer {
 		}
 
 		int savedIndex = currentSavestate.index;
-		this.currentSavestate = savestateToLoad.clone(savesDir.resolve(worldname).resolve(savestateDatPath), savesDir.resolve(worldname));
+		this.currentSavestate = savestateToLoad.clone(savesDir.resolve(worldname).resolve(savestateFilePath), savesDir.resolve(worldname));
 
 		Path sourceDir = savestateToLoad.getFolder();
 		Path targetDir = savesDir.resolve(worldname);
@@ -151,6 +213,13 @@ public class SavestateIndexer {
 		return out;
 	}
 
+	/**
+	 * Renames a savestate
+	 * @param index The index to rename
+	 * @param name The new name
+	 * @return The {@link SavestatePaths}
+	 * @throws SavestateException If the savestate doesn't exist or it can't be renamed
+	 */
 	public SavestatePaths renameSavestate(int index, String name) throws SavestateException {
 		Savestate savestateToRename = savestateList.get(index);
 
@@ -170,6 +239,12 @@ public class SavestateIndexer {
 		return SavestatePaths.of(savestateToRename, null, null);
 	}
 
+	/**
+	 * Deletes a savestate
+	 * @param index The index to delete
+	 * @return The {@link SavestatePaths}
+	 * @throws SavestateDeleteException If the savestate doesn't exist
+	 */
 	public SavestatePaths deleteSavestate(int index) throws SavestateDeleteException {
 		logger.trace("Deleting savestate {}", index);
 
@@ -190,6 +265,13 @@ public class SavestateIndexer {
 		return out;
 	}
 
+	/**
+	 * Deletes multiple savestates
+	 * @param from The starting savestates
+	 * @param to The end of the savestates (inclusive)
+	 * @param onDelete Runnable that is run every time a savestate is deleted
+	 * @param onError Runnable that is run ever time a savestate fails to be deleted
+	 */
 	public void deleteMultipleSavestates(int from, int to, DeletionRunnable onDelete, ErrorRunnable onError) {
 		if (from >= to) {
 			onError.run(new SavestateDeleteException("Can't delete amounts that are negative or 0"));
@@ -204,6 +286,9 @@ public class SavestateIndexer {
 		}
 	}
 
+	/**
+	 * Sorts the savestate list by key to keep an order
+	 */
 	private void sortSavestateList() {
 		LinkedHashMap<Integer, Savestate> copy = new LinkedHashMap<>();
 		//@formatter:off
@@ -215,6 +300,9 @@ public class SavestateIndexer {
 		savestateList.putAll(copy);
 	}
 
+	/**
+	 * Reloads the {@link #savestateList} from the disk
+	 */
 	public void reload() {
 		logger.trace("Reloading savestate indexes");
 		savestateList.clear();
@@ -242,7 +330,7 @@ public class SavestateIndexer {
 				Pattern backupIndexPattern = Pattern.compile("-Savestate(\\d+)$");
 
 				pathSet.forEach(path -> {
-					Path savestateDat = path.resolve(savestateDatPath);
+					Path savestateDat = path.resolve(savestateFilePath);
 
 					Savestate savestate = null;
 
@@ -278,10 +366,16 @@ public class SavestateIndexer {
 		t.run();
 	}
 
+	/**
+	 * @return The indexes from the {@link #savestateList}
+	 */
 	public Set<Integer> getIndexList() {
 		return savestateList.keySet();
 	}
 
+	/**
+	 * @return The savestate list
+	 */
 	public List<Savestate> getSavestateList() {
 		return getSavestateList(currentSavestate.index);
 	}
@@ -308,10 +402,18 @@ public class SavestateIndexer {
 		return out;
 	}
 
+	/**
+	 * @return The size of the {@link #savestateList}t
+	 */
 	public int size() {
 		return savestateList.size();
 	}
 
+	/**
+	 * Finds the latest index of a savestate
+	 * @param start The starting index
+	 * @return The latest index
+	 */
 	public int findLatestIndex(int start) {
 		if (savestateList.containsKey(start))
 			return start;
@@ -324,6 +426,9 @@ public class SavestateIndexer {
 		return 0;
 	}
 
+	/**
+	 * @return The {@link #currentSavestate}
+	 */
 	public Savestate getCurrentSavestate() {
 		return currentSavestate;
 	}
@@ -400,7 +505,7 @@ public class SavestateIndexer {
 				if (loadedIndex != null)
 					this.index = Integer.parseInt(loadedIndex);
 			} catch (Exception e) {
-				logger.error("Can't parse '{}' in {}", Options.INDEX.toString(), currentSavestateDir.resolve(savestateDatPath));
+				logger.error("Can't parse '{}' in {}", Options.INDEX.toString(), currentSavestateDir.resolve(savestateFilePath));
 				logger.catching(e);
 			}
 			this.name = properties.getProperty(Options.NAME.toString());
@@ -409,7 +514,7 @@ public class SavestateIndexer {
 				if (loadedDate != null)
 					this.date = parseDate(loadedDate);
 			} catch (Exception e) {
-				logger.error("Can't parse '{}' in {}", Options.DATE.toString(), currentSavestateDir.resolve(savestateDatPath));
+				logger.error("Can't parse '{}' in {}", Options.DATE.toString(), currentSavestateDir.resolve(savestateFilePath));
 				logger.catching(e);
 			}
 		}
@@ -434,6 +539,11 @@ public class SavestateIndexer {
 		}
 	}
 
+	/**
+	 * A savestate failing to save
+	 * 
+	 * @author Scribble
+	 */
 	public class FailedSavestate extends Savestate {
 
 		private final Throwable t;
@@ -516,6 +626,11 @@ public class SavestateIndexer {
 		}
 	}
 
+	/**
+	 * Copies a folder recursively. Replaces existing files
+	 * @param src The source folder to copy
+	 * @param dest The destination
+	 */
 	public static void copyFolder(Path src, Path dest) {
 		try {
 			Files.walk(src).forEach(s -> {
@@ -536,6 +651,10 @@ public class SavestateIndexer {
 		}
 	}
 
+	/**
+	 * Deletes a folder recursively
+	 * @param toDelete The folder to delete
+	 */
 	public static void deleteFolder(Path toDelete) {
 		try {
 			Files.walk(toDelete).forEach(s -> {
