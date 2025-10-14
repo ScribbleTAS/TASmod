@@ -10,7 +10,8 @@ import com.minecrafttas.mctcommon.ConfigurationRegistry.ConfigOptions;
 public enum TASmodConfig implements ConfigOptions {
 	FileToOpen("fileToOpen", ""),
 	ServerConnection("serverConnection", ""),
-	EnabledFileCommands("enabledFileCommands", "tasmod_desyncMonitor@v1, tasmod_label@v1, tasmod_options@v1");
+	EnabledFileCommands("enabledFileCommands", "tasmod_desyncMonitor@v1, tasmod_label@v1, tasmod_options@v1"),
+	SAVESTATE_SHOW_CONTROLS("savestateShowControls", "true");
 
 	private String configKey;
 	private String defaultValue;

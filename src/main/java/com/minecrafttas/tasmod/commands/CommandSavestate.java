@@ -1,18 +1,27 @@
 package com.minecrafttas.tasmod.commands;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
+import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateCallback;
+import com.minecrafttas.tasmod.savestates.SavestateIndexer.FailedSavestate;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer.Savestate;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateDeleteException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
+import com.minecrafttas.tasmod.util.Component;
+import com.minecrafttas.tasmod.util.Component.CClickEvent;
+import com.minecrafttas.tasmod.util.Component.CHoverEvent;
+import com.minecrafttas.tasmod.util.I18n;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.minecraft.command.CommandBase;
@@ -22,9 +31,15 @@ import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.event.HoverEvent;
 
 public class CommandSavestate extends CommandBase {
+
+	public static boolean once = true;
 
 	@Override
 	public String getName() {
@@ -264,15 +279,129 @@ public class CommandSavestate extends CommandBase {
 
 	private void info(ICommandSender sender) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Info");
-
+		infoIndexAmount(sender, null, null);
 	}
 
-	private void infoIndex(ICommandSender sender, int index) {
+	private void infoIndex(ICommandSender sender, Integer index) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command InfoIndex {}", index);
+		infoIndexAmount(sender, index, null);
 	}
 
-	private void infoIndexAmount(ICommandSender sender, int index, int amount) {
-		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command InfoIndexAmount {}|{}", index, amount);
+	private void infoIndexAmount(ICommandSender sender, Integer indexToDisplay, Integer amount) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command InfoIndexAmount {}|{}", indexToDisplay, amount);
+
+		int currentIndex = TASmod.savestateHandlerServer.getCurrentIndex();
+		int size = TASmod.savestateHandlerServer.size();
+		if (indexToDisplay == null) {
+			indexToDisplay = currentIndex;
+		}
+		if (amount == null) {
+			amount = 10;
+		}
+
+		sender.sendMessage(Component.literal("").build()); // Print an empty line
+
+		String format = I18n.format("msg.tasmod.savestate.dateformat");
+		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+
+		List<Savestate> savestateList = TASmod.savestateHandlerServer.getSavestateInfo(indexToDisplay, amount);
+
+		if (savestateList.size() < size && once) {
+			sender.sendMessage(Component.translatable("gui.tasmod.savestate.omitted", "/savestate info all").withStyle(TextFormatting.RED, TextFormatting.ITALIC).build());
+			once = false;
+		}
+
+		for (Savestate savestate : savestateList) {
+
+			String index = savestate.getIndex() == null ? "" : Integer.toString(savestate.getIndex());
+			boolean isCurrentIndex = savestate.getIndex() == currentIndex;
+			String name = savestate.getName() == null ? "" : savestate.getName();
+			String date = savestate.getDate() == null ? "" : dateFormat.format(savestate.getDate());
+
+			TextFormatting indexColor = isCurrentIndex ? TextFormatting.AQUA : TextFormatting.BLUE;
+			TextFormatting nameColor = isCurrentIndex ? TextFormatting.WHITE : TextFormatting.GRAY;
+			TextFormatting dateColor = isCurrentIndex ? TextFormatting.AQUA : TextFormatting.DARK_AQUA;
+			TextFormatting saveColor = isCurrentIndex ? TextFormatting.LIGHT_PURPLE : TextFormatting.DARK_PURPLE;
+			TextFormatting deleteColor = isCurrentIndex ? TextFormatting.RED : TextFormatting.DARK_RED;
+			TextFormatting renameColor = isCurrentIndex ? TextFormatting.YELLOW : TextFormatting.GOLD;
+			TextFormatting loadColor = isCurrentIndex ? TextFormatting.GREEN : TextFormatting.DARK_GREEN;
+
+			//@formatter:off
+			UnaryOperator<Style> hover = t -> 
+							t.setHoverEvent (
+									CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.literal(date).withStyle(dateColor))
+									);
+			
+			Component msg = null;
+					
+			if(savestate instanceof FailedSavestate) {
+				FailedSavestate failedSavestate = (FailedSavestate) savestate;
+				msg = Component.translatable("%s: %s%s",
+						Component.literal(index).withStyle(indexColor), 
+						Component.literal(name).withStyle(nameColor),
+						Component.translatable("msg.tasmod.savestate.info.error", failedSavestate.getError().getMessage())
+					.withStyle(TextFormatting.RED))
+					.withStyle(t -> 
+						t.setHoverEvent(
+								CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.literal(date).withStyle(TextFormatting.GOLD)
+						)));
+			} else {
+				if(!TASmodClient.config.getBoolean(TASmodConfig.SAVESTATE_SHOW_CONTROLS)) {
+					msg = Component.translatable("%s: %s", 
+							Component.literal(index).withStyle(indexColor), 
+							Component.literal(name).withStyle(nameColor))
+							.withStyle(hover);
+					
+				}
+				else {
+					Component saveComponent = Component.translatable("msg.tasmod.savestate.save.clickable").withStyle(saveColor)
+							.withStyle(t->
+							t.setHoverEvent(
+									CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("msg.tasmod.savestate.save.hover", name).withStyle(saveColor)))
+							)
+							.withStyle(t->
+								t.setClickEvent(
+										CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, String.format("/savestate save %s", index)))
+							);
+					
+					Component deleteComponent = Component.translatable("msg.tasmod.savestate.delete.clickable").withStyle(deleteColor)
+							.withStyle(t->
+								t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, String.format("/savestate delete %s", index)))
+							)
+							.withStyle(t->
+								t.setHoverEvent(CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("msg.tasmod.savestate.delete.hover", name).withStyle(deleteColor)))
+							);
+					
+					Component renameComponent = Component.translatable("msg.tasmod.savestate.rename.clickable").withStyle(renameColor)
+							.withStyle(t->
+								t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, String.format("/savestate rename %s", index)))
+							)
+							.withStyle(t->
+								t.setHoverEvent(CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("msg.tasmod.savestate.rename.hover", name).withStyle(renameColor)))
+							);
+					
+					Component loadComponent = Component.translatable("msg.tasmod.savestate.load.clickable").withStyle(loadColor)
+							.withStyle(t->
+								t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, String.format("/savestate load %s", index)))
+							)
+							.withStyle(t->
+								t.setHoverEvent(CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("msg.tasmod.savestate.load.hover", name).withStyle(loadColor)))
+							);
+					
+					msg = Component.translatable("%s: %s     %s %s %s %s",
+							Component.literal(index).withStyle(indexColor), 
+							Component.literal(name).withStyle(nameColor),
+							Component.wrap(saveComponent, nameColor),
+							Component.wrap(deleteComponent, nameColor),
+							Component.wrap(renameComponent, nameColor),
+							Component.wrap(loadComponent, nameColor)
+						).withStyle(hover);
+				}
+			}
+			
+			//@formatter:on
+			sender.sendMessage(msg.build());
+		}
 	}
 
 	private void infoAll(ICommandSender sender) {
