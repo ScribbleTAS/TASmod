@@ -281,7 +281,8 @@ public class SavestateIndexer {
 			try {
 				onDelete.run(deleteSavestate(i));
 			} catch (Exception e) {
-				onError.run(e);
+				if (onError != null)
+					onError.run(e);
 			}
 		}
 	}

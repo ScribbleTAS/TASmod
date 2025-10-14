@@ -30,6 +30,7 @@ import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataEx
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateGuiHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
@@ -120,6 +121,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		PacketHandlerRegistry.register(startPositionMetadataExtension);
 		PacketHandlerRegistry.register(tabCompletionUtils);
 		PacketHandlerRegistry.register(commandFileCommand);
+		PacketHandlerRegistry.register(new SavestateGuiHandlerServer());
 		PacketHandlerRegistry.register(motionStorage);
 		SavestateResourcePackHandler resourcepackHandler = new SavestateResourcePackHandler();
 		PacketHandlerRegistry.register(resourcepackHandler);

@@ -40,6 +40,7 @@ import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodKeybinds;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateGuiHandlerClient;
 import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandlerClient;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerClient;
 import com.minecrafttas.tasmod.ticksync.TickSyncClient;
@@ -173,6 +174,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		PacketHandlerRegistry.register(tickratechanger);
 		PacketHandlerRegistry.register(savestateHandlerClient);
 		PacketHandlerRegistry.register(new SavestatePlayerHandlerClient());
+		PacketHandlerRegistry.register(new SavestateGuiHandlerClient());
 	}
 
 	private void registerEventListeners() {

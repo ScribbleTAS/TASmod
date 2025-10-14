@@ -63,7 +63,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 	private final MinecraftServer server;
 
-	public SavestateState state = SavestateState.NONE; // TODO Make private
+	private SavestateState state = SavestateState.NONE; // TODO Make private
 
 	/**
 	 * Manages enumeration and location of savestates on the file system
@@ -91,19 +91,19 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		createIndexer(server);
 	}
 
-	public void saveState(SavestateCallback cb, SavestateFlags... options) throws Exception {
+	public void saveState(SavestateCallback cb, SavestateFlags... options) throws SavestateException {
 		saveState(-1, null, cb, options);
 	}
 
-	public void saveState(int index, SavestateCallback cb, SavestateFlags... flags) throws Exception {
+	public void saveState(int index, SavestateCallback cb, SavestateFlags... flags) throws SavestateException {
 		saveState(index, null, cb, flags);
 	}
 
-	public void saveState(String name, SavestateCallback cb, SavestateFlags... flags) throws Exception {
+	public void saveState(String name, SavestateCallback cb, SavestateFlags... flags) throws SavestateException {
 		saveState(-1, name, cb, flags);
 	}
 
-	public void saveState(int index, String name, SavestateCallback cb, SavestateFlags... flags) throws SavestateException, IOException {
+	public void saveState(int index, String name, SavestateCallback cb, SavestateFlags... flags) throws SavestateException {
 		if (logger.isTraceEnabled()) {
 			logger.trace(LoggerMarkers.Savestate, "SAVING a savestate with index {}. Flags: ", index, Arrays.stream(flags).map(Enum::toString).collect(Collectors.joining(",")));
 		} else {
@@ -119,9 +119,9 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Open GuiSavestateScreen
 		try {
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SCREEN));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOADING_SCREEN).writeInt(SavestateState.SAVING.ordinal()));
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.catching(e);
 		}
 
 		// Lock savestating and loadstating
@@ -177,7 +177,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		copyFolder(sourceFolder, targetFolder);
 
 		// Send a notification that the savestate has been loaded
-		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToSave + " saved"));
+//		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToSave + " saved"));
 
 		try {
 			// Close GuiSavestateScreen
@@ -189,6 +189,9 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		if (!SavestateFlags.BLOCK_PAUSE_TICKRATE.isBlocked(flags)) {
 			TASmod.tickratechanger.pauseGame(false);
 		}
+
+		if (cb != null)
+			cb.invoke(paths);
 
 		// Unlock savestating
 		state = SavestateState.NONE;
@@ -221,6 +224,13 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		}
 		// Lock savestating and loadstating
 		state = SavestateState.LOADING;
+
+		// Open GuiSavestateScreen
+		try {
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOADING_SCREEN).writeInt(SavestateState.LOADING.ordinal()));
+		} catch (Exception e) {
+			logger.catching(e);
+		}
 
 		// Enable tickrate 0
 		TASmod.tickratechanger.pauseGame(true);
@@ -288,13 +298,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		// Refresh server resourcepacks on the client
 		SavestateResourcePackHandler.refreshServerResourcepack(server);
 
-		// Incrementing info file
-//		SavestateTrackerFile tracker = new SavestateTrackerFile(savestateDirectory.resolve(worldname + "-info.txt")); // TODO Bring back the trackerfile!
-//		tracker.increaseLoadstateCount();
-
-		// Send a notification that the savestate has been loaded
-		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToLoad + " loaded"));
-
 		// Add players to the chunk
 		worldHandler.addPlayersToServerChunks();
 
@@ -309,6 +312,9 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		if (!SavestateFlags.BLOCK_PAUSE_TICKRATE.isBlocked(flags)) {
 			TASmod.tickratechanger.pauseGame(false);
 		}
+
+		if (cb != null)
+			cb.invoke(paths);
 
 		// Unlock savestating
 		state = SavestateState.NONE;
@@ -360,7 +366,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		DeletionRunnable onDelete = (paths) -> {
 			SavestateIndexer.deleteFolder(paths.getTargetFolder());
-			cb.invoke(paths);
+			if (cb != null)
+				cb.invoke(paths);
 		};
 
 		indexer.deleteMultipleSavestates(from, to, onDelete, err);
@@ -389,7 +396,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 				//@formatter:off
 				TASmodPackets.SAVESTATE_SAVE,
 				TASmodPackets.SAVESTATE_LOAD,
-				TASmodPackets.SAVESTATE_SCREEN,
 				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS
 				//@formatter:on
 		};
@@ -400,20 +406,32 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		// TODO Permissions
 		TASmodPackets packet = (TASmodPackets) id;
 
-		EntityPlayerMP player = TASmod.getServerInstance().getPlayerList().getPlayerByUsername(username);
+		EntityPlayerMP player = server.getPlayerList().getPlayerByUsername(username);
 
 		switch (packet) {
 			case SAVESTATE_SAVE:
 				int index = TASmodBufferBuilder.readInt(buf);
 
+				SavestateCallback cb = (paths) -> {
+					/* 
+					 * Opens the savestate rename screen only for the player who initiated the savestate.
+					 * Once the player is done renaming the savestate, the screens are cleared for all players.
+					 */
+					try {
+						TASmod.server.sendTo(player, new TASmodBufferBuilder(TASmodPackets.SAVESTATE_RENAME_SCREEN).writeInt(paths.getSavestate().index));
+					} catch (Exception e) {
+						LOGGER.catching(e);
+					}
+				};
+
 				Task savestateTask = () -> {
 					try {
-						saveState(index, null);
+						saveState(index, cb);
 					} catch (SavestateException e) {
 						if (player != null)
 							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getMessage()));
 
-						LOGGER.error(LoggerMarkers.Savestate, "Failed to create a savestate");
+						LOGGER.error("Failed to create a savestate");
 						LOGGER.catching(e);
 					} catch (Exception e) {
 						if (player != null)
@@ -458,7 +476,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 				TASmod.gameLoopSchedulerServer.add(loadstateTask);
 				break;
 
-			case SAVESTATE_SCREEN:
 			case SAVESTATE_UNLOAD_CHUNKS:
 				throw new WrongSideException(id, Side.SERVER);
 			default:
@@ -554,5 +571,28 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 	public Path getCurrentSavestateDir() {
 		return indexer.getCurrentSavestateDir();
+	}
+
+	public void resetState() {
+		state = SavestateState.NONE;
+	}
+
+	public SavestateState getState() {
+		return state;
+	}
+
+	public void rename(int index, String name) throws SavestateException {
+		rename(index, name, null);
+	}
+
+	public void rename(int index, String name, SavestateCallback cb) throws SavestateException {
+		SavestatePaths paths = indexer.renameSavestate(index, name);
+		if (cb != null) {
+			cb.invoke(paths);
+		}
+	}
+
+	public void reload() {
+		indexer.reload();
 	}
 }

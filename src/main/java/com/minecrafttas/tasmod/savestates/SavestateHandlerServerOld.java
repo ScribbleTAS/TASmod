@@ -153,11 +153,11 @@ public class SavestateHandlerServerOld implements ServerPacketHandler {
 			throw new SavestateException("A loadstate operation is being carried out");
 		}
 
+		// Open GuiSavestateScreen
 		try {
-			// Open GuiSavestateScreen
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SCREEN));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOADING_SCREEN).writeInt(SavestateState.SAVING.ordinal()));
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.catching(e);
 		}
 
 		// Lock savestating and loadstating
@@ -214,7 +214,7 @@ public class SavestateHandlerServerOld implements ServerPacketHandler {
 				// savestate inputs client
 				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SAVE).writeString(getSavestateName(indexToSave)));
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.catching(e);
 			}
 		}
 
@@ -761,7 +761,7 @@ public class SavestateHandlerServerOld implements ServerPacketHandler {
 				//@formatter:off
 				TASmodPackets.SAVESTATE_SAVE,
 				TASmodPackets.SAVESTATE_LOAD,
-				TASmodPackets.SAVESTATE_SCREEN,
+				TASmodPackets.SAVESTATE_LOADING_SCREEN,
 				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS
 				//@formatter:on
 		};
@@ -830,7 +830,7 @@ public class SavestateHandlerServerOld implements ServerPacketHandler {
 				TASmod.gameLoopSchedulerServer.add(loadstateTask);
 				break;
 
-			case SAVESTATE_SCREEN:
+			case SAVESTATE_LOADING_SCREEN:
 			case SAVESTATE_UNLOAD_CHUNKS:
 				throw new WrongSideException(id, Side.SERVER);
 			default:

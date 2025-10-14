@@ -25,7 +25,6 @@ import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
-import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
 import com.minecrafttas.tasmod.util.Ducks.WorldClientDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -294,7 +293,6 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 				//@formatter:off
 				TASmodPackets.SAVESTATE_SAVE,
 				TASmodPackets.SAVESTATE_LOAD,
-				TASmodPackets.SAVESTATE_SCREEN,
 				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS };
 				//@formatter:on
 	}
@@ -307,7 +305,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		switch (packet) {
 			case SAVESTATE_SAVE:
 				String savestateName = TASmodBufferBuilder.readString(buf);
-				Minecraft.getMinecraft().addScheduledTask(() -> {
+				mc.addScheduledTask(() -> {
 
 					// Create client savestate
 					try {
@@ -322,7 +320,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			case SAVESTATE_LOAD:
 				// Load client savestate
 				String loadstateName = TASmodBufferBuilder.readString(buf);
-				Minecraft.getMinecraft().addScheduledTask(() -> {
+				mc.addScheduledTask(() -> {
 					try {
 						SavestateHandlerClient.loadstate(loadstateName);
 					} catch (IOException e) {
@@ -332,15 +330,9 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 					}
 				});
 				break;
-			case SAVESTATE_SCREEN:
-				// Open Savestate screen
-				Minecraft.getMinecraft().addScheduledTask(() -> {
-					mc.displayGuiScreen(new GuiSavestateSavingScreen());
-				});
-				break;
 
 			case SAVESTATE_UNLOAD_CHUNKS:
-				Minecraft.getMinecraft().addScheduledTask(() -> {
+				mc.addScheduledTask(() -> {
 					SavestateHandlerClient.unloadAllClientChunks();
 				});
 				break;

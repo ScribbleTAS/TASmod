@@ -7,6 +7,9 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
+import com.minecrafttas.tasmod.savestates.gui.GuiSavestate;
+import com.minecrafttas.tasmod.savestates.gui.GuiSavestateDone;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 import com.minecrafttas.tasmod.util.Ducks.ScoreboardDuck;
@@ -63,11 +66,27 @@ public enum TASmodPackets implements PacketID {
 	 */
 	SAVESTATE_LOAD,
 	/**
-	 * <p>Opens or closes the savestate screen on the client
+	 * <p>Opens the {@link GuiSavestate} screen on the client
 	 * <p>SIDE: Client<br>
-	 * ARGS: none
+	 * ARGS: int The {@link SavestateState} for displaying the correct message
 	 */
-	SAVESTATE_SCREEN,
+	SAVESTATE_LOADING_SCREEN,
+	/**
+	 * <p>Opens the {@link GuiSavestateDone} screen on the client
+	 * <p>SIDE: Client<br>
+	 * ARGS:<br>
+	 * int The index of the savestate to display in the gui<br>
+	 * String The name of the savestate to display in the gui<br>
+	 */
+	SAVESTATE_DONE_SCREEN,
+	/**
+	 * <p>Opens the {@link GuiSavestateDone} screen on the client
+	 * <p>SIDE: BOTH<br>
+	 * <strong>Server->Client</strong> int The index of the savestate to display in the gui<br>
+	 * <strong>Client->Server</strong> int The index of the savestate to rename<br>
+	 * <strong>Client->Server</strong> String The name of the savestate to be renamed<br>
+	 */
+	SAVESTATE_RENAME_SCREEN,
 	/**
 	 * <p>Sends the playerdata of the player to the client, inluding the motion
 	 * <p>SIDE: Client<br>

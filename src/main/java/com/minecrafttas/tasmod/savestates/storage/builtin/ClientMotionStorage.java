@@ -28,7 +28,6 @@ import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
-import com.minecrafttas.tasmod.savestates.gui.GuiSavestateSavingScreen;
 import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
@@ -134,9 +133,6 @@ public class ClientMotionStorage extends SavestateStorageExtensionBase implement
 			case SAVESTATE_REQUEST_MOTION:
 
 				if (player != null) {
-					if (!(mc.currentScreen instanceof GuiSavestateSavingScreen)) {
-						mc.displayGuiScreen(new GuiSavestateSavingScreen());
-					}
 				//@formatter:off
 				MotionData motionData = new MotionData(
 						player.motionX,

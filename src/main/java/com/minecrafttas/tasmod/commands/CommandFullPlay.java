@@ -5,7 +5,6 @@ import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateFlags;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 
 import net.minecraft.command.CommandBase;
@@ -39,7 +38,7 @@ public class CommandFullPlay extends CommandBase {
 			e.printStackTrace();
 			return;
 		} finally {
-			TASmod.savestateHandlerServer.state = SavestateState.NONE;
+			TASmod.savestateHandlerServer.resetState();
 		}
 		TASmod.playbackControllerServer.setServerState(TASstate.PLAYBACK);
 		try {
