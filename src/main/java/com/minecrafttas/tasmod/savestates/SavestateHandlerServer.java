@@ -350,18 +350,23 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		this.indexer = new SavestateIndexer(logger, savesDirectory, savestateBaseDirectory, worldname);
 	}
 
-	public void deleteSavestate(int index) throws SavestateDeleteException {
+	public void deleteSavestate(int index, SavestateCallback cb) throws SavestateDeleteException {
 		logger.warn(LoggerMarkers.Savestate, "Deleting savestate {}", index);
-		this.indexer.deleteSavestate(index);
+		SavestatePaths paths = this.indexer.deleteSavestate(index);
+
+		if (cb != null)
+			cb.invoke(paths);
 	}
 
 	public void deleteSavestate(int from, int to, SavestateCallback cb, ErrorRunnable err) throws SavestateDeleteException {
 		logger.warn(LoggerMarkers.Savestate, "Deleting multiple savestates from {} to {}", from, to);
 		if (state == SavestateState.SAVING) {
-			throw new SavestateDeleteException("A savestating operation is already being carried out");
+			err.run(new SavestateDeleteException("msg.tasmod.savestate.save.error"));
+			return;
 		}
 		if (state == SavestateState.LOADING) {
-			throw new SavestateDeleteException("A loadstate operation is being carried out");
+			err.run(new SavestateDeleteException("msg.tasmod.savestate.load.error"));
+			return;
 		}
 
 		DeletionRunnable onDelete = (paths) -> {

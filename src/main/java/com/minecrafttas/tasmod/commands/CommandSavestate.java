@@ -13,6 +13,7 @@ import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateCallback;
+import com.minecrafttas.tasmod.savestates.SavestateIndexer.ErrorRunnable;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer.FailedSavestate;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer.Savestate;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
@@ -24,6 +25,7 @@ import com.minecrafttas.tasmod.util.Component.CHoverEvent;
 import com.minecrafttas.tasmod.util.I18n;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -416,7 +418,7 @@ public class CommandSavestate extends CommandBase {
 				try {
 					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_RENAME_SCREEN).writeInt(paths.getSavestate().getIndex()).writeString(sender.getName()));
 				} catch (Exception e) {
-					TASmod.LOGGER.catching(e);
+					onFailure(sender, e);
 				}
 			}
 		});
@@ -424,7 +426,7 @@ public class CommandSavestate extends CommandBase {
 		try {
 			TASmod.savestateHandlerServer.saveState(doneSavingCallback);
 		} catch (SavestateException e) {
-			TASmod.LOGGER.catching(e);
+			onFailure(sender, e);
 		}
 	}
 
@@ -433,7 +435,7 @@ public class CommandSavestate extends CommandBase {
 		try {
 			TASmod.savestateHandlerServer.saveState(index, null);
 		} catch (SavestateException e) {
-			TASmod.LOGGER.catching(e);
+			onFailure(sender, e);
 		}
 	}
 
@@ -442,7 +444,7 @@ public class CommandSavestate extends CommandBase {
 		try {
 			TASmod.savestateHandlerServer.saveState(index, name, null);
 		} catch (SavestateException e) {
-			TASmod.LOGGER.catching(e);
+			onFailure(sender, e);
 		}
 	}
 
@@ -451,7 +453,7 @@ public class CommandSavestate extends CommandBase {
 		try {
 			TASmod.savestateHandlerServer.saveState(name, null);
 		} catch (SavestateException e) {
-			TASmod.LOGGER.catching(e);
+			onFailure(sender, e);
 		}
 	}
 
@@ -460,7 +462,7 @@ public class CommandSavestate extends CommandBase {
 		try {
 			TASmod.savestateHandlerServer.loadState(null);
 		} catch (LoadstateException e) {
-			TASmod.LOGGER.catching(e);
+			onFailure(sender, e);
 		}
 	}
 
@@ -469,30 +471,69 @@ public class CommandSavestate extends CommandBase {
 		try {
 			TASmod.savestateHandlerServer.loadState(index, null);
 		} catch (LoadstateException e) {
-			TASmod.LOGGER.catching(e);
+			onFailure(sender, e);
 		}
 	}
 
 	private void delete(ICommandSender sender, int index) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Delete {}", index);
+
+		SavestateCallback cb = (paths) -> {
+			sender.sendMessage(Component.translatable("msg.lotaslight.savestate.delete", paths.getSavestate().getIndex()).withStyle(TextFormatting.GREEN).build());
+		};
+
 		try {
-			TASmod.savestateHandlerServer.deleteSavestate(index);
+			TASmod.savestateHandlerServer.deleteSavestate(index, cb);
 		} catch (SavestateDeleteException e) {
-			e.printStackTrace();
+			onFailure(sender, e);
 		}
 	}
 
 	private void deleteMore(ICommandSender sender, int indexFrom, int indexTo) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command DeleteMore {}|{}", indexFrom, indexTo);
-		deleteDis(sender, indexFrom, indexTo);
+		int count = (indexTo + 1) - indexFrom;
+
+		if (count < 0) {
+			onFailure(sender, new SavestateDeleteException("msg.tasmod.savestate.deleteMore.error.negative", count));
+		}
+
+		String translationKey = "msg.tasmod.savestate.deleteMore" + (count == 1 ? ".singular" : ".plural");
+
+		//@formatter:off
+		Component countComponent = Component.literal(Integer.toString(count)).withStyle(TextFormatting.RED);
+		
+		Component confirmationComponent = Component.wrap(Component.translatable("msg.tasmod.savestate.deleteMore.clickable", true)
+				.withStyle(
+						style -> style
+							.setClickEvent(
+									CClickEvent.create(ClickEvent.Action.RUN_COMMAND, String.format("/savestate delete %s %s force", indexFrom, indexTo))
+							)
+							.setHoverEvent(
+									CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("msg.tasmod.savestate.deleteMore.hover").withStyle(TextFormatting.DARK_RED)))
+				)).withStyle(TextFormatting.GREEN);
+		
+		
+		sender.sendMessage(
+			Component.translatable(translationKey, countComponent, confirmationComponent).withStyle(TextFormatting.YELLOW).build()
+		);
+		//@formatter:on
 	}
 
 	private void deleteDis(ICommandSender sender, int indexFrom, int indexTo) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command DeleteDis {}|{}", indexFrom, indexTo);
+
+		SavestateCallback cb = (paths) -> {
+			sender.sendMessage(Component.translatable("msg.tasmod.savestate.delete", paths.getSavestate().getIndex()).withStyle(TextFormatting.GREEN).build());
+		};
+
+		ErrorRunnable onErr = (exception) -> {
+			onFailure(sender, exception);
+		};
+
 		try {
-			TASmod.savestateHandlerServer.deleteSavestate(indexFrom, indexTo, null, null);
+			TASmod.savestateHandlerServer.deleteSavestate(indexFrom, indexTo, cb, onErr);
 		} catch (SavestateDeleteException e) {
-			e.printStackTrace();
+			onFailure(sender, e);
 		}
 	}
 
@@ -547,5 +588,16 @@ public class CommandSavestate extends CommandBase {
 			out.add(Integer.toString(save.getIndex()));
 		});
 		return getListOfStringsMatchingLastWord(args, out);
+	}
+
+	private static void onFailure(ICommandSender sender, Throwable e) {
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.addScheduledTask(() -> {
+			mc.displayGuiScreen(null);
+		});
+
+		sender.sendMessage(Component.literal(e.getMessage()).withStyle(TextFormatting.RED).build());
+		TASmod.LOGGER.catching(e);
+		TASmod.savestateHandlerServer.resetState();
 	}
 }
