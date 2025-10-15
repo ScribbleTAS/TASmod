@@ -183,8 +183,8 @@ public class CommandSavestate extends CommandBase {
 		}
 
 		else if ("rename".equals(first)) {
-			int index = processIndex(args[2]);
-			String name = getRestArgsAsString(3, args);
+			int index = processIndex(args[1]);
+			String name = getRestArgsAsString(2, args);
 
 			rename(sender, index, name);
 			return;

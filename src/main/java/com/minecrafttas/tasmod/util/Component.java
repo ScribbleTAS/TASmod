@@ -95,7 +95,7 @@ public class Component {
 	}
 
 	public static Component wrap(Component component) {
-		return Component.literal(String.format("[%s]", component.build().getFormattedText()));
+		return Component.translatable("[%s]", component);
 	}
 
 	public static class CClickEvent {
