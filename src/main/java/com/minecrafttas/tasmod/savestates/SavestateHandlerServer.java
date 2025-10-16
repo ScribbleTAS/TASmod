@@ -20,6 +20,7 @@ import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.events.EventSavestate;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorAnvilChunkLoader;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorChunkLoader;
@@ -267,8 +268,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		worldHandler.flushSaveHandler();
 
 		// Delete and copy directories
-		deleteFolder(sourcefolder);
-		copyFolder(targetfolder, sourcefolder);
+		deleteFolder(targetfolder);
+		copyFolder(sourcefolder, targetfolder);
 
 		playerHandler.clearScoreboard();
 
@@ -439,9 +440,13 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 			case SAVESTATE_LOAD:
 				int indexing = TASmodBufferBuilder.readInt(buf);
+
+				SavestateCallback cb2 = CommandSavestate.createChatMessageCallback(player, "msg.tasmod.savestate.load.end");
+
 				Task loadstateTask = () -> {
+
 					try {
-						loadState(indexing, null);
+						loadState(indexing, cb2);
 					} catch (LoadstateException e) {
 						if (player != null)
 							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to load a savestate: " + e.getMessage()));

@@ -8,9 +8,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateCallback;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer.ErrorRunnable;
@@ -50,7 +48,7 @@ public class CommandSavestate extends CommandBase {
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "/savestate save|load|delete|reload|rename|info|import";
+		return "/savestate save|load|delete|reload|rename|info";
 	}
 
 	@Override
@@ -218,9 +216,9 @@ public class CommandSavestate extends CommandBase {
 			}
 		}
 
-		else if ("import".equals(first)) {
-			importing(sender);
-		}
+//		else if ("import".equals(first)) {
+//			importing(sender);
+//		}
 
 		throw new WrongUsageException(getUsage(sender));
 	}
@@ -289,11 +287,16 @@ public class CommandSavestate extends CommandBase {
 		infoIndexAmount(sender, index, null);
 	}
 
+	@SuppressWarnings("unused")
 	private void infoIndexAmount(ICommandSender sender, Integer indexToDisplay, Integer amount) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command InfoIndexAmount {}|{}", indexToDisplay, amount);
 
 		int currentIndex = TASmod.savestateHandlerServer.getCurrentIndex();
 		int size = TASmod.savestateHandlerServer.size();
+
+		if (size == 0)
+			sendHelp(sender);
+
 		if (indexToDisplay == null) {
 			indexToDisplay = currentIndex;
 		}
@@ -303,13 +306,16 @@ public class CommandSavestate extends CommandBase {
 
 		sender.sendMessage(Component.literal("").build()); // Print an empty line
 
-		String format = I18n.format("msg.tasmod.savestate.dateformat");
+		String format = "MM/dd/yyyy hh:mm:ss a";	// TODO Add server config
+		if (!sender.getServer().isDedicatedServer()) {
+			format = I18n.format("msg.tasmod.savestate.dateformat");
+		}
 		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
 
 		List<Savestate> savestateList = TASmod.savestateHandlerServer.getSavestateInfo(indexToDisplay, amount);
 
 		if (savestateList.size() < size && once) {
-			sender.sendMessage(Component.translatable("gui.tasmod.savestate.omitted", "/savestate info all").withStyle(TextFormatting.RED, TextFormatting.ITALIC).build());
+			sender.sendMessage(Component.translatable("msg.tasmod.savestate.omitted", "/savestate info all").withStyle(TextFormatting.RED, TextFormatting.ITALIC).build());
 			once = false;
 		}
 
@@ -348,7 +354,7 @@ public class CommandSavestate extends CommandBase {
 								CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.literal(date).withStyle(TextFormatting.GOLD)
 						)));
 			} else {
-				if(!TASmodClient.config.getBoolean(TASmodConfig.SAVESTATE_SHOW_CONTROLS)) {
+				if(/*!TASmodClient.config.getBoolean(TASmodConfig.SAVESTATE_SHOW_CONTROLS)*/false) { // TODO Add server config
 					msg = Component.translatable("%s: %s", 
 							Component.literal(index).withStyle(indexColor), 
 							Component.literal(name).withStyle(nameColor))
@@ -406,6 +412,22 @@ public class CommandSavestate extends CommandBase {
 		}
 	}
 
+	private void sendHelp(ICommandSender sender) {
+		UnaryOperator<Style> hover = t -> t.setHoverEvent(CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("Click me!").withStyle(TextFormatting.AQUA)));
+		UnaryOperator<Style> click;
+
+		sender.sendMessage(Component.translatable("You currently do not have any savestates!").withStyle(TextFormatting.RED).build());
+		sender.sendMessage(Component.literal("").build());
+		click = t -> t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, "/savestate save My first savestate!"));
+		sender.sendMessage(Component.translatable("Use %s to create one", Component.literal("/savestate save [name]").withStyle(hover).withStyle(click).withStyle(TextFormatting.AQUA, TextFormatting.BOLD)).withStyle(TextFormatting.YELLOW).build());
+		click = t -> t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, "/savestate load"));
+		sender.sendMessage(Component.translatable("then use %s to load it.", Component.literal("/savestate load").withStyle(hover).withStyle(click).withStyle(TextFormatting.AQUA, TextFormatting.BOLD)).withStyle(TextFormatting.YELLOW).build());
+		sender.sendMessage(Component.translatable("This can also be done with the hotkeys J and K respectively.").withStyle(TextFormatting.YELLOW).build());
+		click = t -> t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, "/savestate"));
+		sender.sendMessage(Component.translatable("Running %s will display all savestates", Component.literal("/savestate").withStyle(hover).withStyle(click).withStyle(TextFormatting.AQUA, TextFormatting.BOLD)).withStyle(TextFormatting.YELLOW).build());
+		sender.sendMessage(Component.translatable("(You can click on the %s!)", Component.translatable("commands").withStyle(TextFormatting.AQUA)).withStyle(TextFormatting.GREEN).build());
+	}
+
 	private void infoAll(ICommandSender sender) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command InfoAll");
 	}
@@ -413,64 +435,117 @@ public class CommandSavestate extends CommandBase {
 	private void saveNew(ICommandSender sender) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveNew");
 
-		try {
-			TASmod.savestateHandlerServer.saveState(createCallback(sender));
-		} catch (SavestateException e) {
-			onFailure(sender, e);
-		}
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.save.end");
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+
+			try {
+				TASmod.savestateHandlerServer.saveState(cb);
+			} catch (SavestateException e) {
+				onFailure(sender, e);
+			}
+		});
 	}
 
 	private void saveIndex(ICommandSender sender, int index) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveIndex {}", index);
 
-		try {
-			TASmod.savestateHandlerServer.saveState(index, createCallback(sender));
-		} catch (SavestateException e) {
-			onFailure(sender, e);
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.save.end");
+
+		if (index == 0) {
+			onFailure(sender, new SavestateException("msg.tasmod.savestate.save.error.zero"));
+			return;
+		} else if (index < 0) {
+			sender.sendMessage(Component.translatable("msg.tasmod.savestate.save.negative").withStyle(TextFormatting.YELLOW).build());
 		}
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.saveState(index, cb);
+			} catch (SavestateException e) {
+				onFailure(sender, e);
+			}
+		});
 	}
 
 	private void saveIndexName(ICommandSender sender, int index, String name) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveNameIndex {}|{}", index, name);
-		try {
-			TASmod.savestateHandlerServer.saveState(index, name, createCallback(sender));
-		} catch (SavestateException e) {
-			onFailure(sender, e);
+
+		if (index == 0) {
+			onFailure(sender, new SavestateException("msg.tasmod.savestate.save.error.zero"));
+			return;
+		} else if (index < 0) {
+			sender.sendMessage(Component.translatable("msg.tasmod.savestate.save.negative").withStyle(TextFormatting.YELLOW).build());
 		}
+
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.save.end");
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.saveState(index, name, cb);
+			} catch (SavestateException e) {
+				onFailure(sender, e);
+			}
+		});
 	}
 
 	private void saveName(ICommandSender sender, String name) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveName {}", name);
-		try {
-			TASmod.savestateHandlerServer.saveState(name, createCallback(sender));
-		} catch (SavestateException e) {
-			onFailure(sender, e);
-		}
+
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.save.end");
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.saveState(name, cb);
+			} catch (SavestateException e) {
+				onFailure(sender, e);
+			}
+		});
 	}
 
 	private void loadRecent(ICommandSender sender) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command LoadRecent");
-		try {
-			TASmod.savestateHandlerServer.loadState(createCallback(sender));
-		} catch (LoadstateException e) {
-			onFailure(sender, e);
-		}
+
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.load.end");
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.loadState(cb);
+			} catch (LoadstateException e) {
+				onFailure(sender, e);
+			}
+		});
 	}
 
 	private void loadIndex(ICommandSender sender, int index) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command LoadIndex {}", index);
-		try {
-			TASmod.savestateHandlerServer.loadState(index, createCallback(sender));
-		} catch (LoadstateException e) {
-			onFailure(sender, e);
+
+		if (index < 0) {
+			sender.sendMessage(Component.translatable("msg.tasmod.savestate.load.negative").withStyle(TextFormatting.YELLOW).build());
 		}
+
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.load.end");
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.loadState(index, cb);
+			} catch (LoadstateException e) {
+				onFailure(sender, e);
+			}
+		});
 	}
 
 	private void delete(ICommandSender sender, int index) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Delete {}", index);
 
 		SavestateCallback cb = (paths) -> {
-			sender.sendMessage(Component.translatable("msg.tasmod.savestate.delete", paths.getSavestate().getIndex()).withStyle(TextFormatting.GREEN).build());
+			//@formatter:off
+			sender.getServer().getPlayerList().sendMessage(
+					Component.translatable("msg.tasmod.savestate.delete", 
+							Component.literal(Integer.toString(paths.getSavestate().getIndex()))
+								.withStyle(TextFormatting.AQUA)
+					).withStyle(TextFormatting.GREEN).build());
+			//@formatter:on
 		};
 
 		try {
@@ -486,6 +561,7 @@ public class CommandSavestate extends CommandBase {
 
 		if (count < 0) {
 			onFailure(sender, new SavestateDeleteException("msg.tasmod.savestate.deleteMore.error.negative", count));
+			return;
 		}
 
 		String translationKey = "msg.tasmod.savestate.deleteMore" + (count == 1 ? ".singular" : ".plural");
@@ -514,7 +590,7 @@ public class CommandSavestate extends CommandBase {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command DeleteDis {}|{}", indexFrom, indexTo);
 
 		SavestateCallback cb = (paths) -> {
-			sender.sendMessage(Component.translatable("msg.tasmod.savestate.delete", paths.getSavestate().getIndex()).withStyle(TextFormatting.GREEN).build());
+			sender.getServer().getPlayerList().sendMessage(Component.translatable("msg.tasmod.savestate.delete", paths.getSavestate().getIndex()).withStyle(TextFormatting.GREEN).build());
 		};
 
 		ErrorRunnable onErr = (exception) -> {
@@ -530,18 +606,35 @@ public class CommandSavestate extends CommandBase {
 
 	private void reload(ICommandSender sender) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Reload");
+
+		sender.getServer().getPlayerList().sendMessage(Component.translatable("msg.tasmod.savestate.reload").withStyle(TextFormatting.GREEN).build());
 		TASmod.savestateHandlerServer.reload();
 	}
 
 	private void rename(ICommandSender sender, int index, String name) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Rename {}|{}", index, name);
-		TASmod.savestateHandlerServer.rename(index, name);
-	}
 
-	private void importing(ICommandSender sender) {
-		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Import");
+		SavestateCallback cb = (paths) -> {
+			//@formatter:off
+			sender.getServer().getPlayerList().sendMessage(
+					Component.translatable("msg.tasmod.savestate.rename", 
+							Component.literal(Integer.toString(paths.getSavestate().getIndex()))
+								.withStyle(TextFormatting.AQUA),
+							Component.literal(paths.getSavestate().getName())
+								.withStyle(TextFormatting.YELLOW)
+					)
+					.withStyle(TextFormatting.GREEN).build()
+			);
+			//@formatter:on
+		};
 
+		TASmod.savestateHandlerServer.rename(index, name, cb);
 	}
+//
+//	private void importing(ICommandSender sender) {
+//		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Import");
+//
+//	}
 	// ======================================================================
 
 	private int processIndex(String arg) throws CommandException {
@@ -565,7 +658,7 @@ public class CommandSavestate extends CommandBase {
 	 * @return True if the string is numeric
 	 */
 	private boolean isNumeric(String string) {
-		return Pattern.matches("~|((~-?)?\\d+)", string);
+		return Pattern.matches("~|(~?-?\\d+)", string);
 	}
 
 	private String getRestArgsAsString(int start, String[] args) {
@@ -587,12 +680,31 @@ public class CommandSavestate extends CommandBase {
 			mc.displayGuiScreen(null);
 		});
 
-		sender.sendMessage(Component.literal(e.getMessage()).withStyle(TextFormatting.RED).build());
+		sender.getServer().getPlayerList().sendMessage(Component.translatable(e.getMessage()).withStyle(TextFormatting.RED).build());
 		TASmod.LOGGER.catching(e);
 		TASmod.savestateHandlerServer.resetState();
 	}
 
-	private SavestateCallback createCallback(ICommandSender sender) {
+	public static SavestateCallback createChatMessageCallback(ICommandSender sender, String translationKey) {
+		return (paths) -> {
+
+			createClearScreenCallback(sender).invoke(paths); // Yes it's a callback in a callback...
+
+			//@formatter:off
+			sender.getServer().getPlayerList().sendMessage(
+					Component.translatable(translationKey, 
+							Component.literal(paths.getSavestate().getName())
+								.withStyle(TextFormatting.YELLOW),
+							Component.literal(Integer.toString(paths.getSavestate().getIndex()))
+								.withStyle(TextFormatting.AQUA)
+					)
+					.withStyle(TextFormatting.GREEN).build()
+			);
+			//@formatter:on
+		};
+	}
+
+	public static SavestateCallback createClearScreenCallback(ICommandSender sender) {
 		return (paths -> {
 			if (sender instanceof EntityPlayerMP) {
 				try {

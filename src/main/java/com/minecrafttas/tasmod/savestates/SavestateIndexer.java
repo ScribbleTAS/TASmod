@@ -137,9 +137,8 @@ public class SavestateIndexer {
 	 */
 	public SavestatePaths createSavestate(int index, String name, boolean changeIndex) {
 		logger.trace("Creating a savestate in indexer");
-		if (index < 0) {
-			index = currentSavestate.getIndex() + 1;
-		}
+
+		index = getNextIndex(index);
 
 		if (name == null) {
 			name = "Savestate #" + index;
@@ -247,6 +246,10 @@ public class SavestateIndexer {
 	 */
 	public SavestatePaths deleteSavestate(int index) throws SavestateDeleteException {
 		logger.trace("Deleting savestate {}", index);
+
+		if (index == 0) {
+			throw new SavestateDeleteException("msg.tasmod.savestate.delete.error.zero");
+		}
 
 		if (!savestateList.containsKey(index)) {
 			throw new SavestateDeleteException(I18n.format("msg.tasmod.savestate.error.noexist", index));
@@ -700,5 +703,21 @@ public class SavestateIndexer {
 
 	public Path getCurrentSavestateDir() {
 		return currentSavestateDir;
+	}
+
+	public boolean exists(int index) {
+		index = getNextIndex(index);
+		return savestateList.containsKey(index);
+	}
+
+	/**
+	 * @param index The current index. -1 if the next index should be used
+	 * @return The next index to save into
+	 */
+	public int getNextIndex(int index) {
+		if (index < 0) {
+			index = currentSavestate.getIndex() + 1;
+		}
+		return index;
 	}
 }

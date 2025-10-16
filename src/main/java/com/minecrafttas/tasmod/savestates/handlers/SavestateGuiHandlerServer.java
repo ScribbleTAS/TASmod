@@ -13,12 +13,15 @@ import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
+import com.minecrafttas.tasmod.util.Component;
+
+import net.minecraft.util.text.TextFormatting;
 
 public class SavestateGuiHandlerServer implements ServerPacketHandler {
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
-		return new PacketID[] { SAVESTATE_RENAME_SCREEN };
+		return new PacketID[] { SAVESTATE_RENAME_SCREEN, SAVESTATE_CLEAR_SCREEN };
 	}
 
 	@Override
@@ -33,6 +36,19 @@ public class SavestateGuiHandlerServer implements ServerPacketHandler {
 					TASmod.savestateHandlerServer.rename(index, name);
 				});
 				TASmod.server.sendToAll(new TASmodBufferBuilder(SAVESTATE_CLEAR_SCREEN));
+
+				//@formatter:off
+				TASmod.getServerInstance().getPlayerList().sendMessage(
+						Component.translatable("msg.tasmod.savestate.save.end", 
+								Component.literal(name)
+									.withStyle(TextFormatting.YELLOW),
+								Component.literal(Integer.toString(index))
+									.withStyle(TextFormatting.AQUA)
+						)
+						.withStyle(TextFormatting.GREEN).build()
+				);
+				//@formatter:on
+
 				break;
 			case SAVESTATE_CLEAR_SCREEN:
 				TASmod.server.sendToAll(new TASmodBufferBuilder(buf));
@@ -41,5 +57,4 @@ public class SavestateGuiHandlerServer implements ServerPacketHandler {
 				throw new PacketNotImplementedException(packet, Side.SERVER);
 		}
 	}
-
 }

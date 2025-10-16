@@ -14,6 +14,7 @@ import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePau
 import com.minecrafttas.tasmod.util.Ducks.ScoreboardDuck;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiDownloadTerrain;
 import net.minecraft.nbt.NBTTagCompound;
 
 /**
@@ -80,12 +81,12 @@ public enum TASmodPackets implements PacketID {
 	SAVESTATE_RENAME_SCREEN,
 	/**
 	 * <p>Clears the screen on the client, if it's a savestate screen
-	 * <p>SIDE: Client<br>
+	 * <p>SIDE: Both<br>
 	 * ARGS: None
 	 */
 	SAVESTATE_CLEAR_SCREEN(Side.CLIENT, (buf, clientID) -> {
 		Minecraft mc = Minecraft.getMinecraft();
-		if (mc.currentScreen instanceof GuiSavestate) {
+		if (mc.currentScreen instanceof GuiSavestate || mc.currentScreen instanceof GuiDownloadTerrain) {
 			mc.displayGuiScreen(null);
 		}
 	}),
