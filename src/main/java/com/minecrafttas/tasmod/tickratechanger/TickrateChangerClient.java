@@ -148,7 +148,7 @@ public class TickrateChangerClient implements ClientPacketHandler {
 	public void togglePause() {
 		try {
 			// request tickrate change
-			TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.TICKRATE_ZERO).writeTickratePauseState(TickratePauseState.TOGGLE));
+			TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.TICKRATE_ZERO).writeEnum(TickratePauseState.TOGGLE));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -273,7 +273,7 @@ public class TickrateChangerClient implements ClientPacketHandler {
 				advanceClientTick();
 				break;
 			case TICKRATE_ZERO:
-				TickratePauseState state = TASmodBufferBuilder.readTickratePauseState(buf);
+				TickratePauseState state = TASmodBufferBuilder.readEnum(TickratePauseState.class, buf);
 
 				switch (state) {
 					case PAUSE:

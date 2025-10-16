@@ -9,7 +9,6 @@ import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.Playbac
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestate;
-import com.minecrafttas.tasmod.savestates.gui.GuiSavestateDone;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 import com.minecrafttas.tasmod.util.Ducks.ScoreboardDuck;
@@ -68,17 +67,9 @@ public enum TASmodPackets implements PacketID {
 	/**
 	 * <p>Opens the {@link GuiSavestate} screen on the client
 	 * <p>SIDE: Client<br>
-	 * ARGS: int The {@link SavestateState} for displaying the correct message
+	 * ARGS: Enum The {@link SavestateState} for displaying the correct message
 	 */
 	SAVESTATE_LOADING_SCREEN,
-	/**
-	 * <p>Opens the {@link GuiSavestateDone} screen on the client
-	 * <p>SIDE: Client<br>
-	 * ARGS:<br>
-	 * int The index of the savestate to display in the gui<br>
-	 * String The name of the savestate to display in the gui<br>
-	 */
-	SAVESTATE_DONE_SCREEN,
 	/**
 	 * <p>Opens the {@link GuiSavestateDone} screen on the client
 	 * <p>SIDE: BOTH<br>
@@ -87,6 +78,17 @@ public enum TASmodPackets implements PacketID {
 	 * <strong>Client->Server</strong> String The name of the savestate to be renamed<br>
 	 */
 	SAVESTATE_RENAME_SCREEN,
+	/**
+	 * <p>Clears the screen on the client, if it's a savestate screen
+	 * <p>SIDE: Client<br>
+	 * ARGS: None
+	 */
+	SAVESTATE_CLEAR_SCREEN(Side.CLIENT, (buf, clientID) -> {
+		Minecraft mc = Minecraft.getMinecraft();
+		if (mc.currentScreen instanceof GuiSavestate) {
+			mc.displayGuiScreen(null);
+		}
+	}),
 	/**
 	 * <p>Sends the playerdata of the player to the client, inluding the motion
 	 * <p>SIDE: Client<br>
@@ -196,7 +198,7 @@ public enum TASmodPackets implements PacketID {
 	 * ARGS: <br>
 	 * <strong>Client->Server</strong> {@link TASstate} state The new state everyone should adapt
 	 * <strong>Server->Client</strong>
-	 * {@link TASstate} state The new state everyone should adapt<br>
+	 * Enum The {@link TASstate} state The new state everyone should adapt<br>
 	 * boolean verbose If a chat message should be printed
 	 */
 	PLAYBACK_STATE,

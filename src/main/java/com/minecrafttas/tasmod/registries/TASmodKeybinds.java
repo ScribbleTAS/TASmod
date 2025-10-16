@@ -7,12 +7,10 @@ import com.minecrafttas.mctcommon.KeybindManager.Keybind;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.savestates.gui.GuiSavestateRename;
 import com.minecrafttas.tasmod.virtual.VirtualKeybindings;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.util.text.TextComponentString;
 
 public enum TASmodKeybinds {
 	TICKRATE_0("Tickrate 0 Key", "TASmod", Keyboard.KEY_F8, () -> TASmodClient.tickratechanger.togglePause(), VirtualKeybindings::isKeyDown),
@@ -47,7 +45,6 @@ public enum TASmodKeybinds {
 		TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle(0, 45);
 	}),
 	TEST1("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
-		Minecraft.getMinecraft().displayGuiScreen(new GuiSavestateRename(new TextComponentString("Test"), 1));
 	}, VirtualKeybindings::isKeyDown),
 	TEST2("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
 	}, VirtualKeybindings::isKeyDown);

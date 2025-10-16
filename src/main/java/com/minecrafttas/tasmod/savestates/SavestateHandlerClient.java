@@ -198,7 +198,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 
 			preload(savestateContainerList, index);
 			controller.setInputs(savestateContainerList, index);
-			TASmodClient.virtual.clearKeys();
+			TASmodClient.virtual.clearNext();
 		}
 		/*
 		 * When loading a savestate during a playback 2 different scenarios can happen.
@@ -232,7 +232,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 
 				preload(controller.getInputs(), index);
 				controller.setIndex(index);
-				TASmodClient.virtual.clearKeys();
+				TASmodClient.virtual.clearNext();
 			}
 			/*
 			 * Scenario 2:

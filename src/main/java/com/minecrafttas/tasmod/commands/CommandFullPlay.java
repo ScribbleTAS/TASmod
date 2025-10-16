@@ -4,6 +4,7 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateCallback;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateFlags;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 
@@ -28,8 +29,17 @@ public class CommandFullPlay extends CommandBase {
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+
+		SavestateCallback cb = (paths) -> {
+			try {
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_CLEAR_SCREEN));
+			} catch (Exception e) {
+				TASmod.LOGGER.catching(e);
+			}
+		};
+
 		try {
-			TASmod.savestateHandlerServer.loadState(0, null, SavestateFlags.BLOCK_CHANGE_INDEX, SavestateFlags.BLOCK_PAUSE_TICKRATE);
+			TASmod.savestateHandlerServer.loadState(0, cb, SavestateFlags.BLOCK_CHANGE_INDEX, SavestateFlags.BLOCK_PAUSE_TICKRATE);
 		} catch (LoadstateException e) {
 			sender.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to load a savestate: " + e.getMessage()));
 			return;

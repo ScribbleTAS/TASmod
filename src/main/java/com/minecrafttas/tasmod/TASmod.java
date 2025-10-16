@@ -23,7 +23,6 @@ import com.minecrafttas.tasmod.commands.CommandRestartAndPlay;
 import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
-import com.minecrafttas.tasmod.commands.TabCompletionUtils;
 import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
@@ -37,6 +36,7 @@ import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler;
+import com.minecrafttas.tasmod.util.TabCompletionUtils;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;

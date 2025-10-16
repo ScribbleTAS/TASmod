@@ -66,6 +66,7 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader;
  * @author Scribble
  *
  */
+@Deprecated
 public class SavestateHandlerServerOld implements ServerPacketHandler {
 
 	private final MinecraftServer server;
@@ -155,7 +156,7 @@ public class SavestateHandlerServerOld implements ServerPacketHandler {
 
 		// Open GuiSavestateScreen
 		try {
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOADING_SCREEN).writeInt(SavestateState.SAVING.ordinal()));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOADING_SCREEN).writeEnum(SavestateState.SAVING));
 		} catch (Exception e) {
 			logger.catching(e);
 		}

@@ -1,5 +1,6 @@
 package com.minecrafttas.tasmod.savestates.handlers;
 
+import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_CLEAR_SCREEN;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_RENAME_SCREEN;
 
 import java.nio.ByteBuffer;
@@ -31,6 +32,10 @@ public class SavestateGuiHandlerServer implements ServerPacketHandler {
 				TASmod.gameLoopSchedulerServer.add(() -> {
 					TASmod.savestateHandlerServer.rename(index, name);
 				});
+				TASmod.server.sendToAll(new TASmodBufferBuilder(SAVESTATE_CLEAR_SCREEN));
+				break;
+			case SAVESTATE_CLEAR_SCREEN:
+				TASmod.server.sendToAll(new TASmodBufferBuilder(buf));
 				break;
 			default:
 				throw new PacketNotImplementedException(packet, Side.SERVER);

@@ -9,9 +9,7 @@ import java.nio.ByteBuffer;
 
 import com.minecrafttas.mctcommon.networking.ByteBufferBuilder;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage.MotionData;
-import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -28,11 +26,6 @@ public class TASmodBufferBuilder extends ByteBufferBuilder {
 
 	public TASmodBufferBuilder(ByteBuffer buf) {
 		super(buf);
-	}
-
-	public TASmodBufferBuilder writeTASState(TASstate state) {
-		this.writeShort((short) state.ordinal());
-		return this;
 	}
 
 	public TASmodBufferBuilder writeNBTTagCompound(NBTTagCompound compound) {
@@ -59,11 +52,6 @@ public class TASmodBufferBuilder extends ByteBufferBuilder {
 		return this;
 	}
 
-	public TASmodBufferBuilder writeTickratePauseState(TickratePauseState state) {
-		writeShort((short) state.ordinal());
-		return this;
-	}
-
 	public TASmodBufferBuilder writeMotionData(MotionData data) {
 		writeDouble(data.getClientX());
 		writeDouble(data.getClientY());
@@ -74,10 +62,6 @@ public class TASmodBufferBuilder extends ByteBufferBuilder {
 		writeFloat(data.getJumpMovementVector());
 		writeBoolean(data.isSprinting());
 		return this;
-	}
-
-	public static TASstate readTASState(ByteBuffer buf) {
-		return TASstate.values()[buf.getShort()];
 	}
 
 	public static NBTTagCompound readNBTTagCompound(ByteBuffer buf) throws IOException {
@@ -91,10 +75,6 @@ public class TASmodBufferBuilder extends ByteBufferBuilder {
 		datain.close();
 
 		return compound;
-	}
-
-	public static TickratePauseState readTickratePauseState(ByteBuffer buf) {
-		return TickratePauseState.values()[buf.getShort()];
 	}
 
 	public static MotionData readMotionData(ByteBuffer buf) {

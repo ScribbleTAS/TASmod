@@ -413,18 +413,8 @@ public class CommandSavestate extends CommandBase {
 	private void saveNew(ICommandSender sender) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveNew");
 
-		SavestateCallback doneSavingCallback = (paths -> {
-			if (sender instanceof EntityPlayerMP) {
-				try {
-					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_RENAME_SCREEN).writeInt(paths.getSavestate().getIndex()).writeString(sender.getName()));
-				} catch (Exception e) {
-					onFailure(sender, e);
-				}
-			}
-		});
-
 		try {
-			TASmod.savestateHandlerServer.saveState(doneSavingCallback);
+			TASmod.savestateHandlerServer.saveState(createCallback(sender));
 		} catch (SavestateException e) {
 			onFailure(sender, e);
 		}
@@ -432,8 +422,9 @@ public class CommandSavestate extends CommandBase {
 
 	private void saveIndex(ICommandSender sender, int index) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveIndex {}", index);
+
 		try {
-			TASmod.savestateHandlerServer.saveState(index, null);
+			TASmod.savestateHandlerServer.saveState(index, createCallback(sender));
 		} catch (SavestateException e) {
 			onFailure(sender, e);
 		}
@@ -442,7 +433,7 @@ public class CommandSavestate extends CommandBase {
 	private void saveIndexName(ICommandSender sender, int index, String name) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveNameIndex {}|{}", index, name);
 		try {
-			TASmod.savestateHandlerServer.saveState(index, name, null);
+			TASmod.savestateHandlerServer.saveState(index, name, createCallback(sender));
 		} catch (SavestateException e) {
 			onFailure(sender, e);
 		}
@@ -451,7 +442,7 @@ public class CommandSavestate extends CommandBase {
 	private void saveName(ICommandSender sender, String name) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveName {}", name);
 		try {
-			TASmod.savestateHandlerServer.saveState(name, null);
+			TASmod.savestateHandlerServer.saveState(name, createCallback(sender));
 		} catch (SavestateException e) {
 			onFailure(sender, e);
 		}
@@ -460,7 +451,7 @@ public class CommandSavestate extends CommandBase {
 	private void loadRecent(ICommandSender sender) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command LoadRecent");
 		try {
-			TASmod.savestateHandlerServer.loadState(null);
+			TASmod.savestateHandlerServer.loadState(createCallback(sender));
 		} catch (LoadstateException e) {
 			onFailure(sender, e);
 		}
@@ -469,7 +460,7 @@ public class CommandSavestate extends CommandBase {
 	private void loadIndex(ICommandSender sender, int index) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command LoadIndex {}", index);
 		try {
-			TASmod.savestateHandlerServer.loadState(index, null);
+			TASmod.savestateHandlerServer.loadState(index, createCallback(sender));
 		} catch (LoadstateException e) {
 			onFailure(sender, e);
 		}
@@ -479,7 +470,7 @@ public class CommandSavestate extends CommandBase {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Delete {}", index);
 
 		SavestateCallback cb = (paths) -> {
-			sender.sendMessage(Component.translatable("msg.lotaslight.savestate.delete", paths.getSavestate().getIndex()).withStyle(TextFormatting.GREEN).build());
+			sender.sendMessage(Component.translatable("msg.tasmod.savestate.delete", paths.getSavestate().getIndex()).withStyle(TextFormatting.GREEN).build());
 		};
 
 		try {
@@ -599,5 +590,17 @@ public class CommandSavestate extends CommandBase {
 		sender.sendMessage(Component.literal(e.getMessage()).withStyle(TextFormatting.RED).build());
 		TASmod.LOGGER.catching(e);
 		TASmod.savestateHandlerServer.resetState();
+	}
+
+	private SavestateCallback createCallback(ICommandSender sender) {
+		return (paths -> {
+			if (sender instanceof EntityPlayerMP) {
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_CLEAR_SCREEN));
+				} catch (Exception e) {
+					onFailure(sender, e);
+				}
+			}
+		});
 	}
 }

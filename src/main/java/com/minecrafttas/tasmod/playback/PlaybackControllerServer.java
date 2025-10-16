@@ -56,7 +56,7 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 		switch (packet) {
 
 			case PLAYBACK_STATE:
-				TASstate networkState = TASmodBufferBuilder.readTASState(buf);
+				TASstate networkState = TASmodBufferBuilder.readEnum(TASstate.class, buf);
 				/* TODO Permissions */
 				setState(networkState);
 				break;
@@ -80,7 +80,7 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 	public void setState(TASstate stateIn) {
 		setServerState(stateIn);
 		try {
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.PLAYBACK_STATE).writeTASState(state).writeBoolean(true));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.PLAYBACK_STATE).writeEnum(state).writeBoolean(true));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

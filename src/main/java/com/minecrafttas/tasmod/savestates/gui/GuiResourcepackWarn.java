@@ -35,9 +35,4 @@ public class GuiResourcepackWarn extends GuiScreen {
 
 		super.drawScreen(mouseX, mouseY, partialTicks);
 	}
-
-	@Override
-	public boolean doesGuiPauseGame() {
-		return false;
-	}
 }

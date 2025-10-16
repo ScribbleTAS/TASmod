@@ -1,10 +1,11 @@
 package com.minecrafttas.tasmod.savestates.gui;
 
+import com.minecrafttas.tasmod.virtual.SubtickGuiScreen;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.text.ITextComponent;
 
-public class GuiSavestate extends GuiScreen {
+public class GuiSavestate extends SubtickGuiScreen {
 
 	private final ITextComponent msg;
 

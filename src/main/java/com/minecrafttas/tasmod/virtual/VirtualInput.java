@@ -83,6 +83,8 @@ public class VirtualInput {
 	public void update(GuiScreen currentScreen) {
 		while (Keyboard.next()) {
 			KEYBOARD.updateNextKeyboard(Keyboard.getEventKey(), Keyboard.getEventKeyState(), Keyboard.getEventCharacter(), Keyboard.areRepeatEventsEnabled());
+
+			updateSubtickGuiScreenKeyboard(currentScreen);
 		}
 		while (Mouse.next()) {
 			if (currentScreen == null) {
@@ -94,7 +96,36 @@ public class VirtualInput {
 				eventX = PointerNormalizer.getNormalizedX(eventX);
 				eventY = PointerNormalizer.getNormalizedY(eventY);
 				MOUSE.updateNextMouse(Mouse.getEventButton() - 100, Mouse.getEventButtonState(), Mouse.getEventDWheel(), eventX, eventY);
+
+				updateSubtickGuiScreenMouse(currentScreen);
 			}
+		}
+	}
+
+	/**
+	 * Update the {@link SubtickGuiScreen#keyTyped(char, int)}, if the current screen is a {@link SubtickGuiScreen}
+	 * @param currentScreen The current screen to update
+	 */
+	private void updateSubtickGuiScreenKeyboard(GuiScreen currentScreen) {
+		if (currentScreen instanceof SubtickGuiScreen) {
+			SubtickGuiScreen screenSubtickable = (SubtickGuiScreen) currentScreen;
+
+			if (Keyboard.getEventKeyState())
+				screenSubtickable.keyTyped(Keyboard.getEventCharacter(), Keyboard.getEventKey());
+		}
+	}
+
+	/**
+	 * Update the {@link SubtickGuiScreen#mouseClicked(int, int, int)}, if the current screen is a {@link SubtickGuiScreen}
+	 * @param currentScreen The current screen to update
+	 */
+	private void updateSubtickGuiScreenMouse(GuiScreen currentScreen) {
+		if (currentScreen instanceof SubtickGuiScreen) {
+			SubtickGuiScreen screenSubtickable = (SubtickGuiScreen) currentScreen;
+			Ducks.GuiScreenDuck screenDuck = (Ducks.GuiScreenDuck) screenSubtickable;
+
+			if (Mouse.getEventButtonState())
+				screenSubtickable.mouseClicked(screenDuck.unscaleX(Mouse.getEventX()), screenDuck.unscaleY(Mouse.getEventY()), Mouse.getEventButton());
 		}
 	}
 
@@ -133,9 +164,17 @@ public class VirtualInput {
 	/**
 	 * Unpresses all keys in {@link VirtualKeyboardInput#nextKeyboard} and {@link VirtualMouseInput#nextMouse}
 	 */
-	public void clearKeys() {
+	public void clearNext() {
 		KEYBOARD.clearNext();
 		MOUSE.clearNext();
+	}
+
+	/**
+	 * Unpresses all keys in {@link VirtualKeyboardInput#currentKeyboard} and {@link VirtualMouseInput#currentMouse}
+	 */
+	public void clearCurrent() {
+		KEYBOARD.clearCurrent();
+		MOUSE.clearCurrent();
 	}
 
 	public void preloadInput(VirtualKeyboard keyboardToPreload, VirtualMouse mouseToPreload, VirtualCameraAngle angleToPreload) {
@@ -349,6 +388,13 @@ public class VirtualInput {
 		public void clearNext() {
 			nextKeyboard.clear();
 		}
+
+		/**
+		 * Clears the {@link #currentKeyboard}
+		 */
+		public void clearCurrent() {
+			currentKeyboard.clear();
+		}
 	}
 
 	/**
@@ -550,6 +596,13 @@ public class VirtualInput {
 		public void clearNext() {
 			nextMouse.clear();
 		}
+
+		/**
+		 * Clears the {@link #currentMouse}
+		 */
+		public void clearCurrent() {
+			currentMouse.clear();
+		}
 	}
 
 	/**
@@ -716,6 +769,13 @@ public class VirtualInput {
 		 */
 		public void clearNext() {
 			nextCameraAngle.clear();
+		}
+
+		/**
+		 * Clears the {@link #currentCameraAngle}
+		 */
+		public void clearCurrent() {
+			currentCameraAngle.clear();
 		}
 	}
 }

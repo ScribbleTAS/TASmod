@@ -271,7 +271,7 @@ public class TickrateChangerServer implements EventServerStop, EventClientComple
 				advanceTick();
 				break;
 			case TICKRATE_ZERO:
-				TickratePauseState state = TASmodBufferBuilder.readTickratePauseState(buf);
+				TickratePauseState state = TASmodBufferBuilder.readEnum(TickratePauseState.class, buf);
 
 				switch (state) {
 					case PAUSE:

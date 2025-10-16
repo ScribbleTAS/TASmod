@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.savestates.handlers;
 
-import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_DONE_SCREEN;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_LOADING_SCREEN;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_RENAME_SCREEN;
 
@@ -15,7 +14,6 @@ import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestate;
-import com.minecrafttas.tasmod.savestates.gui.GuiSavestateDone;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestateRename;
 import com.minecrafttas.tasmod.util.Component;
 
@@ -32,7 +30,6 @@ public class SavestateGuiHandlerClient implements ClientPacketHandler {
 		//@formatter:off
 		return new PacketID[] {
 			SAVESTATE_LOADING_SCREEN,
-			SAVESTATE_DONE_SCREEN,
 			SAVESTATE_RENAME_SCREEN
 		};
 		//@formatter:on
@@ -46,7 +43,7 @@ public class SavestateGuiHandlerClient implements ClientPacketHandler {
 		switch (packet) {
 			case SAVESTATE_LOADING_SCREEN:
 				// Open Savestate screen
-				SavestateState state = SavestateState.values()[TASmodBufferBuilder.readInt(buf)];
+				SavestateState state = TASmodBufferBuilder.readEnum(SavestateState.class, buf);
 				mc.addScheduledTask(() -> {
 
 					String msg = "";
@@ -54,10 +51,6 @@ public class SavestateGuiHandlerClient implements ClientPacketHandler {
 						msg = "gui.tasmod.savestate.save.start";
 					else if (state == SavestateState.LOADING)
 						msg = "gui.tasmod.savestate.load.start";
-					else {
-						mc.displayGuiScreen(null);
-						return;
-					}
 
 					mc.displayGuiScreen(new GuiSavestate(Component.translatable(msg).withStyle(TextFormatting.YELLOW).build()));
 				});
@@ -66,13 +59,6 @@ public class SavestateGuiHandlerClient implements ClientPacketHandler {
 				int index = TASmodBufferBuilder.readInt(buf);
 				mc.addScheduledTask(() -> {
 					displayGuiRename(index);
-				});
-				break;
-			case SAVESTATE_DONE_SCREEN:
-				index = TASmodBufferBuilder.readInt(buf);
-				String name = TASmodBufferBuilder.readString(buf);
-				mc.addScheduledTask(() -> {
-					displayGuiDone(index, name);
 				});
 				break;
 			default:
@@ -89,20 +75,6 @@ public class SavestateGuiHandlerClient implements ClientPacketHandler {
 								Component.literal(Integer.toString(index)).withStyle(t->t.setColor(TextFormatting.AQUA))
 						).withStyle(t->t.setColor(TextFormatting.GREEN)).build(),
 						index
-				)
-		);
-		//@formatter:on
-	}
-
-	private void displayGuiDone(int index, String name) {
-		Minecraft mc = Minecraft.getMinecraft();
-		//@formatter:off
-		mc.displayGuiScreen(
-				new GuiSavestateDone(
-						Component.translatable("gui.tasmod.savestate.save.end", 
-								Component.literal(name).withStyle(TextFormatting.YELLOW),
-								Component.literal(Integer.toString(index)).withStyle(TextFormatting.AQUA)
-						).withStyle(TextFormatting.GREEN).build()
 				)
 		);
 		//@formatter:on

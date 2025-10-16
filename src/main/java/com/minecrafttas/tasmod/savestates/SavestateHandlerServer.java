@@ -1,7 +1,6 @@
 package com.minecrafttas.tasmod.savestates;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
-import static com.minecrafttas.tasmod.registries.TASmodPackets.CLEAR_SCREEN;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -119,7 +118,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Open GuiSavestateScreen
 		try {
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOADING_SCREEN).writeInt(SavestateState.SAVING.ordinal()));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOADING_SCREEN).writeEnum(SavestateState.SAVING));
 		} catch (Exception e) {
 			logger.catching(e);
 		}
@@ -176,17 +175,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		// Copy the directory
 		copyFolder(sourceFolder, targetFolder);
 
-		// Send a notification that the savestate has been loaded
-//		server.getPlayerList().sendMessage(new TextComponentString(TextFormatting.GREEN + "Savestate " + indexToSave + " saved"));
-
-		try {
-			// Close GuiSavestateScreen
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		if (!SavestateFlags.BLOCK_PAUSE_TICKRATE.isBlocked(flags)) {
+		if (SavestateFlags.BLOCK_PAUSE_TICKRATE.isBlocked(flags)) {
 			TASmod.tickratechanger.pauseGame(false);
 		}
 
@@ -227,7 +216,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		// Open GuiSavestateScreen
 		try {
-			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOADING_SCREEN).writeInt(SavestateState.LOADING.ordinal()));
+			TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOADING_SCREEN).writeEnum(SavestateState.LOADING));
 		} catch (Exception e) {
 			logger.catching(e);
 		}
@@ -303,13 +292,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		worldHandler.sendChunksToClient();
 
-		try {
-			TASmod.server.sendToAll(new TASmodBufferBuilder(CLEAR_SCREEN));
-		} catch (Exception e) {
-			LOGGER.catching(e);
-		}
-
-		if (!SavestateFlags.BLOCK_PAUSE_TICKRATE.isBlocked(flags)) {
+		if (SavestateFlags.BLOCK_PAUSE_TICKRATE.isBlocked(flags)) {
 			TASmod.tickratechanger.pauseGame(false);
 		}
 
@@ -344,7 +327,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		}
 
 		Path savestateBaseDirectory = savesDirectory.resolve("savestates"); // The base savestatedir: .minecraft/saves/savestates
-		String worldname = server.getWorldName();
+		String worldname = server.getFolderName();
 
 		logger.debug("Created savestate handler with saves: {}, savestates: {}, worldname: {}", savesDirectory, savestateBaseDirectory, worldname);
 		this.indexer = new SavestateIndexer(logger, savesDirectory, savestateBaseDirectory, worldname);

@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.commands;
+package com.minecrafttas.tasmod.util;
 
 import static com.minecrafttas.tasmod.registries.TASmodPackets.COMMAND_FLAVORLIST;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.COMMAND_TASFILELIST;
