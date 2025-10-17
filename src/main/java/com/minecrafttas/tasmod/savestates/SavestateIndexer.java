@@ -188,7 +188,8 @@ public class SavestateIndexer {
 		Savestate savestateToLoad = savestateList.get(index);
 
 		if (savestateToLoad == null) {
-			throw new LoadstateException(I18n.format("msg.tasmod.savestate.error.noexist", index));
+			String translationKey = savestateList.size() == 0 ? "msg.tasmod.savestate.error.none" : "msg.tasmod.savestate.error.noexist";
+			throw new LoadstateException(translationKey, index);
 		}
 
 		int savedIndex = currentSavestate.index;
@@ -199,7 +200,7 @@ public class SavestateIndexer {
 
 		if (sourceDir != null && !Files.exists(sourceDir)) {
 			Path missingFile = savesDir.relativize(sourceDir);
-			throw new LoadstateException(I18n.format("msg.tasmod.savestate.error.filenoexist", missingFile));
+			throw new LoadstateException("msg.tasmod.savestate.error.filenoexist", missingFile);
 		}
 
 		SavestatePaths out = SavestatePaths.of(currentSavestate.clone(), sourceDir, targetDir);

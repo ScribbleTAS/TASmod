@@ -292,8 +292,8 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		return new TASmodPackets[] {
 				//@formatter:off
 				TASmodPackets.SAVESTATE_SAVE,
-				TASmodPackets.SAVESTATE_LOAD,
-				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS };
+				TASmodPackets.SAVESTATE_LOAD
+				};
 				//@formatter:on
 	}
 
@@ -330,13 +330,6 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 					}
 				});
 				break;
-
-			case SAVESTATE_UNLOAD_CHUNKS:
-				mc.addScheduledTask(() -> {
-					SavestateHandlerClient.unloadAllClientChunks();
-				});
-				break;
-
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.CLIENT);
 		}

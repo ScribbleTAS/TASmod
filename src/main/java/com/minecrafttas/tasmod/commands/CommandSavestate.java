@@ -438,11 +438,15 @@ public class CommandSavestate extends CommandBase {
 		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.save.end");
 
 		TASmod.gameLoopSchedulerServer.add(() -> {
-
 			try {
 				TASmod.savestateHandlerServer.saveState(cb);
 			} catch (SavestateException e) {
 				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
 			}
 		});
 	}
@@ -464,6 +468,11 @@ public class CommandSavestate extends CommandBase {
 				TASmod.savestateHandlerServer.saveState(index, cb);
 			} catch (SavestateException e) {
 				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
 			}
 		});
 	}
@@ -485,6 +494,11 @@ public class CommandSavestate extends CommandBase {
 				TASmod.savestateHandlerServer.saveState(index, name, cb);
 			} catch (SavestateException e) {
 				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
 			}
 		});
 	}
@@ -499,6 +513,11 @@ public class CommandSavestate extends CommandBase {
 				TASmod.savestateHandlerServer.saveState(name, cb);
 			} catch (SavestateException e) {
 				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
 			}
 		});
 	}
@@ -513,6 +532,11 @@ public class CommandSavestate extends CommandBase {
 				TASmod.savestateHandlerServer.loadState(cb);
 			} catch (LoadstateException e) {
 				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
 			}
 		});
 	}
@@ -531,6 +555,11 @@ public class CommandSavestate extends CommandBase {
 				TASmod.savestateHandlerServer.loadState(index, cb);
 			} catch (LoadstateException e) {
 				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
 			}
 		});
 	}

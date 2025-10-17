@@ -1,6 +1,7 @@
 {
   "tickratechanger.tasmod.command.show":"Current tickrate: %s",
   "tickratechanger.tasmod.command.usage":"/tickrate <ticks per second>",
+  "msg.tasmod.tickrate.tr0warn":"Press %s to unpause",
   "msg.tasmod.savestate.save.clickable":"Save",
   "msg.tasmod.savestate.save.hover":"Overwrite savestate %s",
   "msg.tasmod.savestate.save.negative":"Can't save a savestate at a negative index... Using the next index instead!",
@@ -15,6 +16,7 @@
   "msg.tasmod.savestate.failure":"Something unexpected went wrong: %s",
   "msg.tasmod.savestate.error.noexist":"Savestate %s does not exist",
   "msg.tasmod.savestate.error.filenoexist":"The savestate folder does not exist. %s",
+  "msg.tasmod.savestate.error.none":"Failed to load, there are no savestates. Try creating one with /savestate save",
   "msg.tasmod.savestate.delete":"Deleted savestate at index %s",
   "msg.tasmod.savestate.delete.clickable":"Delete",
   "msg.tasmod.savestate.delete.hover":"Delete savestate %s",

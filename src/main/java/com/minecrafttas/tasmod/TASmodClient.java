@@ -126,7 +126,9 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 		registerConfigValues();
 
-		loadConfig(Minecraft.getMinecraft());
+		Minecraft mc = Minecraft.getMinecraft();
+
+		loadConfig(mc);
 
 		virtual = new VirtualInput(LOGGER);
 
@@ -315,7 +317,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 	@Override
 	public void onOptionsInit(GameSettings options) {
-		Arrays.stream(TASmodKeybinds.valuesKeybind()).forEach((keybind) -> keybindManager.registerKeybind(keybind, options));
+		// Initialize keybind manager
+		keybindManager.registerKeybinds(options, TASmodKeybinds.class);
 		Arrays.stream(TASmodKeybinds.valuesVanillaKeybind()).forEach(VirtualKeybindings::registerBlockedKeyBinding);
 	}
 

@@ -11,7 +11,7 @@ public enum TASmodConfig implements ConfigOptions {
 	FileToOpen("fileToOpen", ""),
 	ServerConnection("serverConnection", ""),
 	EnabledFileCommands("enabledFileCommands", "tasmod_desyncMonitor@v1, tasmod_label@v1, tasmod_options@v1"),
-	SAVESTATE_SHOW_CONTROLS("savestateShowControls", "true");
+	UnpauseWarn("unpauseWarn", "true");
 
 	private String configKey;
 	private String defaultValue;

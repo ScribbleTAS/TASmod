@@ -35,6 +35,7 @@ import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler;
+import com.minecrafttas.tasmod.util.Component;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 
@@ -42,8 +43,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
@@ -178,6 +177,12 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		if (SavestateFlags.BLOCK_PAUSE_TICKRATE.isBlocked(flags)) {
 			TASmod.tickratechanger.pauseGame(false);
+		} else {
+			try {
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+			} catch (Exception e) {
+				logger.catching(e);
+			}
 		}
 
 		if (cb != null)
@@ -295,6 +300,12 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		if (SavestateFlags.BLOCK_PAUSE_TICKRATE.isBlocked(flags)) {
 			TASmod.tickratechanger.pauseGame(false);
+		} else {
+			try {
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+			} catch (Exception e) {
+				logger.catching(e);
+			}
 		}
 
 		if (cb != null)
@@ -384,8 +395,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		return new TASmodPackets[] {
 				//@formatter:off
 				TASmodPackets.SAVESTATE_SAVE,
-				TASmodPackets.SAVESTATE_LOAD,
-				TASmodPackets.SAVESTATE_UNLOAD_CHUNKS
+				TASmodPackets.SAVESTATE_LOAD
 				//@formatter:on
 		};
 	}
@@ -417,18 +427,35 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 					try {
 						saveState(index, cb);
 					} catch (SavestateException e) {
-						if (player != null)
-							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getMessage()));
+						TASmod.getServerInstance().getServer().getPlayerList().sendMessage(Component.translatable(e.getMessage()).withStyle(TextFormatting.RED).build());
+
+						try {
+							TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+							TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
+						} catch (Exception e1) {
+							logger.catching(e);
+						}
 
 						LOGGER.error("Failed to create a savestate");
 						LOGGER.catching(e);
 					} catch (Exception e) {
-						if (player != null)
-							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to create a savestate: " + e.getClass().getName().toString() + ": " + e.getMessage()));
+						Throwable cause = e.getCause();
+						if (cause == null) {
+							cause = e;
+						}
+						TASmod.getServerInstance().getPlayerList().sendMessage(Component.translatable("msg.tasmod.savestate.failure", e.getMessage()).withStyle(TextFormatting.RED).build());
 
+						try {
+							TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+							TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
+						} catch (Exception e1) {
+							logger.catching(e);
+						}
+
+						LOGGER.error("Failed to create a savestate");
 						LOGGER.catching(e);
 					} finally {
-						state = SavestateState.NONE;
+						resetState();
 					}
 				};
 
@@ -448,29 +475,38 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 					try {
 						loadState(indexing, cb2);
 					} catch (LoadstateException e) {
-						if (player != null)
-							player.sendMessage(new TextComponentString(TextFormatting.RED + "Failed to load a savestate: " + e.getMessage()));
+						TASmod.getServerInstance().getServer().getPlayerList().sendMessage(Component.translatable(e.getMessage()).withStyle(TextFormatting.RED).build());
 
-						LOGGER.error(LoggerMarkers.Savestate, "Failed to create a savestate: " + e.getMessage());
-						state = SavestateState.NONE;
+						try {
+							TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+							TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
+						} catch (Exception e1) {
+							logger.catching(e);
+						}
+
+						LOGGER.error("Failed to create a savestate: " + e.getMessage());
 					} catch (Exception e) {
-						if (player != null) {
-							Throwable cause = e.getCause();
-							if (cause == null) {
-								cause = e;
-							}
-							player.sendMessage(new TextComponentString(String.format("Failed to load a savestate: %s", cause.getMessage())).setStyle(new Style().setColor(TextFormatting.RED)));
+						Throwable cause = e.getCause();
+						if (cause == null) {
+							cause = e;
+						}
+						TASmod.getServerInstance().getServer().getPlayerList().sendMessage(Component.translatable("msg.tasmod.savestate.failure", e.getMessage()).withStyle(TextFormatting.RED).build());
+
+						try {
+							TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+							TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
+						} catch (Exception e1) {
+							logger.catching(e);
 						}
 
 						LOGGER.throwing(e);
-						state = SavestateState.NONE;
+					} finally {
+						resetState();
 					}
 				};
 				TASmod.gameLoopSchedulerServer.add(loadstateTask);
 				break;
 
-			case SAVESTATE_UNLOAD_CHUNKS:
-				throw new WrongSideException(id, Side.SERVER);
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.SERVER);
 		}
