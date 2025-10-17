@@ -313,6 +313,7 @@ public class SavestateIndexer {
 		savestateList.clear();
 		Thread t = new Thread(new Runnable() {
 
+			@SuppressWarnings("deprecation")
 			@Override
 			public void run() {
 				Stream<Path> stream = null;
@@ -343,7 +344,30 @@ public class SavestateIndexer {
 					 * Read the index from the folder if the savestate file
 					 * doesn't exist
 					 */
-					if (!Files.exists(savestateDat)) {
+					if (Files.exists(savestateDat)) {
+						savestate = new Savestate(savestateDat, path);
+						savestate.load();
+					} else if (Files.exists(path.resolve("tasmod/savestateData.txt"))) { // Legacy format
+
+						Path tasmodDir = path.resolve("tasmod");
+						Path tasDir = tasmodDir.getParent().resolve(savestateDataDir);
+						copyFolder(tasmodDir, tasDir);
+						deleteFolder(tasmodDir);
+
+						Path legacyPath = tasDir.resolve("savestateData.txt");
+						com.minecrafttas.tasmod.savestates.files.SavestateDataFile dataFile = new com.minecrafttas.tasmod.savestates.files.SavestateDataFile(legacyPath);
+						dataFile.load();
+						int index = Integer.parseInt(dataFile.get(com.minecrafttas.tasmod.savestates.files.SavestateDataFile.DataValues.INDEX));
+
+						try {
+							Files.delete(legacyPath);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+
+						savestate = new Savestate(savestateDat, index, "Savestate #" + index, null, path);
+						savestate.save();
+					} else {
 						String filename = path.getFileName().toString();
 						Matcher matcher = backupIndexPattern.matcher(filename);
 						int backupIndex = -1;
@@ -354,9 +378,6 @@ public class SavestateIndexer {
 						logger.warn("Savestate {} does not contain a valid savestate.json, skipping", backupIndex);
 						Throwable error = new SavestateException("Savestate.json data file not found in " + savestateBaseDirectory.relativize(savestateDat));
 						savestate = new FailedSavestate(path, backupIndex, null, null, error);
-					} else {
-						savestate = new Savestate(savestateDat, path);
-						savestate.load();
 					}
 					savestateList.put(savestate.getIndex(), savestate.clone());
 				});
