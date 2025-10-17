@@ -430,6 +430,7 @@ public class CommandSavestate extends CommandBase {
 
 	private void infoAll(ICommandSender sender) {
 		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command InfoAll");
+		infoIndexAmount(sender, -1, 0);
 	}
 
 	private void saveNew(ICommandSender sender) {
