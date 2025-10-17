@@ -1,24 +1,45 @@
 package com.minecrafttas.tasmod.commands;
 
-import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
+import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
+import com.minecrafttas.tasmod.registries.TASmodPackets;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateCallback;
+import com.minecrafttas.tasmod.savestates.SavestateIndexer.ErrorRunnable;
+import com.minecrafttas.tasmod.savestates.SavestateIndexer.FailedSavestate;
+import com.minecrafttas.tasmod.savestates.SavestateIndexer.Savestate;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateDeleteException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
+import com.minecrafttas.tasmod.util.Component;
+import com.minecrafttas.tasmod.util.Component.CClickEvent;
+import com.minecrafttas.tasmod.util.Component.CHoverEvent;
+import com.minecrafttas.tasmod.util.I18n;
+import com.minecrafttas.tasmod.util.LoggerMarkers;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.command.WrongUsageException;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.event.HoverEvent;
 
 public class CommandSavestate extends CommandBase {
+
+	public static boolean once = true;
 
 	@Override
 	public String getName() {
@@ -27,7 +48,7 @@ public class CommandSavestate extends CommandBase {
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "/savestate <save|load|delete|list> [index]";
+		return "/savestate save|load|delete|reload|rename|info";
 	}
 
 	@Override
@@ -35,233 +56,693 @@ public class CommandSavestate extends CommandBase {
 		return 2;
 	}
 
+	/**
+	 * <pre>
+	 * savestate -&gt; info
+	 * ├── index -&gt; infoIndex
+	 * │   └── amount -&gt; infoIndexAmount
+	 * ├── save -&gt; saveNew
+	 * │   ├── index -&gt; saveIndex
+	 * │   │   └── name -&gt; saveNameIndex
+	 * │   └── name -&gt; saveName
+	 * ├── load -&gt; loadRecent
+	 * │   └── index -&gt; loadIndex
+	 * ├── delete
+	 * │   └── index -&gt; delete
+	 * │       └── indexTo -&gt; deleteMore
+	 * │           └── force -&gt; deleteDis
+	 * ├── reload -&gt; reload
+	 * ├── rename
+	 * │   └── index
+	 * │       └── name -&gt; rename
+	 * ├── info -&gt; info
+	 * │   ├── index -&gt; infoIndex
+	 * │   │   └── amount -&gt; infoIndexAmount
+	 * │   └── all -&gt; infoAll
+	 * └── import -&gt; importing
+	 * </pre>
+	 * @param server The MinecraftServer
+	 * @param sender The command sender
+	 * @param args The command arguments
+	 */
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		if (args.length == 0) {
-			sendHelp(sender);
-		} else if (args.length >= 1) {
-			if ("save".equals(args[0])) {
-				if (args.length == 1) {
-					TASmod.gameLoopSchedulerServer.add(() -> {
-						try {
-							saveLatest();
-						} catch (CommandException e) {
-							e.printStackTrace();
-						}
-					});
-				} else if (args.length == 2) {
-					TASmod.gameLoopSchedulerServer.add(() -> {
-						try {
-							saveWithIndex(args);
-						} catch (CommandException e) {
-							e.printStackTrace();
-						}
-					});
-				} else {
-					throw new CommandException("Too many arguments!", new Object[] {});
-				}
-			} else if ("load".equals(args[0])) {
-				if (args.length == 1) {
-					TASmod.gameLoopSchedulerServer.add(() -> {
-						try {
-							loadLatest();
-						} catch (CommandException e) {
-							e.printStackTrace();
-						}
-					});
-				} else if (args.length == 2) {
-					TASmod.gameLoopSchedulerServer.add(() -> {
-						try {
-							loadLatest(args);
-						} catch (CommandException e) {
-							e.printStackTrace();
-						}
-					});
-				} else {
-					throw new CommandException("Too many arguments!", new Object[] {});
-				}
-			} else if ("delete".equals(args[0])) {
-				if (args.length == 2) {
-					delete(args);
-				} else if (args.length == 3) {
-					int args1 = processIndex(args[1]);
-					int args2 = processIndex(args[2]);
-					int count = (args2 + 1) - args1;
-					TextComponentString confirm = new TextComponentString(TextFormatting.YELLOW + "Are you sure you want to delete " + count + (count == 1 ? " savestate? " : " savestates? ") + TextFormatting.GREEN + "[YES]");
-					confirm.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.format("/savestate deletDis %s %s", args[1], args[2])));
-					sender.sendMessage(confirm);
-				} else {
-					throw new CommandException("Too many arguments!", new Object[] {});
-				}
-			} else if ("deletDis".equals(args[0])) {
-				if (args.length == 3) {
-					deleteMultiple(args);
-				}
-			} else if ("list".equals(args[0])) {
-				sender.sendMessage(new TextComponentString(String.format("The current savestate index is %s%s", TextFormatting.AQUA, TASmod.savestateHandlerServer.getCurrentIndex())));
-				sender.sendMessage(new TextComponentString(String.format("Available indexes are %s%s", TextFormatting.AQUA, TASmod.savestateHandlerServer.getIndexesAsString().isEmpty() ? "None" : TASmod.savestateHandlerServer.getIndexesAsString())));
-			} else if ("help".equals(args[0])) {
-				if (args.length == 1) {
-					sendHelp(sender);
-				} else if (args.length == 2) {
-					int i = 1;
-					try {
-						i = Integer.parseInt(args[1]);
-					} catch (NumberFormatException e) {
-						throw new CommandException("Page number was not a number %s", new Object[] { args[1] });
-					}
-					sendHelp(sender, i);
-				} else {
-					throw new CommandException("Too many arguments", new Object[] {});
-				}
+		int length = args.length;
 
-			}
-		}
-	}
-
-	private void sendHelp(ICommandSender sender) throws CommandException {
-		sendHelp(sender, 1);
-	}
-
-	private void sendHelp(ICommandSender sender, int i) throws CommandException {
-		int currentIndex = TASmod.savestateHandlerServer.getCurrentIndex();
-		if (i > 3) {
-			throw new CommandException("This help page doesn't exist (yet?)", new Object[] {});
-		}
-		if (i == 1) {
-			sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "-------------------Savestate Help 1--------------------\n" + TextFormatting.RESET
-					+ "Makes a backup of the minecraft world you are currently playing.\n\n"
-					+ "The mod will keep track of the number of savestates you made in the 'current index' number which is currently " + TextFormatting.AQUA + currentIndex + TextFormatting.RESET
-					+ String.format(". If you make a new savestate via %s/savestate save%s or by pressing %sJ%s by default, ", TextFormatting.AQUA, TextFormatting.RESET, TextFormatting.AQUA, TextFormatting.RESET)
-					+ "the current index will increase by one. "
-					+ String.format("If you load a savestate with %s/savestate load%s or %sK%s by default, it will load the savestate at the current index.\n", TextFormatting.AQUA, TextFormatting.RESET, TextFormatting.AQUA, TextFormatting.RESET)));
-		} else if (i == 2) {
-			sender.sendMessage(new TextComponentString(String.format("%1$s-------------------Savestate Help 2--------------------\n"
-					+ "You can load or save savestates in different indexes by specifying the index: %3$s/savestate %4$s<save|load> %5$s<index>%2$s\n"
-					+ "This will change the %5$scurrent index%2$s to the index you specified.\n\n"
-					+ "So, if you have the savestates %3$s1, 2, 3%2$s and your %5$scurrent index%2$s is %3$s3%2$s, %3$s/savestate %4$sload %5$s2%2$s will load the second savestate and will set the %5$scurrent index%2$s to %3$s2%2$s.\n"
-					+ "But if you savestate again you will OVERWRITE the third savestate, so keep that in mind!!\n\n"
-					+ "The savestate at index 0 will be the savestate when you started the TAS recording and can't be deleted or overwritten with this command", /*1*/TextFormatting.GOLD, /*2*/TextFormatting.RESET, /*3*/TextFormatting.AQUA, /*4*/TextFormatting.GREEN, /*5*/TextFormatting.YELLOW)));
-		} else if (i == 3) {
-			sender.sendMessage(new TextComponentString(String.format("%1$s-------------------Savestate Help 3--------------------\n%2$s"
-					+ "%3$s/savestate %4$ssave%2$s - Make a savestate at the next index\n"
-					+ "%3$s/savestate %4$ssave%5$s <index>%2$s - Make a savestate at the specified index\n"
-					+ "%3$s/savestate %4$sload%2$s - Load the savestate at the current index\n"
-					+ "%3$s/savestate %4$sload%5$s <index>%2$s - Load the savestate at the specified index\n"
-					+ "%3$s/savestate %4$sdelete%5$s <index>%2$s - Delete the savestate at the specified index\n"
-					+ "%3$s/savestate %4$sdelete%5$s <fromIndex> <toIndex>%2$s - Delete the savestates from the fromIndex to the toIndex\n"
-					+ "%3$s/savestate %4$slist%2$s - Shows the current index as well as the available indexes\n"
-					+ "\nInstead of %4$s<index> %2$syou can use ~ to specify an index relative to the current index e.g. %3$s~-1%2$s will currently load %6$s\n",
-					/*1*/TextFormatting.GOLD, /*2*/TextFormatting.RESET, /*3*/TextFormatting.AQUA, /*4*/TextFormatting.GREEN, /*5*/TextFormatting.YELLOW, /*6*/(currentIndex - 1))));
+		if (length == 0) {
+			info(sender);
 			return;
 		}
-		TextComponentString nextPage = new TextComponentString(TextFormatting.GOLD + "Click here to go to the next help page (" + (i + 1) + ")\n");
-		nextPage.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/savestate help " + (i + 1) + ""));
-		sender.sendMessage(nextPage);
+
+		String first = args[0];
+
+		if (isNumeric(first)) {
+			int index = processIndex(first);
+
+			if (length == 1) {
+				infoIndex(sender, index);
+				return;
+			}
+
+			String second = args[1];
+			int amount = parseInt(second);
+			infoIndexAmount(sender, index, amount);
+			return;
+		}
+
+		else if ("save".equals(first)) {
+
+			if (length == 1) {
+				saveNew(sender);
+				return;
+			}
+
+			String second = args[1];
+			if (isNumeric(second)) {
+				int index = processIndex(second);
+
+				if (length == 2) {
+					saveIndex(sender, index);
+					return;
+				}
+
+				String third = getRestArgsAsString(2, args);
+				saveIndexName(sender, index, third);
+				return;
+
+			} else {
+				second = getRestArgsAsString(1, args);
+				saveName(sender, second);
+				return;
+			}
+		}
+
+		else if ("load".equals(first)) {
+
+			if (length == 1) {
+				loadRecent(sender);
+				return;
+			}
+
+			String second = args[1];
+			int index = processIndex(second);
+			loadIndex(sender, index);
+			return;
+		}
+
+		else if ("delete".equals(first)) {
+
+			if (length == 1) {
+				throw new WrongUsageException("/savestate delete <indexFrom> [indexTo]");
+			}
+
+			String second = args[1];
+			int indexFrom = processIndex(second);
+			if (length == 2) {
+				delete(sender, indexFrom);
+				return;
+			}
+
+			String third = args[2];
+			int indexTo = processIndex(third);
+			if (length == 3) {
+				deleteMore(sender, indexFrom, indexTo);
+				return;
+			}
+
+			String fourth = args[3];
+			if ("force".equals(fourth)) {
+				deleteDis(sender, indexFrom, indexTo);
+				return;
+			}
+		}
+
+		else if ("reload".equals(first)) {
+			reload(sender);
+			return;
+		}
+
+		else if ("rename".equals(first)) {
+			int index = processIndex(args[1]);
+			String name = getRestArgsAsString(2, args);
+
+			rename(sender, index, name);
+			return;
+		}
+
+		else if ("info".equals(first)) {
+
+			if (length == 1) {
+				info(sender);
+				return;
+			}
+
+			String second = args[1];
+			if (isNumeric(second)) {
+				int index = processIndex(second);
+
+				if (length == 2) {
+					infoIndex(sender, index);
+					return;
+				}
+
+				String third = args[2];
+				int amount = parseInt(third);
+				infoIndexAmount(sender, index, amount);
+				return;
+			} else if ("all".equals(second)) {
+				infoAll(sender);
+				return;
+			}
+		}
+
+//		else if ("import".equals(first)) {
+//			importing(sender);
+//		}
+
+		throw new WrongUsageException(getUsage(sender));
 	}
 
 	@Override
-	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
-		if (args.length == 1) {
-			return getListOfStringsMatchingLastWord(args, new String[] { "save", "load", "delete", "list", "help" });
-		} else if (args.length == 2 && !"list".equals(args[0])) {
-			sender.sendMessage(new TextComponentString("Available indexes: " + TextFormatting.AQUA + TASmod.savestateHandlerServer.getIndexesAsString()));
+	public List<String> getTabCompletions(MinecraftServer minecraftServer, ICommandSender iCommandSender, String[] args, BlockPos blockPos) {
+		int length = args.length;
+		if (length == 1) {
+			return getListOfStringsMatchingLastWord(args, "save", "load", "delete", "reload", "rename", "info", "import");
 		}
-		return super.getTabCompletions(server, sender, args, targetPos);
-	}
 
-	// ======================================================================
-
-	private void saveLatest() throws CommandException {
-		try {
-			TASmod.savestateHandlerServer.saveState();
-		} catch (SavestateException e) {
-			throw new CommandException(e.getMessage(), new Object[] {});
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new CommandException(e.getMessage(), new Object[] {});
-		} finally {
-			TASmod.savestateHandlerServer.state = SavestateState.NONE;
-		}
-	}
-
-	private void saveWithIndex(String[] args) throws CommandException {
-		try {
-			int indexToSave = processIndex(args[1]);
-			if (indexToSave <= 0) { // Disallow to save on Savestate 0
-				indexToSave = -1;
+		String first = args[0];
+		if ("save".equals(first)) {
+			if (length == 2) {
+				return getIndexes(args);
 			}
-			TASmod.savestateHandlerServer.saveState(indexToSave, true);
-		} catch (SavestateException e) {
-			throw new CommandException(e.getMessage(), new Object[] {});
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new CommandException(e.getMessage(), new Object[] {});
-		} finally {
-			TASmod.savestateHandlerServer.state = SavestateState.NONE;
+			String second = args[1];
+			if (isNumeric(second)) {
+				iCommandSender.sendMessage(new TextComponentString("Type the name of the savestate"));
+				return new ArrayList<>();
+			}
+
+		}
+
+		else if ("load".equals(first)) {
+			if (length == 2) {
+				return getIndexes(args);
+			}
+		}
+
+		else if ("delete".equals(first)) {
+			if (length <= 3) {
+				return getIndexes(args);
+			}
+		}
+
+		else if ("rename".equals(first)) {
+			if (length == 2) {
+				return getIndexes(args);
+			} else if (length == 3) {
+				iCommandSender.sendMessage(new TextComponentString("Type the new name of the savestate"));
+				return new ArrayList<>();
+			}
+		}
+
+		else if ("info".equals(first)) {
+			if (length == 2) {
+				String second = args[1];
+				if (isNumeric(second)) {
+					return getIndexes(args);
+				} else {
+					return getListOfStringsMatchingLastWord(args, "all");
+				}
+			}
+		}
+		return new ArrayList<>();
+	}
+
+	private void info(ICommandSender sender) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Info");
+		infoIndexAmount(sender, null, null);
+	}
+
+	private void infoIndex(ICommandSender sender, Integer index) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command InfoIndex {}", index);
+		infoIndexAmount(sender, index, null);
+	}
+
+	@SuppressWarnings("unused")
+	private void infoIndexAmount(ICommandSender sender, Integer indexToDisplay, Integer amount) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command InfoIndexAmount {}|{}", indexToDisplay, amount);
+
+		int currentIndex = TASmod.savestateHandlerServer.getCurrentIndex();
+		int size = TASmod.savestateHandlerServer.size();
+
+		if (size == 0)
+			sendHelp(sender);
+
+		if (indexToDisplay == null) {
+			indexToDisplay = currentIndex;
+		}
+		if (amount == null) {
+			amount = 10;
+		}
+
+		sender.sendMessage(Component.literal("").build()); // Print an empty line
+
+		String format = "MM/dd/yyyy hh:mm:ss a";	// TODO Add server config
+		if (!sender.getServer().isDedicatedServer()) {
+			format = I18n.format("msg.tasmod.savestate.dateformat");
+		}
+		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+
+		List<Savestate> savestateList = TASmod.savestateHandlerServer.getSavestateInfo(indexToDisplay, amount);
+
+		if (savestateList.size() < size && once) {
+			sender.sendMessage(Component.translatable("msg.tasmod.savestate.omitted", "/savestate info all").withStyle(TextFormatting.RED, TextFormatting.ITALIC).build());
+			once = false;
+		}
+
+		for (Savestate savestate : savestateList) {
+
+			String index = savestate.getIndex() == null ? "" : Integer.toString(savestate.getIndex());
+			boolean isCurrentIndex = savestate.getIndex() == currentIndex;
+			String name = savestate.getName() == null ? "" : savestate.getName();
+			String date = savestate.getDate() == null ? "" : dateFormat.format(savestate.getDate());
+
+			TextFormatting indexColor = isCurrentIndex ? TextFormatting.AQUA : TextFormatting.BLUE;
+			TextFormatting nameColor = isCurrentIndex ? TextFormatting.WHITE : TextFormatting.GRAY;
+			TextFormatting dateColor = isCurrentIndex ? TextFormatting.AQUA : TextFormatting.DARK_AQUA;
+			TextFormatting saveColor = isCurrentIndex ? TextFormatting.LIGHT_PURPLE : TextFormatting.DARK_PURPLE;
+			TextFormatting deleteColor = isCurrentIndex ? TextFormatting.RED : TextFormatting.DARK_RED;
+			TextFormatting renameColor = isCurrentIndex ? TextFormatting.YELLOW : TextFormatting.GOLD;
+			TextFormatting loadColor = isCurrentIndex ? TextFormatting.GREEN : TextFormatting.DARK_GREEN;
+
+			//@formatter:off
+			UnaryOperator<Style> hover = t -> 
+							t.setHoverEvent (
+									CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.literal(date).withStyle(dateColor))
+									);
+			
+			Component msg = null;
+					
+			if(savestate instanceof FailedSavestate) {
+				FailedSavestate failedSavestate = (FailedSavestate) savestate;
+				msg = Component.translatable("%s: %s%s",
+						Component.literal(index).withStyle(indexColor), 
+						Component.literal(name).withStyle(nameColor),
+						Component.translatable("msg.tasmod.savestate.info.error", failedSavestate.getError().getMessage())
+					.withStyle(TextFormatting.RED))
+					.withStyle(t -> 
+						t.setHoverEvent(
+								CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.literal(date).withStyle(TextFormatting.GOLD)
+						)));
+			} else {
+				if(/*!TASmodClient.config.getBoolean(TASmodConfig.SAVESTATE_SHOW_CONTROLS)*/false) { // TODO Add server config
+					msg = Component.translatable("%s: %s", 
+							Component.literal(index).withStyle(indexColor), 
+							Component.literal(name).withStyle(nameColor))
+							.withStyle(hover);
+					
+				}
+				else {
+					Component saveComponent = Component.translatable("msg.tasmod.savestate.save.clickable").withStyle(saveColor)
+							.withStyle(t->
+							t.setHoverEvent(
+									CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("msg.tasmod.savestate.save.hover", name).withStyle(saveColor)))
+							)
+							.withStyle(t->
+								t.setClickEvent(
+										CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, String.format("/savestate save %s", index)))
+							);
+					
+					Component deleteComponent = Component.translatable("msg.tasmod.savestate.delete.clickable").withStyle(deleteColor)
+							.withStyle(t->
+								t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, String.format("/savestate delete %s", index)))
+							)
+							.withStyle(t->
+								t.setHoverEvent(CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("msg.tasmod.savestate.delete.hover", name).withStyle(deleteColor)))
+							);
+					
+					Component renameComponent = Component.translatable("msg.tasmod.savestate.rename.clickable").withStyle(renameColor)
+							.withStyle(t->
+								t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, String.format("/savestate rename %s", index)))
+							)
+							.withStyle(t->
+								t.setHoverEvent(CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("msg.tasmod.savestate.rename.hover", name).withStyle(renameColor)))
+							);
+					
+					Component loadComponent = Component.translatable("msg.tasmod.savestate.load.clickable").withStyle(loadColor)
+							.withStyle(t->
+								t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, String.format("/savestate load %s", index)))
+							)
+							.withStyle(t->
+								t.setHoverEvent(CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("msg.tasmod.savestate.load.hover", name).withStyle(loadColor)))
+							);
+					
+					msg = Component.translatable("%s: %s     %s %s %s %s",
+							Component.literal(index).withStyle(indexColor), 
+							Component.literal(name).withStyle(nameColor),
+							Component.wrap(saveComponent, nameColor),
+							Component.wrap(deleteComponent, nameColor),
+							Component.wrap(renameComponent, nameColor),
+							Component.wrap(loadComponent, nameColor)
+						).withStyle(hover);
+				}
+			}
+			
+			//@formatter:on
+			sender.sendMessage(msg.build());
 		}
 	}
 
-	private void loadLatest() throws CommandException {
-		try {
-			TASmod.savestateHandlerServer.loadState();
-		} catch (LoadstateException e) {
-			throw new CommandException(e.getMessage(), new Object[] {});
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new CommandException(e.getMessage(), new Object[] {});
-		} finally {
-			TASmod.savestateHandlerServer.state = SavestateState.NONE;
-		}
+	private void sendHelp(ICommandSender sender) {
+		UnaryOperator<Style> hover = t -> t.setHoverEvent(CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("Click me!").withStyle(TextFormatting.AQUA)));
+		UnaryOperator<Style> click;
+
+		sender.sendMessage(Component.translatable("You currently do not have any savestates!").withStyle(TextFormatting.RED).build());
+		sender.sendMessage(Component.literal("").build());
+		click = t -> t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, "/savestate save My first savestate!"));
+		sender.sendMessage(Component.translatable("Use %s to create one", Component.literal("/savestate save [name]").withStyle(hover).withStyle(click).withStyle(TextFormatting.AQUA, TextFormatting.BOLD)).withStyle(TextFormatting.YELLOW).build());
+		click = t -> t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, "/savestate load"));
+		sender.sendMessage(Component.translatable("then use %s to load it.", Component.literal("/savestate load").withStyle(hover).withStyle(click).withStyle(TextFormatting.AQUA, TextFormatting.BOLD)).withStyle(TextFormatting.YELLOW).build());
+		sender.sendMessage(Component.translatable("This can also be done with the hotkeys J and K respectively.").withStyle(TextFormatting.YELLOW).build());
+		click = t -> t.setClickEvent(CClickEvent.create(ClickEvent.Action.SUGGEST_COMMAND, "/savestate"));
+		sender.sendMessage(Component.translatable("Running %s will display all savestates", Component.literal("/savestate").withStyle(hover).withStyle(click).withStyle(TextFormatting.AQUA, TextFormatting.BOLD)).withStyle(TextFormatting.YELLOW).build());
+		sender.sendMessage(Component.translatable("(You can click on the %s!)", Component.translatable("commands").withStyle(TextFormatting.AQUA)).withStyle(TextFormatting.GREEN).build());
 	}
 
-	private void loadLatest(String[] args) throws CommandException {
-		try {
-			TASmod.savestateHandlerServer.loadState(processIndex(args[1]), true);
-		} catch (LoadstateException e) {
-			throw new CommandException(e.getMessage(), new Object[] {});
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new CommandException(e.getMessage(), new Object[] {});
-		} finally {
-			TASmod.savestateHandlerServer.state = SavestateState.NONE;
-		}
+	private void infoAll(ICommandSender sender) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command InfoAll");
+		infoIndexAmount(sender, -1, 0);
 	}
 
-	private void delete(String[] args) throws CommandException {
-		int arg1 = processIndex(args[1]);
+	private void saveNew(ICommandSender sender) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveNew");
+
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.save.end");
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.saveState(cb);
+			} catch (SavestateException e) {
+				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
+			}
+		});
+	}
+
+	private void saveIndex(ICommandSender sender, int index) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveIndex {}", index);
+
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.save.end");
+
+		if (index == 0) {
+			onFailure(sender, new SavestateException("msg.tasmod.savestate.save.error.zero"));
+			return;
+		} else if (index < 0) {
+			sender.sendMessage(Component.translatable("msg.tasmod.savestate.save.negative").withStyle(TextFormatting.YELLOW).build());
+		}
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.saveState(index, cb);
+			} catch (SavestateException e) {
+				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
+			}
+		});
+	}
+
+	private void saveIndexName(ICommandSender sender, int index, String name) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveNameIndex {}|{}", index, name);
+
+		if (index == 0) {
+			onFailure(sender, new SavestateException("msg.tasmod.savestate.save.error.zero"));
+			return;
+		} else if (index < 0) {
+			sender.sendMessage(Component.translatable("msg.tasmod.savestate.save.negative").withStyle(TextFormatting.YELLOW).build());
+		}
+
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.save.end");
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.saveState(index, name, cb);
+			} catch (SavestateException e) {
+				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
+			}
+		});
+	}
+
+	private void saveName(ICommandSender sender, String name) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command SaveName {}", name);
+
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.save.end");
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.saveState(name, cb);
+			} catch (SavestateException e) {
+				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
+			}
+		});
+	}
+
+	private void loadRecent(ICommandSender sender) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command LoadRecent");
+
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.load.end");
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.loadState(cb);
+			} catch (LoadstateException e) {
+				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
+			}
+		});
+	}
+
+	private void loadIndex(ICommandSender sender, int index) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command LoadIndex {}", index);
+
+		if (index < 0) {
+			sender.sendMessage(Component.translatable("msg.tasmod.savestate.load.negative").withStyle(TextFormatting.YELLOW).build());
+		}
+
+		SavestateCallback cb = createChatMessageCallback(sender, "msg.tasmod.savestate.load.end");
+
+		TASmod.gameLoopSchedulerServer.add(() -> {
+			try {
+				TASmod.savestateHandlerServer.loadState(index, cb);
+			} catch (LoadstateException e) {
+				onFailure(sender, e);
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				} catch (Exception e1) {
+					TASmod.LOGGER.catching(e);
+				}
+			}
+		});
+	}
+
+	private void delete(ICommandSender sender, int index) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Delete {}", index);
+
+		SavestateCallback cb = (paths) -> {
+			//@formatter:off
+			sender.getServer().getPlayerList().sendMessage(
+					Component.translatable("msg.tasmod.savestate.delete", 
+							Component.literal(Integer.toString(paths.getSavestate().getIndex()))
+								.withStyle(TextFormatting.AQUA)
+					).withStyle(TextFormatting.GREEN).build());
+			//@formatter:on
+		};
+
 		try {
-			TASmod.savestateHandlerServer.deleteSavestate(arg1);
+			TASmod.savestateHandlerServer.deleteSavestate(index, cb);
 		} catch (SavestateDeleteException e) {
-			throw new CommandException(e.getMessage(), new Object[] {});
+			onFailure(sender, e);
 		}
 	}
 
-	private void deleteMultiple(String[] args) throws CommandException {
+	private void deleteMore(ICommandSender sender, int indexFrom, int indexTo) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command DeleteMore {}|{}", indexFrom, indexTo);
+		int count = (indexTo + 1) - indexFrom;
+
+		if (count < 0) {
+			onFailure(sender, new SavestateDeleteException("msg.tasmod.savestate.deleteMore.error.negative", count));
+			return;
+		}
+
+		String translationKey = "msg.tasmod.savestate.deleteMore" + (count == 1 ? ".singular" : ".plural");
+
+		//@formatter:off
+		Component countComponent = Component.literal(Integer.toString(count)).withStyle(TextFormatting.RED);
+		
+		Component confirmationComponent = Component.wrap(Component.translatable("msg.tasmod.savestate.deleteMore.clickable", true)
+				.withStyle(
+						style -> style
+							.setClickEvent(
+									CClickEvent.create(ClickEvent.Action.RUN_COMMAND, String.format("/savestate delete %s %s force", indexFrom, indexTo))
+							)
+							.setHoverEvent(
+									CHoverEvent.create(HoverEvent.Action.SHOW_TEXT, Component.translatable("msg.tasmod.savestate.deleteMore.hover").withStyle(TextFormatting.DARK_RED)))
+				)).withStyle(TextFormatting.GREEN);
+		
+		
+		sender.sendMessage(
+			Component.translatable(translationKey, countComponent, confirmationComponent).withStyle(TextFormatting.YELLOW).build()
+		);
+		//@formatter:on
+	}
+
+	private void deleteDis(ICommandSender sender, int indexFrom, int indexTo) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command DeleteDis {}|{}", indexFrom, indexTo);
+
+		SavestateCallback cb = (paths) -> {
+			sender.getServer().getPlayerList().sendMessage(Component.translatable("msg.tasmod.savestate.delete", paths.getSavestate().getIndex()).withStyle(TextFormatting.GREEN).build());
+		};
+
+		ErrorRunnable onErr = (exception) -> {
+			onFailure(sender, exception);
+		};
+
 		try {
-			TASmod.savestateHandlerServer.deleteSavestate(processIndex(args[1]), processIndex(args[2]));
+			TASmod.savestateHandlerServer.deleteSavestate(indexFrom, indexTo, cb, onErr);
 		} catch (SavestateDeleteException e) {
-			throw new CommandException(e.getMessage(), new Object[] {});
+			onFailure(sender, e);
 		}
 	}
 
+	private void reload(ICommandSender sender) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Reload");
+
+		sender.getServer().getPlayerList().sendMessage(Component.translatable("msg.tasmod.savestate.reload").withStyle(TextFormatting.GREEN).build());
+		TASmod.savestateHandlerServer.reload();
+	}
+
+	private void rename(ICommandSender sender, int index, String name) {
+		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Rename {}|{}", index, name);
+
+		SavestateCallback cb = (paths) -> {
+			//@formatter:off
+			sender.getServer().getPlayerList().sendMessage(
+					Component.translatable("msg.tasmod.savestate.rename", 
+							Component.literal(Integer.toString(paths.getSavestate().getIndex()))
+								.withStyle(TextFormatting.AQUA),
+							Component.literal(paths.getSavestate().getName())
+								.withStyle(TextFormatting.YELLOW)
+					)
+					.withStyle(TextFormatting.GREEN).build()
+			);
+			//@formatter:on
+		};
+
+		TASmod.savestateHandlerServer.rename(index, name, cb);
+	}
+//
+//	private void importing(ICommandSender sender) {
+//		TASmod.LOGGER.trace(LoggerMarkers.Savestate, "Command Import");
+//
+//	}
 	// ======================================================================
 
 	private int processIndex(String arg) throws CommandException {
 		if ("~".equals(arg)) {
 			return TASmod.savestateHandlerServer.getCurrentIndex();
-		} else if (arg.matches("~-?\\d")) {
+		} else if (arg.matches("~-?\\d+")) {
 			arg = arg.replace("~", "");
-			int i = Integer.parseInt(arg);
+			int i = parseInt(arg);
 			return TASmod.savestateHandlerServer.getCurrentIndex() + i;
 		} else {
 			int i = 0;
-			try {
-				i = Integer.parseInt(arg);
-			} catch (NumberFormatException e) {
-				throw new CommandException("The specified index is not a number: %s", arg);
-			}
+			i = parseInt(arg);
 			return i;
 		}
+	}
+
+	/**
+	 * Utility method to check if the string is numeric
+	 * 
+	 * @param string The string to search
+	 * @return True if the string is numeric
+	 */
+	private boolean isNumeric(String string) {
+		return Pattern.matches("~|(~?-?\\d+)", string);
+	}
+
+	private String getRestArgsAsString(int start, String[] args) {
+		return String.join(" ", Arrays.copyOfRange(args, start, args.length));
+	}
+
+	private List<String> getIndexes(String[] args) {
+		List<Savestate> info = TASmod.savestateHandlerServer.getSavestateInfo();
+		List<String> out = new ArrayList<>();
+		info.forEach(save -> {
+			out.add(Integer.toString(save.getIndex()));
+		});
+		return getListOfStringsMatchingLastWord(args, out);
+	}
+
+	private static void onFailure(ICommandSender sender, Throwable e) {
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.addScheduledTask(() -> {
+			mc.displayGuiScreen(null);
+		});
+
+		sender.getServer().getPlayerList().sendMessage(Component.translatable(e.getMessage()).withStyle(TextFormatting.RED).build());
+		TASmod.LOGGER.catching(e);
+		TASmod.savestateHandlerServer.resetState();
+	}
+
+	public static SavestateCallback createChatMessageCallback(ICommandSender sender, String translationKey) {
+		return (paths) -> {
+
+			createClearScreenCallback(sender).invoke(paths); // Yes it's a callback in a callback...
+
+			//@formatter:off
+			sender.getServer().getPlayerList().sendMessage(
+					Component.translatable(translationKey, 
+							Component.literal(paths.getSavestate().getName())
+								.withStyle(TextFormatting.YELLOW),
+							Component.literal(Integer.toString(paths.getSavestate().getIndex()))
+								.withStyle(TextFormatting.AQUA)
+					)
+					.withStyle(TextFormatting.GREEN).build()
+			);
+			//@formatter:on
+		};
+	}
+
+	public static SavestateCallback createClearScreenCallback(ICommandSender sender) {
+		return (paths -> {
+			if (sender instanceof EntityPlayerMP) {
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_CLEAR_SCREEN));
+				} catch (Exception e) {
+					onFailure(sender, e);
+				}
+			}
+		});
 	}
 }

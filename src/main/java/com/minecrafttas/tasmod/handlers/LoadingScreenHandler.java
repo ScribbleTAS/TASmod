@@ -95,7 +95,7 @@ public class LoadingScreenHandler implements EventLaunchIntegratedServer, EventC
 	 */
 	@Override
 	public void onPlayerJoinedClientSide(EntityPlayerSP player) {
-		TASmodClient.virtual.clearKeys();
+		TASmodClient.virtual.clearNext();
 	}
 
 	/**

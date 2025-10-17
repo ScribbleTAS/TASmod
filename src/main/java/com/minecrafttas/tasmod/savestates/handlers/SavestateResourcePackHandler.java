@@ -1,7 +1,6 @@
 package com.minecrafttas.tasmod.savestates.handlers;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -20,6 +19,7 @@ import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventSavestate;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
+import com.minecrafttas.tasmod.savestates.SavestateIndexer.SavestatePaths;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.gui.GuiResourcepackWarn;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -48,7 +48,7 @@ public class SavestateResourcePackHandler implements EventSavestate.EventServerL
 	public static CountDownLatch clientRPLatch;
 
 	@Override
-	public void onServerLoadstate(MinecraftServer server, int index, Path target, Path current) {
+	public void onServerLoadstate(MinecraftServer server, SavestatePaths paths) {
 		if (server.getResourcePackUrl().isEmpty() || server.isDedicatedServer())
 			return;
 

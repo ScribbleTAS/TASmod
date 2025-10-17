@@ -7,6 +7,8 @@ import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadataRegistry;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorRegistry;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.builtin.Beta1Flavor;
+import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
+import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionRegistry;
 
 import net.minecraft.command.CommandBase;
 
@@ -47,4 +49,11 @@ public class TASmodAPIRegistry {
 	 * then create a command like normal, as it extends from the vanilla {@link CommandBase}
 	 */
 	public static final ClientCommandRegistry CLIENT_COMMANDS = new ClientCommandRegistry();
+
+	/**
+	 * <p>Registry for registering additional data that should be stored or loaded during a Savestate or Loadstate respectively
+	 * 
+	 * <p>Create a new SavestateStorageExtension by extending {@link SavestateStorageExtensionBase}
+	 */
+	public static final SavestateStorageExtensionRegistry SAVESTATE_STORAGE = new SavestateStorageExtensionRegistry();
 }

@@ -23,18 +23,20 @@ import com.minecrafttas.tasmod.commands.CommandRestartAndPlay;
 import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
-import com.minecrafttas.tasmod.commands.TabCompletionUtils;
 import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
+import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateGuiHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
-import com.minecrafttas.tasmod.savestates.storage.builtin.SavestateMotionStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler;
+import com.minecrafttas.tasmod.util.TabCompletionUtils;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
@@ -81,6 +83,8 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 	public static final PlayUntilHandler playUntil = new PlayUntilHandler();
 
+	public static ClientMotionStorage motionStorage = new ClientMotionStorage();
+
 	@Override
 	public void onInitialize() {
 
@@ -117,14 +121,17 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		PacketHandlerRegistry.register(startPositionMetadataExtension);
 		PacketHandlerRegistry.register(tabCompletionUtils);
 		PacketHandlerRegistry.register(commandFileCommand);
-		SavestateMotionStorage motionStorage = new SavestateMotionStorage();
+		PacketHandlerRegistry.register(new SavestateGuiHandlerServer());
 		PacketHandlerRegistry.register(motionStorage);
-		EventListenerRegistry.register(motionStorage);
 		SavestateResourcePackHandler resourcepackHandler = new SavestateResourcePackHandler();
 		PacketHandlerRegistry.register(resourcepackHandler);
 		EventListenerRegistry.register(resourcepackHandler);
 		PacketHandlerRegistry.register(playUntil);
 		EventListenerRegistry.register(playUntil);
+
+		EventListenerRegistry.register(TASmodAPIRegistry.SAVESTATE_STORAGE);
+
+		registerSavestateStorage();
 	}
 
 	@Override
@@ -185,8 +192,11 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		}
 	}
 
+	private void registerSavestateStorage() {
+		TASmodAPIRegistry.SAVESTATE_STORAGE.register(motionStorage);
+	}
+
 	public static MinecraftServer getServerInstance() {
 		return serverInstance;
 	}
-
 }

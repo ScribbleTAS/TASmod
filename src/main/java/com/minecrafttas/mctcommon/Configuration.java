@@ -1,5 +1,6 @@
 package com.minecrafttas.mctcommon;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
@@ -23,14 +24,35 @@ public class Configuration extends AbstractDataFile {
 	}
 
 	@Override
-	public void loadFromXML() {
+	public void load() {
+
 		if (Files.exists(file)) {
-			loadFromXML(file);
+			String in = null;
+			try {
+				in = readFile(file);
+			} catch (IOException e) {
+				MCTCommon.LOGGER.catching(e);
+				return;
+			}
+
+			if (in.startsWith("<?xml")) {
+				MCTCommon.LOGGER.warn("Converting xml config to json");
+				loadFromXML();
+				return;
+			}
+
+			loadFromJson(file);
 		}
+
 		if (properties == null || !Files.exists(file)) {
 			properties = generateDefault();
-			saveToXML();
+			saveToJson();
 		}
+	}
+
+	@Override
+	public void save() {
+		super.saveToJson();
 	}
 
 	/**
@@ -67,7 +89,7 @@ public class Configuration extends AbstractDataFile {
 			throw new NullPointerException("Config needs to be loaded first, before trying to set a value");
 		}
 		properties.setProperty(configOption.getConfigKey(), value);
-		saveToXML();
+		save();
 	}
 
 	public void set(ConfigOptions configOption, int value) {
@@ -86,6 +108,6 @@ public class Configuration extends AbstractDataFile {
 
 	public void delete(ConfigOptions configOption) {
 		properties.remove(configOption);
-		saveToXML();
+		saveToJson();
 	}
 }

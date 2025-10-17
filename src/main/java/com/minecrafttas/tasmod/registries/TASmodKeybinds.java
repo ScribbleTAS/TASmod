@@ -4,6 +4,7 @@ import org.lwjgl.input.Keyboard;
 
 import com.minecrafttas.mctcommon.KeybindManager.IsKeyDownFunc;
 import com.minecrafttas.mctcommon.KeybindManager.Keybind;
+import com.minecrafttas.mctcommon.KeybindManager.KeybindID;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
@@ -12,7 +13,7 @@ import com.minecrafttas.tasmod.virtual.VirtualKeybindings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 
-public enum TASmodKeybinds {
+public enum TASmodKeybinds implements KeybindID {
 	TICKRATE_0("Tickrate 0 Key", "TASmod", Keyboard.KEY_F8, () -> TASmodClient.tickratechanger.togglePause(), VirtualKeybindings::isKeyDown),
 	TICKRATE_ADVANCE("Advance Tick", "TASmod", Keyboard.KEY_F9, () -> TASmodClient.tickratechanger.advanceTick(), VirtualKeybindings::isKeyDown),
 	TICKRATE_INCREASE("Increase Tickrate", "TASmod", Keyboard.KEY_PERIOD, () -> TASmodClient.tickratechanger.increaseTickrate(), VirtualKeybindings::isKeyDownExceptTextfield),
@@ -75,5 +76,10 @@ public enum TASmodKeybinds {
 			keybinds[i] = tasmodkeybinds[i].keybind.vanillaKeyBinding;
 		}
 		return keybinds;
+	}
+
+	@Override
+	public Keybind getKeybind() {
+		return this.keybind;
 	}
 }

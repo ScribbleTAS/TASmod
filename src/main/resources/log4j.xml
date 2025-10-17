@@ -19,7 +19,7 @@
 	<Appenders>
 		<Console name="SysOut2" target="SYSTEM_OUT">
 			<PatternLayout disableAnsi="${sys:fabric.log.disableAnsi:-true}">
-					<pattern>%style{[%d{HH:mm:ss}]}{blue} %highlight{[%t/%level]}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=green, TRACE=blue} %style{(%logger{1}%notEmpty{/%marker})}{cyan} %highlight{%msg%n}{FATAL=red, ERROR=red, WARN=normal, INFO=normal, DEBUG=normal, TRACE=normal}</pattern>
+					<pattern>%style{[%d{HH:mm:ss}]}{blue} %highlight{[%t/%level]}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=green, TRACE=magenta} %style{(%logger{1}%notEmpty{/%marker})}{cyan} %highlight{%msg%n}{FATAL=red, ERROR=red, WARN=normal, INFO=normal, DEBUG=normal, TRACE=normal}</pattern>
 			</PatternLayout>
 		</Console>
 		

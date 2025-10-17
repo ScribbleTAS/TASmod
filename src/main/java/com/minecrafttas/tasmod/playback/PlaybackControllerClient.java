@@ -187,7 +187,7 @@ public class PlaybackControllerClient implements
 	 */
 	public void setTASState(TASstate stateIn) {
 		try {
-			TASmodClient.client.send(new TASmodBufferBuilder(PLAYBACK_STATE).writeTASState(stateIn));
+			TASmodClient.client.send(new TASmodBufferBuilder(PLAYBACK_STATE).writeEnum(stateIn));
 		} catch (Exception e) {
 			logger.catching(e);
 		}
@@ -269,7 +269,7 @@ public class PlaybackControllerClient implements
 					LOGGER.debug(LoggerMarkers.Playback, "Pausing a playback");
 					state = TASstate.PAUSED;
 					stateAfterPause = TASstate.PLAYBACK;
-					TASmodClient.virtual.clearKeys();
+					TASmodClient.virtual.clearNext();
 					return verbose ? TextFormatting.GREEN + "Pausing a playback" : "";
 				case NONE:
 					stopPlayback(true);
@@ -315,7 +315,7 @@ public class PlaybackControllerClient implements
 
 	private void stopRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
-		TASmodClient.virtual.clearKeys();
+		TASmodClient.virtual.clearNext();
 	}
 
 	private void startPlayback() {
@@ -329,7 +329,7 @@ public class PlaybackControllerClient implements
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
 		Minecraft.getMinecraft().gameSettings.chatLinks = true;
 		if (clearInputs) {
-			TASmodClient.virtual.clearKeys();
+			TASmodClient.virtual.clearNext();
 		}
 	}
 
@@ -1035,7 +1035,7 @@ public class PlaybackControllerClient implements
 				throw new WrongSideException(packet, Side.CLIENT);
 
 			case PLAYBACK_STATE:
-				TASstate networkState = TASmodBufferBuilder.readTASState(buf);
+				TASstate networkState = TASmodBufferBuilder.readEnum(TASstate.class, buf);
 				boolean verbose = TASmodBufferBuilder.readBoolean(buf);
 				Task task = () -> {
 					PlaybackControllerClient container = TASmodClient.controller;

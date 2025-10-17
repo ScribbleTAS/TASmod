@@ -110,7 +110,7 @@ public abstract class MixinMinecraftServer {
 
 		TASmod.gameLoopSchedulerServer.runAllTasks();
 
-		boolean stopTaskQueue = TASmod.savestateHandlerServer != null && TASmod.savestateHandlerServer.state == SavestateState.LOADING;
+		boolean stopTaskQueue = TASmod.savestateHandlerServer != null && TASmod.savestateHandlerServer.getState() == SavestateState.LOADING;
 		if (!stopTaskQueue) {
 			synchronized (this.futureTaskQueue) {
 				while (!this.futureTaskQueue.isEmpty()) {

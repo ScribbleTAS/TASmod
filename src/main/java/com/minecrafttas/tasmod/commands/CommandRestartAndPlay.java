@@ -2,7 +2,6 @@ package com.minecrafttas.tasmod.commands;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +9,7 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateFlags;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 
 import net.minecraft.client.Minecraft;
@@ -49,21 +48,13 @@ public class CommandRestartAndPlay extends CommandBase {
 					name = name.concat(args[i] + spacer);
 				}
 				try {
-					TASmod.savestateHandlerServer.loadState(0, false);
+					TASmod.savestateHandlerServer.loadState(0, null, SavestateFlags.BLOCK_PAUSE_TICKRATE);
 				} catch (LoadstateException e) {
 					TASmod.LOGGER.catching(e);
 					if (e.getMessage() != null) {
 						sender.sendMessage(new TextComponentString(TextFormatting.RED + "Could not load the initial savestate: " + e.getMessage()));
 					}
-					TASmod.savestateHandlerServer.state = SavestateState.NONE;
-					TASmod.tickratechanger.pauseGame(false);
-					return;
-				} catch (IOException e) {
-					TASmod.LOGGER.catching(e);
-					if (e.getMessage() != null) {
-						sender.sendMessage(new TextComponentString(TextFormatting.RED + "Could not load the initial savestate: " + e.getMessage()));
-					}
-					TASmod.savestateHandlerServer.state = SavestateState.NONE;
+					TASmod.savestateHandlerServer.resetState();
 					TASmod.tickratechanger.pauseGame(false);
 					return;
 				}

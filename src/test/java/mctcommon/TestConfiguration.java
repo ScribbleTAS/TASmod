@@ -16,7 +16,11 @@ import com.minecrafttas.mctcommon.Configuration;
 import com.minecrafttas.mctcommon.ConfigurationRegistry;
 import com.minecrafttas.mctcommon.ConfigurationRegistry.ConfigOptions;
 
-class TestConfiguration {
+class TestConfiguration extends Configuration {
+
+	public TestConfiguration() {
+		super("", Paths.get("src/test/resources/test.cfg"), new ConfigurationRegistry());
+	}
 
 	enum TestConfig implements ConfigOptions {
 		FileToOpen("fileToOpen", ""),
@@ -56,7 +60,7 @@ class TestConfiguration {
 	void beforeEach() {
 		registry.register(TestConfig.values());
 		config = new Configuration("Test config", configPath, registry);
-		config.loadFromXML();
+		config.load();
 	}
 
 	@AfterEach
@@ -79,7 +83,7 @@ class TestConfiguration {
 	void testDefault() throws Exception {
 		Files.delete(configPath);
 		config = new Configuration("Test config", configPath, registry);
-		config.loadFromXML();
+		config.load();
 		assertEquals("", config.get(TestConfig.FileToOpen));
 	}
 
@@ -89,7 +93,7 @@ class TestConfiguration {
 	@Test
 	void testSavingAndLoading() {
 		config.set(TestConfig.FileToOpen, "Test");
-		config.loadFromXML();
+		config.load();
 		assertEquals("Test", config.get(TestConfig.FileToOpen));
 	}
 

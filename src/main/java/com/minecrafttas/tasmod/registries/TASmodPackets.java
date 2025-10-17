@@ -1,18 +1,28 @@
 package com.minecrafttas.tasmod.registries;
 
+import com.minecrafttas.mctcommon.KeybindManager.Keybind;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
-import com.minecrafttas.tasmod.savestates.storage.builtin.SavestateMotionStorage.MotionData;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
+import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
+import com.minecrafttas.tasmod.savestates.gui.GuiSavestate;
+import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
+import com.minecrafttas.tasmod.util.Component;
 import com.minecrafttas.tasmod.util.Ducks.ScoreboardDuck;
+import com.minecrafttas.tasmod.virtual.VirtualKey;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiDownloadTerrain;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.TextFormatting;
 
 /**
  * PacketIDs and handlers specifically for TASmod
@@ -47,6 +57,18 @@ public enum TASmodPackets implements PacketID {
 	 */
 	TICKRATE_ADVANCE,
 	/**
+	 * <p>Displays a warning in chat that the tickrate was automatically set to 0
+	 * <p>SIDE: Client
+	 */
+	TICKRATE_0_WARN(Side.CLIENT, (buf, username) -> {
+		Minecraft mc = Minecraft.getMinecraft();
+		Keybind tickrate0Kbd = TASmodClient.keybindManager.getKeybind(TASmodKeybinds.TICKRATE_0);
+		String keyName = VirtualKey.getName(tickrate0Kbd.vanillaKeyBinding.getKeyCode());
+
+		if (TASmodClient.config.getBoolean(TASmodConfig.UnpauseWarn))
+			mc.ingameGUI.addChatMessage(ChatType.CHAT, Component.translatable("msg.tasmod.tickrate.tr0warn", Component.literal(keyName).withStyle(TextFormatting.GOLD)).withStyle(TextFormatting.GREEN).build());
+	}),
+	/**
 	 * <p>Creates a savestate
 	 * <p>SIDE: Both<br>
 	 * ARGS: <br>
@@ -63,11 +85,32 @@ public enum TASmodPackets implements PacketID {
 	 */
 	SAVESTATE_LOAD,
 	/**
-	 * <p>Opens or closes the savestate screen on the client
+	 * <p>Opens the {@link GuiSavestate} screen on the client
 	 * <p>SIDE: Client<br>
-	 * ARGS: none
+	 * ARGS: Enum The {@link SavestateState} for displaying the correct message
 	 */
-	SAVESTATE_SCREEN,
+	SAVESTATE_LOADING_SCREEN,
+	/**
+	 * <p>Opens the {@link GuiSavestateDone} screen on the client
+	 * <p>SIDE: BOTH<br>
+	 * <strong>Server->Client</strong> int The index of the savestate to display in the gui<br>
+	 * <strong>Client->Server</strong> int The index of the savestate to rename<br>
+	 * <strong>Client->Server</strong> String The name of the savestate to be renamed<br>
+	 */
+	SAVESTATE_RENAME_SCREEN,
+	/**
+	 * <p>Clears the screen on the client, if it's a savestate screen
+	 * <p>SIDE: Both<br>
+	 * ARGS: None
+	 */
+	SAVESTATE_CLEAR_SCREEN(Side.CLIENT, (buf, clientID) -> {
+		Minecraft mc = Minecraft.getMinecraft();
+		if (mc.currentScreen instanceof GuiSavestate || mc.currentScreen instanceof GuiDownloadTerrain) {
+			mc.addScheduledTask(() -> {
+				mc.displayGuiScreen(null);
+			});
+		}
+	}),
 	/**
 	 * <p>Sends the playerdata of the player to the client, inluding the motion
 	 * <p>SIDE: Client<br>
@@ -94,7 +137,12 @@ public enum TASmodPackets implements PacketID {
 	 * <p>SIDE: Client<br>
 	 * ARGS: none
 	 */
-	SAVESTATE_UNLOAD_CHUNKS,
+	SAVESTATE_UNLOAD_CHUNKS(Side.CLIENT, (buf, username) -> {
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.addScheduledTask(() -> {
+			SavestateHandlerClient.unloadAllClientChunks();
+		});
+	}),
 	/**
 	 * <p>Clears the scoreboard on the client side
 	 * <p>SIDE: Client<br>
@@ -177,7 +225,7 @@ public enum TASmodPackets implements PacketID {
 	 * ARGS: <br>
 	 * <strong>Client->Server</strong> {@link TASstate} state The new state everyone should adapt
 	 * <strong>Server->Client</strong>
-	 * {@link TASstate} state The new state everyone should adapt<br>
+	 * Enum The {@link TASstate} state The new state everyone should adapt<br>
 	 * boolean verbose If a chat message should be printed
 	 */
 	PLAYBACK_STATE,

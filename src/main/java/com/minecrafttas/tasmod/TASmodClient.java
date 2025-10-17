@@ -40,7 +40,8 @@ import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodKeybinds;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
-import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandler;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateGuiHandlerClient;
+import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandlerClient;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerClient;
 import com.minecrafttas.tasmod.ticksync.TickSyncClient;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -125,7 +126,9 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 		registerConfigValues();
 
-		loadConfig(Minecraft.getMinecraft());
+		Minecraft mc = Minecraft.getMinecraft();
+
+		loadConfig(mc);
 
 		virtual = new VirtualInput(LOGGER);
 
@@ -172,7 +175,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		PacketHandlerRegistry.register(ticksyncClient);
 		PacketHandlerRegistry.register(tickratechanger);
 		PacketHandlerRegistry.register(savestateHandlerClient);
-		PacketHandlerRegistry.register(new SavestatePlayerHandler(null)); //TODO Split player handler into client and server
+		PacketHandlerRegistry.register(new SavestatePlayerHandlerClient());
+		PacketHandlerRegistry.register(new SavestateGuiHandlerClient());
 	}
 
 	private void registerEventListeners() {
@@ -313,7 +317,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 	@Override
 	public void onOptionsInit(GameSettings options) {
-		Arrays.stream(TASmodKeybinds.valuesKeybind()).forEach((keybind) -> keybindManager.registerKeybind(keybind, options));
+		// Initialize keybind manager
+		keybindManager.registerKeybinds(options, TASmodKeybinds.class);
 		Arrays.stream(TASmodKeybinds.valuesVanillaKeybind()).forEach(VirtualKeybindings::registerBlockedKeyBinding);
 	}
 
@@ -358,7 +363,8 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			}
 		}
 		config = new Configuration("TASmod configuration", configDir.resolve("tasmod.cfg"), CONFIG_REGISTRY);
-		config.loadFromXML();
-		config.saveToXML();
+
+		config.load();
+		config.save();
 	}
 }

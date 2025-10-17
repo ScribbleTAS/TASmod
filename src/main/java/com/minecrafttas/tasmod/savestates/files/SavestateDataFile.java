@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import com.minecrafttas.mctcommon.file.AbstractDataFile;
 
+@Deprecated
 public class SavestateDataFile extends AbstractDataFile {
 
 	public SavestateDataFile(Path file) {

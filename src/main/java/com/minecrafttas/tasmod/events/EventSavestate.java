@@ -1,8 +1,7 @@
 package com.minecrafttas.tasmod.events;
 
-import java.nio.file.Path;
-
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
+import com.minecrafttas.tasmod.savestates.SavestateIndexer.SavestatePaths;
 
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.server.MinecraftServer;
@@ -18,11 +17,10 @@ public interface EventSavestate {
 		/**
 		 * Fired when saving a savestate, before the savestate folder is copied
 		 * 
-		 * @param index   The savestate index for this savestate
-		 * @param target  Target folder, where the savestate is copied to
-		 * @param current The current folder that will be copied from
+		 * @param server The server instance
+		 * @param paths The {@link SavestatePaths} object
 		 */
-		public void onServerSavestate(MinecraftServer server, int index, Path target, Path current);
+		public void onServerSavestate(MinecraftServer server, SavestatePaths paths);
 	}
 
 	/**
@@ -34,11 +32,10 @@ public interface EventSavestate {
 		/**
 		 * Fired when loading a savestate, before the savestate folder is copied
 		 * 
-		 * @param index   The savestate index for this loadstate
-		 * @param target  Target folder, where the savestate is copied to
-		 * @param current The current folder that will be copied from
+		 * @param server The server instance
+		 * @param paths The {@link SavestatePaths} object
 		 */
-		public void onServerLoadstate(MinecraftServer server, int index, Path target, Path current);
+		public void onServerLoadstate(MinecraftServer server, SavestatePaths paths);
 	}
 
 	/**

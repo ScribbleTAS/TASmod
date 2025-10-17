@@ -3,7 +3,6 @@ package com.minecrafttas.tasmod.savestates.handlers;
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_PLAYER;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
@@ -11,7 +10,6 @@ import java.util.UUID;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
-import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
@@ -20,9 +18,6 @@ import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -36,11 +31,11 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 /**
  * Handles player related savestating methods
  */
-public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacketHandler {
+public class SavestatePlayerHandlerServer implements ServerPacketHandler {
 
 	private final MinecraftServer server;
 
-	public SavestatePlayerHandler(MinecraftServer server) {
+	public SavestatePlayerHandlerServer(MinecraftServer server) {
 		this.server = server;
 	}
 
@@ -192,35 +187,6 @@ public class SavestatePlayerHandler implements ClientPacketHandler, ServerPacket
 		switch (packet) {
 			case SAVESTATE_PLAYER:
 				throw new WrongSideException(packet, Side.SERVER);
-			default:
-				break;
-		}
-	}
-
-	@Environment(EnvType.CLIENT)
-	@Override
-	public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
-		TASmodPackets packet = (TASmodPackets) id;
-
-		switch (packet) {
-			case SAVESTATE_PLAYER:
-				NBTTagCompound compound;
-				try {
-					compound = TASmodBufferBuilder.readNBTTagCompound(buf);
-				} catch (IOException e) {
-					e.printStackTrace();
-					break;
-				}
-				/*
-				 * Fair warning: Do NOT read the buffer inside an addScheduledTask. Read it
-				 * before that. The buffer will have the wrong limit, when the task is executed.
-				 * This is probably due to the buffers being reused.
-				 */
-				Minecraft.getMinecraft().addScheduledTask(() -> {
-					SavestateHandlerClient.loadPlayer(compound);
-				});
-				break;
-
 			default:
 				break;
 		}

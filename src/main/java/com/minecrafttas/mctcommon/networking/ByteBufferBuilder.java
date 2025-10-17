@@ -135,6 +135,11 @@ public class ByteBufferBuilder {
 		return this;
 	}
 
+	public ByteBufferBuilder writeEnum(Enum<?> state) {
+		this.writeShort((short) state.ordinal());
+		return this;
+	}
+
 	/**
 	 * Unlocks the buffer from the pool making it available for other uses
 	 */
@@ -199,6 +204,12 @@ public class ByteBufferBuilder {
 		byte[] array = new byte[length];
 		buf.get(array);
 		return array;
+	}
+
+	public static <T extends Enum<?>> T readEnum(Class<T> clazz, ByteBuffer buf) {
+		if (!clazz.isEnum())
+			throw new IllegalArgumentException("Class is not an enum");
+		return clazz.getEnumConstants()[buf.getShort()];
 	}
 
 	/**

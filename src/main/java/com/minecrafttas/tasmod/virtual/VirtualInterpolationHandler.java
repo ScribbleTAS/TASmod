@@ -88,13 +88,13 @@ public class VirtualInterpolationHandler implements EventVirtualInput.EventVirtu
 	}
 
 	/**
-	 * Rounds the partial tick to 1 depending on the tickrate
+	 * <p>Rounds the partial tick to 1 depending on the tickrate.
 	 * 
-	 * To correctly play back the mouse cursor, the partial ticks have to reach 1 at some point.
-	 * However this is not the case in higher tickrates.
+	 * <p>To correctly play back the mouse cursor, the partial ticks have to reach 1 at some point.<br>
+	 * However this is not the case in higher tickrates.<br>
 	 * The solution is to round the partial ticks to 1 after a certain threshold.
 	 * 
-	 * The higher the tps, the lower the threshold for rounding.
+	 * <p>The higher the tps, the lower the threshold for rounding.
 	 * 
 	 * @param partialTick The partial ticks to round
 	 * @param tps The ticks per second used for setting the threshold

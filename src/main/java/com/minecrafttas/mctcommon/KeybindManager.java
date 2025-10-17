@@ -1,7 +1,7 @@
 package com.minecrafttas.mctcommon;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -20,6 +20,77 @@ import net.minecraft.client.settings.KeyBinding;
 public class KeybindManager implements EventClientGameLoop {
 
 	private final IsKeyDownFunc defaultFunction;
+
+	private Map<KeybindID, Keybind> keybindings;
+
+	/**
+	 * Initialize keybind manage
+	 * 
+	 * @param defaultFunction The default function used to determine if a keybind is
+	 *                        down. Can be overridden when registering a new keybind
+	 */
+	public KeybindManager(IsKeyDownFunc defaultFunction) {
+		this.defaultFunction = defaultFunction;
+		this.keybindings = new HashMap<>();
+	}
+
+	/**
+	 * Handle registered keybindings on game loop
+	 */
+	@Override
+	public void onRunClientGameLoop(Minecraft mc) {
+		for (Keybind keybind : this.keybindings.values()) {
+			IsKeyDownFunc keyDown = keybind.isKeyDownFunc != null ? keybind.isKeyDownFunc : defaultFunction;
+			if (keyDown.isKeyDown(keybind.vanillaKeyBinding)) {
+				keybind.onKeyDown.run();
+			}
+		}
+
+	}
+
+	public void registerKeybinds(GameSettings options, Class<? extends KeybindID> keybindIDclass) {
+		if (keybindIDclass.isEnum())
+			registerKeybinds(options, keybindIDclass.getEnumConstants());
+	}
+
+	public void registerKeybinds(GameSettings options, KeybindID... keybind) {
+		for (KeybindID keybindEnum : keybind) {
+			registerKeybind(options, keybindEnum, keybindEnum.getKeybind());
+		}
+	}
+
+	/**
+	 * Register a new keybind
+	 * 
+	 * @param keybindID The {@link KeybindID} to register this underI 
+	 * @param keybind The {@link Keybind} to register
+	 */
+	public void registerKeybind(GameSettings options, KeybindID keybindID, Keybind keybind) {
+		this.keybindings.put(keybindID, keybind);
+		KeyBinding keyBinding = keybind.vanillaKeyBinding;
+
+		Map<String, Integer> categoryOrder = AccessorKeyBinding.getCategoryOrder();
+
+		if (!categoryOrder.containsKey(keybind.category))
+			categoryOrder.put(keybind.category, categoryOrder.size() + 1);
+
+		// add keybinding
+		options.keyBindings = ArrayUtils.add(options.keyBindings, keyBinding);
+	}
+
+	public Keybind getKeybind(KeybindID id) {
+		return keybindings.get(id);
+	}
+
+	@FunctionalInterface
+	public static interface IsKeyDownFunc {
+
+		public boolean isKeyDown(KeyBinding keybind);
+	}
+
+	public static interface KeybindID {
+		public Keybind getKeybind();
+	}
 
 	public static class Keybind {
 
@@ -59,55 +130,5 @@ public class KeybindManager implements EventClientGameLoop {
 		public String toString() {
 			return this.vanillaKeyBinding.getKeyDescription();
 		}
-	}
-
-	private List<Keybind> keybindings;
-
-	/**
-	 * Initialize keybind manage
-	 * 
-	 * @param defaultFunction The default function used to determine if a keybind is
-	 *                        down. Can be overridden when registering a new keybind
-	 */
-	public KeybindManager(IsKeyDownFunc defaultFunction) {
-		this.defaultFunction = defaultFunction;
-		this.keybindings = new ArrayList<>();
-	}
-
-	/**
-	 * Handle registered keybindings on game loop
-	 */
-	@Override
-	public void onRunClientGameLoop(Minecraft mc) {
-		for (Keybind keybind : this.keybindings) {
-			IsKeyDownFunc keyDown = keybind.isKeyDownFunc != null ? keybind.isKeyDownFunc : defaultFunction;
-			if (keyDown.isKeyDown(keybind.vanillaKeyBinding)) {
-				keybind.onKeyDown.run();
-			}
-		}
-
-	}
-
-	/**
-	 * Register new keybind
-	 * 
-	 * @param keybind Keybind to register
-	 * @param options 
-	 */
-	public void registerKeybind(Keybind keybind, GameSettings options) {
-		this.keybindings.add(keybind);
-		KeyBinding keyBinding = keybind.vanillaKeyBinding;
-
-		if (!AccessorKeyBinding.getCategoryOrder().containsKey(keybind.category))
-			AccessorKeyBinding.getCategoryOrder().put(keybind.category, AccessorKeyBinding.getCategoryOrder().size() + 1);
-
-		// add keybinding
-		options.keyBindings = ArrayUtils.add(options.keyBindings, keyBinding);
-	}
-
-	@FunctionalInterface
-	public static interface IsKeyDownFunc {
-
-		public boolean isKeyDown(KeyBinding keybind);
 	}
 }

@@ -18,6 +18,6 @@ public class MixinNetHandlerPlayServer {
 	 */
 	@Redirect(method = "processPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/EntityPlayerMP;isInvulnerableDimensionChange()Z"))
 	public boolean redirect_processPlayer(EntityPlayerMP parentIn) {
-		return !parentIn.isInvulnerableDimensionChange() && TASmod.savestateHandlerServer.state != SavestateState.LOADING;
+		return !parentIn.isInvulnerableDimensionChange() && TASmod.savestateHandlerServer.getState() != SavestateState.LOADING;
 	}
 }
