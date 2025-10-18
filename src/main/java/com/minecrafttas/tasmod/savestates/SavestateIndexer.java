@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import com.minecrafttas.mctcommon.file.AbstractDataFile;
 import com.minecrafttas.tasmod.TASmod;
@@ -473,8 +474,11 @@ public class SavestateIndexer {
 	 */
 	public class Savestate extends AbstractDataFile {
 
+		@Nullable
 		protected Integer index;
+		@Nullable
 		protected String name;
+		@Nullable
 		protected Date date;
 		protected Path folder;
 		protected Logger logger = TASmod.LOGGER;
