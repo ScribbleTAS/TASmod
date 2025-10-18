@@ -23,7 +23,7 @@ public class CommandPlay extends CommandBase {
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "/play";
+		return "/play [nosave]";
 	}
 
 	@Override
@@ -41,9 +41,13 @@ public class CommandPlay extends CommandBase {
 		if (!(sender instanceof EntityPlayer)) {
 			return;
 		}
-		if (args.length < 1) {
-			TASmod.playbackControllerServer.togglePlayback();
-		} else if (args.length > 1) {
+		if (args.length <= 1) {
+			boolean loadTempSavestate = true;
+			if (args.length == 1 && "nosave".equals(args[0])) {
+				loadTempSavestate = false;
+			}
+			TASmod.playbackControllerServer.togglePlayback(loadTempSavestate);
+		} else if (args.length > 2) {
 			sender.sendMessage(new TextComponentString(TextFormatting.RED + "Too many arguments. " + getUsage(sender)));
 		}
 
@@ -51,6 +55,9 @@ public class CommandPlay extends CommandBase {
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
+		if (args.length == 1) {
+			return getListOfStringsMatchingLastWord(args, "nosave");
+		}
 		return super.getTabCompletions(server, sender, args, targetPos);
 	}
 }

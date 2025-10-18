@@ -10,6 +10,7 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 
@@ -22,7 +23,7 @@ public class CommandRecord extends CommandBase {
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "/record";
+		return "/record [nosave]";
 	}
 
 	@Override
@@ -40,14 +41,23 @@ public class CommandRecord extends CommandBase {
 		if (!(sender instanceof EntityPlayer)) {
 			return;
 		}
-		if (args.length < 1) {
-			TASmod.playbackControllerServer.toggleRecording();
-//			TASmod.tickSchedulerServer.add(() ->{
-//				TASmod.ktrngHandler.broadcastStartSeed();
-//			});
+		if (args.length <= 1) {
+			boolean saveTempSavestate = true;
+			if (args.length == 1 && "nosave".equals(args[0])) {
+				saveTempSavestate = false;
+			}
+			TASmod.playbackControllerServer.toggleRecording(saveTempSavestate);
 		} else if (args.length > 1) {
 			sender.sendMessage(new TextComponentString(TextFormatting.RED + "Too many arguments. " + getUsage(sender)));
 		}
 
+	}
+
+	@Override
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
+		if (args.length == 1) {
+			return getListOfStringsMatchingLastWord(args, "nosave");
+		}
+		return super.getTabCompletions(server, sender, args, targetPos);
 	}
 }

@@ -1,8 +1,6 @@
 package com.minecrafttas.tasmod.commands;
 
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.registries.TASmodPackets;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -25,11 +23,7 @@ public class CommandClearInputs extends CommandBase {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if (sender instanceof EntityPlayer) {
-			try {
-				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.PLAYBACK_CLEAR_INPUTS));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			TASmod.playbackControllerServer.clearInputs();
 		}
 	}
 

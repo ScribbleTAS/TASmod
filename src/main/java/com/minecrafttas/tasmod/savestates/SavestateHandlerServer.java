@@ -145,15 +145,23 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		savestateInner(paths, cb, flags);
 	}
 
+	public void saveStateTemp(SavestateCallback cb) {
+		SavestatePaths paths = indexer.createTempSavestate();
+		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE, SavestateFlags.BLOCK_PAUSE_TICKRATE };
+		savestateInner(paths, cb, flags);
+		paths.getSavestate().save();
+	}
+
 	private void savestateInner(SavestatePaths paths, SavestateCallback cb, SavestateFlags... flags) {
 		Path sourceFolder = paths.getSourceFolder();
 		Path targetFolder = paths.getTargetFolder();
-		int indexToSave = paths.getSavestate().index;
+		Integer indexToSave = paths.getSavestate().index;
 		logger.debug("Source: {}, Target: {}", sourceFolder, targetFolder);
 		EventListenerRegistry.fireEvent(EventSavestate.EventServerSavestate.class, server, paths);
 
 		if (Files.exists(targetFolder)) {
-			logger.warn(LoggerMarkers.Savestate, "WARNING! Overwriting the savestate with the index {}", indexToSave);
+			if (indexToSave != null)
+				logger.warn(LoggerMarkers.Savestate, "WARNING! Overwriting the savestate with the index {}", indexToSave);
 			deleteFolder(targetFolder);
 		}
 
@@ -251,6 +259,15 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		}
 
 		loadStateInner(paths, cb, flags);
+	}
+
+	public void loadStateTemp(SavestateCallback cb) {
+		SavestatePaths paths = indexer.loadTempSavestate();
+		if (paths == null)
+			return;
+		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE, SavestateFlags.BLOCK_PAUSE_TICKRATE };
+		loadStateInner(paths, cb, flags);
+		paths.getSavestate().save();
 	}
 
 	private void loadStateInner(SavestatePaths paths, SavestateCallback cb, SavestateFlags... flags) {
