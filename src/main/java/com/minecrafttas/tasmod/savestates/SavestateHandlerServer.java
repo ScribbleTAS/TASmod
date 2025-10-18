@@ -653,6 +653,10 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		rename(index, name, null);
 	}
 
+	public void renameCurrent(String name) throws SavestateException {
+		indexer.renameCurrent(name);
+	}
+
 	public void rename(int index, String name, SavestateCallback cb) throws SavestateException {
 		SavestatePaths paths = indexer.renameSavestate(index, name);
 		if (cb != null) {

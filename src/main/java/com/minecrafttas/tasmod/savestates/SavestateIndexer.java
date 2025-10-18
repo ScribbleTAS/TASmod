@@ -240,6 +240,11 @@ public class SavestateIndexer {
 		return SavestatePaths.of(savestateToRename, null, null);
 	}
 
+	public void renameCurrent(String name) {
+		currentSavestate.name = name;
+		currentSavestate.save();
+	}
+
 	/**
 	 * Deletes a savestate
 	 * @param index The index to delete
