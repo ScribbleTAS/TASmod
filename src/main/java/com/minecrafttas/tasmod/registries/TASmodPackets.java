@@ -180,7 +180,7 @@ public enum TASmodPackets implements PacketID {
 	 * <p>Notifies the client to quit the game. Upon restarting the game, the specified tasfile will be loaded and played back in {@link PlaybackControllerClient}
 	 * <p>SIDE: Both<br>
 	 * ARGS: <br>
-	 * <strong>Client->Server</strong> None<br>
+	 * <strong>Client->Server</strong> String filename The TASfile name to load on restart<br>
 	 * <strong>Server->Client</strong> String filename The TASfile name to load on restart
 	 */
 	PLAYBACK_RESTARTANDPLAY,
