@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.Logger;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
@@ -135,15 +136,32 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		logger.trace("Create new savestate index via indexer");
 		SavestatePaths paths = indexer.createSavestate(index, name, !SavestateFlags.BLOCK_CHANGE_INDEX.isBlocked(flags));
+
+		if (paths.getSavestate().index == 0) {
+			if (!ArrayUtils.contains(flags, SavestateFlags.BLOCK_CLIENT_SAVESTATE))
+				flags = ArrayUtils.add(flags, SavestateFlags.BLOCK_CLIENT_SAVESTATE);
+		}
+
+		savestateInner(paths, cb, flags);
+	}
+
+	public void saveStateTemp(SavestateCallback cb) {
+		SavestatePaths paths = indexer.createTempSavestate();
+		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE, SavestateFlags.BLOCK_PAUSE_TICKRATE };
+		savestateInner(paths, cb, flags);
+		paths.getSavestate().save();
+	}
+
+	private void savestateInner(SavestatePaths paths, SavestateCallback cb, SavestateFlags... flags) {
 		Path sourceFolder = paths.getSourceFolder();
 		Path targetFolder = paths.getTargetFolder();
-		int indexToSave = paths.getSavestate().index;
+		Integer indexToSave = paths.getSavestate().index;
 		logger.debug("Source: {}, Target: {}", sourceFolder, targetFolder);
-
 		EventListenerRegistry.fireEvent(EventSavestate.EventServerSavestate.class, server, paths);
 
 		if (Files.exists(targetFolder)) {
-			logger.warn(LoggerMarkers.Savestate, "WARNING! Overwriting the savestate with the index {}", indexToSave);
+			if (indexToSave != null)
+				logger.warn(LoggerMarkers.Savestate, "WARNING! Overwriting the savestate with the index {}", indexToSave);
 			deleteFolder(targetFolder);
 		}
 
@@ -151,7 +169,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		 * Prevents creating an InputSavestate when saving at index 0 (Index 0 is the
 		 * savestate when starting a recording)
 		 */
-		if (index != 0) {
+		if (!SavestateFlags.BLOCK_CLIENT_SAVESTATE.isBlocked(flags)) {
 			/*
 			 * Send the name of the world to all players. This will make a savestate of the
 			 * recording on the client with that name
@@ -235,10 +253,27 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		SavestatePaths paths = indexer.loadSavestate(index, !SavestateFlags.BLOCK_CHANGE_INDEX.isBlocked(flags));
 		logger.debug(LoggerMarkers.Savestate, "Source: {}, Target: {}", paths.getSourceFolder(), paths.getTargetFolder());
 
+		if (paths.getSavestate().index == 0) {
+			if (!ArrayUtils.contains(flags, SavestateFlags.BLOCK_CLIENT_SAVESTATE))
+				flags = ArrayUtils.add(flags, SavestateFlags.BLOCK_CLIENT_SAVESTATE);
+		}
+
+		loadStateInner(paths, cb, flags);
+	}
+
+	public void loadStateTemp(SavestateCallback cb) {
+		SavestatePaths paths = indexer.loadTempSavestate();
+		if (paths == null)
+			return;
+		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE, SavestateFlags.BLOCK_PAUSE_TICKRATE };
+		loadStateInner(paths, cb, flags);
+		paths.getSavestate().save();
+	}
+
+	private void loadStateInner(SavestatePaths paths, SavestateCallback cb, SavestateFlags... flags) {
 		String worldname = server.getFolderName();
 		Path sourcefolder = paths.getSourceFolder();
 		Path targetfolder = paths.getTargetFolder();
-		int indexToLoad = paths.getSavestate().index;
 
 		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstate.class, server, paths);
 
@@ -247,7 +282,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		 * savestate when starting a recording. Not doing this will load an empty
 		 * InputSavestate)
 		 */
-		if (indexToLoad != 0) {
+		if (!SavestateFlags.BLOCK_CLIENT_SAVESTATE.isBlocked(flags)) {
 			try {
 				// loadstate inputs client
 				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOAD).writeString(paths.getSavestate().folder.toString()));
@@ -577,6 +612,10 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		 */
 		BLOCK_CHANGE_INDEX,
 		/**
+		 * Stops the creation/loading of a client savestate
+		 */
+		BLOCK_CLIENT_SAVESTATE,
+		/**
 		 * Stops setting the tickrate to 0 after a savestate/loadstate
 		 */
 		BLOCK_PAUSE_TICKRATE;
@@ -612,6 +651,10 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 	public void rename(int index, String name) throws SavestateException {
 		rename(index, name, null);
+	}
+
+	public void renameCurrent(String name) throws SavestateException {
+		indexer.renameCurrent(name);
 	}
 
 	public void rename(int index, String name, SavestateCallback cb) throws SavestateException {

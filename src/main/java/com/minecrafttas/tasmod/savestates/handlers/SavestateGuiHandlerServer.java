@@ -34,6 +34,7 @@ public class SavestateGuiHandlerServer implements ServerPacketHandler {
 				String name = TASmodBufferBuilder.readString(buf);
 				TASmod.gameLoopSchedulerServer.add(() -> {
 					TASmod.savestateHandlerServer.rename(index, name);
+					TASmod.savestateHandlerServer.renameCurrent(name);
 				});
 				TASmod.server.sendToAll(new TASmodBufferBuilder(SAVESTATE_CLEAR_SCREEN));
 

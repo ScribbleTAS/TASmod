@@ -33,6 +33,8 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 
 	private TASstate state;
 
+	private boolean createState = true;
+
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
 		//@formatter:off
@@ -62,7 +64,7 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 				break;
 
 			case PLAYBACK_CLEAR_INPUTS:
-				TASmod.server.sendToAll(new TASmodBufferBuilder(PLAYBACK_CLEAR_INPUTS));
+				clearInputs();
 				break;
 			case PLAYBACK_FULLPLAY:
 			case PLAYBACK_FULLRECORD:
@@ -98,12 +100,40 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 		}
 	}
 
-	public void toggleRecording() {
+	public void toggleRecording(boolean saveSavestate) {
+		if (state == TASstate.NONE && createState && saveSavestate) {
+			createState = false;
+			TASmod.savestateHandlerServer.saveStateTemp((paths) -> {
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_CLEAR_SCREEN));
+				} catch (Exception e) {
+					TASmod.LOGGER.catching(e);
+				}
+			});
+		}
 		setState(state == TASstate.RECORDING ? TASstate.NONE : TASstate.RECORDING);
 	}
 
-	public void togglePlayback() {
+	public void togglePlayback(boolean loadSavestate) {
+		if (state == TASstate.NONE && loadSavestate) {
+			TASmod.savestateHandlerServer.loadStateTemp((paths) -> {
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_CLEAR_SCREEN));
+				} catch (Exception e) {
+					TASmod.LOGGER.catching(e);
+				}
+			});
+		}
 		setState(state == TASstate.PLAYBACK ? TASstate.NONE : TASstate.PLAYBACK);
+	}
+
+	public void clearInputs() {
+		createState = true;
+		try {
+			TASmod.server.sendToAll(new TASmodBufferBuilder(PLAYBACK_CLEAR_INPUTS));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public TASstate getState() {

@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import com.minecrafttas.mctcommon.file.AbstractDataFile;
 import com.minecrafttas.tasmod.TASmod;
@@ -239,6 +240,11 @@ public class SavestateIndexer {
 		return SavestatePaths.of(savestateToRename, null, null);
 	}
 
+	public void renameCurrent(String name) {
+		currentSavestate.name = name;
+		currentSavestate.save();
+	}
+
 	/**
 	 * Deletes a savestate
 	 * @param index The index to delete
@@ -379,7 +385,8 @@ public class SavestateIndexer {
 						Throwable error = new SavestateException("Savestate.json data file not found in " + savestateBaseDirectory.relativize(savestateDat));
 						savestate = new FailedSavestate(path, backupIndex, null, null, error);
 					}
-					savestateList.put(savestate.getIndex(), savestate.clone());
+					if (savestate.index != null) // Temporary savestates have no index and are not listed in the savestatelist
+						savestateList.put(savestate.getIndex(), savestate.clone());
 				});
 				sortSavestateList();
 				try {
@@ -473,14 +480,17 @@ public class SavestateIndexer {
 	 */
 	public class Savestate extends AbstractDataFile {
 
+		@Nullable
 		protected Integer index;
+		@Nullable
 		protected String name;
+		@Nullable
 		protected Date date;
 		protected Path folder;
 		protected Logger logger = TASmod.LOGGER;
 
 		private Savestate(Path datFile, Path folder) {
-			this(datFile, -1, null, null, folder);
+			this(datFile, null, null, null, folder);
 		}
 
 		private Savestate(Path file, Integer index, String name, Date date, Path folder) {
@@ -741,5 +751,20 @@ public class SavestateIndexer {
 			index = currentSavestate.getIndex() + 1;
 		}
 		return index;
+	}
+
+	public SavestatePaths createTempSavestate() {
+		Path sourceDirectory = savesDir.resolve(worldname);
+		Path targetDirectory = currentSavestateDir.resolve(worldname + "-SavestateTemp");
+		Savestate tempSavestate = new Savestate(targetDirectory.resolve(savestateFilePath), null, "Temporary Savestate!", new Date(), targetDirectory);
+		return SavestatePaths.of(tempSavestate, sourceDirectory, targetDirectory);
+	}
+
+	public SavestatePaths loadTempSavestate() {
+		Path sourceDirectory = currentSavestateDir.resolve(worldname + "-SavestateTemp");
+		if (!Files.exists(sourceDirectory))
+			return null;
+		Path targetDirectory = savesDir.resolve(worldname);
+		return SavestatePaths.of(currentSavestate.clone(), sourceDirectory, targetDirectory);
 	}
 }
