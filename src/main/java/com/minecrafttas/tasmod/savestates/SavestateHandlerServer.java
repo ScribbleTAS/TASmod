@@ -35,6 +35,7 @@ import com.minecrafttas.tasmod.savestates.exceptions.SavestateDeleteException;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.handlers.SavestatePlayerHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateTempHandler;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler;
 import com.minecrafttas.tasmod.util.Component;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -72,6 +73,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 	private final SavestatePlayerHandlerServer playerHandler;
 	private final SavestateWorldHandler worldHandler;
+	private final SavestateTempHandler tempSavestateHandler;
 
 	private final Logger logger;
 
@@ -87,6 +89,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		this.playerHandler = new SavestatePlayerHandlerServer(server);
 		this.worldHandler = new SavestateWorldHandler(server);
+		this.tempSavestateHandler = new SavestateTempHandler(this, logger);
 
 		createIndexer(server);
 	}
@@ -408,10 +411,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		indexer.deleteMultipleSavestates(from, to, onDelete, err);
 	}
 
-	public SavestatePlayerHandlerServer getPlayerHandler() {
-		return playerHandler;
-	}
-
 	public int getCurrentIndex() {
 		return indexer.getCurrentSavestate().index;
 	}
@@ -666,5 +665,13 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 	public void reload() {
 		indexer.reload();
+	}
+
+	public SavestatePlayerHandlerServer getPlayerHandler() {
+		return playerHandler;
+	}
+
+	public SavestateTempHandler getSavestateTemporaryHandler() {
+		return tempSavestateHandler;
 	}
 }

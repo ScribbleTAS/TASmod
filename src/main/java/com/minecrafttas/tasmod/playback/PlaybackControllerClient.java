@@ -9,6 +9,7 @@ import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_RESTARTA
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_SAVE;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
@@ -1014,7 +1015,7 @@ public class PlaybackControllerClient implements
 				break;
 
 			case PLAYBACK_RESTARTANDPLAY:
-				final String finalname = ByteBufferBuilder.readString(buf);
+				String tasFilename = ByteBufferBuilder.readString(buf);
 
 				try {
 					Thread.sleep(100L);
@@ -1022,7 +1023,7 @@ public class PlaybackControllerClient implements
 					e.printStackTrace();
 				}
 				Minecraft.getMinecraft().addScheduledTask(() -> {
-					TASmodClient.config.set(TASmodConfig.FileToOpen, finalname);
+					TASmodClient.config.set(TASmodConfig.FileToOpen, tasFilename);
 					System.exit(0);
 				});
 				break;
@@ -1077,5 +1078,13 @@ public class PlaybackControllerClient implements
 		} else {
 			TASmodClient.config.reset(TASmodConfig.FileToOpen);
 		}
+
+		try {
+			TASmodClient.controller.setInputs(PlaybackSerialiser.loadFromFile(tasFileDirectory.resolve(fileOnStart + fileEnding)));
+		} catch (PlaybackLoadException | IOException e) {
+			logger.catching(e);
+		}
+
+		setTASState(TASstate.PLAYBACK);
 	}
 }

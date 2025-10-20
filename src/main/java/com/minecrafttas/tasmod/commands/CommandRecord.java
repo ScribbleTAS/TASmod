@@ -42,11 +42,9 @@ public class CommandRecord extends CommandBase {
 			return;
 		}
 		if (args.length <= 1) {
-			boolean saveTempSavestate = true;
-			if (args.length == 1 && "nosave".equals(args[0])) {
-				saveTempSavestate = false;
-			}
-			TASmod.playbackControllerServer.toggleRecording(saveTempSavestate);
+			boolean noSave = args.length == 1 && "nosave".equals(args[0]);
+			TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setNoSave(noSave);
+			TASmod.playbackControllerServer.toggleRecording();
 		} else if (args.length > 1) {
 			sender.sendMessage(new TextComponentString(TextFormatting.RED + "Too many arguments. " + getUsage(sender)));
 		}

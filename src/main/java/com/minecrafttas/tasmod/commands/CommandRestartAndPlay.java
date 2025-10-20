@@ -6,11 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
-import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
-import com.minecrafttas.tasmod.registries.TASmodPackets;
-import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateFlags;
-import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
@@ -39,31 +34,7 @@ public class CommandRestartAndPlay extends CommandBase {
 			if (args.length < 1) {
 				sender.sendMessage(new TextComponentString(TextFormatting.RED + "Please add a filename, " + getUsage(sender)));
 			} else {
-				String name = "";
-				String spacer = " ";
-				for (int i = 0; i < args.length; i++) {
-					if (i == args.length - 1) {
-						spacer = "";
-					}
-					name = name.concat(args[i] + spacer);
-				}
-				try {
-					TASmod.savestateHandlerServer.loadState(0, null, SavestateFlags.BLOCK_PAUSE_TICKRATE);
-				} catch (LoadstateException e) {
-					TASmod.LOGGER.catching(e);
-					if (e.getMessage() != null) {
-						sender.sendMessage(new TextComponentString(TextFormatting.RED + "Could not load the initial savestate: " + e.getMessage()));
-					}
-					TASmod.savestateHandlerServer.resetState();
-					TASmod.tickratechanger.pauseGame(false);
-					return;
-				}
-				TASmod.playbackControllerServer.setServerState(TASstate.PLAYBACK);
-				try {
-					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.PLAYBACK_RESTARTANDPLAY).writeString(args[0]));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				TASmod.playbackControllerServer.restartAndPlay(String.join(" ", args));
 			}
 		} else {
 			sender.sendMessage(new TextComponentString(TextFormatting.RED + "You have no permission to use this command"));

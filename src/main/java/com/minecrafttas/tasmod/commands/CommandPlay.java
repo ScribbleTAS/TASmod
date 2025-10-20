@@ -42,11 +42,10 @@ public class CommandPlay extends CommandBase {
 			return;
 		}
 		if (args.length <= 1) {
-			boolean loadTempSavestate = true;
-			if (args.length == 1 && "nosave".equals(args[0])) {
-				loadTempSavestate = false;
-			}
-			TASmod.playbackControllerServer.togglePlayback(loadTempSavestate);
+			boolean noSave = args.length == 1 && "nosave".equals(args[0]);
+			TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setNoSave(noSave);
+
+			TASmod.playbackControllerServer.togglePlayback();
 		} else if (args.length > 2) {
 			sender.sendMessage(new TextComponentString(TextFormatting.RED + "Too many arguments. " + getUsage(sender)));
 		}
