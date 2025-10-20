@@ -8,9 +8,8 @@ public interface EventPlaybackServer {
 
 	/**
 	 * Fired when {@link PlaybackControllerServer#setTASStateServer(TASstate)} is called
-	 * 
-	 * @author Scribble
 	 */
+	@FunctionalInterface
 	public interface EventControllerStateChange extends EventBase {
 		/**
 		 * Fired when {@link PlaybackControllerServer#setTASStateServer(TASstate)} is called
@@ -21,13 +20,13 @@ public interface EventPlaybackServer {
 	}
 
 	/**
-	 * Fired when a recording is cleared
+	 * Fired when a recording is cleared in {@link PlaybackControllerServer#clearInputs()}
 	 */
 	@FunctionalInterface
 	public interface EventRecordClear extends EventBase {
 
 		/**
-		 * Fired when a recording is cleared
+		 * Fired when a recording is cleared in {@link PlaybackControllerServer#clearInputs()}
 		 */
 		public void onRecordingClear();
 	}

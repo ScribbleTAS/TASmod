@@ -1015,7 +1015,7 @@ public class PlaybackControllerClient implements
 				break;
 
 			case PLAYBACK_RESTARTANDPLAY:
-				String finalname = ByteBufferBuilder.readString(buf);
+				String tasFilename = ByteBufferBuilder.readString(buf);
 
 				try {
 					Thread.sleep(100L);
@@ -1023,7 +1023,7 @@ public class PlaybackControllerClient implements
 					e.printStackTrace();
 				}
 				Minecraft.getMinecraft().addScheduledTask(() -> {
-					TASmodClient.config.set(TASmodConfig.FileToOpen, finalname);
+					TASmodClient.config.set(TASmodConfig.FileToOpen, tasFilename);
 					System.exit(0);
 				});
 				break;
