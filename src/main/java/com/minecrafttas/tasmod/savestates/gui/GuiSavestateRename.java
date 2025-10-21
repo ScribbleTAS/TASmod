@@ -27,7 +27,6 @@ public class GuiSavestateRename extends GuiSavestate {
 
 	@Override
 	public void initGui() {
-		TASmodClient.virtual.clearNext();
 		this.buttonList.clear();
 		int boxWidth = 200;
 		buttonList.add(new GuiButton(1, width / 2 - (boxWidth / 2) - 1, height / 2 + 62, boxWidth + 3, 20, new TextComponentTranslation("gui.tasmod.savestate.save.rename.button").getFormattedText()));
@@ -76,7 +75,6 @@ public class GuiSavestateRename extends GuiSavestate {
 		} catch (Exception e) {
 			TASmod.LOGGER.catching(e);
 		}
-		TASmodClient.virtual.clearNext();
 		mc.displayGuiScreen(null);
 	}
 

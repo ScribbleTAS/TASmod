@@ -1,7 +1,5 @@
 package com.minecrafttas.tasmod.virtual;
 
-import com.minecrafttas.tasmod.TASmodClient;
-
 import net.minecraft.client.gui.GuiScreen;
 
 /**
@@ -29,11 +27,5 @@ public class SubtickGuiScreen extends GuiScreen {
 	@Override
 	public void mouseClicked(int i, int j, int k) {
 		super.mouseClicked(i, j, k);
-	}
-
-	@Override
-	public void onGuiClosed() {
-		TASmodClient.virtual.clearNext();
-		super.onGuiClosed();
 	}
 }

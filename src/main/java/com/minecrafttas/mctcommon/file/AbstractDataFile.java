@@ -54,12 +54,6 @@ public abstract class AbstractDataFile {
 		this.name = name;
 		this.comment = comment;
 		this.properties = new Properties();
-
-		try {
-			createDirectory(file.getParent());
-		} catch (IOException e) {
-			MCTCommon.LOGGER.catching(e);
-		}
 	}
 
 	/**
@@ -98,6 +92,11 @@ public abstract class AbstractDataFile {
 
 	protected void saveToProperties(Path file) {
 		try {
+			createDirectory(file.getParent());
+		} catch (IOException e) {
+			MCTCommon.LOGGER.catching(e);
+		}
+		try {
 			OutputStream fos = Files.newOutputStream(file);
 			properties.store(fos, comment);
 			fos.close();
@@ -119,6 +118,11 @@ public abstract class AbstractDataFile {
 	 */
 	protected void saveToXML(Path file) {
 		try {
+			createDirectory(file.getParent());
+		} catch (IOException e) {
+			MCTCommon.LOGGER.catching(e);
+		}
+		try {
 			OutputStream fos = Files.newOutputStream(file);
 			properties.storeToXML(fos, comment, "UTF-8");
 			fos.close();
@@ -132,6 +136,11 @@ public abstract class AbstractDataFile {
 	}
 
 	protected void saveToJson(Path file) {
+		try {
+			createDirectory(file.getParent());
+		} catch (IOException e) {
+			MCTCommon.LOGGER.catching(e);
+		}
 		//@formatter:off
 		Gson json = new GsonBuilder()
 				.registerTypeAdapter(Properties.class, new PropertiesSerializer())
