@@ -4,6 +4,7 @@ import com.minecrafttas.mctcommon.KeybindManager.Keybind;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
@@ -106,7 +107,7 @@ public enum TASmodPackets implements PacketID {
 	SAVESTATE_CLEAR_SCREEN(Side.CLIENT, (buf, clientID) -> {
 		Minecraft mc = Minecraft.getMinecraft();
 		if (mc.currentScreen instanceof GuiSavestate || mc.currentScreen instanceof GuiDownloadTerrain) {
-			mc.addScheduledTask(() -> {
+			TASmod.gameLoopSchedulerServer.add(() -> {
 				mc.displayGuiScreen(null);
 			});
 		}

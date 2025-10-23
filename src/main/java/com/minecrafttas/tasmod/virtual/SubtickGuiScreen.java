@@ -1,5 +1,7 @@
 package com.minecrafttas.tasmod.virtual;
 
+import org.lwjgl.input.Keyboard;
+
 import net.minecraft.client.gui.GuiScreen;
 
 /**
@@ -27,5 +29,10 @@ public class SubtickGuiScreen extends GuiScreen {
 	@Override
 	public void mouseClicked(int i, int j, int k) {
 		super.mouseClicked(i, j, k);
+	}
+
+	@Override
+	public void onGuiClosed() {
+		Keyboard.enableRepeatEvents(false);
 	}
 }

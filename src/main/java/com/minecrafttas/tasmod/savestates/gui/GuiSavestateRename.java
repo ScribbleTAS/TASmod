@@ -75,7 +75,6 @@ public class GuiSavestateRename extends GuiSavestate {
 		} catch (Exception e) {
 			TASmod.LOGGER.catching(e);
 		}
-		mc.displayGuiScreen(null);
 	}
 
 	@Override
@@ -85,6 +84,12 @@ public class GuiSavestateRename extends GuiSavestate {
 
 	@Override
 	public void onGuiClosed() {
+		TASmodClient.virtual.clearNext();
 		Keyboard.enableRepeatEvents(false);
+	}
+
+	@Override
+	public boolean doesGuiPauseGame() {
+		return false;
 	}
 }

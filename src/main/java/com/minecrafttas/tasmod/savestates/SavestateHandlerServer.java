@@ -457,7 +457,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 					 * Once the player is done renaming the savestate, the screens are cleared for all players.
 					 */
 					try {
-						TASmod.server.sendTo(player, new TASmodBufferBuilder(TASmodPackets.SAVESTATE_RENAME_SCREEN).writeInt(paths.getSavestate().index));
+						// TODO Currently desyncs the savestates... Bigger investigation necessary
+//						TASmod.server.sendTo(player, new TASmodBufferBuilder(TASmodPackets.SAVESTATE_RENAME_SCREEN).writeInt(paths.getSavestate().index));
 					} catch (Exception e) {
 						LOGGER.catching(e);
 					}
