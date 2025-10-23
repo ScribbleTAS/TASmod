@@ -179,7 +179,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			 */
 			try {
 				// savestate inputs client
-				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SAVE).writeString(paths.getSavestate().folder.toString()));
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SAVE).writeString(paths.getSavestate().folder.getFileName().toString()));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -288,7 +288,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		if (!SavestateFlags.BLOCK_CLIENT_SAVESTATE.isBlocked(flags)) {
 			try {
 				// loadstate inputs client
-				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOAD).writeString(paths.getSavestate().folder.toString()));
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOAD).writeString(paths.getSavestate().folder.getFileName().toString()));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
