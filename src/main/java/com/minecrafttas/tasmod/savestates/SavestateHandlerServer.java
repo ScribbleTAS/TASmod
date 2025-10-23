@@ -177,9 +177,12 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			 * Send the name of the world to all players. This will make a savestate of the
 			 * recording on the client with that name
 			 */
+			Path folder = paths.getSavestate().folder;
+			Path savestateDir = folder.getParent().getParent();
+			Path relativeFolder = savestateDir.relativize(folder);
 			try {
 				// savestate inputs client
-				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SAVE).writeString(paths.getSavestate().folder.getFileName().toString()));
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SAVE).writeString(relativeFolder.toString()));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -286,9 +289,12 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		 * InputSavestate)
 		 */
 		if (!SavestateFlags.BLOCK_CLIENT_SAVESTATE.isBlocked(flags)) {
+			Path folder = paths.getSavestate().folder;
+			Path savestateDir = folder.getParent().getParent();
+			Path relativeFolder = savestateDir.relativize(folder);
 			try {
 				// loadstate inputs client
-				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOAD).writeString(paths.getSavestate().folder.getFileName().toString()));
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_LOAD).writeString(relativeFolder.toString()));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

@@ -118,9 +118,16 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			return;
 		}
 
-		createClientSavestateDirectory();
+		Path targetfile = clientSavestateDirectory.resolve(nameOfSavestate + ".mctas").normalize();
 
-		Path targetfile = clientSavestateDirectory.resolve(nameOfSavestate + ".mctas");
+		if (!targetfile.startsWith(clientSavestateDirectory)) {
+			LOGGER.error("Could not create client savestate: Savestate won't be saved in savestate folder {}", targetfile);
+			return;
+		}
+
+		Path targetParentDir = targetfile.getParent();
+		if (!Files.exists(targetParentDir))
+			Files.createDirectories(targetParentDir);
 
 		PlaybackControllerClient container = TASmodClient.controller;
 		if (container.isRecording()) {
@@ -146,6 +153,13 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			return;
 		}
 
+		Path targetfile = clientSavestateDirectory.resolve(nameOfSavestate + ".mctas").normalize();
+
+		if (!targetfile.startsWith(clientSavestateDirectory)) {
+			LOGGER.error("Could not load client savestate: Savestate won't be saved in savestate folder {}", targetfile);
+			return;
+		}
+
 		PlaybackControllerClient controller = TASmodClient.controller;
 
 		TASstate state = controller.getState();
@@ -160,8 +174,6 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		if (state == TASstate.PAUSED) {
 			state = controller.getStateAfterPause();
 		}
-
-		Path targetfile = clientSavestateDirectory.resolve(nameOfSavestate + ".mctas");
 
 		BigArrayList<InputContainer> savestateContainerList;
 
@@ -252,11 +264,6 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		TASmodClient.tickSchedulerClient.add(() -> {
 			EventListenerRegistry.fireEvent(EventSavestate.EventClientCompleteLoadstate.class);
 		});
-	}
-
-	private static void createClientSavestateDirectory() throws IOException {
-		LOGGER.trace(LoggerMarkers.Savestate, "Creating savestate directory at {}", clientSavestateDirectory);
-		Files.createDirectories(clientSavestateDirectory);
 	}
 
 	private static void preload(BigArrayList<InputContainer> containerList, long index) {
