@@ -56,6 +56,7 @@ public class SavestateGuiHandlerClient implements ClientPacketHandler {
 				break;
 			case SAVESTATE_RENAME_SCREEN:
 				int index = TASmodBufferBuilder.readInt(buf);
+				mc.displayGuiScreen(null);
 				TASmodClient.tickSchedulerClient.add(() -> {
 					displayGuiRename(index);
 				});

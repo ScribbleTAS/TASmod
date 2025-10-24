@@ -33,14 +33,10 @@ public class VirtualInterpolationHandler implements EventVirtualInput.EventVirtu
 	 * Is updated in {@link #onVirtualCameraTick()}
 	 */
 	private final List<VirtualCameraAngle> cameraAngleStates = new ArrayList<>();
-//	private int debugFinalIndex = 0;
 
 	@Override
 	public VirtualMouse onVirtualMouseTick(VirtualMouse vmouse) {
 		this.nextMouse = vmouse;
-//		if (TASmodClient.controller.isPlayingback()) {
-//			System.out.println(debugFinalIndex == mousePointerInterpolationStates.size() - 1);
-//		}
 		mousePointerStates.clear();
 		TASmodClient.controller.getNextMouse().getStates(mousePointerStates);
 		return null;
@@ -69,7 +65,6 @@ public class VirtualInterpolationHandler implements EventVirtualInput.EventVirtu
 		if (enable && !mousePointerStates.isEmpty()) {
 			partialTick = dynamicallyRound(partialTick, TASmodClient.tickratechanger.ticksPerSecond);
 			int index = (int) MathHelper.clampedLerp(0, mousePointerStates.size() - 1, partialTick); // Get interpolate index
-//			debugFinalIndex = index;
 			VirtualMouse interpolatedCamera = mousePointerStates.get(index);
 
 			interpolatedPointerX = interpolatedCamera.getCursorX();
@@ -79,7 +74,7 @@ public class VirtualInterpolationHandler implements EventVirtualInput.EventVirtu
 		Minecraft mc = Minecraft.getMinecraft();
 		GuiScreenDuck gui = (GuiScreenDuck) mc.currentScreen;
 
-		if (gui != null) {
+		if (gui != null && !(mc.currentScreen instanceof SubtickGuiScreen)) {
 			interpolatedPointerX = gui.rescaleX(PointerNormalizer.reapplyScalingX(interpolatedPointerX));
 			interpolatedPointerY = gui.rescaleY(PointerNormalizer.reapplyScalingY(interpolatedPointerY));
 		}
