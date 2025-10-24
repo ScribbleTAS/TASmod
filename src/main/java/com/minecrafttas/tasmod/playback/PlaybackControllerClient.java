@@ -1074,7 +1074,7 @@ public class PlaybackControllerClient implements
 		// Execute /restartandplay. Load the file to start from the config. If it exists load the playback file on start.
 		String fileOnStart = TASmodClient.config.get(TASmodConfig.FileToOpen);
 		if (fileOnStart.isEmpty()) {
-			fileOnStart = null;
+			return;
 		} else {
 			TASmodClient.config.reset(TASmodConfig.FileToOpen);
 		}

@@ -204,7 +204,7 @@ public class SavestateIndexer {
 			throw new LoadstateException("msg.tasmod.savestate.error.filenoexist", missingFile);
 		}
 
-		SavestatePaths out = SavestatePaths.of(currentSavestate.clone(), sourceDir, targetDir);
+		SavestatePaths out = SavestatePaths.of(savestateToLoad.clone(), sourceDir, targetDir);
 
 		trackerfile.increaseLoadstateCount();
 

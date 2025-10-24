@@ -10,6 +10,7 @@ import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedExcep
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
+import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
@@ -44,20 +45,18 @@ public class SavestateGuiHandlerClient implements ClientPacketHandler {
 			case SAVESTATE_LOADING_SCREEN:
 				// Open Savestate screen
 				SavestateState state = TASmodBufferBuilder.readEnum(SavestateState.class, buf);
-				mc.addScheduledTask(() -> {
 
-					String msg = "";
-					if (state == SavestateState.SAVING)
-						msg = "gui.tasmod.savestate.save.start";
-					else if (state == SavestateState.LOADING)
-						msg = "gui.tasmod.savestate.load.start";
+				String msg = "";
+				if (state == SavestateState.SAVING)
+					msg = "gui.tasmod.savestate.save.start";
+				else if (state == SavestateState.LOADING)
+					msg = "gui.tasmod.savestate.load.start";
 
-					mc.displayGuiScreen(new GuiSavestate(Component.translatable(msg).withStyle(TextFormatting.YELLOW).build()));
-				});
+				mc.displayGuiScreen(new GuiSavestate(Component.translatable(msg).withStyle(TextFormatting.YELLOW).build()));
 				break;
 			case SAVESTATE_RENAME_SCREEN:
 				int index = TASmodBufferBuilder.readInt(buf);
-				mc.addScheduledTask(() -> {
+				TASmodClient.tickSchedulerClient.add(() -> {
 					displayGuiRename(index);
 				});
 				break;

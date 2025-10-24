@@ -1,6 +1,6 @@
 package com.minecrafttas.tasmod.virtual;
 
-import com.minecrafttas.tasmod.TASmodClient;
+import org.lwjgl.input.Keyboard;
 
 import net.minecraft.client.gui.GuiScreen;
 
@@ -33,7 +33,6 @@ public class SubtickGuiScreen extends GuiScreen {
 
 	@Override
 	public void onGuiClosed() {
-		TASmodClient.virtual.clearNext();
-		super.onGuiClosed();
+		Keyboard.enableRepeatEvents(false);
 	}
 }

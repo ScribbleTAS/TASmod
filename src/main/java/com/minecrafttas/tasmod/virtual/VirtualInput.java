@@ -82,22 +82,25 @@ public class VirtualInput {
 	 */
 	public void update(GuiScreen currentScreen) {
 		while (Keyboard.next()) {
-			KEYBOARD.updateNextKeyboard(Keyboard.getEventKey(), Keyboard.getEventKeyState(), Keyboard.getEventCharacter(), Keyboard.areRepeatEventsEnabled());
 
-			updateSubtickGuiScreenKeyboard(currentScreen);
+			if (updateSubtickGuiScreenKeyboard(currentScreen))
+				return;
+
+			KEYBOARD.updateNextKeyboard(Keyboard.getEventKey(), Keyboard.getEventKeyState(), Keyboard.getEventCharacter(), Keyboard.areRepeatEventsEnabled());
 		}
 		while (Mouse.next()) {
 			if (currentScreen == null) {
 				MOUSE.updateNextMouse(Mouse.getEventButton() - 100, Mouse.getEventButtonState(), Mouse.getEventDWheel(), 0, 0);
 			} else {
+				if (updateSubtickGuiScreenMouse(currentScreen))
+					return;
+
 				Ducks.GuiScreenDuck screen = (Ducks.GuiScreenDuck) currentScreen;
 				int eventX = screen.unscaleX(Mouse.getEventX());
 				int eventY = screen.unscaleY(Mouse.getEventY());
 				eventX = PointerNormalizer.getNormalizedX(eventX);
 				eventY = PointerNormalizer.getNormalizedY(eventY);
 				MOUSE.updateNextMouse(Mouse.getEventButton() - 100, Mouse.getEventButtonState(), Mouse.getEventDWheel(), eventX, eventY);
-
-				updateSubtickGuiScreenMouse(currentScreen);
 			}
 		}
 	}
@@ -105,28 +108,34 @@ public class VirtualInput {
 	/**
 	 * Update the {@link SubtickGuiScreen#keyTyped(char, int)}, if the current screen is a {@link SubtickGuiScreen}
 	 * @param currentScreen The current screen to update
+	 * @return True if the next keyboard should not be updated
 	 */
-	private void updateSubtickGuiScreenKeyboard(GuiScreen currentScreen) {
+	private boolean updateSubtickGuiScreenKeyboard(GuiScreen currentScreen) {
 		if (currentScreen instanceof SubtickGuiScreen) {
 			SubtickGuiScreen screenSubtickable = (SubtickGuiScreen) currentScreen;
 
 			if (Keyboard.getEventKeyState())
 				screenSubtickable.keyTyped(Keyboard.getEventCharacter(), Keyboard.getEventKey());
+			return true;
 		}
+		return false;
 	}
 
 	/**
 	 * Update the {@link SubtickGuiScreen#mouseClicked(int, int, int)}, if the current screen is a {@link SubtickGuiScreen}
 	 * @param currentScreen The current screen to update
+	 * @return True if the next mouse should not be updated
 	 */
-	private void updateSubtickGuiScreenMouse(GuiScreen currentScreen) {
+	private boolean updateSubtickGuiScreenMouse(GuiScreen currentScreen) {
 		if (currentScreen instanceof SubtickGuiScreen) {
 			SubtickGuiScreen screenSubtickable = (SubtickGuiScreen) currentScreen;
 			Ducks.GuiScreenDuck screenDuck = (Ducks.GuiScreenDuck) screenSubtickable;
 
 			if (Mouse.getEventButtonState())
 				screenSubtickable.mouseClicked(screenDuck.unscaleX(Mouse.getEventX()), screenDuck.unscaleY(Mouse.getEventY()), Mouse.getEventButton());
+			return true;
 		}
+		return false;
 	}
 
 	/**

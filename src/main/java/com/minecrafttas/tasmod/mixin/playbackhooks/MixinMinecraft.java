@@ -1,5 +1,7 @@
 package com.minecrafttas.tasmod.mixin.playbackhooks;
 
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -8,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.virtual.SubtickGuiScreen;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualKeyboardInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualMouseInput;
@@ -16,6 +19,7 @@ import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.settings.KeyBinding;
 
 @Mixin(Minecraft.class)
 public class MixinMinecraft {
@@ -158,4 +162,29 @@ public class MixinMinecraft {
 		return TASmodClient.virtual.MOUSE.getEventMouseScrollWheel();
 	}
 
+	// ============================ DisplayGui
+
+	@Redirect(method = "displayGuiScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/settings/KeyBinding;unPressAllKeys()V"))
+	private static void playback_unpressAllKeys(GuiScreen guiScreen) {
+		if (guiScreen instanceof SubtickGuiScreen) {
+			return;
+		}
+		KeyBinding.unPressAllKeys();
+	}
+
+	@Redirect(method = "displayGuiScreen", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;next()Z"))
+	private static boolean playback_mouseNext(GuiScreen guiScreen) {
+		if (guiScreen instanceof SubtickGuiScreen) {
+			return false;
+		}
+		return Mouse.next();
+	}
+
+	@Redirect(method = "displayGuiScreen", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Keyboard;next()Z"))
+	private static boolean playback_keyboardNext(GuiScreen guiScreen) {
+		if (guiScreen instanceof SubtickGuiScreen) {
+			return false;
+		}
+		return Keyboard.next();
+	}
 }
