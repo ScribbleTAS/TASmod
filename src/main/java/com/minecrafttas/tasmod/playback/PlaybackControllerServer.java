@@ -42,7 +42,7 @@ import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
  */
 public class PlaybackControllerServer implements ServerPacketHandler {
 
-	private TASstate state;
+	private TASstate state = NONE;
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {

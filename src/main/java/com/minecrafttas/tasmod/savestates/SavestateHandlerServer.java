@@ -130,13 +130,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		// Lock savestating and loadstating
 		state = SavestateState.SAVING;
 
-		// Enable tickrate 0
-		TASmod.tickratechanger.pauseGame(true);
-
-		// Save the world!
-		server.getPlayerList().saveAllPlayerData();
-		server.saveAllWorlds(false);
-
 		logger.trace("Create new savestate index via indexer");
 		SavestatePaths paths = indexer.createSavestate(index, name, !SavestateFlags.BLOCK_CHANGE_INDEX.isBlocked(flags));
 
@@ -149,6 +142,16 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	}
 
 	public void saveStateTemp(SavestateCallback cb) {
+		if (state == SavestateState.SAVING) {
+			throw new SavestateException("A savestating operation is already being carried out");
+		}
+		if (state == SavestateState.LOADING) {
+			throw new SavestateException("A loadstate operation is being carried out");
+		}
+
+		// Lock savestating and loadstating
+		state = SavestateState.SAVING;
+
 		SavestatePaths paths = indexer.createTempSavestate();
 		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE, SavestateFlags.BLOCK_PAUSE_TICKRATE };
 		savestateInner(paths, cb, flags);
@@ -156,6 +159,14 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	}
 
 	private void savestateInner(SavestatePaths paths, SavestateCallback cb, SavestateFlags... flags) {
+
+		// Enable tickrate 0
+		TASmod.tickratechanger.pauseGame(true);
+
+		// Save the world!
+		server.getPlayerList().saveAllPlayerData();
+		server.saveAllWorlds(false);
+
 		Path sourceFolder = paths.getSourceFolder();
 		Path targetFolder = paths.getTargetFolder();
 		Integer indexToSave = paths.getSavestate().index;
@@ -251,9 +262,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			logger.catching(e);
 		}
 
-		// Enable tickrate 0
-		TASmod.tickratechanger.pauseGame(true);
-
 		// Get the current and target directory for copying
 		logger.trace(LoggerMarkers.Savestate, "Load savestate index via indexer");
 		SavestatePaths paths = indexer.loadSavestate(index, !SavestateFlags.BLOCK_CHANGE_INDEX.isBlocked(flags));
@@ -268,6 +276,16 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	}
 
 	public void loadStateTemp(SavestateCallback cb) {
+		if (state == SavestateState.SAVING) {
+			throw new LoadstateException("A savestating operation is already being carried out");
+		}
+		if (state == SavestateState.LOADING) {
+			throw new LoadstateException("A loadstate operation is being carried out");
+		}
+
+		// Lock savestating and loadstating
+		state = SavestateState.LOADING;
+
 		SavestatePaths paths = indexer.loadTempSavestate();
 		if (paths == null)
 			return;
@@ -277,6 +295,9 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	}
 
 	private void loadStateInner(SavestatePaths paths, SavestateCallback cb, SavestateFlags... flags) {
+		// Enable tickrate 0
+		TASmod.tickratechanger.pauseGame(true);
+
 		String worldname = server.getFolderName();
 		Path sourcefolder = paths.getSourceFolder();
 		Path targetfolder = paths.getTargetFolder();
