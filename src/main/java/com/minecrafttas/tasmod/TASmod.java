@@ -188,7 +188,6 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		if (savestateHandlerServer != null) {
 			PacketHandlerRegistry.unregister(savestateHandlerServer); // Unregistering the savestatehandler, as a new instance is registered in onServerStart()
 			PacketHandlerRegistry.unregister(savestateHandlerServer.getPlayerHandler());
-			PacketHandlerRegistry.unregister(savestateHandlerServer);
 			EventListenerRegistry.unregister(savestateHandlerServer.getSavestateTemporaryHandler());
 
 			savestateHandlerServer = null;
