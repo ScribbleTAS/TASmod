@@ -17,6 +17,11 @@ import com.minecrafttas.tasmod.util.Component;
 
 import net.minecraft.util.text.TextFormatting;
 
+/**
+ * Handles the server side effects of the GUIs that are displayed in {@link SavestateGuiHandlerClient}
+ * 
+ * @author Scribble
+ */
 public class SavestateGuiHandlerServer implements ServerPacketHandler {
 
 	@Override
