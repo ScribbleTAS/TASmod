@@ -240,6 +240,10 @@ public class SavestateIndexer {
 		return SavestatePaths.of(savestateToRename, null, null);
 	}
 
+	/**
+	 * Renames the current savestate (aka the savestate in the .minecraft/saves/worlname) folder
+	 * @param name The name to rename the savestate to
+	 */
 	public void renameCurrent(String name) {
 		currentSavestate.name = name;
 		currentSavestate.save();
@@ -413,10 +417,16 @@ public class SavestateIndexer {
 		return getSavestateList(currentSavestate.index);
 	}
 
+	/**
+	 * @return The savestate list with a specific center
+	 */
 	public List<Savestate> getSavestateList(int center) {
 		return getSavestateList(center, 10);
 	}
 
+	/**
+	 * @return The savestate list with a specific center and amount
+	 */
 	public List<Savestate> getSavestateList(int center, int amount) {
 		List<Savestate> out = new LinkedList<>();
 		if (center < 0) {
@@ -464,6 +474,13 @@ public class SavestateIndexer {
 	 */
 	public Savestate getCurrentSavestate() {
 		return currentSavestate;
+	}
+
+	/**
+	 * @return The {@link Savestate#index} from the {@link #currentSavestate}
+	 */
+	public int getCurrentIndex() {
+		return getCurrentSavestate().index;
 	}
 
 	/**

@@ -2,6 +2,8 @@ package com.minecrafttas.tasmod.virtual;
 
 import org.lwjgl.input.Keyboard;
 
+import com.minecrafttas.tasmod.TASmodClient;
+
 import net.minecraft.client.gui.GuiScreen;
 
 /**
@@ -14,6 +16,11 @@ import net.minecraft.client.gui.GuiScreen;
  * @author Scribble
  */
 public class SubtickGuiScreen extends GuiScreen {
+
+	@Override
+	public void initGui() {
+		TASmodClient.virtual.setUseVanillaIsKeyDown(true);
+	}
 
 	/*
 	 * Make keyTyped public instead of protected, to be usable by VirtualInput#update()
@@ -33,6 +40,7 @@ public class SubtickGuiScreen extends GuiScreen {
 
 	@Override
 	public void onGuiClosed() {
+		TASmodClient.virtual.setUseVanillaIsKeyDown(false);
 		Keyboard.enableRepeatEvents(false);
 	}
 }

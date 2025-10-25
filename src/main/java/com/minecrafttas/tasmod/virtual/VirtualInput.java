@@ -48,6 +48,8 @@ public class VirtualInput {
 
 	public final VirtualInterpolationHandler interpolationHandler = new VirtualInterpolationHandler();
 
+	private boolean useVanillaIsKeyDown;
+
 	/**
 	 * Creates a new virtual input with an empty {@link VirtualKeyboardInput}, {@link VirtualMouseInput} and {@link VirtualCameraAngleInput}
 	 * @param logger The logger instance
@@ -138,6 +140,10 @@ public class VirtualInput {
 		return false;
 	}
 
+	public void setUseVanillaIsKeyDown(boolean isVanilla) {
+		this.useVanillaIsKeyDown = isVanilla;
+	}
+
 	/**
 	 * If the keyboard or mouse key is currently down.
 	 * If keycode >= 0 then {@link VirtualKeyboardInput#isKeyDown(int)} will be called,<br>
@@ -148,9 +154,15 @@ public class VirtualInput {
 	 */
 	public boolean isKeyDown(int keycode) {
 		if (keycode >= 0) {
-			return KEYBOARD.isKeyDown(keycode);
+			if (!useVanillaIsKeyDown)
+				return KEYBOARD.isKeyDown(keycode);
+			else
+				return Keyboard.isKeyDown(keycode);
 		} else {
-			return MOUSE.isKeyDown(keycode);
+			if (!useVanillaIsKeyDown)
+				return MOUSE.isKeyDown(keycode);
+			else
+				return Keyboard.isKeyDown(keycode);
 		}
 	}
 

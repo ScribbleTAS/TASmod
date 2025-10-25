@@ -62,26 +62,43 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader;
  */
 public class SavestateHandlerServer implements ServerPacketHandler {
 
+	/**
+	 * The server instance
+	 */
 	private final MinecraftServer server;
 
-	private SavestateState state = SavestateState.NONE; // TODO Make private
+	/**
+	 * The current state of the handler to prevent savestating/loadstating twice
+	 */
+	private SavestateState state = SavestateState.NONE;
 
 	/**
 	 * Manages enumeration and location of savestates on the file system
 	 */
 	private SavestateIndexer indexer;
 
+	/**
+	 * Declutter class for handling player specific steps during saving/loading
+	 */
 	private final SavestatePlayerHandlerServer playerHandler;
+	/**
+	 * Declutter class for handling world specific steps during saving/loading
+	 */
 	private final SavestateWorldHandler worldHandler;
+	/**
+	 * Class for handling events associated with temporary savestates
+	 */
 	private final SavestateTempHandler tempSavestateHandler;
 
+	/**
+	 * The logger instance
+	 */
 	private final Logger logger;
 
 	/**
 	 * Creates a savestate handler on the specified server
-	 * @param logger 
-	 * 
-	 * @param The server that should store the savestates
+	 * @param server The server that should store the savestates
+	 * @param logger The logger instance
 	 */
 	public SavestateHandlerServer(MinecraftServer server, Logger logger) {
 		this.server = server;
@@ -94,18 +111,46 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		createIndexer(server);
 	}
 
-	public void saveState(SavestateCallback cb, SavestateFlags... options) throws SavestateException {
-		saveState(-1, null, cb, options);
+	/**
+	 * Creates a new savestate at index {@link SavestateIndexer#getCurrentIndex()} + 1 with a default name
+	 * @param cb The {@link SavestateCallback}
+	 * @param flags The {@link SavestateFlags}
+	 * @throws SavestateException If a savestate can't be created
+	 */
+	public void saveState(SavestateCallback cb, SavestateFlags... flags) throws SavestateException {
+		saveState(-1, null, cb, flags);
 	}
 
+	/**
+	 * Creates a new savestate at the specified index with a default name
+	 * @param index The index to save the savestate to
+	 * @param cb The {@link SavestateCallback}
+	 * @param flags The {@link SavestateFlags}
+	 * @throws SavestateException If a savestate can't be created
+	 */
 	public void saveState(int index, SavestateCallback cb, SavestateFlags... flags) throws SavestateException {
 		saveState(index, null, cb, flags);
 	}
 
+	/**
+	 * Creates a new savestate at index {@link SavestateIndexer#getCurrentIndex()} + 1 with a specified name
+	 * @param name The name that the savestate should have
+	 * @param cb The {@link SavestateCallback}
+	 * @param flags The {@link SavestateFlags}
+	 * @throws SavestateException If a savestate can't be created
+	 */
 	public void saveState(String name, SavestateCallback cb, SavestateFlags... flags) throws SavestateException {
 		saveState(-1, name, cb, flags);
 	}
 
+	/**
+	 * Creates a new savestate at a specified index and name
+	 * @param index The index to save the savestate to
+	 * @param name The name that the savestate should have
+	 * @param cb The {@link SavestateCallback}
+	 * @param flags The {@link SavestateFlags}
+	 * @throws SavestateException If a savestate can't be created
+	 */
 	public void saveState(int index, String name, SavestateCallback cb, SavestateFlags... flags) throws SavestateException {
 		if (logger.isTraceEnabled()) {
 			logger.trace(LoggerMarkers.Savestate, "SAVING a savestate with index {}. Flags: ", index, Arrays.stream(flags).map(Enum::toString).collect(Collectors.joining(",")));
@@ -130,13 +175,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		// Lock savestating and loadstating
 		state = SavestateState.SAVING;
 
-		// Enable tickrate 0
-		TASmod.tickratechanger.pauseGame(true);
-
-		// Save the world!
-		server.getPlayerList().saveAllPlayerData();
-		server.saveAllWorlds(false);
-
 		logger.trace("Create new savestate index via indexer");
 		SavestatePaths paths = indexer.createSavestate(index, name, !SavestateFlags.BLOCK_CHANGE_INDEX.isBlocked(flags));
 
@@ -148,14 +186,42 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		savestateInner(paths, cb, flags);
 	}
 
+	/**
+	 * Creates a temporary savestate without an index
+	 * @param cb The {@link SavestateCallback}
+	 */
 	public void saveStateTemp(SavestateCallback cb) {
+		if (state == SavestateState.SAVING) {
+			throw new SavestateException("A savestating operation is already being carried out");
+		}
+		if (state == SavestateState.LOADING) {
+			throw new SavestateException("A loadstate operation is being carried out");
+		}
+
+		// Lock savestating and loadstating
+		state = SavestateState.SAVING;
+
 		SavestatePaths paths = indexer.createTempSavestate();
 		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE, SavestateFlags.BLOCK_PAUSE_TICKRATE };
 		savestateInner(paths, cb, flags);
 		paths.getSavestate().save();
 	}
 
+	/**
+	 * Inner savestate method using a series of steps to copy the folder from {@link SavestatePaths#getSourceFolder()} to {@link SavestatePaths#getTargetFolder()}
+	 * @param paths The paths to use during copying
+	 * @param cb The {@link SavestateCallback}
+	 * @param flags The {@link SavestateFlags}
+	 */
 	private void savestateInner(SavestatePaths paths, SavestateCallback cb, SavestateFlags... flags) {
+
+		// Enable tickrate 0
+		TASmod.tickratechanger.pauseGame(true);
+
+		// Save the world!
+		server.getPlayerList().saveAllPlayerData();
+		server.saveAllWorlds(false);
+
 		Path sourceFolder = paths.getSourceFolder();
 		Path targetFolder = paths.getTargetFolder();
 		Integer indexToSave = paths.getSavestate().index;
@@ -170,7 +236,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		/*
 		 * Prevents creating an InputSavestate when saving at index 0 (Index 0 is the
-		 * savestate when starting a recording)
+		 * savestate when starting a full recording)
 		 */
 		if (!SavestateFlags.BLOCK_CLIENT_SAVESTATE.isBlocked(flags)) {
 			/*
@@ -199,6 +265,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		// Copy the directory
 		copyFolder(sourceFolder, targetFolder);
 
+		// Unpause the game
 		if (SavestateFlags.BLOCK_PAUSE_TICKRATE.isBlocked(flags)) {
 			TASmod.tickratechanger.pauseGame(false);
 		} else {
@@ -209,6 +276,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			}
 		}
 
+		// Run the savestate callback
 		if (cb != null)
 			cb.invoke(paths);
 
@@ -216,19 +284,24 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		state = SavestateState.NONE;
 	}
 
+	/**
+	 * Loads a savestate at the {@link SavestateIndexer#getCurrentIndex()}
+	 * @param cb The {@link SavestateCallback}
+	 * @param flags The {@link SavestateFlags}
+	 * @throws LoadstateException If a savestate can't be loaded
+	 */
 	public void loadState(SavestateCallback cb, SavestateFlags... flags) throws LoadstateException {
-		loadState(-1, null, cb, flags);
+		loadState(-1, cb, flags);
 	}
 
+	/**
+	 * Loads a savestate at the specified index
+	 * @param index The index to load from
+	 * @param cb The {@link SavestateCallback}
+	 * @param flags The {@link SavestateFlags}
+	 * @throws LoadstateException If a savestate can't be loaded
+	 */
 	public void loadState(int index, SavestateCallback cb, SavestateFlags... flags) throws LoadstateException {
-		loadState(index, null, cb, flags);
-	}
-
-	public void loadState(String name, SavestateCallback cb, SavestateFlags... flags) throws LoadstateException {
-		loadState(-1, name, cb, flags);
-	}
-
-	public void loadState(int index, String name, SavestateCallback cb, SavestateFlags... flags) throws LoadstateException {
 		if (logger.isTraceEnabled()) {
 			logger.trace(LoggerMarkers.Savestate, "LOADING a savestate with index {}, ", index, Arrays.stream(flags).map(Enum::toString).collect(Collectors.joining(",")));
 		} else {
@@ -251,9 +324,6 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			logger.catching(e);
 		}
 
-		// Enable tickrate 0
-		TASmod.tickratechanger.pauseGame(true);
-
 		// Get the current and target directory for copying
 		logger.trace(LoggerMarkers.Savestate, "Load savestate index via indexer");
 		SavestatePaths paths = indexer.loadSavestate(index, !SavestateFlags.BLOCK_CHANGE_INDEX.isBlocked(flags));
@@ -267,16 +337,49 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		loadStateInner(paths, cb, flags);
 	}
 
+	/**
+	 * Loads a temporary savestate (created in {@link #saveStateTemp(SavestateCallback)})
+	 * @param cb The {@link SavestateCallback}
+	 */
 	public void loadStateTemp(SavestateCallback cb) {
+		if (state == SavestateState.SAVING) {
+			throw new LoadstateException("A savestating operation is already being carried out");
+		}
+		if (state == SavestateState.LOADING) {
+			throw new LoadstateException("A loadstate operation is being carried out");
+		}
+
+		// Lock savestating and loadstating
+		state = SavestateState.LOADING;
+
 		SavestatePaths paths = indexer.loadTempSavestate();
 		if (paths == null)
 			return;
+
+		// Add blocking flags
 		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE, SavestateFlags.BLOCK_PAUSE_TICKRATE };
 		loadStateInner(paths, cb, flags);
+		/**
+		 * After copying the temporary savestate (which is missing an index in savestate.dat)
+		 * the index would get deleted in the main world folder.
+		 * 
+		 * Since that index is used to for loading the current index on start, we need to retrieve it by simply saving and overwriting the savestate
+		 */
 		paths.getSavestate().save();
 	}
 
+	/**
+	 * Inner loadstate method using a series of steps to copy the folder from {@link SavestatePaths#getSourceFolder()} to {@link SavestatePaths#getTargetFolder()}
+	 * and hotswapping the chunks while the {@link #server} is still running
+	 * 
+	 * @param paths The paths to use during copying
+	 * @param cb The {@link SavestateCallback}
+	 * @param flags The {@link SavestateFlags}
+	 */
 	private void loadStateInner(SavestatePaths paths, SavestateCallback cb, SavestateFlags... flags) {
+		// Enable tickrate 0
+		TASmod.tickratechanger.pauseGame(true);
+
 		String worldname = server.getFolderName();
 		Path sourcefolder = paths.getSourceFolder();
 		Path targetfolder = paths.getTargetFolder();
@@ -371,7 +474,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 	/**
 	 * Create and set the {@link #indexer} based on the server
-	 * @param server 
+	 * @param server The server to retrieve the current directory from
 	 */
 	private void createIndexer(MinecraftServer server) {
 		logger.trace(LoggerMarkers.Savestate, "Creating savestate indexer");
@@ -389,6 +492,12 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		this.indexer = new SavestateIndexer(logger, savesDirectory, savestateBaseDirectory, worldname);
 	}
 
+	/**
+	 * Deletes the savestate at a specified index
+	 * @param index The index to delete from
+	 * @param cb The {@link SavestateCallback}
+	 * @throws SavestateDeleteException If a savestate can't be deleted
+	 */
 	public void deleteSavestate(int index, SavestateCallback cb) throws SavestateDeleteException {
 		logger.warn(LoggerMarkers.Savestate, "Deleting savestate {}", index);
 		SavestatePaths paths = this.indexer.deleteSavestate(index);
@@ -397,6 +506,14 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			cb.invoke(paths);
 	}
 
+	/**
+	 * Deletes multiple savestates
+	 * @param from The lower index to delete from
+	 * @param to The upper index to delete to
+	 * @param cb The {@link SavestateCallback}
+	 * @param err The {@link ErrorRunnable} If an error occurs while deleting one savestate
+	 * @throws SavestateDeleteException If something other than that fails
+	 */
 	public void deleteSavestate(int from, int to, SavestateCallback cb, ErrorRunnable err) throws SavestateDeleteException {
 		logger.warn(LoggerMarkers.Savestate, "Deleting multiple savestates from {} to {}", from, to);
 		if (state == SavestateState.SAVING) {
@@ -417,11 +534,47 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		indexer.deleteMultipleSavestates(from, to, onDelete, err);
 	}
 
-	public int getCurrentIndex() {
-		return indexer.getCurrentSavestate().index;
+	/**
+	 * Renames a savestate at the specified index
+	 * @param index The index to rename
+	 * @param name The new name of that savestate
+	 * @throws SavestateException If something goes wrong
+	 */
+	public void rename(int index, String name) throws SavestateException {
+		rename(index, name, null);
 	}
 
-	public void onLoadstateComplete() {
+	/**
+	 * Renames the {@link SavestateIndexer#getCurrentSavestate()}
+	 * @param name The new name for the currentSavestate
+	 * @throws SavestateException If something goes wrong
+	 */
+	public void renameCurrent(String name) throws SavestateException {
+		indexer.renameCurrent(name);
+	}
+
+	/**
+	 * Renames a savestate at the specified index
+	 * @param index The index to rename
+	 * @param name The new name of that savestate
+	 * @param cb The {@link SavestateCallback}
+	 * @throws SavestateException If something goes wrong
+	 */
+	public void rename(int index, String name, SavestateCallback cb) throws SavestateException {
+		SavestatePaths paths = indexer.renameSavestate(index, name);
+
+		if (cb != null)
+			cb.invoke(paths);
+	}
+
+	/**
+	 * Reloads the {@link #indexer}
+	 */
+	public void reload() {
+		indexer.reload();
+	}
+
+	public void onLoadstateComplete() { // TODO Make Event
 		logger.trace(LoggerMarkers.Savestate, "Running loadstate complete event");
 		PlayerList playerList = server.getPlayerList();
 		for (EntityPlayerMP player : playerList.getPlayers()) {
@@ -499,10 +652,15 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 					}
 				};
 
-				if (TASmod.tickratechanger.ticksPerSecond == 0)
-					TASmod.gameLoopSchedulerServer.add(savestateTask);
-				else
+				/*
+				 * If the savestate is triggered via a keybind from the client,
+				 * savestates have to be saved at the start of a tick,
+				 * otherwise everything would desync 
+				 */
+				if (TASmod.tickratechanger.ticksPerSecond != 0)
 					TASmod.tickSchedulerServer.add(savestateTask);
+				else
+					TASmod.gameLoopSchedulerServer.add(savestateTask);
 				break;
 
 			case SAVESTATE_LOAD:
@@ -552,6 +710,11 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		}
 	}
 
+	/**
+	 * Copies a folder recursively
+	 * @param src Source path to copy from
+	 * @param dest Source path to copy to
+	 */
 	public static void copyFolder(Path src, Path dest) {
 		try {
 			Files.walk(src).forEach(s -> {
@@ -572,6 +735,10 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		}
 	}
 
+	/**
+	 * Deletes a folder recursively
+	 * @param toDelete The folder to delete
+	 */
 	public static void deleteFolder(Path toDelete) {
 		try {
 			Files.walk(toDelete).forEach(s -> {
@@ -593,14 +760,35 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		}
 	}
 
+	/**
+	 * Callback method that runs at the end of a Savestate/Loadstate
+	 * 
+	 * Takes a {@link SavestatePaths} argument
+	 * 
+	 * @author Scribble
+	 */
 	@FunctionalInterface
 	public interface SavestateCallback {
 		public void invoke(SavestatePaths path);
 	}
 
+	/**
+	 * The state of the savestate
+	 * 
+	 * @author Scribble
+	 */
 	public enum SavestateState {
+		/**
+		 * This savestatehandler is currently creating a savestate
+		 */
 		SAVING,
+		/**
+		 * The savestatehandler is currently loading a savestate
+		 */
 		LOADING,
+		/**
+		 * The savestatehandler is idle. It can accept commands to create/load a savestate
+		 */
 		NONE
 	}
 
@@ -625,58 +813,77 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		 */
 		BLOCK_PAUSE_TICKRATE;
 
+		/**
+		 * Check if the flag is in the flaglist and therefore blocked
+		 * @param flagList The flag list to check
+		 * @return True if this enum is in the flagList
+		 */
 		public boolean isBlocked(SavestateFlags[] flagList) {
 			return Arrays.stream(flagList).anyMatch(this::equals);
 		}
 	}
 
+	/**
+	 * @return A list of savestates with savestates with a default range
+	 */
 	public List<SavestateIndexer.Savestate> getSavestateInfo() {
 		return getSavestateInfo(-1, 10);
 	}
 
-	public List<SavestateIndexer.Savestate> getSavestateInfo(int index, int amount) {
-		return indexer.getSavestateList(index, amount);
+	/**
+	 * @param center The center of the range 
+	 * @param amount How many savestates minus and plus the center are displayed
+	 * @return A list of savestates with a specified center and amount
+	 */
+	public List<SavestateIndexer.Savestate> getSavestateInfo(int center, int amount) {
+		return indexer.getSavestateList(center, amount);
 	}
 
+	/**
+	 * @return How many savestates are used
+	 */
 	public int size() {
 		return indexer.size();
 	}
 
+	/**
+	 * @return {@link SavestateIndexer#getCurrentIndex()}
+	 */
+	public int getCurrentIndex() {
+		return indexer.getCurrentIndex();
+	}
+
+	/**
+	 * @return The current savestate directory 
+	 */
 	public Path getCurrentSavestateDir() {
 		return indexer.getCurrentSavestateDir();
 	}
 
+	/**
+	 * Resets the {@link #state} to {@link SavestateState#NONE}
+	 */
 	public void resetState() {
 		state = SavestateState.NONE;
 	}
 
+	/**
+	 * @return The current {@link #state}
+	 */
 	public SavestateState getState() {
 		return state;
 	}
 
-	public void rename(int index, String name) throws SavestateException {
-		rename(index, name, null);
-	}
-
-	public void renameCurrent(String name) throws SavestateException {
-		indexer.renameCurrent(name);
-	}
-
-	public void rename(int index, String name, SavestateCallback cb) throws SavestateException {
-		SavestatePaths paths = indexer.renameSavestate(index, name);
-		if (cb != null) {
-			cb.invoke(paths);
-		}
-	}
-
-	public void reload() {
-		indexer.reload();
-	}
-
+	/**
+	 * @return The {@link #playerHandler}
+	 */
 	public SavestatePlayerHandlerServer getPlayerHandler() {
 		return playerHandler;
 	}
 
+	/**
+	 * @return The {@link #tempSavestateHandler}
+	 */
 	public SavestateTempHandler getSavestateTemporaryHandler() {
 		return tempSavestateHandler;
 	}

@@ -21,10 +21,12 @@ import com.minecrafttas.tasmod.util.Component;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.TextFormatting;
 
+/**
+ * Handles displaying Gui screens for savestating on the client
+ * 
+ * @author Scribble
+ */
 public class SavestateGuiHandlerClient implements ClientPacketHandler {
-
-	public SavestateGuiHandlerClient() {
-	}
 
 	@Override
 	public PacketID[] getAcceptedPacketIDs() {
@@ -56,6 +58,18 @@ public class SavestateGuiHandlerClient implements ClientPacketHandler {
 				break;
 			case SAVESTATE_RENAME_SCREEN:
 				int index = TASmodBufferBuilder.readInt(buf);
+				/*
+				 * At the time of writing, the savestate rename screen
+				 * is only opened when the savestate is triggered via a keybind
+				 * 
+				 * However opening the screen would desync a running recording
+				 * by displacing the player by a few units.
+				 * 
+				 * The solution is to first clear the screen, then at the start of the next tick
+				 * display the screen.
+				 * 
+				 * Apparently showing a screen has a tiny influence on the motion of the client...
+				 */
 				mc.displayGuiScreen(null);
 				TASmodClient.tickSchedulerClient.add(() -> {
 					displayGuiRename(index);

@@ -100,7 +100,7 @@ public enum TASmodPackets implements PacketID {
 	 */
 	SAVESTATE_RENAME_SCREEN,
 	/**
-	 * <p>Clears the screen on the client, if it's a savestate screen
+	 * <p>Clears the screen on the client, if it's a savestate screen or a "Loading Terrain" screen
 	 * <p>SIDE: Both<br>
 	 * ARGS: None
 	 */
