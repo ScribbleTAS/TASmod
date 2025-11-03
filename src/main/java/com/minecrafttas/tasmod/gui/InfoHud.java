@@ -297,15 +297,15 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 			y += 14;
 
 //			if (TASmod.ktrngHandler.isLoaded()) {
-//				title = "ktrng_randomseed";
-//				if (configuration.getProperty(title + "_x", "err").equals("err"))
-//					setDefaults(title, y);
-//				lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
-//						+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-//							if (Minecraft.getMinecraft().currentScreen == this)
-//								return "KTRNG";
-//							return "RandomSeed: " + TASmod.ktrngHandler.getGlobalSeedClient();
-//						}));
+			title = "ktrng_randomseed";
+			if (configuration.getProperty(title + "_x", "err").equals("err"))
+				setDefaults(title, y);
+			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
+					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+						if (Minecraft.getMinecraft().currentScreen == this)
+							return "KTRNG";
+						return "Global RandomSeed: " + TASmod.globalRandomness.getCurrentSeed();
+					}));
 //			}
 
 			title = "facing";

@@ -160,7 +160,7 @@ public class RandomBase extends Random {
 
 	@Override
 	public String toString() {
-		return name + ": " + enabled;
+		return Long.toString(getSeed());
 	}
 
 	@Override

@@ -4,9 +4,13 @@ import com.minecrafttas.tasmod.TASmod;
 
 public class EntityRandomness extends RandomBase {
 
-	private static long entityCounter = 0L;
+	public static long entityCounter = 0L;
 
 	public EntityRandomness() {
 		super(TASmod.globalRandomness.getCurrentSeed() + (entityCounter++));
+	}
+
+	public EntityRandomness(long seed) {
+		super(seed);
 	}
 }
