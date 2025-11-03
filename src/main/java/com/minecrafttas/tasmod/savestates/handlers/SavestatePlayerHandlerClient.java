@@ -36,44 +36,7 @@ public class SavestatePlayerHandlerClient implements ClientPacketHandler {
 		// Clear any accidental applied potion particles on the client
 		((AccessorEntityLivingBase) player).clearPotionEffects();
 
-		/*
-		 * TODO
-		 * The following 20 lines are all one
-		 * gross workaround for correctly applying the player motion
-		 * to the client...
-		 * 
-		 * The motion is applied
-		 * to the player in a previous step and unfortunately
-		 * player.readFromNBT(compound) overwrites the
-		 * previously applied motion...
-		 * 
-		 * So this workaround makes sure that the motion is not overwritten
-		 * Fixing this, requires restructuring the steps for loadstating
-		 * and since I plan to do this anyway at some point, I will
-		 * leave this here and be done for today*/
-		double x = player.motionX;
-		double y = player.motionY;
-		double z = player.motionZ;
-
-		float rx = player.moveForward;
-		float ry = player.moveVertical;
-		float rz = player.moveStrafing;
-
-		boolean sprinting = player.isSprinting();
-		float jumpVector = player.jumpMovementFactor;
-
 		player.readFromNBT(compound);
-
-		player.motionX = x;
-		player.motionY = y;
-		player.motionZ = z;
-
-		player.moveForward = rx;
-		player.moveVertical = ry;
-		player.moveStrafing = rz;
-
-		player.setSprinting(sprinting);
-		player.jumpMovementFactor = jumpVector;
 
 		LOGGER.trace(LoggerMarkers.Savestate, "Setting client gamemode");
 		// #86

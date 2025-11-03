@@ -26,4 +26,5 @@ public abstract class SavestateStorageExtensionBase implements Registerable {
 	public abstract JsonObject onSavestate(MinecraftServer server, JsonObject dataToSave);
 
 	public abstract void onLoadstate(MinecraftServer server, JsonObject loadedData);
+
 }

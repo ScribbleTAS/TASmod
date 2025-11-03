@@ -35,7 +35,7 @@ import net.minecraft.server.MinecraftServer;
  * 
  * @author Scribble
  */
-public class SavestateResourcePackHandler implements EventSavestate.EventServerLoadstate, ServerPacketHandler, ClientPacketHandler {
+public class SavestateResourcePackHandler implements EventSavestate.EventServerLoadstatePre, ServerPacketHandler, ClientPacketHandler {
 
 	/**
 	 * The server future for waiting until the client is done unloading the RP
@@ -48,7 +48,7 @@ public class SavestateResourcePackHandler implements EventSavestate.EventServerL
 	public static CountDownLatch clientRPLatch;
 
 	@Override
-	public void onServerLoadstate(MinecraftServer server, SavestatePaths paths) {
+	public void onServerLoadstatePre(MinecraftServer server, SavestatePaths paths) {
 		if (server.getResourcePackUrl().isEmpty() || server.isDedicatedServer())
 			return;
 

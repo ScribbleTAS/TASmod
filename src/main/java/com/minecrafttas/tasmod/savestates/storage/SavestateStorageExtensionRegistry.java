@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import com.google.gson.JsonObject;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.events.EventSavestate.EventServerLoadstate;
+import com.minecrafttas.tasmod.events.EventSavestate.EventServerLoadstatePost;
 import com.minecrafttas.tasmod.events.EventSavestate.EventServerSavestate;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer.SavestatePaths;
@@ -18,7 +18,7 @@ import com.minecrafttas.tasmod.util.JsonUtils;
 
 import net.minecraft.server.MinecraftServer;
 
-public class SavestateStorageExtensionRegistry extends AbstractRegistry<SavestateStorageExtensionBase> implements EventServerSavestate, EventServerLoadstate {
+public class SavestateStorageExtensionRegistry extends AbstractRegistry<SavestateStorageExtensionBase> implements EventServerSavestate, EventServerLoadstatePost {
 
 	public SavestateStorageExtensionRegistry() {
 		super("SAVESTATESTORAGE_REGISTRY", new LinkedHashMap<>());
@@ -48,7 +48,7 @@ public class SavestateStorageExtensionRegistry extends AbstractRegistry<Savestat
 	}
 
 	@Override
-	public void onServerLoadstate(MinecraftServer server, SavestatePaths paths) {
+	public void onServerLoadstatePost(MinecraftServer server, SavestatePaths paths) {
 		Path storageDir = paths.getTargetFolder().resolve(SavestateIndexer.savestateDataDir);
 		if (!Files.exists(storageDir)) {
 			try {
