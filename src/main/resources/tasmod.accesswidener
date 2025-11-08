@@ -15,3 +15,4 @@ accessible field net/minecraft/client/settings/KeyBinding CATEGORY_ORDER Ljava/u
 
 #KillTheRNG
 accessible field net/minecraft/entity/Entity rand Ljava/util/Random;
+mutable field net/minecraft/world/World rand Ljava/util/Random;

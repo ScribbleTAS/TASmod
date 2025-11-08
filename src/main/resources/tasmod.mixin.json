@@ -23,7 +23,8 @@
 		// Fixing forge and vanilla stuff
 		"fixes.MixinDragonFightManager",
 		
-		"killtherng.MixinEntity"
+		"killtherng.MixinEntity",
+		"killtherng.MixinWorld"
 		
 	],
 	"client": [

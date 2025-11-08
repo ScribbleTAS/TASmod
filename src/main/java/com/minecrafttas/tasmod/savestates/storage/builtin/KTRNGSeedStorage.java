@@ -10,6 +10,8 @@ import com.google.gson.JsonObject;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.ktrng.EntityRandomness;
 import com.minecrafttas.tasmod.ktrng.KTRNGEntityHandler;
+import com.minecrafttas.tasmod.ktrng.KTRNGWorldHandler;
+import com.minecrafttas.tasmod.ktrng.WorldRandomness;
 import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
 
 import net.minecraft.server.MinecraftServer;
@@ -38,6 +40,14 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 
 		dataToSave.add("entityRandom", entityRandomDataJson);
 
+		JsonObject worldRandomDataJson = new JsonObject();
+		Map<Integer, WorldRandomness> worldRandom = KTRNGWorldHandler.getWorldRandomnessMap();
+		for (Entry<Integer, WorldRandomness> entry : worldRandom.entrySet()) {
+			worldRandomDataJson.addProperty(entry.getKey().toString(), entry.getValue().getSeed());
+		}
+
+		dataToSave.add("worldRandom", worldRandomDataJson);
+
 		return dataToSave;
 	}
 
@@ -60,6 +70,17 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 		}
 
 		KTRNGEntityHandler.setRandomnessList(randomList);
+
+		JsonObject worldRandomListJson = loadedData.get("worldRandom").getAsJsonObject();
+
+		Map<Integer, WorldRandomness> worldList = new HashMap<>();
+		for (Entry<String, JsonElement> entry : worldRandomListJson.entrySet()) {
+			int id = Integer.parseInt(entry.getKey());
+			WorldRandomness worldRandomness = new WorldRandomness(entry.getValue().getAsLong());
+
+			worldList.put(id, worldRandomness);
+		}
+		KTRNGWorldHandler.setWorldRandomnessMap(worldList);
 	}
 
 	@Override
