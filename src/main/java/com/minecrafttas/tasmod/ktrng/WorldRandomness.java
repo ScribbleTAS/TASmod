@@ -11,4 +11,9 @@ public class WorldRandomness extends RandomBase {
 	public WorldRandomness() {
 		super(TASmod.globalRandomness.getCurrentSeed());
 	}
+
+	@Override
+	public void fireEvent(long seed, String value) {
+//		super.fireEvent(seed, value);
+	}
 }

@@ -15,6 +15,8 @@
 			onMatch="${sys:tasmod.marker.keyboard:-DENY}" onMismatch="NEUTRAL" />
 		<MarkerFilter marker="Mouse"
 			onMatch="${sys:tasmod.marker.mouse:-DENY}" onMismatch="NEUTRAL" />
+		<MarkerFilter marker="KillTheRNG"
+			onMatch="${sys:tasmod.marker.killtherng:-DENY}" onMismatch="NEUTRAL" />
 	</Filters>
 	<Appenders>
 		<Console name="SysOut2" target="SYSTEM_OUT">

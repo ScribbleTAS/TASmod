@@ -2,6 +2,9 @@ package com.minecrafttas.tasmod.ktrng;
 
 import java.util.Random;
 
+import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.util.LoggerMarkers;
+
 import kaptainwutax.seedutils.lcg.LCG;
 import kaptainwutax.seedutils.rand.JRand;
 
@@ -174,7 +177,16 @@ public class RandomBase extends Random {
 	}
 
 	public void fireEvent(long seed, String value) {
-		// TODO Implement
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[3];
+		String methodName = stackTraceElement.getMethodName();
+		String[] classNames = stackTraceElement.getClassName().split("\\.");
+		String className = classNames[classNames.length - 1];
+		if (methodName.equals("showBarrierParticles"))
+			return;
+		String out = className + "." + methodName +
+				(stackTraceElement.isNativeMethod() ? "(Native Method)" : (stackTraceElement.getFileName() != null && stackTraceElement.getLineNumber() >= 0 ? "(" + stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber()
+						+ ")" : (stackTraceElement.getFileName() != null ? "(" + stackTraceElement.getFileName() + ")" : "(Unknown Source)")));
+		TASmod.LOGGER.debug(LoggerMarkers.KillTheRNG, "{}\t{}\t{}", seed, value, out);
 	}
 
 	public long getInitialSeed() {
