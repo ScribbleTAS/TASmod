@@ -172,7 +172,7 @@ public class MixinMinecraft {
 		KeyBinding.unPressAllKeys();
 	}
 
-	@Redirect(method = "displayGuiScreen", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;next()Z"))
+	@Redirect(method = "displayGuiScreen", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;next()Z", remap = false))
 	private static boolean playback_mouseNext(GuiScreen guiScreen) {
 		if (guiScreen instanceof SubtickGuiScreen) {
 			return false;
@@ -180,7 +180,7 @@ public class MixinMinecraft {
 		return Mouse.next();
 	}
 
-	@Redirect(method = "displayGuiScreen", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Keyboard;next()Z"))
+	@Redirect(method = "displayGuiScreen", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Keyboard;next()Z", remap = false))
 	private static boolean playback_keyboardNext(GuiScreen guiScreen) {
 		if (guiScreen instanceof SubtickGuiScreen) {
 			return false;
