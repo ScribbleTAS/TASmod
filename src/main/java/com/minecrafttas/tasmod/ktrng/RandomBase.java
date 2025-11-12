@@ -20,6 +20,10 @@ public class RandomBase extends Random {
 
 	private long initialSeed;
 
+	public RandomBase() {
+		super();
+	}
+
 	public RandomBase(long seed) {
 		super(seed);
 		this.initialSeed = seed;

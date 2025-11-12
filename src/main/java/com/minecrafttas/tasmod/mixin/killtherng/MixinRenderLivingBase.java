@@ -37,6 +37,7 @@ public abstract class MixinRenderLivingBase extends Render {
 		long seed = random.getSeed();
 		long distance = -random.distance(random.getInitialSeed());
 		GlStateManager.alphaFunc(516, 0.1F);
+		this.renderEntityName(entity, d, e + 0.69D, f, Long.toString(random.getInitialSeed()), 64);
 		this.renderEntityName(entity, d, e + 0.46D, f, Long.toString(seed), 64);
 		this.renderEntityName(entity, d, e + 0.23D, f, Long.toString(distance), 64);
 	}

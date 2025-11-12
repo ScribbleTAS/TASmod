@@ -6,7 +6,7 @@ import net.minecraft.server.MinecraftServer;
 
 public class GlobalRandomnessTimer implements EventServer.EventServerTick {
 
-	private RandomBase globalRandomness;
+	private final RandomBase globalRandomness;
 
 	private long currentSeed = 0L;
 
