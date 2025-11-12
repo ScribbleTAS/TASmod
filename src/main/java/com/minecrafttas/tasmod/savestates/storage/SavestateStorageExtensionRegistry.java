@@ -3,13 +3,14 @@ package com.minecrafttas.tasmod.savestates.storage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.google.gson.JsonObject;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.events.EventSavestate.EventServerLoadstatePost;
-import com.minecrafttas.tasmod.events.EventSavestate.EventServerSavestate;
+import com.minecrafttas.tasmod.events.EventSavestate;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer.SavestatePaths;
 import com.minecrafttas.tasmod.savestates.exceptions.LoadstateException;
@@ -18,7 +19,9 @@ import com.minecrafttas.tasmod.util.JsonUtils;
 
 import net.minecraft.server.MinecraftServer;
 
-public class SavestateStorageExtensionRegistry extends AbstractRegistry<SavestateStorageExtensionBase> implements EventServerSavestate, EventServerLoadstatePost {
+public class SavestateStorageExtensionRegistry extends AbstractRegistry<SavestateStorageExtensionBase> implements EventSavestate.EventServerSavestate, EventSavestate.EventServerLoadstatePre, EventSavestate.EventServerLoadstatePost, EventSavestate.EventServerCompleteLoadstate {
+
+	Map<SavestateStorageExtensionBase, JsonObject> jsonMap = new HashMap<>();
 
 	public SavestateStorageExtensionRegistry() {
 		super("SAVESTATESTORAGE_REGISTRY", new LinkedHashMap<>());
@@ -47,8 +50,8 @@ public class SavestateStorageExtensionRegistry extends AbstractRegistry<Savestat
 		}
 	}
 
-	@Override
-	public void onServerLoadstatePost(MinecraftServer server, SavestatePaths paths) {
+	private void load(SavestatePaths paths) {
+		jsonMap.clear();
 		Path storageDir = paths.getTargetFolder().resolve(SavestateIndexer.savestateDataDir);
 		if (!Files.exists(storageDir)) {
 			try {
@@ -72,8 +75,29 @@ public class SavestateStorageExtensionRegistry extends AbstractRegistry<Savestat
 			} catch (IOException e) {
 				throw new LoadstateException(e, "Can't load %s in %s extension", storage.fileName, storage.getExtensionName());
 			}
+			jsonMap.put(storage, loadedData);
+		}
+	}
 
-			storage.onLoadstate(server, loadedData);
+	@Override
+	public void onServerLoadstatePre(MinecraftServer server, SavestatePaths paths) {
+		load(paths);
+		for (SavestateStorageExtensionBase storage : REGISTRY.values()) {
+			storage.onLoadstatePre(server, jsonMap.get(storage));
+		}
+	}
+
+	@Override
+	public void onServerLoadstatePost(MinecraftServer server, SavestatePaths paths) {
+		for (SavestateStorageExtensionBase storage : REGISTRY.values()) {
+			storage.onLoadstatePost(server, jsonMap.get(storage));
+		}
+	}
+
+	@Override
+	public void onServerLoadstateComplete(MinecraftServer server, SavestatePaths paths) {
+		for (SavestateStorageExtensionBase storage : REGISTRY.values()) {
+			storage.onLoadstateComplete(TASmod.getServerInstance(), jsonMap.get(storage));
 		}
 	}
 }

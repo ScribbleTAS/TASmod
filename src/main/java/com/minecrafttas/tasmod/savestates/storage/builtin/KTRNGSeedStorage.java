@@ -28,7 +28,6 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 		dataToSave.addProperty("globalSeed", currentSeed);
 
 		JsonObject entityRandomDataJson = new JsonObject();
-		entityRandomDataJson.addProperty("entityCount", EntityRandomness.entityCounter);
 
 		JsonObject entityRandomListJson = new JsonObject();
 		Map<UUID, EntityRandomness> randomList = KTRNGEntityHandler.getRandomnessList();
@@ -52,12 +51,11 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 	}
 
 	@Override
-	public void onLoadstate(MinecraftServer server, JsonObject loadedData) {
+	public void onLoadstateComplete(MinecraftServer server, JsonObject loadedData) {
 		long newSeed = loadedData.get("globalSeed").getAsLong();
 		TASmod.globalRandomness.setSeed(newSeed);
 
 		JsonObject entityRandomDataJson = loadedData.get("entityRandom").getAsJsonObject();
-		EntityRandomness.entityCounter = entityRandomDataJson.get("entityCount").getAsLong();
 
 		JsonObject entityRandomListJson = entityRandomDataJson.get("entityList").getAsJsonObject();
 

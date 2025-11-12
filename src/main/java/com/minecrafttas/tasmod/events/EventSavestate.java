@@ -62,7 +62,7 @@ public interface EventSavestate {
 		/**
 		 * Fired one tick after a loadstate was carried out
 		 */
-		public void onServerLoadstateComplete();
+		public void onServerLoadstateComplete(MinecraftServer server, SavestatePaths paths);
 	}
 
 	/**

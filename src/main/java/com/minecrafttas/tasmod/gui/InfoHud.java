@@ -18,7 +18,6 @@ import com.minecrafttas.mctcommon.events.EventClient.EventClientTick;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventDrawHotbar;
-import com.minecrafttas.tasmod.ktrng.EntityRandomness;
 import com.minecrafttas.tasmod.ktrng.KTRNGWorldHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
@@ -308,16 +307,16 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 						return "Global RandomSeed: " + TASmod.globalRandomness.getCurrentSeed();
 					}));
 
-			y += 14;
-			title = "ktrng_entitycount";
-			if (configuration.getProperty(title + "_x", "err").equals("err"))
-				setDefaults(title, y);
-			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
-					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
-						if (Minecraft.getMinecraft().currentScreen == this)
-							return "EntityCount";
-						return "EntityCount: " + EntityRandomness.entityCounter;
-					}));
+//			y += 14;
+//			title = "ktrng_entitycount";
+//			if (configuration.getProperty(title + "_x", "err").equals("err"))
+//				setDefaults(title, y);
+//			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
+//					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+//						if (Minecraft.getMinecraft().currentScreen == this)
+//							return "EntityCount";
+//						return "EntityCount: " + EntityRandomness.entityCounter;
+//					}));
 
 			y += 14;
 			title = "ktrng_worldseed";

@@ -87,7 +87,7 @@ public class ClientMotionStorage extends SavestateStorageExtensionBase implement
 	}
 
 	@Override
-	public void onLoadstate(MinecraftServer server, JsonObject loadedData) {
+	public void onLoadstatePost(MinecraftServer server, JsonObject loadedData) {
 		PlayerList list = server.getPlayerList();
 
 		for (Entry<String, JsonElement> motionDataJsonElement : loadedData.entrySet()) {

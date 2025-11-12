@@ -469,7 +469,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		 *  Rn it's not a problem, but this should be looked at...
 		 */
 		TASmod.tickSchedulerServer.add(() -> {
-			EventListenerRegistry.fireEvent(EventSavestate.EventServerCompleteLoadstate.class);
+			EventListenerRegistry.fireEvent(EventSavestate.EventServerCompleteLoadstate.class, server, paths);
 			onLoadstateComplete();
 		});
 	}
