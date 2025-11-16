@@ -33,6 +33,9 @@ public class KTRNGWorldHandler {
 	}
 
 	public static String getWorldRandom() {
-		return Long.toString(((WorldRandomness) TASmod.getServerInstance().worlds[0].rand).getSeed());
+		if (TASmod.getServerInstance().worlds[0] != null)
+			return Long.toString(((WorldRandomness) TASmod.getServerInstance().worlds[0].rand).getSeed());
+		else
+			return "";
 	}
 }

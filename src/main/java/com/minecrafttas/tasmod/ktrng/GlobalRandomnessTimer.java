@@ -16,7 +16,8 @@ public class GlobalRandomnessTimer implements EventServer.EventServerTick {
 
 	@Override
 	public void onServerTick(MinecraftServer server) {
-		currentSeed = globalRandomness.nextLong();
+		globalRandomness.advance();
+		currentSeed = globalRandomness.getSeed();
 	}
 
 	public long getCurrentSeed() {

@@ -4,6 +4,8 @@ import com.minecrafttas.tasmod.TASmod;
 
 public class EntityRandomness extends RandomBase {
 
+	public static long entityCount = 0;
+
 	public EntityRandomness() {
 		super(TASmod.globalRandomness.getCurrentSeed());
 	}
