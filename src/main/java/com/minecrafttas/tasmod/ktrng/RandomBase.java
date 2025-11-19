@@ -29,13 +29,14 @@ public class RandomBase extends Random {
 		this.initialSeed = seed;
 	}
 
+	@Override
 	public void setSeed(long seedIn) {
-		timesCalled = 0;
-		super.setSeed(seedIn ^ 0x5deece66dL);
+		setSeed(seedIn, true);
 	}
 
-	public void setSeed(long seedIn, boolean shouldIncrease) {
-		timesCalled++;
+	public void setSeed(long seedIn, boolean shouldLog) {
+		if (shouldLog)
+			fireSetEvent("setSeed()", seedIn, "", 8);
 		super.setSeed(seedIn ^ 0x5deece66dL);
 	}
 
@@ -76,7 +77,7 @@ public class RandomBase extends Random {
 		timesCalled++;
 		long seedstored = getSeed();
 		long value = super.nextLong();
-		fireEvent(seedstored, Long.toString(value));
+		fireGetEvent("nextLong()", seedstored, Long.toString(value));
 		return value;
 	}
 
@@ -85,7 +86,7 @@ public class RandomBase extends Random {
 		timesCalled++;
 		long seedstored = getSeed();
 		double value = super.nextDouble();
-		fireEvent(seedstored, Double.toString(value));
+		fireGetEvent("nextDouble()", seedstored, Double.toString(value));
 		return value;
 	}
 
@@ -94,7 +95,7 @@ public class RandomBase extends Random {
 		timesCalled++;
 		long seedstored = getSeed();
 		boolean value = super.nextBoolean();
-		fireEvent(seedstored, Boolean.toString(value));
+		fireGetEvent("nextBoolean()", seedstored, Boolean.toString(value));
 		return value;
 	}
 
@@ -103,7 +104,7 @@ public class RandomBase extends Random {
 		timesCalled++;
 		long seedstored = getSeed();
 		int value = super.nextInt();
-		fireEvent(seedstored, Integer.toString(value));
+		fireGetEvent("nextInt()", seedstored, Integer.toString(value));
 		return value;
 	}
 
@@ -112,7 +113,7 @@ public class RandomBase extends Random {
 		timesCalled++;
 		long seedstored = getSeed();
 		int value = super.nextInt(bound);
-		fireEvent(seedstored, Integer.toString(value));
+		fireGetEvent(String.format("nextInt(%s)", bound), seedstored, Integer.toString(value));
 		return value;
 	}
 
@@ -141,7 +142,7 @@ public class RandomBase extends Random {
 	public void advance(long i) {
 		JRand thing = JRand.ofInternalSeed(getSeed());
 		thing.advance(i);
-		setSeed(thing.getSeed());
+		setSeed(thing.getSeed(), false);
 	}
 
 	public long getSeedAt(int steps) {
@@ -180,11 +181,15 @@ public class RandomBase extends Random {
 		}
 	}
 
-	public void fireEvent(long seed, String value) {
-		fireEvent(seed, value, 3);
+	public void fireSetEvent(String eventType, long seed, String value, int stackTraceOffset) {
+		fireEvent(eventType, seed, value, stackTraceOffset);
 	}
 
-	public void fireEvent(long seed, String value, int stackTraceOffset) {
+	public void fireGetEvent(String eventType, long seed, String value) {
+		//fireEvent(eventType, seed, value, 3);
+	}
+
+	public void fireEvent(String eventType, long seed, String value, int stackTraceOffset) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[stackTraceOffset];
 		String methodName = stackTraceElement.getMethodName();
 		String[] classNames = stackTraceElement.getClassName().split("\\.");
@@ -194,7 +199,7 @@ public class RandomBase extends Random {
 		String out = className + "." + methodName +
 				(stackTraceElement.isNativeMethod() ? "(Native Method)" : (stackTraceElement.getFileName() != null && stackTraceElement.getLineNumber() >= 0 ? "(" + stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber()
 						+ ")" : (stackTraceElement.getFileName() != null ? "(" + stackTraceElement.getFileName() + ")" : "(Unknown Source)")));
-		TASmod.LOGGER.debug(LoggerMarkers.KillTheRNG, "{}\t{}\t{}", seed, value, out);
+		TASmod.LOGGER.debug(LoggerMarkers.KillTheRNG, "{} {}\t{}\t{}", eventType, seed, value, out);
 	}
 
 	public long getInitialSeed() {
