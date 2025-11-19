@@ -21,6 +21,18 @@ public class KTRNGWorldHandler {
 		return out;
 	}
 
+	public static Map<Integer, Integer> getWorldLCGMap() {
+		Map<Integer, Integer> out = new HashMap<>();
+		WorldServer[] worlds = TASmod.getServerInstance().worlds;
+		int id = 0;
+		for (WorldServer worldServer : worlds) {
+			int updateLCG = worldServer.updateLCG;
+			out.put(id, updateLCG);
+			id++;
+		}
+		return out;
+	}
+
 	public static void setWorldRandomnessMap(Map<Integer, WorldRandomness> randomnessList) {
 		WorldServer[] worlds = TASmod.getServerInstance().worlds;
 		int id = 0;
@@ -28,6 +40,17 @@ public class KTRNGWorldHandler {
 			WorldRandomness worldRandomness = randomnessList.get(id);
 			if (worldRandomness != null)
 				worldServer.rand = worldRandomness;
+			id++;
+		}
+	}
+
+	public static void setWorldLCGMap(Map<Integer, Integer> lcgList) {
+		WorldServer[] worlds = TASmod.getServerInstance().worlds;
+		int id = 0;
+		for (WorldServer worldServer : worlds) {
+			Integer updateLCG = lcgList.get(id);
+			if (updateLCG != null)
+				worldServer.updateLCG = updateLCG;
 			id++;
 		}
 	}

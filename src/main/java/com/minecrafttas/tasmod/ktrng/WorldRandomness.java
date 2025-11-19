@@ -13,7 +13,7 @@ public class WorldRandomness extends RandomBase {
 	}
 
 	@Override
-	public void fireEvent(long seed, String value) {
-//		super.fireEvent(seed, value);
+	public void fireEvent(long seed, String value, int offset) {
+		//super.fireEvent(seed, value, 5);
 	}
 }

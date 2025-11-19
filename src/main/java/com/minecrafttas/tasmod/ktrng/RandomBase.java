@@ -181,7 +181,11 @@ public class RandomBase extends Random {
 	}
 
 	public void fireEvent(long seed, String value) {
-		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[3];
+		fireEvent(seed, value, 3);
+	}
+
+	public void fireEvent(long seed, String value, int stackTraceOffset) {
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[stackTraceOffset];
 		String methodName = stackTraceElement.getMethodName();
 		String[] classNames = stackTraceElement.getClassName().split("\\.");
 		String className = classNames[classNames.length - 1];

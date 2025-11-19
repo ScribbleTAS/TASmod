@@ -40,10 +40,22 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 		dataToSave.add("entityRandom", entityRandomDataJson);
 
 		JsonObject worldRandomDataJson = new JsonObject();
+
+		JsonObject worldListJson = new JsonObject();
 		Map<Integer, WorldRandomness> worldRandom = KTRNGWorldHandler.getWorldRandomnessMap();
 		for (Entry<Integer, WorldRandomness> entry : worldRandom.entrySet()) {
-			worldRandomDataJson.addProperty(entry.getKey().toString(), entry.getValue().getSeed());
+			worldListJson.addProperty(entry.getKey().toString(), entry.getValue().getSeed());
 		}
+
+		worldRandomDataJson.add("worldList", worldListJson);
+
+		JsonObject lcgListJson = new JsonObject();
+		Map<Integer, Integer> lcgMap = KTRNGWorldHandler.getWorldLCGMap();
+		for (Entry<Integer, Integer> entry : lcgMap.entrySet()) {
+			lcgListJson.addProperty(entry.getKey().toString(), entry.getValue());
+		}
+
+		worldRandomDataJson.add("lcgList", lcgListJson);
 
 		dataToSave.add("worldRandom", worldRandomDataJson);
 
@@ -69,15 +81,26 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 
 		KTRNGEntityHandler.setRandomnessList(randomList);
 
-		JsonObject worldRandomListJson = loadedData.get("worldRandom").getAsJsonObject();
+		JsonObject worldRandomJson = loadedData.get("worldRandom").getAsJsonObject();
+		JsonObject worldListJson = worldRandomJson.get("worldList").getAsJsonObject();
 
 		Map<Integer, WorldRandomness> worldList = new HashMap<>();
-		for (Entry<String, JsonElement> entry : worldRandomListJson.entrySet()) {
+		for (Entry<String, JsonElement> entry : worldListJson.entrySet()) {
 			int id = Integer.parseInt(entry.getKey());
 			WorldRandomness worldRandomness = new WorldRandomness(entry.getValue().getAsLong());
 
 			worldList.put(id, worldRandomness);
 		}
+
+		JsonObject worldLCGList = worldRandomJson.get("lcgList").getAsJsonObject();
+		Map<Integer, Integer> lcgList = new HashMap<>();
+		for (Entry<String, JsonElement> entry : worldLCGList.entrySet()) {
+			int id = Integer.parseInt(entry.getKey());
+			int lcg = entry.getValue().getAsInt();
+
+			lcgList.put(id, lcg);
+		}
+
 		KTRNGWorldHandler.setWorldRandomnessMap(worldList);
 	}
 
