@@ -64,6 +64,7 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 
 	@Override
 	public void onLoadstateComplete(MinecraftServer server, JsonObject loadedData) {
+		TASmod.LOGGER.debug("Loading KTRNG seeds");
 		long newSeed = loadedData.get("globalSeed").getAsLong();
 		TASmod.globalRandomness.setSeed(newSeed);
 

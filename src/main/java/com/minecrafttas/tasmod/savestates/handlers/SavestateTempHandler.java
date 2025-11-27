@@ -29,7 +29,7 @@ import net.minecraft.util.text.TextFormatting;
  * 
  * @author Scribble
  */
-public class SavestateTempHandler implements EventControllerStateChange, EventRecordClear, EventSavestate.EventServerLoadstate {
+public class SavestateTempHandler implements EventControllerStateChange, EventRecordClear, EventSavestate.EventServerLoadstatePre {
 
 	private final Logger logger;
 	private final SavestateHandlerServer handler;
@@ -149,7 +149,7 @@ public class SavestateTempHandler implements EventControllerStateChange, EventRe
 	}
 
 	@Override
-	public void onServerLoadstate(MinecraftServer server, SavestatePaths paths) {
+	public void onServerLoadstatePre(MinecraftServer server, SavestatePaths paths) {
 		createState = false;
 	}
 }
