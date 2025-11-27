@@ -158,6 +158,7 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 				TASmod.savestateHandlerServer.resetState();
 			}
 
+			TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setNoSave(true);
 			setTASStateServer(TASstate.RECORDING);
 
 			try {
@@ -187,6 +188,7 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 				TASmod.savestateHandlerServer.resetState();
 			}
 
+			TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setNoSave(true);
 			setTASStateServer(TASstate.PLAYBACK);
 
 			try {
