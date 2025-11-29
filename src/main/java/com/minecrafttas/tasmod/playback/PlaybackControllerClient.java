@@ -1085,6 +1085,7 @@ public class PlaybackControllerClient implements
 			logger.catching(e);
 		}
 
+		TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setNoSave(true);
 		setTASState(TASstate.PLAYBACK);
 	}
 }
