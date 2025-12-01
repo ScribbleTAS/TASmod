@@ -24,7 +24,9 @@
 		"fixes.MixinDragonFightManager",
 		
 		"killtherng.MixinEntity",
-		"killtherng.MixinWorld"
+		"killtherng.MixinWorld",
+		"killtherng.mathrand.MixinEntityLivingBase",
+		"killtherng.mathrand.MixinEntityItem"
 		
 	],
 	"client": [

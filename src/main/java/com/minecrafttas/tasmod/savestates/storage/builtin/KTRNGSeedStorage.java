@@ -59,6 +59,8 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 
 		dataToSave.add("worldRandom", worldRandomDataJson);
 
+		dataToSave.addProperty("mathRandom", Long.toString(TASmod.mathRandomness.getSeed()));
+
 		return dataToSave;
 	}
 
@@ -103,6 +105,8 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 		}
 
 		KTRNGWorldHandler.setWorldRandomnessMap(worldList);
+
+		TASmod.mathRandomness.setSeed(loadedData.get("mathRandom").getAsLong());
 	}
 
 	@Override
