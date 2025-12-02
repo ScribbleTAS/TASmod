@@ -15,7 +15,6 @@ public class MixinEntityItem {
 
 	@WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Ljava/lang/Math;random()D"))
 	private double wrap_entityItemInit(Operation<Double> original, World world, double d, double e, double f) {
-		System.out.println("Test");
 		return TASmod.mathRandomness.nextDouble();
 	}
 }

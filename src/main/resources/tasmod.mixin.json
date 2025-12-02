@@ -26,7 +26,10 @@
 		"killtherng.MixinEntity",
 		"killtherng.MixinWorld",
 		"killtherng.mathrand.MixinEntityLivingBase",
-		"killtherng.mathrand.MixinEntityItem"
+		"killtherng.mathrand.MixinEntityItem",
+		"killtherng.mathrand.MixinEntityXPOrb",
+		"killtherng.mathrand.MixinEntityTNTPrimed",
+		"killtherng.mathrand.MixinWorldEntitySpawner"
 		
 	],
 	"client": [
