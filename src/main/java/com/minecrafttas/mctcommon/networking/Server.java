@@ -30,6 +30,11 @@ public class Server {
 	private final AsynchronousServerSocketChannel serverSocket;
 	private final List<Client> clients;
 
+	public final int port;
+
+	public Server(PacketID[] packetIDS) throws Exception {
+		this(0, packetIDS);
+	}
 	/**
 	 * Create and bind socket
 	 * 
@@ -41,6 +46,12 @@ public class Server {
 		LOGGER.info(Server, "Creating server on port {}", port);
 		this.serverSocket = AsynchronousServerSocketChannel.open();
 		this.serverSocket.bind(new InetSocketAddress(port));
+
+		InetSocketAddress addr =
+				(InetSocketAddress) this.serverSocket.getLocalAddress();
+		this.port = addr.getPort();
+
+		LOGGER.info(Server, "Server created on port {}", this.port);
 
 		// create connection handler
 		this.clients = new ArrayList<>();

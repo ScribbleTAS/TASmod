@@ -156,11 +156,10 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 		// Starting local server instance
 		try {
-			TASmod.server = new Server(TASmod.networkingport - 1, TASmodPackets.values());
+			TASmod.server = new Server(TASmodPackets.values());
 		} catch (Exception e) {
 			LOGGER.error("Unable to launch TASmod server: {}", e.getMessage());
 		}
-
 	}
 
 	private void createFolders() {
@@ -228,7 +227,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		boolean local;
 		if (server != null) {
 			ip = "localhost";
-			port = TASmod.networkingport - 1;
+			port = TASmod.server.port;
 			local = true;
 		} else {
 			ip = data.serverIP.split(":")[0];
@@ -290,7 +289,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			Minecraft mc = Minecraft.getMinecraft();
 
 			String IP = "localhost";
-			int PORT = TASmod.networkingport - 1;
+			int PORT = TASmod.server.port;
 
 			// Get the connection on startup from config
 			String configAddress = config.get(TASmodConfig.ServerConnection);
