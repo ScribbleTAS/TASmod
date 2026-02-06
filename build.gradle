@@ -3,8 +3,8 @@ plugins {
     id "fabric-loom" version "${loom_version}"
     // legacy looming (loom plugin improvements)
     id "legacy-looming" version "${loom_version}"
-    id "com.palantir.git-version" version "3.1.0"
-    id "com.diffplug.spotless" version "7.0.3"
+    id "com.palantir.git-version" version "4.2.0"
+    id "com.diffplug.spotless" version "8.1.0"
 }
 
 
@@ -15,6 +15,10 @@ if(project.release=="false") {
 }
 version = project.version+hash
 group = project.group
+
+base {
+	archivesName = project.artifact
+}
 
 java {
 	// compile for java 8
@@ -56,7 +60,7 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	
 	// testing dependencies
-    testImplementation "org.junit.jupiter:junit-jupiter:5.13.3"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.14.1"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
@@ -77,7 +81,6 @@ processResources {
 
 // configure jar file
 jar {
-	archivesBaseName = project.artifact
 
 	// pack embedded stuff
 	from {
