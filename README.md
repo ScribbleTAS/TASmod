@@ -63,7 +63,7 @@ When ingame, hitting <kbd>F6</kbd> will show you options for customising your HU
 Author of the original prototype: [tr7zw](https://github.com/tr7zw/MC-TASmod)  
 Main Mod Author: Scribble  
 
-Contributions by: famous1622, Pancake  
+Contributions by: cittyinthecloud, forester302, Pancake
   
 Initial Tickratechanger: [Guichaguri](https://github.com/Guichaguri/TickrateChanger)  
 Tickrate 0 idea: [Cubitect](https://github.com/Cubitect/Cubitick)  
