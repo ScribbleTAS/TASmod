@@ -48,13 +48,14 @@ public class SavestateGuiHandlerClient implements ClientPacketHandler {
 				// Open Savestate screen
 				SavestateState state = TASmodBufferBuilder.readEnum(SavestateState.class, buf);
 
-				String msg = "";
-				if (state == SavestateState.SAVING)
-					msg = "gui.tasmod.savestate.save.start";
-				else if (state == SavestateState.LOADING)
-					msg = "gui.tasmod.savestate.load.start";
-
-				mc.displayGuiScreen(new GuiSavestate(Component.translatable(msg).withStyle(TextFormatting.YELLOW).build()));
+				TASmodClient.gameLoopSchedulerClient.add(() -> {
+					String msg = "";
+					if (state == SavestateState.SAVING)
+						msg = "gui.tasmod.savestate.save.start";
+					else if (state == SavestateState.LOADING)
+						msg = "gui.tasmod.savestate.load.start";
+					mc.displayGuiScreen(new GuiSavestate(Component.translatable(msg).withStyle(TextFormatting.YELLOW).build()));
+				});
 				break;
 			case SAVESTATE_RENAME_SCREEN:
 				int index = TASmodBufferBuilder.readInt(buf);
