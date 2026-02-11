@@ -27,6 +27,7 @@ import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
 import com.minecrafttas.tasmod.ktrng.GlobalRandomnessTimer;
 import com.minecrafttas.tasmod.ktrng.MathRandomness;
+import com.minecrafttas.tasmod.ktrng.WorldSeedRandomness;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
@@ -94,6 +95,8 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 	public static KTRNGSeedStorage seedStorage = new KTRNGSeedStorage();
 
 	public static MathRandomness mathRandomness = new MathRandomness(0);
+
+	public static WorldSeedRandomness worldSeedRandomness = new WorldSeedRandomness();
 
 	@Override
 	public void onInitialize() {
