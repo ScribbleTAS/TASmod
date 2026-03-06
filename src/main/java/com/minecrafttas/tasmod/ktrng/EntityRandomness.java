@@ -13,4 +13,9 @@ public class EntityRandomness extends RandomBase {
 	public EntityRandomness(long seed) {
 		super(seed);
 	}
+
+	@Override
+	public void fireEvent(String eventType, long seed, String value, int stackTraceOffset) {
+//		super.fireEvent(eventType, seed, value, stackTraceOffset);
+	}
 }

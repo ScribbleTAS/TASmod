@@ -1,5 +1,7 @@
 package com.minecrafttas.tasmod.ktrng;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import com.minecrafttas.tasmod.TASmod;
@@ -13,126 +15,104 @@ public class RandomBase extends Random {
 	private String name;
 	private String description;
 
-	private long timesCalled = 0;
-
-	private boolean enabled;
-	private boolean client;
-
 	private long initialSeed;
 	public static FileThread writerThread;
 
-	public RandomBase() {
-		super();
-	}
+	private JRand.Debugger jrand;
 
 	public RandomBase(long seed) {
 		super(seed);
 		this.initialSeed = seed;
+		jrand = new JRand(seed, false).asDebugger();
 	}
 
 	@Override
 	public void setSeed(long seedIn) {
-		setSeed(seedIn, true);
-	}
-
-	public void setSeed(long seedIn, boolean shouldLog) {
-		if (shouldLog)
-			fireSetEvent("setSeed()", seedIn, "", 8);
-		super.setSeed(seedIn ^ 0x5deece66dL);
+		super.setSeed(seedIn);
+		if (jrand != null)
+			jrand.setSeed(seedIn, false);
+//		super.setSeed(seedIn ^ 0x5deece66dL);
 	}
 
 	public long getSeed() {
-		long saved = timesCalled;
-		long seed = reverse(super.nextLong()) ^ 0x5deece66dL;
-		super.setSeed(seed);
-		timesCalled = saved;
-		return seed ^ 0x5deece66dL;
+//		long saved = timesCalled;
+//		long seed = reverse(super.nextLong()) ^ 0x5deece66dL;
+//		super.setSeed(seed);
+//		timesCalled = saved;
+//		return seed ^ 0x5deece66dL;
+		return jrand.getSeed();
 	}
 
-	public static long reverse(long in) {
-		return (((7847617 * ((24667315 * (in >>> 32) + 18218081 * (in & 0xffffffffL) + 67552711) >> 32) - 18218081 * ((-4824621 * (in >>> 32) + 7847617 * (in & 0xffffffffL) + 7847617) >> 32)) - 11) * 246154705703781L) & 0xffffffffffffL;
-	}
+//	public static long reverse(long in) {
+//		return (((7847617 * ((24667315 * (in >>> 32) + 18218081 * (in & 0xffffffffL) + 67552711) >> 32) - 18218081 * ((-4824621 * (in >>> 32) + 7847617 * (in & 0xffffffffL) + 7847617) >> 32)) - 11) * 246154705703781L) & 0xffffffffffffL;
+//	}
 
-	public String getName() {
-		return this.name;
-	}
+//	public String getName() {
+//		return this.name;
+//	}
+//
+//	public String getDescription() {
+//		return description;
+//	}
 
-	public String getDescription() {
-		return description;
-	}
-
-	public long getTimesCalled() {
-		return timesCalled;
-	}
-
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	public boolean isClient() {
-		return client;
-	}
+//	public long getTimesCalled() {
+//		return timesCalled;
+//	}
 
 	@Override
 	public long nextLong() {
-		timesCalled++;
+//		timesCalled++;
 		long seedstored = getSeed();
-		long value = super.nextLong();
+		long value = jrand.nextLong();
 		fireGetEvent("nextLong()", seedstored, Long.toString(value));
 		return value;
 	}
 
 	@Override
 	public double nextDouble() {
-		timesCalled++;
+//		timesCalled++;
 		long seedstored = getSeed();
-		double value = super.nextDouble();
+		double value = jrand.nextDouble();
 		fireGetEvent("nextDouble()", seedstored, Double.toString(value));
 		return value;
 	}
 
 	@Override
 	public boolean nextBoolean() {
-		timesCalled++;
+//		timesCalled++;
 		long seedstored = getSeed();
-		boolean value = super.nextBoolean();
+		boolean value = jrand.nextBoolean();
 		fireGetEvent("nextBoolean()", seedstored, Boolean.toString(value));
 		return value;
 	}
 
 	@Override
 	public int nextInt() {
-		timesCalled++;
+//		timesCalled++;
 		long seedstored = getSeed();
-		int value = super.nextInt();
+		int value = jrand.nextInt();
 		fireGetEvent("nextInt()", seedstored, Integer.toString(value));
 		return value;
 	}
 
 	@Override
 	public int nextInt(int bound) {
-		timesCalled++;
+//		timesCalled++;
 		long seedstored = getSeed();
-		int value = super.nextInt(bound);
+		int value = jrand.nextInt(bound);
 		fireGetEvent(String.format("nextInt(%s)", bound), seedstored, Integer.toString(value));
 		return value;
 	}
 
 	@Override
 	public float nextFloat() {
-		return super.nextFloat();
-	}
-
-	@Override
-	public void nextBytes(byte[] bytes) {
-		super.nextBytes(bytes);
+		return jrand.nextFloat();
 	}
 
 	@Override
 	public double nextGaussian() {
-		timesCalled++;
 		double value = 0;
-		value = super.nextGaussian();
+		value = jrand.nextGaussian();
 		return value;
 	}
 
@@ -141,14 +121,7 @@ public class RandomBase extends Random {
 	}
 
 	public void advance(long i) {
-		JRand thing = JRand.ofInternalSeed(getSeed());
-		thing.advance(i);
-		setSeed(thing.getSeed(), false);
-	}
-
-	public long getSeedAt(int steps) {
-		JRand thing = new JRand(getSeed()).combine(steps);
-		return thing.getSeed();
+		jrand.advance(i);
 	}
 
 	public long distance(RandomBase random) {
@@ -187,7 +160,7 @@ public class RandomBase extends Random {
 	}
 
 	public void fireGetEvent(String eventType, long seed, String value) {
-		//fireEvent(eventType, seed, value, 3);
+//		fireEvent(eventType, seed, value, 3);
 	}
 
 	public void fireEvent(String eventType, long seed, String value, int stackTraceOffset) {

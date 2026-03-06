@@ -19,6 +19,6 @@ public class MathRandomness extends RandomBase {
 
 	@Override
 	public void fireEvent(String eventType, long seed, String value, int stackTraceOffset) {
-//			super.fireEvent(eventType, seed, value, stackTraceOffset);
+		super.fireEvent(eventType, seed, value, 6);
 	}
 }
