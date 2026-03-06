@@ -14,6 +14,6 @@ public class WorldRandomness extends RandomBase {
 
 	@Override
 	public void fireEvent(String val, long seed, String value, int offset) {
-		//super.fireEvent(val, seed, value, 5);
+		super.fireEvent(val, seed, value, 5);
 	}
 }

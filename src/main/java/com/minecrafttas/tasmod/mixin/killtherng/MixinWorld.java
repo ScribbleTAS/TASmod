@@ -12,13 +12,17 @@ import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.ktrng.WorldRandomness;
 
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 @Mixin(World.class)
 public class MixinWorld {
 
 	@ModifyExpressionValue(method = "<init>", at = @At(value = "NEW", target = "Ljava/util/Random;"))
 	public Random modify_worldRandom(Random original) {
-		return new WorldRandomness();
+		if (((World) (Object) this) instanceof WorldServer)
+			return new WorldRandomness();
+		else
+			return original;
 	}
 
 	@ModifyReceiver(method = "setRandomSeed", at = @At(value = "INVOKE", target = "Ljava/util/Random;setSeed(J)V"))

@@ -25,6 +25,7 @@ import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
+import com.minecrafttas.tasmod.ktrng.DebugRand;
 import com.minecrafttas.tasmod.ktrng.GlobalRandomnessTimer;
 import com.minecrafttas.tasmod.ktrng.MathRandomness;
 import com.minecrafttas.tasmod.ktrng.WorldSeedRandomness;
@@ -96,7 +97,9 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	public static MathRandomness mathRandomness = new MathRandomness(0);
 
-	public static WorldSeedRandomness worldSeedRandomness = new WorldSeedRandomness();
+	public static WorldSeedRandomness worldSeedRandomness = new WorldSeedRandomness(0);
+
+	public static DebugRand debugRand = new DebugRand();
 
 	@Override
 	public void onInitialize() {
@@ -124,6 +127,7 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 		EventListenerRegistry.register(ticksyncServer);
 		EventListenerRegistry.register(tickratechanger);
 		//		EventListenerRegistry.register(ktrngHandler);
+		EventListenerRegistry.register(debugRand);
 
 		// Register packet handlers
 		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers");

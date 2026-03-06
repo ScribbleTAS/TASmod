@@ -3,7 +3,7 @@ package com.minecrafttas.tasmod.ktrng;
 import java.util.Random;
 
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.util.LoggerMarkers;
+import com.minecrafttas.tasmod.util.FileThread;
 
 import kaptainwutax.seedutils.lcg.LCG;
 import kaptainwutax.seedutils.rand.JRand;
@@ -19,6 +19,7 @@ public class RandomBase extends Random {
 	private boolean client;
 
 	private long initialSeed;
+	public static FileThread writerThread;
 
 	public RandomBase() {
 		super();
@@ -182,7 +183,7 @@ public class RandomBase extends Random {
 	}
 
 	public void fireSetEvent(String eventType, long seed, String value, int stackTraceOffset) {
-		fireEvent(eventType, seed, value, stackTraceOffset);
+//		fireEvent(eventType, seed, value, stackTraceOffset);
 	}
 
 	public void fireGetEvent(String eventType, long seed, String value) {
@@ -190,16 +191,31 @@ public class RandomBase extends Random {
 	}
 
 	public void fireEvent(String eventType, long seed, String value, int stackTraceOffset) {
-		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[stackTraceOffset];
+		if (!TASmod.debugRand.isActive()) {
+			return;
+		}
+
+		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+		List<String> classOut = new ArrayList<>();
+		for (int i = stackTraceOffset; i < stackTraceOffset + 4; i++) {
+			String out = formatStackTraceElement(stackTraceElements[i]);
+			if (out != null)
+				classOut.add(out);
+		}
+		String out = String.format("%s %s %s\t%s\t%s", eventType, seed, value, this.getClass().getSimpleName(), String.join(", ", classOut));
+		TASmod.debugRand.writeDebug(out);
+	}
+
+	private String formatStackTraceElement(StackTraceElement stackTraceElement) {
 		String methodName = stackTraceElement.getMethodName();
 		String[] classNames = stackTraceElement.getClassName().split("\\.");
 		String className = classNames[classNames.length - 1];
 		if (methodName.equals("showBarrierParticles"))
-			return;
-		String out = className + "." + methodName +
+			return null;
+		String classOut = className + "." + methodName +
 				(stackTraceElement.isNativeMethod() ? "(Native Method)" : (stackTraceElement.getFileName() != null && stackTraceElement.getLineNumber() >= 0 ? "(" + stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber()
 						+ ")" : (stackTraceElement.getFileName() != null ? "(" + stackTraceElement.getFileName() + ")" : "(Unknown Source)")));
-		TASmod.LOGGER.debug(LoggerMarkers.KillTheRNG, "{} {}\t{}\t{}", eventType, seed, value, out);
+		return classOut;
 	}
 
 	public long getInitialSeed() {
