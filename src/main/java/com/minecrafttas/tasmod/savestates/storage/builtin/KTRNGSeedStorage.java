@@ -8,10 +8,10 @@ import java.util.UUID;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.ktrng.EntityRandomness;
-import com.minecrafttas.tasmod.ktrng.KTRNGEntityHandler;
-import com.minecrafttas.tasmod.ktrng.KTRNGWorldHandler;
-import com.minecrafttas.tasmod.ktrng.WorldRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.EntityRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.WorldRandomness;
+import com.minecrafttas.tasmod.ktrng.handlers.KTRNGEntityHandler;
+import com.minecrafttas.tasmod.ktrng.handlers.KTRNGWorldHandler;
 import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
 
 import net.minecraft.server.MinecraftServer;
@@ -59,7 +59,7 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 
 		dataToSave.add("worldRandom", worldRandomDataJson);
 
-		dataToSave.addProperty("mathRandom", Long.toString(TASmod.mathRandomness.getSeed()));
+		dataToSave.addProperty("mathRandom", TASmod.mathRandomness.getSeed());
 
 		return dataToSave;
 	}
@@ -106,7 +106,8 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 
 		KTRNGWorldHandler.setWorldRandomnessMap(worldList);
 
-		TASmod.mathRandomness.setSeed(loadedData.get("mathRandom").getAsLong());
+		long mathSeed = loadedData.get("mathRandom").getAsLong();
+		TASmod.mathRandomness.setSeed(mathSeed);
 	}
 
 	@Override

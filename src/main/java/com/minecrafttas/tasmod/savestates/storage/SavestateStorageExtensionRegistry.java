@@ -52,7 +52,7 @@ public class SavestateStorageExtensionRegistry extends AbstractRegistry<Savestat
 
 	private void load(SavestatePaths paths) {
 		jsonMap.clear();
-		Path storageDir = paths.getTargetFolder().resolve(SavestateIndexer.savestateDataDir);
+		Path storageDir = paths.getSourceFolder().resolve(SavestateIndexer.savestateDataDir);
 		if (!Files.exists(storageDir)) {
 			try {
 				Files.createDirectory(storageDir);

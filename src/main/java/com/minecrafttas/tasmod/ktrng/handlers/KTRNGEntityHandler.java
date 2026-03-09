@@ -1,10 +1,11 @@
-package com.minecrafttas.tasmod.ktrng;
+package com.minecrafttas.tasmod.ktrng.handlers;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.ktrng.builtin.EntityRandomness;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.world.WorldServer;

@@ -25,10 +25,10 @@ import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
-import com.minecrafttas.tasmod.ktrng.DebugRand;
 import com.minecrafttas.tasmod.ktrng.GlobalRandomnessTimer;
-import com.minecrafttas.tasmod.ktrng.MathRandomness;
-import com.minecrafttas.tasmod.ktrng.WorldSeedRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.MathRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.WorldSeedRandomness;
+import com.minecrafttas.tasmod.ktrng.events.KillTheRNGMonitor;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
@@ -99,7 +99,7 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	public static WorldSeedRandomness worldSeedRandomness = new WorldSeedRandomness(0);
 
-	public static DebugRand debugRand = new DebugRand();
+	public static KillTheRNGMonitor debugRand = new KillTheRNGMonitor();
 
 	@Override
 	public void onInitialize() {

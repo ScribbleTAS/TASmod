@@ -7,8 +7,9 @@ public class RNGTest {
 	public static void main(String[] args) {
 		long[] longlist = new long[] {
 				//@formatter:off
-				113621727298730L,
-				161845404674820L
+				221103401599600L,
+				145180429625787L,
+				179651266561706L
 				//@formatter:on
 		};
 

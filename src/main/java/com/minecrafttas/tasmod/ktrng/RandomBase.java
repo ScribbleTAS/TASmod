@@ -1,29 +1,29 @@
 package com.minecrafttas.tasmod.ktrng;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
+import com.minecrafttas.mctcommon.events.EventListenerRegistry;
+import com.minecrafttas.mctcommon.registry.Registerable;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.util.FileThread;
+import com.minecrafttas.tasmod.events.EventKillTheRNGServer;
 
 import kaptainwutax.seedutils.lcg.LCG;
 import kaptainwutax.seedutils.rand.JRand;
 
-public class RandomBase extends Random {
+public abstract class RandomBase extends Random implements Registerable {
 
-	private String name;
-	private String description;
-
+	RNGSide side;
 	private long initialSeed;
-	public static FileThread writerThread;
+	private JRand jrand;
 
-	private JRand.Debugger jrand;
+	public RandomBase() {
+		super(TASmod.globalRandomness.getCurrentSeed());
+	}
 
 	public RandomBase(long seed) {
 		super(seed);
 		this.initialSeed = seed;
-		jrand = new JRand(seed, false).asDebugger();
+		jrand = new JRand(seed, false);
 	}
 
 	@Override
@@ -145,53 +145,25 @@ public class RandomBase extends Random {
 		return Long.toString(getSeed());
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof RandomBase) {
-			RandomBase custom = (RandomBase) obj;
-			return custom.name.equals(name);
-		} else {
-			return super.equals(obj);
-		}
-	}
-
 	public void fireSetEvent(String eventType, long seed, String value, int stackTraceOffset) {
-//		fireEvent(eventType, seed, value, stackTraceOffset);
+		fireRNGEvent(eventType, seed, value, stackTraceOffset);
 	}
 
 	public void fireGetEvent(String eventType, long seed, String value) {
-//		fireEvent(eventType, seed, value, 3);
-	}
-
-	public void fireEvent(String eventType, long seed, String value, int stackTraceOffset) {
-		if (!TASmod.debugRand.isActive()) {
-			return;
-		}
-
-		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-		List<String> classOut = new ArrayList<>();
-		for (int i = stackTraceOffset; i < stackTraceOffset + 4; i++) {
-			String out = formatStackTraceElement(stackTraceElements[i]);
-			if (out != null)
-				classOut.add(out);
-		}
-		String out = String.format("%s %s %s\t%s\t%s", eventType, seed, value, this.getClass().getSimpleName(), String.join(", ", classOut));
-		TASmod.debugRand.writeDebug(out);
-	}
-
-	private String formatStackTraceElement(StackTraceElement stackTraceElement) {
-		String methodName = stackTraceElement.getMethodName();
-		String[] classNames = stackTraceElement.getClassName().split("\\.");
-		String className = classNames[classNames.length - 1];
-		if (methodName.equals("showBarrierParticles"))
-			return null;
-		String classOut = className + "." + methodName +
-				(stackTraceElement.isNativeMethod() ? "(Native Method)" : (stackTraceElement.getFileName() != null && stackTraceElement.getLineNumber() >= 0 ? "(" + stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber()
-						+ ")" : (stackTraceElement.getFileName() != null ? "(" + stackTraceElement.getFileName() + ")" : "(Unknown Source)")));
-		return classOut;
+		fireRNGEvent(eventType, seed, value, 3);
 	}
 
 	public long getInitialSeed() {
 		return initialSeed;
+	}
+
+	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
+		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+		EventListenerRegistry.fireEvent(EventKillTheRNGServer.EventRNG.class, side, eventType, seed, value, stackTraceElements);
+	}
+
+	public enum RNGSide {
+		Server,
+		Client
 	}
 }

@@ -9,7 +9,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.ktrng.WorldRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.WorldRandomness;
 
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;

@@ -18,7 +18,7 @@ import com.minecrafttas.mctcommon.events.EventClient.EventClientTick;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventDrawHotbar;
-import com.minecrafttas.tasmod.ktrng.KTRNGWorldHandler;
+import com.minecrafttas.tasmod.ktrng.handlers.KTRNGWorldHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.builtin.DesyncMonitorFileCommandExtension;
@@ -327,6 +327,17 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 						if (Minecraft.getMinecraft().currentScreen == this)
 							return "WorldRNG";
 						return "WorldRNG: " + KTRNGWorldHandler.getWorldRandom();
+					}));
+
+			y += 14;
+			title = "ktrng_mathseed";
+			if (configuration.getProperty(title + "_x", "err").equals("err"))
+				setDefaults(title, y);
+			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
+					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
+						if (Minecraft.getMinecraft().currentScreen == this)
+							return "MathRNG";
+						return "MathRNG: " + TASmod.mathRandomness.getSeed();
 					}));
 
 			title = "facing";

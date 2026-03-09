@@ -2,18 +2,19 @@ package com.minecrafttas.tasmod.ktrng;
 
 import com.minecrafttas.mctcommon.events.EventClient;
 
+import kaptainwutax.seedutils.rand.JRand;
 import net.minecraft.client.Minecraft;
 
 public class GlobalRandomnessTimerClient implements EventClient.EventClientTick {
 
-	private final RandomBase globalRandomness;
-	private final RandomBase uuidRandomness;
+	private final JRand globalRandomness;
+	private final JRand uuidRandomness;
 
 	private long currentSeed = 0L;
 
 	public GlobalRandomnessTimerClient() {
-		globalRandomness = new RandomBase(0L);
-		uuidRandomness = new RandomBase(0L);
+		globalRandomness = new JRand(0L);
+		uuidRandomness = new JRand(0L);
 	}
 
 	@Override
@@ -26,7 +27,7 @@ public class GlobalRandomnessTimerClient implements EventClient.EventClientTick 
 		return currentSeed;
 	}
 
-	public RandomBase getUUIDRandom() {
+	public JRand getUUIDRandom() {
 		return uuidRandomness;
 	}
 

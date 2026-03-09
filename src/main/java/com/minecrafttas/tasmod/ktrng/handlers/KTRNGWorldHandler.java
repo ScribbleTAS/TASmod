@@ -1,9 +1,10 @@
-package com.minecrafttas.tasmod.ktrng;
+package com.minecrafttas.tasmod.ktrng.handlers;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.ktrng.builtin.WorldRandomness;
 
 import net.minecraft.world.WorldServer;
 

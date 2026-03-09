@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.minecrafttas.tasmod.ktrng.EntityRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.EntityRandomness;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
@@ -21,9 +21,8 @@ public class MixinEntity {
 	public Random modify_entityRandom(Random original, World world) {
 		if (!world.isRemote) {
 			return new EntityRandomness();
-		} else {
-			return new EntityRandomness(0L);
 		}
+		return original;
 	}
 
 	@WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;getRandomUUID(Ljava/util/Random;)Ljava/util/UUID;"))
