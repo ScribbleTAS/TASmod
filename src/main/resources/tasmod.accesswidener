@@ -12,3 +12,7 @@ accessible field net/minecraft/world/World worldInfo Lnet/minecraft/world/storag
 accessible method net/minecraft/world/storage/SaveHandler setSessionLock ()V
 
 accessible field net/minecraft/client/settings/KeyBinding CATEGORY_ORDER Ljava/util/Map;
+
+accessible method net/minecraft/server/MinecraftServer saveAllWorlds (Z)V
+accessible method net/minecraft/server/MinecraftServer convertMapIfNeeded (Ljava/lang/String;)V
+accessible method net/minecraft/server/MinecraftServer setResourcePackFromWorld (Ljava/lang/String;Lnet/minecraft/world/storage/ISaveHandler;)V

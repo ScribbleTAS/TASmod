@@ -28,7 +28,6 @@ import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
 import com.minecrafttas.tasmod.util.Ducks.WorldClientDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
-import com.mojang.realmsclient.gui.ChatFormatting;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -37,6 +36,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.chunk.Chunk;
 
 /**
@@ -93,7 +93,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		LOGGER.trace(LoggerMarkers.Savestate, "Add player {} to loaded entity list", player.getName());
 		int i = MathHelper.floor(player.posX / 16.0D);
 		int j = MathHelper.floor(player.posZ / 16.0D);
-		Chunk chunk = Minecraft.getMinecraft().world.getChunkFromChunkCoords(i, j);
+		Chunk chunk = Minecraft.getMinecraft().world.getChunk(i, j);
 		for (int k = 0; k < chunk.getEntityLists().length; k++) {
 			if (chunk.getEntityLists()[k].contains(player)) {
 				return;
@@ -181,8 +181,8 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			savestateContainerList = PlaybackSerialiser.loadFromFile(targetfile, state != TASstate.PLAYBACK);
 		} else {
 			controller.setTASStateClient(TASstate.NONE, false);
-			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "Inputs could not be loaded for this savestate,"));
-			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(ChatFormatting.YELLOW + "since the file doesn't exist. Stopping!"));
+			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(TextFormatting.YELLOW + "Inputs could not be loaded for this savestate,"));
+			Minecraft.getMinecraft().player.sendMessage(new TextComponentString(TextFormatting.YELLOW + "since the file doesn't exist. Stopping!"));
 			LOGGER.warn(LoggerMarkers.Savestate, "Inputs could not be loaded for this savestate, since the file doesn't exist.");
 			return;
 		}

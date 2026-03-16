@@ -66,9 +66,9 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 	public static TickSyncClient ticksyncClient;
 
-	public final static Path tasfiledirectory = Minecraft.getMinecraft().mcDataDir.toPath().resolve("saves").resolve("tasfiles");
+	public final static Path tasfiledirectory = Minecraft.getMinecraft().gameDir.toPath().resolve("saves").resolve("tasfiles");
 
-	public final static Path savestatedirectory = Minecraft.getMinecraft().mcDataDir.toPath().resolve("saves").resolve("savestates");
+	public final static Path savestatedirectory = Minecraft.getMinecraft().gameDir.toPath().resolve("saves").resolve("savestates");
 
 	public static InfoHud hud;
 
@@ -353,7 +353,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	}
 
 	private void loadConfig(Minecraft mc) {
-		Path configDir = mc.mcDataDir.toPath().resolve("config");
+		Path configDir = mc.gameDir.toPath().resolve("config");
 		if (!Files.exists(configDir)) {
 			try {
 				Files.createDirectory(configDir);
