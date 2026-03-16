@@ -106,13 +106,17 @@ public abstract class RandomBase extends Random implements Registerable {
 
 	@Override
 	public float nextFloat() {
-		return jrand.nextFloat();
+		long seedstored = getSeed();
+		float value = jrand.nextFloat();
+		fireGetEvent("nextFloat", seedstored, Float.toString(value));
+		return value;
 	}
 
 	@Override
 	public double nextGaussian() {
-		double value = 0;
-		value = jrand.nextGaussian();
+		long seedstored = getSeed();
+		double value = jrand.nextGaussian();
+		fireGetEvent("nextGaussian", seedstored, Double.toString(value));
 		return value;
 	}
 
