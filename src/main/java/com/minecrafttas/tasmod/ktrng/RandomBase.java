@@ -18,6 +18,7 @@ public abstract class RandomBase extends Random implements Registerable {
 
 	public RandomBase() {
 		super(TASmod.globalRandomness.getCurrentSeed());
+		jrand = new JRand(TASmod.globalRandomness.getCurrentSeed());
 	}
 
 	public RandomBase(long seed) {
@@ -61,7 +62,6 @@ public abstract class RandomBase extends Random implements Registerable {
 
 	@Override
 	public long nextLong() {
-//		timesCalled++;
 		long seedstored = getSeed();
 		long value = jrand.nextLong();
 		fireGetEvent("nextLong()", seedstored, Long.toString(value));
@@ -70,7 +70,6 @@ public abstract class RandomBase extends Random implements Registerable {
 
 	@Override
 	public double nextDouble() {
-//		timesCalled++;
 		long seedstored = getSeed();
 		double value = jrand.nextDouble();
 		fireGetEvent("nextDouble()", seedstored, Double.toString(value));
@@ -79,7 +78,6 @@ public abstract class RandomBase extends Random implements Registerable {
 
 	@Override
 	public boolean nextBoolean() {
-//		timesCalled++;
 		long seedstored = getSeed();
 		boolean value = jrand.nextBoolean();
 		fireGetEvent("nextBoolean()", seedstored, Boolean.toString(value));
@@ -88,7 +86,6 @@ public abstract class RandomBase extends Random implements Registerable {
 
 	@Override
 	public int nextInt() {
-//		timesCalled++;
 		long seedstored = getSeed();
 		int value = jrand.nextInt();
 		fireGetEvent("nextInt()", seedstored, Integer.toString(value));
@@ -97,7 +94,6 @@ public abstract class RandomBase extends Random implements Registerable {
 
 	@Override
 	public int nextInt(int bound) {
-//		timesCalled++;
 		long seedstored = getSeed();
 		int value = jrand.nextInt(bound);
 		fireGetEvent(String.format("nextInt(%s)", bound), seedstored, Integer.toString(value));
