@@ -146,6 +146,7 @@ public class SavestateWorldHandler {
 					break;
 			}
 		}
+
 	}
 
 	/**
@@ -213,7 +214,7 @@ public class SavestateWorldHandler {
 
 		for (WorldServer world : worlds) {
 			PlayerChunkMapDuck chunkMap = (PlayerChunkMapDuck) world.getPlayerChunkMap();
-			chunkMap.forceTick();
+			chunkMap.sendChunksToClient();
 		}
 	}
 

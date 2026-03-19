@@ -1,10 +1,18 @@
 package com.minecrafttas.tasmod.ktrng.events;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.minecrafttas.mctcommon.events.EventServer;
+import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventKillTheRNGServer;
 import com.minecrafttas.tasmod.events.EventPlaybackServer;
 import com.minecrafttas.tasmod.ktrng.RandomBase.RNGSide;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
+import com.minecrafttas.tasmod.util.FileThread;
 
 import net.minecraft.server.MinecraftServer;
 
@@ -12,21 +20,104 @@ public class KillTheRNGMonitor implements EventPlaybackServer.EventControllerSta
 
 	@Override
 	public void onServerTick(MinecraftServer server) {
-
+		if (isActive()) {
+			thread.addLine("");
+		}
 	}
 
 	@Override
 	public void onControllerStateChange(TASstate newstate, TASstate oldstate) {
+		Path serverDir = TASmod.getServerInstance().getDataDirectory().toPath();
 
+		if (isActive()) {
+			thread.close();
+			thread = null;
+		}
+
+		if (newstate == TASstate.RECORDING) {
+			try {
+				thread = new FileThread(serverDir.resolve("ktrng_recording.txt"), false);
+				thread.start();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else if (newstate == TASstate.PLAYBACK) {
+
+			Path playbackFile = serverDir.resolve("ktrng_playback.txt");
+
+			if (Files.exists(playbackFile)) {
+				int i = 0;
+				do {
+					i++;
+					playbackFile = serverDir.resolve(String.format("ktrng_playback%s.txt", i));
+				} while (Files.exists(playbackFile));
+			}
+
+			try {
+				thread = new FileThread(playbackFile, false);
+				thread.start();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override
 	public void onRecordingClear() {
+		Path serverDir = TASmod.getServerInstance().getDataDirectory().toPath();
+		try {
+			Files.delete(serverDir.resolve("ktrng_recording.txt"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
+		try {
+			Files.delete(serverDir.resolve("ktrng_playback.txt"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	public void onRNGCall(RNGSide side, String eventType, long seed, String value, StackTraceElement[] stackTraceElements) {
+	public void onRNGCall(RNGSide side, String eventType, long seed, String value, String rngClass, StackTraceElement[] stackTraceElements) {
 
+		if (!isActive()) {
+			return;
+		}
+
+		List<String> classOut = new ArrayList<>();
+		if (stackTraceElements != null && stackTraceElements.length != 0) {
+			for (int i = 0; i < 10; i++) {
+				String out = formatStackTraceElement(stackTraceElements[i]);
+				if (out != null)
+					classOut.add(out);
+			}
+		}
+		String out = String.format("%s %s %s\t%s\t%s", eventType, seed, value, rngClass, String.join(", ", classOut));
+		writeDebug(out);
+	}
+
+	private FileThread thread = null;
+
+	public void writeDebug(String out) {
+		if (thread != null && TASmod.isDevEnvironment) {
+			thread.addLine(out);
+		}
+	}
+
+	public boolean isActive() {
+		return thread != null;
+	}
+
+	private String formatStackTraceElement(StackTraceElement stackTraceElement) {
+		String methodName = stackTraceElement.getMethodName();
+		String[] classNames = stackTraceElement.getClassName().split("\\.");
+		String className = classNames[classNames.length - 1];
+		if (methodName.equals("showBarrierParticles"))
+			return null;
+		String classOut = className + "." + methodName +
+				(stackTraceElement.isNativeMethod() ? "(Native Method)" : (stackTraceElement.getFileName() != null && stackTraceElement.getLineNumber() >= 0 ? "(" + stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber()
+						+ ")" : (stackTraceElement.getFileName() != null ? "(" + stackTraceElement.getFileName() + ")" : "(Unknown Source)")));
+		return classOut;
 	}
 }

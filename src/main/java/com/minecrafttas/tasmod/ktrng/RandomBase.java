@@ -158,8 +158,9 @@ public abstract class RandomBase extends Random implements Registerable {
 	}
 
 	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
-		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-		EventListenerRegistry.fireEvent(EventKillTheRNGServer.EventRNG.class, side, eventType, seed, value, stackTraceElements);
+		StackTraceElement[] stackTraceElements = null;
+//		stackTraceElements = Thread.currentThread().getStackTrace();
+		EventListenerRegistry.fireEvent(EventKillTheRNGServer.EventRNG.class, side, eventType, seed, value, this.getClass().getSimpleName(), stackTraceElements);
 	}
 
 	public enum RNGSide {
