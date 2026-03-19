@@ -24,7 +24,6 @@ import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.builtin.DesyncMonitorFileCommandExtension;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualInterpolationHandler.MouseInterpolation;
-import com.mojang.realmsclient.gui.ChatFormatting;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -200,7 +199,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 			return;
 		}
 		try {
-			File tasmodDir = new File(Minecraft.getMinecraft().mcDataDir, "tasmod");
+			File tasmodDir = new File(Minecraft.getMinecraft().gameDir, "tasmod");
 			tasmodDir.mkdir();
 			File configFile = new File(tasmodDir, "infogui2.cfg");
 			if (!configFile.exists())
@@ -229,7 +228,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 		try {
 			configuration = new Properties();
 			if (!resetLayout) {
-				File tasmodDir = new File(Minecraft.getMinecraft().mcDataDir, "tasmod");
+				File tasmodDir = new File(Minecraft.getMinecraft().gameDir, "tasmod");
 				tasmodDir.mkdir();
 				File configFile = new File(tasmodDir, "infogui2.cfg");
 				if (!configFile.exists())
@@ -400,17 +399,17 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 							return "State";
 						} else {
 							TASstate state = TASmodClient.controller.getState();
-							ChatFormatting format = ChatFormatting.WHITE;
+							TextFormatting format = TextFormatting.WHITE;
 							String out = "";
 							if (state == TASstate.PLAYBACK) {
 								out = "Playback";
-								format = ChatFormatting.GREEN;
+								format = TextFormatting.GREEN;
 							} else if (state == TASstate.RECORDING) {
 								out = "Recording";
-								format = ChatFormatting.RED;
+								format = TextFormatting.RED;
 							} else if (state == TASstate.PAUSED) {
 								out = "Paused";
-								format = ChatFormatting.YELLOW;
+								format = TextFormatting.YELLOW;
 							} else if (state == TASstate.NONE) {
 								out = "";
 							}

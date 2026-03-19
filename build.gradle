@@ -1,12 +1,10 @@
 plugins {
 	// loom plugin
-    id "fabric-loom" version "${loom_version}"
-    // legacy looming (loom plugin improvements)
-    id "legacy-looming" version "${loom_version}"
-    id "com.palantir.git-version" version "4.2.0"
-    id "com.diffplug.spotless" version "8.1.0"
+	id "fabric-loom" version "${loom_version}"
+	id "ploceus" version "${loom_version}"
+	id "com.palantir.git-version" version "4.2.0"
+	id "com.diffplug.spotless" version "8.1.0"
 }
-
 
 // set basic properties
 def hash = ""
@@ -34,34 +32,38 @@ loom {
 
 // dependency repositories
 repositories {
-    mavenCentral()
-    maven { url = "https://maven.minecrafttas.com/main" }
-    //maven { url = "https://maven.minecrafttas.com/snapshots" }
-    maven { url = "https://raw.githubusercontent.com/BleachDev/cursed-mappings/main/" }
-    maven { url = "https://jitpack.io" }
-    maven { url = "https://repo.spongepowered.org/maven" }
+	mavenCentral()
+	maven { url = "https://maven.minecrafttas.com/main" }
+	maven { url = "https://maven.legacyfabric.net/" }
+	//maven { url = "https://maven.minecrafttas.com/snapshots" }
+	maven { url = "https://jitpack.io" }
+	maven { url = "https://repo.spongepowered.org/maven" }
 }
 
 // dependency configurations
 configurations {
-    // embed dependency included in build
-    implementation.extendsFrom(embed)
+	// embed dependency included in build
+	implementation.extendsFrom(embed)
+}
+
+ploceus {
+	setIntermediaryGeneration(2)
 }
 
 // dependencies
 dependencies {
-    // tasmod dependencies
-    embed "com.dselent:bigarraylist:1.6"
-    embed "com.github.KaptainWutax:SeedUtils:b6a383113c"
+	// tasmod dependencies
+	embed "com.dselent:bigarraylist:1.6"
+	embed "com.github.KaptainWutax:SeedUtils:b6a383113c"
 
 	// loom dependencies
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.legacyfabric:yarn:${project.minecraft_version}+build.mcp"
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings ploceus.mcpMappings(project.mcp_channel, project.mcp_mcversion, project.mcp_build)
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	
+
 	// testing dependencies
-    testImplementation "org.junit.jupiter:junit-jupiter:5.14.1"
-    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+	testImplementation "org.junit.jupiter:junit-jupiter:5.14.1"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 
@@ -71,12 +73,12 @@ compileJava {
 
 // process fabric mod json
 processResources {
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft_version
-    
-    filesMatching("fabric.mod.json") {
-        expand "mod_url": project.mod_url, "name": project.mod_name, "mod_version": project.version, "mod_description": project.mod_description, "mod_sources": project.mod_sources, "mod_email": project.mod_email
-    }
+	inputs.property "version", project.version
+	inputs.property "mcversion", project.minecraft_version
+
+	filesMatching("fabric.mod.json") {
+		expand "mod_url": project.mod_url, "name": project.mod_name, "mod_version": project.version, "mod_description": project.mod_description, "mod_sources": project.mod_sources, "mod_email": project.mod_email
+	}
 }
 
 // configure jar file
@@ -85,14 +87,14 @@ jar {
 	// pack embedded stuff
 	from {
 		configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
-    } {
-        exclude "LICENSE.txt", "META-INF/MANIFSET.MF", "META-INF/maven/**", "META-INF/*.RSA", "META-INF/*.SF"
+	} {
+		exclude "LICENSE.txt", "META-INF/MANIFSET.MF", "META-INF/maven/**", "META-INF/*.RSA", "META-INF/*.SF"
     }
 }
 
 // configure testing
 tasks.named("test", Test) {
-    useJUnitPlatform()
+	useJUnitPlatform()
 
 	testLogging {
 		events "passed", "skipped", "failed"
@@ -103,8 +105,8 @@ spotless {
 	encoding "UTF-8"
 	lineEndings "UNIX"
 	java {
-	importOrderFile("formatter/TASmodImportorder.txt")
-	eclipse().configFile("formatter/TASmodFormatter.xml")
+		importOrderFile("formatter/TASmodImportorder.txt")
+		eclipse().configFile("formatter/TASmodFormatter.xml")
 	}
 	enforceCheck false
 }

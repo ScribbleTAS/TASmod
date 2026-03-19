@@ -1,5 +1,6 @@
 package com.minecrafttas.tasmod.mixin.playbackhooks;
 
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,6 +38,7 @@ import net.minecraft.client.renderer.GlStateManager;
 @Mixin(EntityRenderer.class)
 public class MixinEntityRenderer implements SubtickDuck {
 
+	@Final
 	@Shadow
 	private Minecraft mc;
 	@Shadow
