@@ -54,7 +54,7 @@ public abstract class MixinPlayerChunkMap implements PlayerChunkMapDuck {
 	 * @see SavestateWorldHandler#addPlayersToChunkMap()
 	 */
 	@Override
-	public void forceTick() {
+	public void sendChunksToClient() {
 
 		/*
 		 * Update the chunks to make them eligible to be sent to the client
@@ -86,16 +86,21 @@ public abstract class MixinPlayerChunkMap implements PlayerChunkMapDuck {
 
 		if (!this.pendingSendToPlayers.isEmpty()) {
 
-			int i = 81;
+			/* 
+			 * Turns out, vanilla sends only 82 chunks every tick to the client.
+			 * This messes with the RNG, as after a savestate, the chunks where mobs can spawn are
+			 * different, hence desyncing the TAS...
+			 */
+//			int i = 81;
 			Iterator<PlayerChunkMapEntry> iterator2 = this.pendingSendToPlayers.iterator();
 
 			while (iterator2.hasNext()) {
 				PlayerChunkMapEntry playerChunkMapEntry3 = (PlayerChunkMapEntry) iterator2.next();
 				if (playerChunkMapEntry3.sendToPlayers()) {
 					iterator2.remove();
-					if (--i < 0) {
-						break;
-					}
+//					if (--i < 0) {
+//						break;
+//					}
 				}
 			}
 		}

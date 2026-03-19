@@ -138,8 +138,8 @@ public class Ducks {
 		 * <p>Under normal circumstances, WorldServer#tick() would update the world time to make this happen,
 		 * but our goal with savestates is to load the chunks without advancing the world time.
 		 * Hence why this method sorts and ticks the chunk map, without waiting for the world time
-		 * @see MixinPlayerChunkMap#forceTick()
+		 * @see MixinPlayerChunkMap#sendChunksToClient()
 		 */
-		public void forceTick();
+		public void sendChunksToClient();
 	}
 }
