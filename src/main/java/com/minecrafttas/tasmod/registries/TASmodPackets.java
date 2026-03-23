@@ -13,6 +13,7 @@ import com.minecrafttas.tasmod.playback.tasfile.flavor.SerialiserFlavorBase;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
 import com.minecrafttas.tasmod.savestates.gui.GuiSavestate;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateTempHandler;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage.MotionData;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePauseState;
 import com.minecrafttas.tasmod.util.Component;
@@ -230,6 +231,12 @@ public enum TASmodPackets implements PacketID {
 	 * boolean verbose If a chat message should be printed
 	 */
 	PLAYBACK_STATE,
+	/**
+	 * <p>Same as {@link #PLAYBACK_STATE}, but instructs the controller to activate {@link SavestateTempHandler temporary savestates}
+	 * <p>SIDE: Server<br>
+	 * ARGS: See {@link #PLAYBACK_STATE}
+	 */
+	PLAYBACK_STATE_TEMP_SAVESTATE,
 	/**
 	 * <p>Enables/Disables {@link PlaybackFileCommandExtension PlaybackFileCommandExtensions}
 	 * <p>SIDE: Client<br>
