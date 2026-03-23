@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateTempHandler;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -41,9 +42,14 @@ public class CommandRecord extends CommandBase {
 		if (!(sender instanceof EntityPlayer)) {
 			return;
 		}
+
+		// Activates temporary savestates, creating one when starting the recording
+		SavestateTempHandler tempSavestateHandler = TASmod.savestateHandlerServer.getSavestateTemporaryHandler();
+		tempSavestateHandler.setActive(true);
+
 		if (args.length <= 1) {
 			boolean noSave = args.length == 1 && "nosave".equals(args[0]);
-			TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setNoSave(noSave);
+			TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setActive(!noSave);
 			TASmod.playbackControllerServer.toggleRecording();
 		} else if (args.length > 1) {
 			sender.sendMessage(new TextComponentString(TextFormatting.RED + "Too many arguments. " + getUsage(sender)));
