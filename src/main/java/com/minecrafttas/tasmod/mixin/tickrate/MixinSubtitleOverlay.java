@@ -1,13 +1,13 @@
 package com.minecrafttas.tasmod.mixin.tickrate;
 
 import org.spongepowered.asm.mixin.Mixin;
-//#if MC>=10900
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import com.minecrafttas.tasmod.TASmodClient;
 
 import net.minecraft.client.gui.GuiSubtitleOverlay;
+
 @Mixin(GuiSubtitleOverlay.class)
 public abstract class MixinSubtitleOverlay {
 

@@ -10,10 +10,10 @@ import net.minecraft.client.renderer.RenderGlobal;
 
 @Mixin(RenderGlobal.class)
 public class MixinWorldborder {
-	
+
 	@ModifyVariable(method = "renderWorldBorder", at = @At(value = "STORE"), index = 20, ordinal = 4)
 	public float injectf3(float f) {
 		return (TASmodClient.tickratechanger.getMilliseconds() % 3000L) / 3000.0F;
 	}
-	
+
 }

@@ -27,7 +27,7 @@ import net.minecraft.client.Minecraft;
  * @author Scribble
  *
  */
-public class TickrateChangerClient implements ClientPacketHandler, EventClientGameLoop{
+public class TickrateChangerClient implements ClientPacketHandler, EventClientGameLoop {
 	/**
 	 * The current tickrate of the client
 	 */
@@ -48,22 +48,22 @@ public class TickrateChangerClient implements ClientPacketHandler, EventClientGa
 	 * How many milliseconds should pass in a tick.
 	 */
 	public long millisecondsPerTick = 50L;
-	
+
 	/**
 	 * Timestamp when the last tickrate change was initiated
 	 */
 	public long timestampSinceLastTickRateChange = System.currentTimeMillis();
-	
+
 	/**
 	 * Time since the last tickrate change was initiated without being affected by tickrate
 	 */
 	public long fakeTimeSinceTickRateChange = System.currentTimeMillis();
-	
+
 	/**
 	 * Timestamp since last game loop and only updated when the tickrate is 0
 	 */
 	private long timestampSinceLastGameLoop;
-	
+
 	/**
 	 * Counts the milliseconds when the tickrate is 0
 	 */
@@ -77,7 +77,7 @@ public class TickrateChangerClient implements ClientPacketHandler, EventClientGa
 	 * The current index of the {@link #rates}
 	 */
 	private short rateIndex = 7;	// Defaults to tickrate 20
-	
+
 	/**
 	 * <p>Creates a new Tickratechanger that is intended to run solely on the client side
 	 * <p>The initial tickrate will be set to 20 ticks/s
@@ -172,7 +172,7 @@ public class TickrateChangerClient implements ClientPacketHandler, EventClientGa
 		time *= (ticksPerSecond / 20F);
 		return (long) (fakeTimeSinceTickRateChange + time);
 	}
-	
+
 	/**
 	 * <p>Toggles between tickrate 0 and tickrate > 0
 	 */
@@ -277,7 +277,7 @@ public class TickrateChangerClient implements ClientPacketHandler, EventClientGa
 		rateIndex = (short) clamp(rateIndex, 0, rates.length - 1);
 		changeTickrate(rates[rateIndex]);
 	}
-	
+
 	public void joinServer() {
 		changeServerTickrate(ticksPerSecond);
 	}
@@ -376,9 +376,9 @@ public class TickrateChangerClient implements ClientPacketHandler, EventClientGa
 
 	@Override
 	public void onRunClientGameLoop(Minecraft mc) {
-    	if (ticksPerSecond == 0) {
-    		timeOffset += System.currentTimeMillis() - timestampSinceLastGameLoop;
-    		timestampSinceLastGameLoop = System.currentTimeMillis();
-    	}
+		if (ticksPerSecond == 0) {
+			timeOffset += System.currentTimeMillis() - timestampSinceLastGameLoop;
+			timestampSinceLastGameLoop = System.currentTimeMillis();
+		}
 	}
 }

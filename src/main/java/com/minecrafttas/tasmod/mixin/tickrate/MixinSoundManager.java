@@ -9,8 +9,8 @@ import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.SoundManager;
 
 @Mixin(SoundManager.class)
-public class MixinSoundManager implements com.minecrafttas.tasmod.util.Ducks.SoundManagerDuck{
-	
+public class MixinSoundManager implements com.minecrafttas.tasmod.util.Ducks.SoundManagerDuck {
+
 	@Shadow
 	private boolean loaded;
 	@Shadow
@@ -20,12 +20,11 @@ public class MixinSoundManager implements com.minecrafttas.tasmod.util.Ducks.Sou
 
 	@Override
 	public void updatePitch() {
-		if (this.loaded)
-        {
-            playingSounds.forEach((sourceName, sound)->{
-            	sndSystem.setPitch(sourceName, sound.getPitch());
-            });
-        }
+		if (this.loaded) {
+			playingSounds.forEach((sourceName, sound) -> {
+				sndSystem.setPitch(sourceName, sound.getPitch());
+			});
+		}
 	}
-	
+
 }

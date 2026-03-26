@@ -35,8 +35,8 @@ import net.minecraft.client.Minecraft;
  * @author Unease
  */
 @Mixin(targets = "net/minecraft/client/gui/toasts/GuiToast$ToastInstance")
-public abstract class MixinGuiToast{
-	
+public abstract class MixinGuiToast {
+
 	/**
 	 * Vanilla, current time in ms when the animationBegan. The delta between animationTimer and animation time shows the progress
 	 */
@@ -46,60 +46,59 @@ public abstract class MixinGuiToast{
 	 * Vanilla, the time the animation is visible. Used in the toast instances (e.g. AdvancementToast) to time their animation. Also used to set the visibility to HIDE and make the toast go away
 	 */
 	@Shadow
-    private long visibleTime;
-	
+	private long visibleTime;
+
 	/**
 	 * When entering tickrate 0, store is the (ms) time when tickrate 0 was activated. This time replaces the "animationTimer" during tickrate 0
 	 */
-	private long store=0L;
+	private long store = 0L;
 	/**
 	 * Makes sure the code runs only once when switching between tickrate 0 and not tickrate 0... I have yet to find a more elegant solution...
 	 */
-	private boolean once=false;
+	private boolean once = false;
 	/**
 	 * The offset of the ms time when using tickrate 0. This is used to "resume" the animation without any jumps, after exiting tickrate 0
 	 */
-	private long offset=0L;
+	private long offset = 0L;
 	/**
 	 * When changing the tickrate while a toast is on screen, the {@link #animationTime} is not correct. The correct animationTime can be optained by subtracting the current time from this delta<br>
 	 */
-	private long animationDelta=0L;
+	private long animationDelta = 0L;
 	/**
 	 * When changing the tickrate while a toast is on screen, the {@link #visibleTime} is not correct. The correct visibleTime can be optained by subtracting the current time from this delta<br>
 	 */
-	private long visibleDelta=0L;
+	private long visibleDelta = 0L;
 	/**
 	 * Used to detect a change in the tickrate and to run the code on.
 	 */
-	private float ticksave=TASmodClient.tickratechanger.ticksPerSecond;
-	
-	@ModifyVariable(method = "render(II)Z", at = @At(value = "STORE", ordinal=0))
+	private float ticksave = TASmodClient.tickratechanger.ticksPerSecond;
+
+	@ModifyVariable(method = "render(II)Z", at = @At(value = "STORE", ordinal = 0))
 	public long modifyAnimationTime(long animationTimer) {
 		//===========TICKRATE OTHER THAN 0===========
-		if(TASmodClient.tickratechanger.ticksPerSecond!=0) {
-			if(once) {
-				once=false;
-				offset=Minecraft.getSystemTime()-store;
+		if (TASmodClient.tickratechanger.ticksPerSecond != 0) {
+			if (once) {
+				once = false;
+				offset = Minecraft.getSystemTime() - store;
 			}
-			
-			animationTimer= (long)((Minecraft.getSystemTime()-offset)*(TASmodClient.tickratechanger.ticksPerSecond/20));
-			
-			if(ticksave!=TASmodClient.tickratechanger.ticksPerSecond) {
-				ticksave=TASmodClient.tickratechanger.ticksPerSecond;
-				animationTime=animationTimer-animationDelta;
-				visibleTime=animationTimer-visibleDelta;
+
+			animationTimer = (long) ((Minecraft.getSystemTime() - offset) * (TASmodClient.tickratechanger.ticksPerSecond / 20));
+
+			if (ticksave != TASmodClient.tickratechanger.ticksPerSecond) {
+				ticksave = TASmodClient.tickratechanger.ticksPerSecond;
+				animationTime = animationTimer - animationDelta;
+				visibleTime = animationTimer - visibleDelta;
 			}
-			animationDelta=animationTimer - animationTime;
-			visibleDelta=animationTimer-visibleTime;
-		//===========TICKRATE 0===========
-		}else{
-			if(!once) {
-				once=true;
-				store=(long) ((Minecraft.getSystemTime()-offset));
+			animationDelta = animationTimer - animationTime;
+			visibleDelta = animationTimer - visibleTime;
+			//===========TICKRATE 0===========
+		} else {
+			if (!once) {
+				once = true;
+				store = (long) ((Minecraft.getSystemTime() - offset));
 			}
-			animationTimer=(long) (store*(TASmodClient.tickratechanger.tickrateSaved/20));
+			animationTimer = (long) (store * (TASmodClient.tickratechanger.tickrateSaved / 20));
 		}
 		return animationTimer;
 	}
 }
-

@@ -12,13 +12,13 @@ import paulscode.sound.Source;
 
 @Mixin(Source.class)
 public abstract class MixinAudioPitch {
-	
+
 	@Shadow(remap = false)
 	public float pitch;
-	
+
 	@Inject(method = "setPitch", at = @At(value = "RETURN"), remap = false)
 	public void redosetPitch(float value, CallbackInfo ci) {
 		pitch = value * (TASmodClient.tickratechanger.ticksPerSecond / 20F);
 	}
-	
+
 }
