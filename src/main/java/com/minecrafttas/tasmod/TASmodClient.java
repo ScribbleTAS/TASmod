@@ -203,6 +203,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		EventListenerRegistry.register(savestateHandlerClient);
 
 		EventListenerRegistry.register(virtual.interpolationHandler);
+		EventListenerRegistry.register(tickratechanger);
 	}
 
 	@Override

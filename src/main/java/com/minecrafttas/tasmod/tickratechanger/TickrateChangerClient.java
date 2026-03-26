@@ -4,6 +4,7 @@ import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
 import java.nio.ByteBuffer;
 
+import com.minecrafttas.mctcommon.events.EventClient.EventClientGameLoop;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.networking.Client.Side;
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
@@ -11,6 +12,7 @@ import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventTickratechanger;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
@@ -25,7 +27,7 @@ import net.minecraft.client.Minecraft;
  * @author Scribble
  *
  */
-public class TickrateChangerClient implements ClientPacketHandler {
+public class TickrateChangerClient implements ClientPacketHandler, EventClientGameLoop{
 	/**
 	 * The current tickrate of the client
 	 */
@@ -46,6 +48,26 @@ public class TickrateChangerClient implements ClientPacketHandler {
 	 * How many milliseconds should pass in a tick.
 	 */
 	public long millisecondsPerTick = 50L;
+	
+	/**
+	 * Timestamp when the last tickrate change was initiated
+	 */
+	public long timestampSinceLastTickRateChange = System.currentTimeMillis();
+	
+	/**
+	 * Time since the last tickrate change was initiated without being affected by tickrate
+	 */
+	public long fakeTimeSinceTickRateChange = System.currentTimeMillis();
+	
+	/**
+	 * Timestamp since last game loop and only updated when the tickrate is 0
+	 */
+	private long timestampSinceLastGameLoop;
+	
+	/**
+	 * Counts the milliseconds when the tickrate is 0
+	 */
+	private float timeOffset = 0L;
 
 	/**
 	 * The tickrate steps that can be set via {@link #increaseTickrate()} and {@link #decreaseTickrate()}
@@ -55,7 +77,7 @@ public class TickrateChangerClient implements ClientPacketHandler {
 	 * The current index of the {@link #rates}
 	 */
 	private short rateIndex = 7;	// Defaults to tickrate 20
-
+	
 	/**
 	 * <p>Creates a new Tickratechanger that is intended to run solely on the client side
 	 * <p>The initial tickrate will be set to 20 ticks/s
@@ -142,6 +164,15 @@ public class TickrateChangerClient implements ClientPacketHandler {
 		}
 	}
 
+	/**
+	 * @return Milliseconds affected by tickrate
+	 */
+	public long getMilliseconds() {
+		long time = (long) (System.currentTimeMillis() - timestampSinceLastTickRateChange - timeOffset);
+		time *= (ticksPerSecond / 20F);
+		return (long) (fakeTimeSinceTickRateChange + time);
+	}
+	
 	/**
 	 * <p>Toggles between tickrate 0 and tickrate > 0
 	 */
@@ -246,7 +277,7 @@ public class TickrateChangerClient implements ClientPacketHandler {
 		rateIndex = (short) clamp(rateIndex, 0, rates.length - 1);
 		changeTickrate(rates[rateIndex]);
 	}
-
+	
 	public void joinServer() {
 		changeServerTickrate(ticksPerSecond);
 	}
@@ -341,5 +372,13 @@ public class TickrateChangerClient implements ClientPacketHandler {
 			throw new IllegalArgumentException(min + " > " + max);
 		}
 		return (int) Math.min(max, Math.max(value, min));
+	}
+
+	@Override
+	public void onRunClientGameLoop(Minecraft mc) {
+    	if (ticksPerSecond == 0) {
+    		timeOffset += System.currentTimeMillis() - timestampSinceLastGameLoop;
+    		timestampSinceLastGameLoop = System.currentTimeMillis();
+    	}
 	}
 }
