@@ -142,4 +142,9 @@ public class Ducks {
 		 */
 		public void forceTick();
 	}
+
+	public static interface SoundManagerDuck {
+
+		public void updatePitch();
+	}
 }

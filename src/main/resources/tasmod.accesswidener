@@ -16,3 +16,4 @@ accessible field net/minecraft/client/settings/KeyBinding CATEGORY_ORDER Ljava/u
 accessible method net/minecraft/server/MinecraftServer saveAllWorlds (Z)V
 accessible method net/minecraft/server/MinecraftServer convertMapIfNeeded (Ljava/lang/String;)V
 accessible method net/minecraft/server/MinecraftServer setResourcePackFromWorld (Ljava/lang/String;Lnet/minecraft/world/storage/ISaveHandler;)V
+accessible class net/minecraft/client/audio/SoundManager$SoundSystemStarterThread
