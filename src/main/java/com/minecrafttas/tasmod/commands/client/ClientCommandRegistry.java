@@ -8,7 +8,6 @@ import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.command.CommandBase;
-import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.TextComponentString;
 
 public class ClientCommandRegistry extends AbstractRegistry<ClientCommandBase> {
@@ -38,7 +37,7 @@ public class ClientCommandRegistry extends AbstractRegistry<ClientCommandBase> {
 				try {
 					command.execute(null, player, args);
 				} catch (Exception e) {
-					mc.ingameGUI.addChatMessage(ChatType.CHAT, new TextComponentString(e.getMessage()));
+					mc.ingameGUI.getChatGUI().addToSentMessages(new TextComponentString(e.getMessage()).getFormattedText());
 				}
 				return true;
 			}

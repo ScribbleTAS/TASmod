@@ -13,5 +13,5 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 public interface AccessorAnvilChunkLoader {
 
 	@Accessor
-	public Map<ChunkPos, NBTTagCompound> getChunksToSave();
+	public Map<ChunkPos, NBTTagCompound> getChunksToRemove();
 }

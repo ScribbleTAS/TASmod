@@ -10,9 +10,9 @@ import net.minecraft.client.settings.KeyBinding;
 
 @Mixin(KeyBinding.class)
 public interface AccessorKeyBinding {
-
-	@Accessor("CATEGORY_ORDER")
-	public static Map<String, Integer> getCategoryOrder() {
-		throw new NotImplementedException("WEE WOO");
-	}
+//
+//	@Accessor("CATEGORY_ORDER")
+//	public static Map<String, Integer> getCategoryOrder() {
+//		throw new NotImplementedException("WEE WOO");
+//	}
 }

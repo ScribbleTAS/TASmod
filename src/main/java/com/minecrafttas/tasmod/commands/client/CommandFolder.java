@@ -17,7 +17,6 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
@@ -79,7 +78,7 @@ public class CommandFolder extends ClientCommandBase {
 		}
 
 		if (!Files.exists(file)) {
-			Minecraft.getMinecraft().ingameGUI.addChatMessage(ChatType.CHAT, new TextComponentString("Can't open savestates, as the directory doesn't exist").setStyle(new Style().setColor(TextFormatting.RED)));
+			Minecraft.getMinecraft().ingameGUI.getChatGUI().addToSentMessages(new TextComponentString("Can't open savestates, as the directory doesn't exist").setStyle(new Style().setColor(TextFormatting.RED)).getFormattedText());
 			return;
 		}
 

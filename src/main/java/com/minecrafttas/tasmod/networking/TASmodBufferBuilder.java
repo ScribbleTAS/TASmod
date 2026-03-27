@@ -87,7 +87,7 @@ public class TASmodBufferBuilder extends ByteBufferBuilder {
 		float jumpMovementVector = TASmodBufferBuilder.readFloat(buf);
 		boolean sprinting = TASmodBufferBuilder.readBoolean(buf);
 
-		return new MotionData(x, y, z, rx, ry, rz, sprinting, jumpMovementVector);
+		return new MotionData(x, y, z, rx, rz, sprinting, jumpMovementVector);
 	}
 
 }

@@ -20,11 +20,11 @@ import net.minecraft.network.play.server.SPacketPlayerListItem.Action;
 @Mixin(NetHandlerPlayClient.class)
 public class MixinNetHandlerPlayClient {
 	@Shadow
-	private Minecraft client;
+	private Minecraft gameController;
 
 	@Inject(method = "handleJoinGame", at = @At(value = "RETURN"))
 	public void clientJoinServerEvent(CallbackInfo ci) throws ConnectException {
-		EventListenerRegistry.fireEvent(EventPlayerJoinedClientSide.class, client.player);
+		EventListenerRegistry.fireEvent(EventPlayerJoinedClientSide.class, gameController.player);
 	}
 
 	@Inject(method = "handlePlayerListItem", at = @At(value = "HEAD"))

@@ -87,7 +87,7 @@ public class MixinEntityRenderer implements SubtickDuck {
 				this.smoothCamPitch = 0.0F;
 			}
 
-			mc.getTutorial().handleMouse(mc.mouseHelper);
+			//mc.getTutorial().handleMouse(mc.mouseHelper);
 			TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle((float) -((double) deltaPitch * 0.15D * invertMouse), (float) ((double) deltaYaw * 0.15D), TASmodClient.tickratechanger.ticksPerSecond != 0);
 		}
 	}

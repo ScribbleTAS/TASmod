@@ -20,7 +20,7 @@ import net.minecraft.world.chunk.Chunk;
 public class MixinChunkProviderClient implements ChunkProviderDuck {
 	@Shadow
 	@Final
-	private Long2ObjectMap<Chunk> loadedChunks;
+	private Long2ObjectMap<Chunk> chunkMapping;
 
 	/**
 	 * <p>Unloads chunk data on the client.
@@ -28,13 +28,13 @@ public class MixinChunkProviderClient implements ChunkProviderDuck {
 	 */
 	@Override
 	public void unloadAllChunks() {
-		ObjectIterator<?> objectiterator = this.loadedChunks.values().iterator();
+		ObjectIterator<?> objectiterator = this.chunkMapping.values().iterator();
 
 		while (objectiterator.hasNext()) {
 			Chunk chunk = (Chunk) objectiterator.next();
 			chunk.onUnload();
 		}
-		loadedChunks.clear();
+		chunkMapping.clear();
 	}
 
 }

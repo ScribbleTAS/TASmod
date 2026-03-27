@@ -99,7 +99,7 @@ public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHand
 
 	private List<String> getFilenames() {
 		List<String> tab = new ArrayList<String>();
-		File folder = new File(Minecraft.getMinecraft().gameDir, "saves" + File.separator + "tasfiles");
+		File folder = new File(Minecraft.getMinecraft().mcDataDir, "saves" + File.separator + "tasfiles");
 
 		File[] listOfFiles = folder.listFiles(new FileFilter() {
 			@Override

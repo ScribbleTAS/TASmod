@@ -57,7 +57,7 @@ public class CommandRestartAndPlay extends CommandBase {
 
 	public List<String> getFilenames() {
 		List<String> tab = new ArrayList<String>();
-		File folder = new File(Minecraft.getMinecraft().gameDir, "saves" + File.separator + "tasfiles");
+		File folder = new File(Minecraft.getMinecraft().mcDataDir, "saves" + File.separator + "tasfiles");
 		File[] listOfFiles = folder.listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File pathname) {

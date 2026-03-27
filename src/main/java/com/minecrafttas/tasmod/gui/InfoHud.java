@@ -198,7 +198,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 			return;
 		}
 		try {
-			File tasmodDir = new File(Minecraft.getMinecraft().gameDir, "tasmod");
+			File tasmodDir = new File(Minecraft.getMinecraft().mcDataDir, "tasmod");
 			tasmodDir.mkdir();
 			File configFile = new File(tasmodDir, "infogui2.cfg");
 			if (!configFile.exists())
@@ -227,7 +227,7 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 		try {
 			configuration = new Properties();
 			if (!resetLayout) {
-				File tasmodDir = new File(Minecraft.getMinecraft().gameDir, "tasmod");
+				File tasmodDir = new File(Minecraft.getMinecraft().mcDataDir, "tasmod");
 				tasmodDir.mkdir();
 				File configFile = new File(tasmodDir, "infogui2.cfg");
 				if (!configFile.exists())

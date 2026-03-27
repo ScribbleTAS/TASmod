@@ -139,7 +139,7 @@ public class ClientMotionStorage extends SavestateStorageExtensionBase implement
 						player.motionY,
 						player.motionZ,
 						player.moveForward,
-						player.moveVertical,
+						//player.moveVertical,
 						player.moveStrafing,
 						player.isSprinting(), 
 						player.jumpMovementFactor
@@ -157,7 +157,7 @@ public class ClientMotionStorage extends SavestateStorageExtensionBase implement
 				player.motionZ = data.motionZ;
 
 				player.moveForward = data.deltaX;
-				player.moveVertical = data.deltaY;
+				//player.moveVertical = data.deltaY;
 				player.moveStrafing = data.deltaZ;
 
 				player.setSprinting(data.sprinting);
@@ -197,19 +197,19 @@ public class ClientMotionStorage extends SavestateStorageExtensionBase implement
 		private boolean sprinting;
 		private float jumpMovementFactor;
 
-		public MotionData(double x, double y, double z, float rx, float ry, float rz, boolean sprinting, float jumpMovementVector) {
+		public MotionData(double x, double y, double z, float rx, float rz, boolean sprinting, float jumpMovementVector) {
 			motionX = x;
 			motionY = y;
 			motionZ = z;
 			deltaX = rx;
-			deltaY = ry;
+			//deltaY = ry;
 			deltaZ = rz;
 			this.sprinting = sprinting;
 			this.jumpMovementFactor = jumpMovementVector;
 		}
 
 		public MotionData() {
-			this(0D, 0D, 0D, 0f, 0f, 0f, false, 0f);
+			this(0D, 0D, 0D, 0f, 0f, false, 0f);
 		}
 
 		public double getClientX() {

@@ -93,7 +93,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 		LOGGER.trace(LoggerMarkers.Savestate, "Add player {} to loaded entity list", player.getName());
 		int i = MathHelper.floor(player.posX / 16.0D);
 		int j = MathHelper.floor(player.posZ / 16.0D);
-		Chunk chunk = Minecraft.getMinecraft().world.getChunk(i, j);
+		Chunk chunk = Minecraft.getMinecraft().world.getChunkFromChunkCoords(i, j);
 		for (int k = 0; k < chunk.getEntityLists().length; k++) {
 			if (chunk.getEntityLists()[k].contains(player)) {
 				return;

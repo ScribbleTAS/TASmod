@@ -5,7 +5,7 @@
 	"name": "${name}",
 	"description": "${mod_description}",
 	"authors": ["Scribble", "Pancake"],
-	"contributors": ["tr7zw", "cittyinthecloud", "forester302"],
+	"contributors": ["tr7zw", "cittyinthecloud", "forester302", "Unease"],
 	"contact": {
 		"homepage": "${mod_url}",
 		"sources": "${mod_sources}",
@@ -31,7 +31,7 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.14.19",
-		"minecraft": "1.12.2",
+		"minecraft": "1.11.2",
 		"java": ">=8"
 	},
 	"custom": {

@@ -166,7 +166,7 @@ public class ShieldDownloader implements EventPlayerJoinedClientSide, EventOther
 
 	@Deprecated
 	private Map<String, String> downloadNames() {
-		File feil = new File(Minecraft.getMinecraft().gameDir + File.separator + "playerstt.txt");
+		File feil = new File(Minecraft.getMinecraft().mcDataDir + File.separator + "playerstt.txt");
 		URL url;
 		Map<String, String> uuids = Maps.<String, String>newHashMap();
 

@@ -12,7 +12,6 @@ import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
-import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventTickratechanger;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
@@ -20,6 +19,7 @@ import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer.TickratePau
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Timer;
 
 /**
  * Changes the {@link Minecraft#timer} variable
@@ -131,13 +131,13 @@ public class TickrateChangerClient implements ClientPacketHandler, EventClientGa
 		Minecraft mc = Minecraft.getMinecraft();
 		if (tickrate > 0) {
 			millisecondsPerTick = (long) (1000F / tickrate);
-			mc.timer.tickLength = millisecondsPerTick;
+			mc.timer.ticksPerSecond = millisecondsPerTick;
 
 		} else if (tickrate == 0F) {
 			if (ticksPerSecond != 0) {
 				tickrateSaved = ticksPerSecond;
 			}
-			mc.timer.tickLength = Float.MAX_VALUE;
+			mc.timer.ticksPerSecond = Float.MAX_VALUE;
 		}
 		ticksPerSecond = tickrate;
 		EventListenerRegistry.fireEvent(EventTickratechanger.EventClientTickrateChange.class, tickrate);

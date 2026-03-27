@@ -258,7 +258,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		for (WorldServer world : server.worlds) {
 			AnvilChunkLoader chunkloader = (AnvilChunkLoader) ((AccessorChunkLoader) world.getChunkProvider()).getChunkLoader();
 
-			while (((AccessorAnvilChunkLoader) chunkloader).getChunksToSave().size() > 0) {
+			while (((AccessorAnvilChunkLoader) chunkloader).getChunksToRemove().size() > 0) {
 			}
 		}
 
