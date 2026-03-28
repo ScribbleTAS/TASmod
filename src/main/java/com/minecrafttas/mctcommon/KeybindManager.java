@@ -69,10 +69,10 @@ public class KeybindManager implements EventClientGameLoop {
 		this.keybindings.put(keybindID, keybind);
 		KeyBinding keyBinding = keybind.vanillaKeyBinding;
 
-		Map<String, Integer> categoryOrder = AccessorKeyBinding.getCategoryOrder();
+		//Map<String, Integer> categoryOrder = AccessorKeyBinding.getCategoryOrder();
 
-		if (!categoryOrder.containsKey(keybind.category))
-			categoryOrder.put(keybind.category, categoryOrder.size() + 1);
+//		if (!categoryOrder.containsKey(keybind.category))
+//			categoryOrder.put(keybind.category, categoryOrder.size() + 1);
 
 		// add keybinding
 		options.keyBindings = ArrayUtils.add(options.keyBindings, keyBinding);

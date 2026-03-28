@@ -41,7 +41,7 @@ public class MixinGuiContainer {
 	@Redirect(method = "keyTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;closeScreen()V"))
 	public void redirectCloseScreen(EntityPlayerSP player) {
 		Minecraft mc = Minecraft.getMinecraft();
-		if (TASmodClient.virtual.isKeyDown(mc.gameSettings.keyBindInventory.getKeyCode()) && ((GuiContainer) (Object) this).isFocused()) {
+		if (TASmodClient.virtual.isKeyDown(mc.gameSettings.keyBindInventory.getKeyCode()) && mc.inGameHasFocus) { //((GuiContainer) (Object) this).isFocused()
 			return;
 		}
 		player.closeScreen();

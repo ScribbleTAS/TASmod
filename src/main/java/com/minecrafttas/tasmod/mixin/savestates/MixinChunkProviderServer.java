@@ -24,7 +24,7 @@ public abstract class MixinChunkProviderServer implements ChunkProviderDuck {
 	 */
 	@Shadow
 	@Final
-	private Long2ObjectMap<Chunk> loadedChunks;
+	private Long2ObjectMap<Chunk> id2ChunkMap;
 
 	/**
 	 * <p>Saves and unloads chunk data.
@@ -34,7 +34,7 @@ public abstract class MixinChunkProviderServer implements ChunkProviderDuck {
 	 */
 	@Override
 	public void unloadAllChunks() {
-		ObjectIterator<?> objectiterator = this.loadedChunks.values().iterator();
+		ObjectIterator<?> objectiterator = this.id2ChunkMap.values().iterator();
 
 		while (objectiterator.hasNext()) {
 			Chunk chunk = (Chunk) objectiterator.next();
@@ -42,7 +42,7 @@ public abstract class MixinChunkProviderServer implements ChunkProviderDuck {
 			this.saveChunkExtraData(chunk);
 			chunk.onUnload();
 		}
-		loadedChunks.clear();
+		id2ChunkMap.clear();
 	}
 
 	@Shadow

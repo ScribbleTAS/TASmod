@@ -74,7 +74,7 @@ public class SavestateWorldHandler {
 		int i = MathHelper.floor(player.posX / 16.0D);
 		int j = MathHelper.floor(player.posZ / 16.0D);
 		WorldServer world = player.getServerWorld();
-		Chunk chunk = world.getChunk(i, j);
+		Chunk chunk = world.getChunkFromChunkCoords(i, j);
 		for (int k = 0; k < chunk.getEntityLists().length; k++) {
 			if (chunk.getEntityLists()[k].contains(player)) {
 				return;

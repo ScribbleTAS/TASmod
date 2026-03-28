@@ -56,7 +56,7 @@
 		"playbackhooks.MixinGuiClickableScrolledSelectionListProxy",
 		"playbackhooks.MixinGuiContainer",
 		"playbackhooks.MixinGuiContainerCreative",
-		"playbackhooks.MixinGuiScreenAdvancements",
+		"playbackhooks.MixinGuiAchievements",
 		"playbackhooks.MixinGuiSlot",
 		"playbackhooks.MixinGuiStats",
 		"playbackhooks.MixinKeyBinding",

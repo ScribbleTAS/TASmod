@@ -56,7 +56,7 @@ public class SavestatePlayerHandlerClient implements ClientPacketHandler {
 		double z = player.motionZ;
 
 		float rx = player.moveForward;
-		float ry = player.moveVertical;
+		//float ry = player.moveVertical;
 		float rz = player.moveStrafing;
 
 		boolean sprinting = player.isSprinting();
@@ -69,7 +69,7 @@ public class SavestatePlayerHandlerClient implements ClientPacketHandler {
 		player.motionZ = z;
 
 		player.moveForward = rx;
-		player.moveVertical = ry;
+		//player.moveVertical = ry;
 		player.moveStrafing = rz;
 
 		player.setSprinting(sprinting);

@@ -23,7 +23,6 @@ import com.minecrafttas.tasmod.virtual.VirtualKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiDownloadTerrain;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.TextFormatting;
 
 /**
@@ -68,7 +67,7 @@ public enum TASmodPackets implements PacketID {
 		String keyName = VirtualKey.getName(tickrate0Kbd.vanillaKeyBinding.getKeyCode());
 
 		if (TASmodClient.config.getBoolean(TASmodConfig.UnpauseWarn))
-			mc.ingameGUI.addChatMessage(ChatType.CHAT, Component.translatable("msg.tasmod.tickrate.tr0warn", Component.literal(keyName).withStyle(TextFormatting.GOLD)).withStyle(TextFormatting.GREEN).build());
+			mc.ingameGUI.getChatGUI().printChatMessage(Component.translatable("msg.tasmod.tickrate.tr0warn", Component.literal(keyName).withStyle(TextFormatting.GOLD)).withStyle(TextFormatting.GREEN).build());
 	}),
 	/**
 	 * <p>Creates a savestate

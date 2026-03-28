@@ -37,7 +37,6 @@ import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 
@@ -186,7 +185,7 @@ public class CommandFileCommand extends CommandBase implements ClientPacketHandl
 				boolean success = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled(filecommand, enable);
 
 				String msg = success ? String.format("%s%s file command: %s", TextFormatting.GREEN, enable ? "Enabled" : "Disabled", filecommand) : String.format("%sFailed to %s file command: %s", TextFormatting.RED, enable ? "enable" : "disable", filecommand);
-				Minecraft.getMinecraft().ingameGUI.addChatMessage(ChatType.CHAT, new TextComponentString(msg));
+				Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(msg));
 				break;
 			default:
 				break;
