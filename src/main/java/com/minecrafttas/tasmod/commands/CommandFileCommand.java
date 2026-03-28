@@ -185,7 +185,7 @@ public class CommandFileCommand extends CommandBase implements ClientPacketHandl
 				boolean success = TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setEnabled(filecommand, enable);
 
 				String msg = success ? String.format("%s%s file command: %s", TextFormatting.GREEN, enable ? "Enabled" : "Disabled", filecommand) : String.format("%sFailed to %s file command: %s", TextFormatting.RED, enable ? "enable" : "disable", filecommand);
-				Minecraft.getMinecraft().ingameGUI.getChatGUI().addToSentMessages(new TextComponentString(msg).getFormattedText());
+				Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(msg));
 				break;
 			default:
 				break;

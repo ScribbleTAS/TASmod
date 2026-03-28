@@ -37,7 +37,7 @@ public class ClientCommandRegistry extends AbstractRegistry<ClientCommandBase> {
 				try {
 					command.execute(null, player, args);
 				} catch (Exception e) {
-					mc.ingameGUI.getChatGUI().addToSentMessages(new TextComponentString(e.getMessage()).getFormattedText());
+					mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(e.getMessage()));
 				}
 				return true;
 			}

@@ -78,7 +78,7 @@ public class CommandFolder extends ClientCommandBase {
 		}
 
 		if (!Files.exists(file)) {
-			Minecraft.getMinecraft().ingameGUI.getChatGUI().addToSentMessages(new TextComponentString("Can't open savestates, as the directory doesn't exist").setStyle(new Style().setColor(TextFormatting.RED)).getFormattedText());
+			Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString("Can't open savestates, as the directory doesn't exist").setStyle(new Style().setColor(TextFormatting.RED)));
 			return;
 		}
 

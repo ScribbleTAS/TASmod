@@ -67,7 +67,7 @@ public enum TASmodPackets implements PacketID {
 		String keyName = VirtualKey.getName(tickrate0Kbd.vanillaKeyBinding.getKeyCode());
 
 		if (TASmodClient.config.getBoolean(TASmodConfig.UnpauseWarn))
-			mc.ingameGUI.getChatGUI().addToSentMessages(Component.translatable("msg.tasmod.tickrate.tr0warn", Component.literal(keyName).withStyle(TextFormatting.GOLD)).withStyle(TextFormatting.GREEN).build().getFormattedText());
+			mc.ingameGUI.getChatGUI().printChatMessage(Component.translatable("msg.tasmod.tickrate.tr0warn", Component.literal(keyName).withStyle(TextFormatting.GOLD)).withStyle(TextFormatting.GREEN).build());
 	}),
 	/**
 	 * <p>Creates a savestate
