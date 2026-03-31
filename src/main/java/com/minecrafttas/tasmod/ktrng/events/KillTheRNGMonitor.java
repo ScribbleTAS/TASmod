@@ -27,6 +27,9 @@ public class KillTheRNGMonitor implements EventPlaybackServer.EventControllerSta
 
 	@Override
 	public void onControllerStateChange(TASstate newstate, TASstate oldstate) {
+		if (!isEnabled()) {
+			return;
+		}
 		Path serverDir = TASmod.getServerInstance().getDataDirectory().toPath();
 
 		if (isActive()) {
@@ -64,6 +67,9 @@ public class KillTheRNGMonitor implements EventPlaybackServer.EventControllerSta
 
 	@Override
 	public void onRecordingClear() {
+		if (!isEnabled()) {
+			return;
+		}
 		Path serverDir = TASmod.getServerInstance().getDataDirectory().toPath();
 		try {
 			Files.delete(serverDir.resolve("ktrng_recording.txt"));
@@ -79,15 +85,19 @@ public class KillTheRNGMonitor implements EventPlaybackServer.EventControllerSta
 	}
 
 	@Override
-	public void onRNGCall(RNGSide side, String eventType, long seed, String value, String rngClass, StackTraceElement[] stackTraceElements) {
+	public void onRNGCall(RNGSide side, String eventType, long seed, String value, String rngClass) {
 
-		if (!isActive()) {
+		if (!isActive() || !isEnabled()) {
 			return;
 		}
 
+		StackTraceElement[] stackTraceElements = null;
+		stackTraceElements = Thread.currentThread().getStackTrace();
+
 		List<String> classOut = new ArrayList<>();
 		if (stackTraceElements != null && stackTraceElements.length != 0) {
-			for (int i = 0; i < 10; i++) {
+			int start = 10;
+			for (int i = start; i < stackTraceElements.length; i++) {
 				String out = formatStackTraceElement(stackTraceElements[i]);
 				if (out != null)
 					classOut.add(out);
@@ -103,6 +113,10 @@ public class KillTheRNGMonitor implements EventPlaybackServer.EventControllerSta
 		if (thread != null && TASmod.isDevEnvironment) {
 			thread.addLine(out);
 		}
+	}
+
+	private boolean isEnabled() {
+		return System.getProperty("tasmod.killtherng.trace", "false").equals("true");
 	}
 
 	public boolean isActive() {
