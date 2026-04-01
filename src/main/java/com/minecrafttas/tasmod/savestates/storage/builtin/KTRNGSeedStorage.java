@@ -95,6 +95,8 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 			worldList.put(id, worldRandomness);
 		}
 
+		KTRNGWorldHandler.setWorldRandomnessMap(worldList);
+
 		JsonObject worldLCGList = worldRandomJson.get("lcgList").getAsJsonObject();
 		Map<Integer, Integer> lcgList = new HashMap<>();
 		for (Entry<String, JsonElement> entry : worldLCGList.entrySet()) {
@@ -103,8 +105,7 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 
 			lcgList.put(id, lcg);
 		}
-
-		KTRNGWorldHandler.setWorldRandomnessMap(worldList);
+		KTRNGWorldHandler.setWorldLCGMap(lcgList);
 
 		long mathSeed = loadedData.get("mathRandom").getAsLong();
 		TASmod.mathRandomness.setSeed(mathSeed);
