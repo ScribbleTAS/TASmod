@@ -57,85 +57,93 @@ public class SavestateTempHandler implements EventControllerStateChange, EventRe
 		if (newstate == RECORDING && createState) {
 			logger.info("Creating temporary savestate");
 			createState = false;
-			try {
-				handler.saveStateTemp((paths) -> {
-					try {
-						TASmod.server.sendToAll(new TASmodBufferBuilder(SAVESTATE_CLEAR_SCREEN));
-					} catch (Exception e) {
-						logger.catching(e);
-					}
-				});
-			} catch (SavestateException e) {
-				TASmod.getServerInstance().getServer().getPlayerList().sendMessage(Component.translatable(e.getMessage()).withStyle(TextFormatting.RED).build());
-
-				try {
-					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
-					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
-				} catch (Exception e1) {
-					logger.catching(e);
-				}
-
-				LOGGER.error("Failed to create a temp savestate");
-				LOGGER.catching(e);
-			} catch (Exception e) {
-				Throwable cause = e.getCause();
-				if (cause == null) {
-					cause = e;
-				}
-				TASmod.getServerInstance().getPlayerList().sendMessage(Component.translatable("msg.tasmod.savestate.failure", e.getMessage()).withStyle(TextFormatting.RED).build());
-
-				try {
-					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
-					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
-				} catch (Exception e1) {
-					logger.catching(e);
-				}
-
-				LOGGER.error("Failed to create a temp savestate");
-				LOGGER.catching(e);
-			} finally {
-				handler.resetState();
-			}
+			savestate();
 		} else if (newstate == PLAYBACK) {
 			logger.info("Loading temporary savestate");
 			createState = false;
+			loadstate();
+		}
+	}
+
+	public void loadstate() {
+		try {
+			handler.loadStateTemp((paths) -> {
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(SAVESTATE_CLEAR_SCREEN));
+				} catch (Exception e) {
+					logger.catching(e);
+				}
+			});
+		} catch (SavestateException e) {
+			TASmod.getServerInstance().getServer().getPlayerList().sendMessage(Component.translatable(e.getMessage()).withStyle(TextFormatting.RED).build());
+
 			try {
-				handler.loadStateTemp((paths) -> {
-					try {
-						TASmod.server.sendToAll(new TASmodBufferBuilder(SAVESTATE_CLEAR_SCREEN));
-					} catch (Exception e) {
-						logger.catching(e);
-					}
-				});
-			} catch (SavestateException e) {
-				TASmod.getServerInstance().getServer().getPlayerList().sendMessage(Component.translatable(e.getMessage()).withStyle(TextFormatting.RED).build());
-
-				try {
-					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
-				} catch (Exception e1) {
-					logger.catching(e);
-				}
-
-				LOGGER.error("Failed to load a temp savestate");
-				LOGGER.catching(e);
-			} catch (Exception e) {
-				Throwable cause = e.getCause();
-				if (cause == null) {
-					cause = e;
-				}
-				TASmod.getServerInstance().getPlayerList().sendMessage(Component.translatable("msg.tasmod.savestate.failure", e.getMessage()).withStyle(TextFormatting.RED).build());
-
-				try {
-					TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
-				} catch (Exception e1) {
-					logger.catching(e);
-				}
-
-				LOGGER.error("Failed to load a temp savestate");
-				LOGGER.catching(e);
-			} finally {
-				handler.resetState();
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
+			} catch (Exception e1) {
+				logger.catching(e);
 			}
+
+			LOGGER.error("Failed to load a temp savestate");
+			LOGGER.catching(e);
+		} catch (Exception e) {
+			Throwable cause = e.getCause();
+			if (cause == null) {
+				cause = e;
+			}
+			TASmod.getServerInstance().getPlayerList().sendMessage(Component.translatable("msg.tasmod.savestate.failure", e.getMessage()).withStyle(TextFormatting.RED).build());
+
+			try {
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
+			} catch (Exception e1) {
+				logger.catching(e);
+			}
+
+			LOGGER.error("Failed to load a temp savestate");
+			LOGGER.catching(e);
+		} finally {
+			handler.resetState();
+		}
+	}
+
+	public void savestate() {
+		try {
+			handler.saveStateTemp((paths) -> {
+				try {
+					TASmod.server.sendToAll(new TASmodBufferBuilder(SAVESTATE_CLEAR_SCREEN));
+				} catch (Exception e) {
+					logger.catching(e);
+				}
+			});
+		} catch (SavestateException e) {
+			TASmod.getServerInstance().getServer().getPlayerList().sendMessage(Component.translatable(e.getMessage()).withStyle(TextFormatting.RED).build());
+
+			try {
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
+			} catch (Exception e1) {
+				logger.catching(e);
+			}
+
+			LOGGER.error("Failed to create a temp savestate");
+			LOGGER.catching(e);
+		} catch (Exception e) {
+			Throwable cause = e.getCause();
+			if (cause == null) {
+				cause = e;
+			}
+			TASmod.getServerInstance().getPlayerList().sendMessage(Component.translatable("msg.tasmod.savestate.failure", e.getMessage()).withStyle(TextFormatting.RED).build());
+
+			try {
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.TICKRATE_0_WARN));
+				TASmod.server.sendToAll(new TASmodBufferBuilder(TASmodPackets.CLEAR_SCREEN));
+			} catch (Exception e1) {
+				logger.catching(e);
+			}
+
+			LOGGER.error("Failed to create a temp savestate");
+			LOGGER.catching(e);
+		} finally {
+			handler.resetState();
 		}
 	}
 

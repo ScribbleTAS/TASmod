@@ -110,7 +110,7 @@ public class KillTheRNGMonitor implements EventPlaybackServer.EventControllerSta
 	private FileThread thread = null;
 
 	public void writeDebug(String out) {
-		if (thread != null && TASmod.isDevEnvironment) {
+		if (isEnabled() && isActive()) {
 			thread.addLine(out);
 		}
 	}
