@@ -47,6 +47,8 @@ public class LoggerMarkers implements EventDrawHotbarAlways {
 
 	public static final Marker Mouse = MarkerManager.getMarker("Mouse");
 
+	public static final Marker KillTheRNG = MarkerManager.getMarker("KillTheRNG");
+
 	@Override
 	public void onDrawHotbarAlways() {
 		ScaledResolution scaledresolution = new ScaledResolution(Minecraft.getMinecraft());

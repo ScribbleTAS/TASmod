@@ -384,7 +384,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		Path sourcefolder = paths.getSourceFolder();
 		Path targetfolder = paths.getTargetFolder();
 
-		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstate.class, server, paths);
+		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstatePre.class, server, paths);
 
 		/*
 		 * Prevents loading an InputSavestate when loading index 0 (Index 0 is the
@@ -445,6 +445,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 
 		worldHandler.sendChunksToClient();
 
+		EventListenerRegistry.fireEvent(EventSavestate.EventServerLoadstatePost.class, server, paths);
+
 		if (SavestateFlags.BLOCK_PAUSE_TICKRATE.isBlocked(flags)) {
 			TASmod.tickratechanger.pauseGame(false);
 		} else {
@@ -467,7 +469,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		 *  Rn it's not a problem, but this should be looked at...
 		 */
 		TASmod.tickSchedulerServer.add(() -> {
-			EventListenerRegistry.fireEvent(EventSavestate.EventServerCompleteLoadstate.class);
+			EventListenerRegistry.fireEvent(EventSavestate.EventServerCompleteLoadstate.class, server, paths);
 			onLoadstateComplete();
 		});
 	}

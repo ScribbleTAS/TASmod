@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import com.minecrafttas.mctcommon.CommandRegistry;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerInit;
+import com.minecrafttas.mctcommon.events.EventServer.EventServerStart;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerStop;
 import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
 import com.minecrafttas.mctcommon.networking.Server;
@@ -24,6 +25,10 @@ import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
+import com.minecrafttas.tasmod.ktrng.GlobalRandomnessTimer;
+import com.minecrafttas.tasmod.ktrng.builtin.MathRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.WorldSeedRandomness;
+import com.minecrafttas.tasmod.ktrng.events.KillTheRNGMonitor;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
@@ -32,6 +37,7 @@ import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateGuiHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.KTRNGSeedStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -48,7 +54,7 @@ import net.minecraft.server.MinecraftServer;
  *
  * @author Scribble
  */
-public class TASmod implements ModInitializer, EventServerInit, EventServerStop {
+public class TASmod implements ModInitializer, EventServerStart, EventServerInit, EventServerStop {
 
 	public static final Logger LOGGER = LogManager.getLogger("TASmod");
 
@@ -85,6 +91,16 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 	public static ClientMotionStorage motionStorage = new ClientMotionStorage();
 
+	public static GlobalRandomnessTimer globalRandomness;
+
+	public static KTRNGSeedStorage seedStorage = new KTRNGSeedStorage();
+
+	public static MathRandomness mathRandomness = new MathRandomness(0);
+
+	public static WorldSeedRandomness worldSeedRandomness = new WorldSeedRandomness(0);
+
+	public static KillTheRNGMonitor debugRand = new KillTheRNGMonitor();
+
 	@Override
 	public void onInitialize() {
 
@@ -111,6 +127,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		EventListenerRegistry.register(ticksyncServer);
 		EventListenerRegistry.register(tickratechanger);
 		//		EventListenerRegistry.register(ktrngHandler);
+		EventListenerRegistry.register(debugRand);
 
 		// Register packet handlers
 		LOGGER.info(LoggerMarkers.Networking, "Registering network handlers");
@@ -128,10 +145,16 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 		EventListenerRegistry.register(resourcepackHandler);
 		PacketHandlerRegistry.register(playUntil);
 		EventListenerRegistry.register(playUntil);
-
 		EventListenerRegistry.register(TASmodAPIRegistry.SAVESTATE_STORAGE);
 
 		registerSavestateStorage();
+	}
+
+	@Override
+	public void onServerStart(MinecraftServer server) {
+		globalRandomness = new GlobalRandomnessTimer();
+		EventListenerRegistry.register(globalRandomness);
+		mathRandomness = new MathRandomness(0);
 	}
 
 	@Override
@@ -196,6 +219,7 @@ public class TASmod implements ModInitializer, EventServerInit, EventServerStop 
 
 	private void registerSavestateStorage() {
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(motionStorage);
+		TASmodAPIRegistry.SAVESTATE_STORAGE.register(seedStorage);
 	}
 
 	public static MinecraftServer getServerInstance() {

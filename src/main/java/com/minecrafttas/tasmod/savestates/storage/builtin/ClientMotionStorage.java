@@ -87,7 +87,7 @@ public class ClientMotionStorage extends SavestateStorageExtensionBase implement
 	}
 
 	@Override
-	public void onLoadstate(MinecraftServer server, JsonObject loadedData) {
+	public void onLoadstatePost(MinecraftServer server, JsonObject loadedData) {
 		PlayerList list = server.getPlayerList();
 
 		for (Entry<String, JsonElement> motionDataJsonElement : loadedData.entrySet()) {
@@ -97,17 +97,16 @@ public class ClientMotionStorage extends SavestateStorageExtensionBase implement
 			EntityPlayerMP player;
 			if (playerUUID.equals("singleplayer")) {
 				String ownerName = server.getServerOwner();
-				if (ownerName == null) {
+				if (ownerName == null)
 					continue;
-				}
+
 				player = list.getPlayerByUsername(ownerName);
 			} else {
 				player = list.getPlayerByUUID(UUID.fromString(playerUUID));
 			}
 
-			if (player == null) {
+			if (player == null)
 				continue;
-			}
 
 			try {
 				TASmod.server.sendTo(player, new TASmodBufferBuilder(SAVESTATE_SET_MOTION).writeMotionData(motionData));

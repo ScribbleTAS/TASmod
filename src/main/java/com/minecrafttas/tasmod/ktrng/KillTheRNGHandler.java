@@ -39,8 +39,8 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 	 * 
 	 * @param isLoaded If the KillTheRNG mod is loaded
 	 */
+	@Deprecated
 	public KillTheRNGHandler(boolean isLoaded) {
-
 		this.isLoaded = isLoaded;
 
 		if (isLoaded) {
@@ -54,6 +54,7 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 		}
 	}
 
+	@Deprecated
 	public long advanceGlobalSeedServer() {
 //		if (isLoaded()) {
 //			return KillTheRNG.commonRandom.nextSeed();
@@ -62,6 +63,7 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 //		}
 	}
 
+	@Deprecated
 	public long getGlobalSeedServer() {
 //		if (isLoaded()) {
 //			return KillTheRNG.commonRandom.GlobalServer.getSeed();
@@ -70,6 +72,7 @@ public class KillTheRNGHandler implements EventServerTick, EventPlayerJoinedClie
 //		}
 	}
 
+	@Deprecated
 	public boolean isLoaded() {
 		return isLoaded;
 	}

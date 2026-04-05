@@ -14,6 +14,19 @@ import net.minecraft.server.MinecraftServer;
 public interface EventServer {
 
 	/**
+	 * Fired, just before the server initialised, for both integrated and dedicated server.
+	 */
+	@FunctionalInterface
+	public static interface EventServerStart extends EventBase {
+
+		/**
+		 * Fired, when the server is initialised, for both integrated and dedicated server.
+		 * @param server The server 
+		 */
+		public void onServerStart(MinecraftServer server);
+	}
+
+	/**
 	 * Fired, when the server is initialised, for both integrated and dedicated server.
 	 */
 	@FunctionalInterface

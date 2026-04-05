@@ -12,7 +12,6 @@ import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
-import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventTickratechanger;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodPackets;

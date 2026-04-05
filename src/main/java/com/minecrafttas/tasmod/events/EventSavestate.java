@@ -27,7 +27,7 @@ public interface EventSavestate {
 	 * Fired when loading a savestate, before the savestate folder is copied
 	 */
 	@FunctionalInterface
-	interface EventServerLoadstate extends EventBase {
+	interface EventServerLoadstatePre extends EventBase {
 
 		/**
 		 * Fired when loading a savestate, before the savestate folder is copied
@@ -35,7 +35,22 @@ public interface EventSavestate {
 		 * @param server The server instance
 		 * @param paths The {@link SavestatePaths} object
 		 */
-		public void onServerLoadstate(MinecraftServer server, SavestatePaths paths);
+		public void onServerLoadstatePre(MinecraftServer server, SavestatePaths paths);
+	}
+
+	/**
+	 * Fired when loading a savestate, after the savestate folder is copied
+	 */
+	@FunctionalInterface
+	interface EventServerLoadstatePost extends EventBase {
+
+		/**
+		 * Fired when loading a savestate, after the savestate folder is copied
+		 * 
+		 * @param server The server instance
+		 * @param paths The {@link SavestatePaths} object
+		 */
+		public void onServerLoadstatePost(MinecraftServer server, SavestatePaths paths);
 	}
 
 	/**
@@ -47,7 +62,7 @@ public interface EventSavestate {
 		/**
 		 * Fired one tick after a loadstate was carried out
 		 */
-		public void onServerLoadstateComplete();
+		public void onServerLoadstateComplete(MinecraftServer server, SavestatePaths paths);
 	}
 
 	/**

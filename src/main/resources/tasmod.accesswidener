@@ -1,19 +1,30 @@
 accessWidener v1 named
 
+# Playback
 accessible field net/minecraft/client/Minecraft timer Lnet/minecraft/util/Timer;
 accessible method net/minecraft/client/Minecraft runTickKeyboard ()V
 accessible method net/minecraft/client/Minecraft runTickMouse ()V
 
+# Tickratechanger
 accessible field net/minecraft/util/Timer tickLength F
 
+# Savestates
 accessible field net/minecraft/world/World unloadedEntityList Ljava/util/List;
 accessible field net/minecraft/world/World worldInfo Lnet/minecraft/world/storage/WorldInfo;
-
 accessible method net/minecraft/world/storage/SaveHandler setSessionLock ()V
-
-accessible field net/minecraft/client/settings/KeyBinding CATEGORY_ORDER Ljava/util/Map;
 
 accessible method net/minecraft/server/MinecraftServer saveAllWorlds (Z)V
 accessible method net/minecraft/server/MinecraftServer convertMapIfNeeded (Ljava/lang/String;)V
 accessible method net/minecraft/server/MinecraftServer setResourcePackFromWorld (Ljava/lang/String;Lnet/minecraft/world/storage/ISaveHandler;)V
+
+# Tickratechanger
 accessible class net/minecraft/client/audio/SoundManager$SoundSystemStarterThread
+
+# Keybindings
+accessible field net/minecraft/client/settings/KeyBinding CATEGORY_ORDER Ljava/util/Map;
+
+# KillTheRNG
+accessible field net/minecraft/entity/Entity rand Ljava/util/Random;
+accessible field net/minecraft/world/World updateLCG I
+mutable field net/minecraft/world/World rand Ljava/util/Random;
+

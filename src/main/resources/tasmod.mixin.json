@@ -21,7 +21,15 @@
 		"events.MixinEntityPlayerMP",
 
 		// Fixing forge and vanilla stuff
-		"fixes.MixinDragonFightManager"
+		"fixes.MixinDragonFightManager",
+		
+		"killtherng.MixinEntity",
+		"killtherng.MixinWorld",
+		"killtherng.mathrand.MixinEntityLivingBase",
+		"killtherng.mathrand.MixinEntityItem",
+		"killtherng.mathrand.MixinEntityXPOrb",
+		"killtherng.mathrand.MixinEntityTNTPrimed",
+		"killtherng.mathrand.MixinWorldEntitySpawner"
 		
 	],
 	"client": [
@@ -69,6 +77,9 @@
 		"fixes.MixinMinecraftFullscreen",
 		"fixes.MixinNetworkManager",
 		"fixes.MixinMouseHelper",
+		
+		// KTRNG
+		"killtherng.MixinRenderLivingBase"
 		
 		// Tickrate Rendering
 		"tickrate.MixinAudioPitch",
