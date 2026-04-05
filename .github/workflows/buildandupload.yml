@@ -6,7 +6,7 @@ name: Build and Upload to Discord
 on:
   push:
     branches:
-      - develop
+      - '**'
     tags-ignore:
       - '**'
 
