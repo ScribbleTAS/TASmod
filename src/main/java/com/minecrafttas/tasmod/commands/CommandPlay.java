@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateTempHandler;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -41,9 +42,14 @@ public class CommandPlay extends CommandBase {
 		if (!(sender instanceof EntityPlayer)) {
 			return;
 		}
+
+		// Activates temporary savestates, loading one when starting the playback
+		SavestateTempHandler tempSavestateHandler = TASmod.savestateHandlerServer.getSavestateTemporaryHandler();
+		tempSavestateHandler.setActive(true);
+
 		if (args.length <= 1) {
 			boolean noSave = args.length == 1 && "nosave".equals(args[0]);
-			TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setNoSave(noSave);
+			tempSavestateHandler.setActive(!noSave);
 
 			TASmod.playbackControllerServer.togglePlayback();
 		} else if (args.length > 2) {

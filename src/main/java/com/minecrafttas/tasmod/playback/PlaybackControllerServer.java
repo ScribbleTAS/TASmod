@@ -66,8 +66,12 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 
 		switch (packet) {
 
+			case PLAYBACK_STATE_TEMP_SAVESTATE:
+				if (TASmod.savestateHandlerServer != null)
+					TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setActive(true);
 			case PLAYBACK_STATE:
 				TASstate networkState = TASmodBufferBuilder.readEnum(TASstate.class, buf);
+
 				/* TODO Permissions */
 				setTASState(networkState);
 				break;
@@ -158,7 +162,6 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 				TASmod.savestateHandlerServer.resetState();
 			}
 
-			TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setNoSave(true);
 			setTASStateServer(TASstate.RECORDING);
 
 			try {
@@ -188,7 +191,6 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 				TASmod.savestateHandlerServer.resetState();
 			}
 
-			TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setNoSave(true);
 			setTASStateServer(TASstate.PLAYBACK);
 
 			try {
@@ -200,7 +202,6 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 	}
 
 	public void restartAndPlay(String tasFileName) {
-		TASmod.savestateHandlerServer.getSavestateTemporaryHandler().setNoSave(true);
 		TASmod.playbackControllerServer.setTASStateServer(PLAYBACK);
 
 		TASmod.tickSchedulerServer.add(() -> {

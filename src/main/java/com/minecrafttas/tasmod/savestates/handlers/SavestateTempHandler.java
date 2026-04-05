@@ -35,7 +35,7 @@ public class SavestateTempHandler implements EventControllerStateChange, EventRe
 	private final SavestateHandlerServer handler;
 
 	private boolean createState = true;
-	private boolean noSave = false;
+	private boolean active = false;
 
 	public SavestateTempHandler(SavestateHandlerServer handler, Logger logger) {
 		this.logger = logger;
@@ -49,10 +49,10 @@ public class SavestateTempHandler implements EventControllerStateChange, EventRe
 			return;
 		}
 
-		if (noSave) {
-			noSave = false;
+		if (!active) {
 			return;
 		}
+		active = false;
 
 		if (newstate == RECORDING && createState) {
 			logger.info("Creating temporary savestate");
@@ -152,8 +152,8 @@ public class SavestateTempHandler implements EventControllerStateChange, EventRe
 		createState = true;
 	}
 
-	public void setNoSave(boolean noSave) {
-		this.noSave = noSave;
+	public void setActive(boolean active) {
+		this.active = active;
 	}
 
 	@Override

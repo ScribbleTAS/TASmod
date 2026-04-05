@@ -80,5 +80,14 @@
 		
 		// KTRNG
 		"killtherng.MixinRenderLivingBase"
+		
+		// Tickrate Rendering
+		"tickrate.MixinAudioPitch",
+		"tickrate.MixinEnchantmentGlimm",
+		"tickrate.MixinGuiToast",
+		"tickrate.MixinSoundManager",
+		"tickrate.MixinSubtitle",
+		"tickrate.MixinSubtitleOverlay",
+		"tickrate.MixinWorldborder"
 	]
 }
