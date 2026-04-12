@@ -34,7 +34,6 @@ import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedExcep
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
-import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventClient.EventDrawScreen;
@@ -52,12 +51,12 @@ import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
+import com.minecrafttas.tasmod.util.DebugWriter;
 import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
-import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
@@ -102,7 +101,7 @@ public class PlaybackControllerClient implements
 	
 //@formatter:on
 {
-	private Logger logger = TASmod.LOGGER;
+	private final Logger logger;
 
 	/**
 	 * The current state of the controller.
@@ -118,6 +117,11 @@ public class PlaybackControllerClient implements
 	 * The current index of the inputs
 	 */
 	private long index;
+
+	/**
+	 * The virtual input instance
+	 */
+	private final VirtualInput virtual;
 
 	/**
 	 * <p>The current keyboard used in the {@link PlaybackControllerClient PlaybackController}
@@ -171,9 +175,10 @@ public class PlaybackControllerClient implements
 
 	// =====================================================================================================
 
-	public PlaybackControllerClient() {
+	public PlaybackControllerClient(VirtualInput virtual, Logger logger) {
+		this.virtual = virtual;
+		this.logger = logger;
 		tasFileDirectory = TASmodClient.tasfiledirectory;
-
 		inputs = new BigArrayList<InputContainer>(tasFileDirectory.resolve("temp").toAbsolutePath().toString());
 	}
 
@@ -230,11 +235,9 @@ public class PlaybackControllerClient implements
 			switch (stateIn) {
 				case PLAYBACK:
 					startPlayback();
-					state = TASstate.PLAYBACK;
 					return verbose ? TextFormatting.GREEN + "Starting playback" : "";
 				case RECORDING:
 					startRecording();
-					state = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Starting a recording" : "";
 				case PAUSED:
 					return verbose ? TextFormatting.RED + "Can't pause anything because nothing is running" : "";
@@ -254,7 +257,6 @@ public class PlaybackControllerClient implements
 					return verbose ? TextFormatting.GREEN + "Pausing a recording" : "";
 				case NONE:
 					stopRecording();
-					state = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Stopping the recording" : "";
 			}
 		} else if (state == TASstate.PLAYBACK) { // If the container is currently playing back
@@ -264,13 +266,12 @@ public class PlaybackControllerClient implements
 				case RECORDING:
 					stopPlayback(false);
 					startRecording();
-					state = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Switching from playback to recording" : "";
 				case PAUSED:
 					LOGGER.debug(LoggerMarkers.Playback, "Pausing a playback");
 					state = TASstate.PAUSED;
 					stateAfterPause = TASstate.PLAYBACK;
-					TASmodClient.virtual.clearNext();
+					virtual.clearNext();
 					return verbose ? TextFormatting.GREEN + "Pausing a playback" : "";
 				case NONE:
 					stopPlayback(true);
@@ -294,9 +295,9 @@ public class PlaybackControllerClient implements
 				case NONE:
 					LOGGER.debug(LoggerMarkers.Playback, "Aborting pausing");
 					state = TASstate.NONE;
-					TASstate statey = stateAfterPause;
+					TASstate stateAfterPauseTemp = stateAfterPause;
 					stateAfterPause = TASstate.NONE;
-					return TextFormatting.GREEN + "Aborting a " + statey.toString().toLowerCase() + " that was paused";
+					return TextFormatting.GREEN + "Aborting a " + stateAfterPauseTemp.toString().toLowerCase() + " that was paused";
 			}
 		}
 		return "Something went wrong ._.";
@@ -304,34 +305,33 @@ public class PlaybackControllerClient implements
 
 	private void startRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
+		state = TASstate.RECORDING;
 		if (this.inputs.isEmpty()) {
-			VirtualCameraAngleInput CAMERA_ANGLE = TASmodClient.virtual.CAMERA_ANGLE;
-			Float pitch = CAMERA_ANGLE.getCurrentPitch();
-			Float yaw = CAMERA_ANGLE.getCurrentYaw();
-			this.currentPlaybackCameraAngle.set(pitch, yaw);
-
-			inputs.add(new InputContainer());
+			InputContainer preloadedContainer = virtual.preloadInputs();
+			inputs.add(preloadedContainer);
 		}
 	}
 
 	private void stopRecording() {
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
-		TASmodClient.virtual.clearNext();
+		virtual.clearNext();
+		state = TASstate.NONE;
 	}
 
 	private void startPlayback() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
 		Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
 		index = 0;
-//		TASmod.ktrngHandler.setInitialSeed(startSeed);
+		state = TASstate.PLAYBACK;
 	}
 
 	private void stopPlayback(boolean clearInputs) {
 		LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
 		Minecraft.getMinecraft().gameSettings.chatLinks = true;
 		if (clearInputs) {
-			TASmodClient.virtual.clearNext();
+			virtual.clearNext();
 		}
+		state = TASstate.NONE;
 	}
 
 	/**
@@ -479,9 +479,7 @@ public class PlaybackControllerClient implements
 			playbackNextTick();
 		}
 
-//		if (TASmod.isDevEnvironment) {
-//			DebugWriter.writeDebugFile(this);
-//		}
+		DebugWriter.writeDebugFile(this);
 	}
 
 	private void recordNextTick() {
@@ -513,7 +511,6 @@ public class PlaybackControllerClient implements
 
 		/* Stop condition */
 		if (index == inputs.size() || inputs.isEmpty()) {
-			index--;
 			unpressContainer();
 			setTASState(TASstate.NONE);
 		}

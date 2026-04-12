@@ -269,7 +269,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 	private static void preload(BigArrayList<InputContainer> containerList, long index) {
 		LOGGER.trace(LoggerMarkers.Savestate, "Preloading container at index {}", index);
 		InputContainer containerToPreload = containerList.get(index);
-		TASmodClient.virtual.preloadInput(containerToPreload.getKeyboard(), containerToPreload.getMouse(), containerToPreload.getCameraAngle());
+		TASmodClient.virtual.preloadInputs(containerToPreload.getKeyboard(), containerToPreload.getMouse(), containerToPreload.getCameraAngle());
 
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.onPlaybackTick(index, containerToPreload);
 	}

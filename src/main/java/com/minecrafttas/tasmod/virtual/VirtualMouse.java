@@ -295,7 +295,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 
 	@Override
 	public void moveFrom(VirtualMouse mouse) {
-		if (mouse == null)
+		if (mouse == null || this == mouse)
 			return;
 		super.moveFrom(mouse);
 		this.scrollWheel = mouse.scrollWheel;
@@ -306,7 +306,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 
 	@Override
 	public void copyFrom(VirtualMouse mouse) {
-		if (mouse == null)
+		if (mouse == null || this == mouse)
 			return;
 		super.copyFrom(mouse);
 		this.scrollWheel = mouse.scrollWheel;
@@ -316,7 +316,7 @@ public class VirtualMouse extends VirtualPeripheral<VirtualMouse> implements Ser
 
 	@Override
 	public void deepCopyFrom(VirtualMouse mouse) {
-		if (mouse == null)
+		if (mouse == null || this == mouse)
 			return;
 		super.deepCopyFrom(mouse);
 		this.scrollWheel = mouse.scrollWheel;

@@ -13,6 +13,7 @@ import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinMinecraft;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.util.Ducks;
 import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -198,7 +199,21 @@ public class VirtualInput {
 		MOUSE.clearCurrent();
 	}
 
-	public void preloadInput(VirtualKeyboard keyboardToPreload, VirtualMouse mouseToPreload, VirtualCameraAngle angleToPreload) {
+	/**
+	 * Preloads the nextInputs into the currentInputs 
+	 */
+	public InputContainer preloadInputs() {
+		preloadInputs(KEYBOARD.nextKeyboard, MOUSE.nextMouse, CAMERA_ANGLE.nextCameraAngle);
+		return new InputContainer(KEYBOARD.nextKeyboard.clone(), MOUSE.nextMouse.clone(), CAMERA_ANGLE.nextCameraAngle.clone());
+	}
+
+	/**
+	 * Preloads the next and current inputs with the Virtual Keyboard mouse and camera angle
+	 * @param keyboardToPreload
+	 * @param mouseToPreload
+	 * @param angleToPreload
+	 */
+	public void preloadInputs(VirtualKeyboard keyboardToPreload, VirtualMouse mouseToPreload, VirtualCameraAngle angleToPreload) {
 		// Preload the nextKeyboard
 		KEYBOARD.nextKeyboard.deepCopyFrom(keyboardToPreload);
 		MOUSE.nextMouse.deepCopyFrom(mouseToPreload);

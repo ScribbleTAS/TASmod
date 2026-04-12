@@ -99,7 +99,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 	 * The container where all inputs get stored during recording or stored and
 	 * ready to be played back
 	 */
-	public static PlaybackControllerClient controller = new PlaybackControllerClient();
+	public static PlaybackControllerClient controller;
 
 	public static void createTASfileDir() {
 		try {
@@ -131,6 +131,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		loadConfig(mc);
 
 		virtual = new VirtualInput(LOGGER);
+		controller = new PlaybackControllerClient(virtual, LOGGER);
 
 		// Initialize InfoHud
 		hud = new InfoHud();

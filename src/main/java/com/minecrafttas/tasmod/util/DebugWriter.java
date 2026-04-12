@@ -16,6 +16,8 @@ public class DebugWriter {
 	private static Path debugTASFile = TASmodClient.tasfiledirectory.resolve("debug.mctas");
 
 	public static void writeDebugFile(PlaybackControllerClient controller) {
-		PlaybackSerialiser.saveToFile(debugTASFile, controller, null);
+		if (System.getProperty("tasmod.playback.trace", "false").equals("true")) {
+			PlaybackSerialiser.saveToFile(debugTASFile, controller, null);
+		}
 	}
 }
