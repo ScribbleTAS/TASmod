@@ -207,6 +207,10 @@ public class VirtualInput {
 		return new InputContainer(KEYBOARD.nextKeyboard.clone(), MOUSE.nextMouse.clone(), CAMERA_ANGLE.nextCameraAngle.clone());
 	}
 
+	public void preloadInputs(InputContainer inputContainer) {
+		preloadInputs(inputContainer.getKeyboard(), inputContainer.getMouse(), inputContainer.getCameraAngle());
+	}
+
 	/**
 	 * Preloads the next and current inputs with the Virtual Keyboard mouse and camera angle
 	 * @param keyboardToPreload

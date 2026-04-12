@@ -320,9 +320,16 @@ public class PlaybackControllerClient implements
 
 	private void startPlayback() {
 		LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
+		state = TASstate.PLAYBACK;
+
+		InputContainer initialContainer = inputs.get(0);
+		this.nextPlaybackKeyboard = initialContainer.getKeyboard().clone();
+		this.nextPlaybackMouse = initialContainer.getMouse().clone();
+		this.nextPlaybackCameraAngle = initialContainer.getCameraAngle().clone();
+		virtual.preloadInputs(initialContainer);
+
 		Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
 		index = 0;
-		state = TASstate.PLAYBACK;
 	}
 
 	private void stopPlayback(boolean clearInputs) {
@@ -503,39 +510,40 @@ public class PlaybackControllerClient implements
 																		// secondly as potential exploit protection
 			LOGGER.info(LoggerMarkers.Playback, "Stopping a {} since the user tabbed out of the game", state);
 			setTASState(TASstate.NONE);
+			return;
+		}
+
+		/* Stop condition */
+		if (index + 1 == inputs.size() || inputs.isEmpty()) {
+			unpressContainer();
+			setTASState(TASstate.NONE);
+			return;
 		}
 
 		index++; // Increase the index and load the next inputs
 
 		EventListenerRegistry.fireEvent(EventPlaybackTickPre.class, index);
 
-		/* Stop condition */
-		if (index == inputs.size() || inputs.isEmpty()) {
-			unpressContainer();
-			setTASState(TASstate.NONE);
-		}
 		/* Continue condition */
-		else {
-			InputContainer container = null;
-			if (index + 1 < inputs.size()) {
-				container = inputs.get(index + 1); // Loads the new inputs from the container
+		InputContainer container = null;
+		if (index + 1 < inputs.size()) {
+			container = inputs.get(index + 1); // Loads the new inputs from the container
 
-				this.currentPlaybackKeyboard = this.nextPlaybackKeyboard.clone();
-				this.currentPlaybackMouse = this.nextPlaybackMouse.clone();
-				this.currentPlaybackCameraAngle = this.nextPlaybackCameraAngle.clone();
+			this.currentPlaybackKeyboard = this.nextPlaybackKeyboard.clone();
+			this.currentPlaybackMouse = this.nextPlaybackMouse.clone();
+			this.currentPlaybackCameraAngle = this.nextPlaybackCameraAngle.clone();
 
-				this.nextPlaybackKeyboard = container.getKeyboard().clone();
-				this.nextPlaybackMouse = container.getMouse().clone();
-				this.nextPlaybackCameraAngle = container.getCameraAngle().clone();
-			} else {
-				container = inputs.get(index); // Loads the new inputs from the container
-				this.currentPlaybackKeyboard = container.getKeyboard().clone();
-				this.currentPlaybackMouse = container.getMouse().clone();
-				this.currentPlaybackCameraAngle = container.getCameraAngle().clone();
-			}
-
-			EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
+			this.nextPlaybackKeyboard = container.getKeyboard().clone();
+			this.nextPlaybackMouse = container.getMouse().clone();
+			this.nextPlaybackCameraAngle = container.getCameraAngle().clone();
+		} else {
+			container = inputs.get(index); // Loads the new inputs from the container
+			this.currentPlaybackKeyboard = container.getKeyboard().clone();
+			this.currentPlaybackMouse = container.getMouse().clone();
+			this.currentPlaybackCameraAngle = container.getCameraAngle().clone();
 		}
+
+		EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
 	}
 	// =====================================================================================================
 	// Methods to manipulate inputs
