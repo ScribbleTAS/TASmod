@@ -131,7 +131,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		loadConfig(mc);
 
 		virtual = new VirtualInput(LOGGER);
-		controller = new PlaybackControllerClient(virtual, LOGGER);
+		controller = new PlaybackControllerClient(virtual, tasfiledirectory, LOGGER);
 
 		// Initialize InfoHud
 		hud = new InfoHud();

@@ -202,9 +202,8 @@ public class VirtualInput {
 	/**
 	 * Preloads the nextInputs into the currentInputs 
 	 */
-	public InputContainer preloadInputs() {
+	public void preloadInputs() {
 		preloadInputs(KEYBOARD.nextKeyboard, MOUSE.nextMouse, CAMERA_ANGLE.nextCameraAngle);
-		return new InputContainer(KEYBOARD.nextKeyboard.clone(), MOUSE.nextMouse.clone(), CAMERA_ANGLE.nextCameraAngle.clone());
 	}
 
 	public void preloadInputs(InputContainer inputContainer) {
@@ -228,6 +227,9 @@ public class VirtualInput {
 		MOUSE.nextMouseTick();
 
 		// Preload vanilla inputs
+		if (Minecraft.getMinecraft() == null) { // If running in unit test env
+			return;
+		}
 		Minecraft.getMinecraft().runTickKeyboard(); // Letting mouse and keyboard tick once to load inputs into the "currentKeyboard"
 		Minecraft.getMinecraft().runTickMouse();
 
@@ -380,6 +382,10 @@ public class VirtualInput {
 			}
 			EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualKeyboardSubtick.class, currentKeyboardEvent);
 			return isPolled;
+		}
+
+		public VirtualKeyboardEvent getCurrentEvent() {
+			return currentKeyboardEvent;
 		}
 
 		/**
@@ -560,6 +566,10 @@ public class VirtualInput {
 			}
 			EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualMouseSubtick.class, currentMouseEvent);
 			return isPolled;
+		}
+
+		public VirtualMouseEvent getCurrentEvent() {
+			return currentMouseEvent;
 		}
 
 		/**
@@ -774,6 +784,10 @@ public class VirtualInput {
 		 */
 		public void setCamera(Float pitch, Float yaw) {
 			nextCameraAngle.set(pitch, yaw);
+		}
+
+		public VirtualCameraAngle getCurrentCameraAngle() {
+			return currentCameraAngle;
 		}
 
 		/**
