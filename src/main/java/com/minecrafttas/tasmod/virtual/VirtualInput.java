@@ -13,6 +13,7 @@ import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinMinecraft;
+import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.util.Ducks;
 import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -198,7 +199,24 @@ public class VirtualInput {
 		MOUSE.clearCurrent();
 	}
 
-	public void preloadInput(VirtualKeyboard keyboardToPreload, VirtualMouse mouseToPreload, VirtualCameraAngle angleToPreload) {
+	/**
+	 * Preloads the nextInputs into the currentInputs 
+	 */
+	public void preloadInputs() {
+		preloadInputs(KEYBOARD.nextKeyboard, MOUSE.nextMouse, CAMERA_ANGLE.nextCameraAngle);
+	}
+
+	public void preloadInputs(InputContainer inputContainer) {
+		preloadInputs(inputContainer.getKeyboard(), inputContainer.getMouse(), inputContainer.getCameraAngle());
+	}
+
+	/**
+	 * Preloads the next and current inputs with the Virtual Keyboard mouse and camera angle
+	 * @param keyboardToPreload
+	 * @param mouseToPreload
+	 * @param angleToPreload
+	 */
+	public void preloadInputs(VirtualKeyboard keyboardToPreload, VirtualMouse mouseToPreload, VirtualCameraAngle angleToPreload) {
 		// Preload the nextKeyboard
 		KEYBOARD.nextKeyboard.deepCopyFrom(keyboardToPreload);
 		MOUSE.nextMouse.deepCopyFrom(mouseToPreload);
@@ -209,6 +227,9 @@ public class VirtualInput {
 		MOUSE.nextMouseTick();
 
 		// Preload vanilla inputs
+		if (Minecraft.getMinecraft() == null) { // If running in unit test env
+			return;
+		}
 		Minecraft.getMinecraft().runTickKeyboard(); // Letting mouse and keyboard tick once to load inputs into the "currentKeyboard"
 		Minecraft.getMinecraft().runTickMouse();
 
@@ -361,6 +382,10 @@ public class VirtualInput {
 			}
 			EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualKeyboardSubtick.class, currentKeyboardEvent);
 			return isPolled;
+		}
+
+		public VirtualKeyboardEvent getCurrentEvent() {
+			return currentKeyboardEvent;
 		}
 
 		/**
@@ -541,6 +566,10 @@ public class VirtualInput {
 			}
 			EventListenerRegistry.fireEvent(EventVirtualInput.EventVirtualMouseSubtick.class, currentMouseEvent);
 			return isPolled;
+		}
+
+		public VirtualMouseEvent getCurrentEvent() {
+			return currentMouseEvent;
 		}
 
 		/**
@@ -755,6 +784,10 @@ public class VirtualInput {
 		 */
 		public void setCamera(Float pitch, Float yaw) {
 			nextCameraAngle.set(pitch, yaw);
+		}
+
+		public VirtualCameraAngle getCurrentCameraAngle() {
+			return currentCameraAngle;
 		}
 
 		/**

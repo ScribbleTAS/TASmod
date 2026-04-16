@@ -1,6 +1,5 @@
 package com.minecrafttas.tasmod.playback;
 
-import static com.minecrafttas.tasmod.TASmod.LOGGER;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_CLEAR_INPUTS;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLPLAY;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_FULLRECORD;
@@ -34,9 +33,9 @@ import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedExcep
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
-import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
+import com.minecrafttas.tasmod.events.EventClient.EventClientTickPre;
 import com.minecrafttas.tasmod.events.EventClient.EventDrawScreen;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventControllerStateChange;
@@ -52,12 +51,12 @@ import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
 import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
+import com.minecrafttas.tasmod.util.DebugWriter;
 import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler.Task;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
-import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
@@ -93,6 +92,7 @@ public class PlaybackControllerClient implements
 	ClientPacketHandler,
 	
 	EventClientInit,
+	EventClientTickPre,
 	EventClientTickPost,
 	EventDrawScreen,
 	
@@ -102,7 +102,7 @@ public class PlaybackControllerClient implements
 	
 //@formatter:on
 {
-	private Logger logger = TASmod.LOGGER;
+	private final Logger logger;
 
 	/**
 	 * The current state of the controller.
@@ -118,6 +118,11 @@ public class PlaybackControllerClient implements
 	 * The current index of the inputs
 	 */
 	private long index;
+
+	/**
+	 * The virtual input instance
+	 */
+	private final VirtualInput virtual;
 
 	/**
 	 * <p>The current keyboard used in the {@link PlaybackControllerClient PlaybackController}
@@ -171,9 +176,10 @@ public class PlaybackControllerClient implements
 
 	// =====================================================================================================
 
-	public PlaybackControllerClient() {
-		tasFileDirectory = TASmodClient.tasfiledirectory;
-
+	public PlaybackControllerClient(VirtualInput virtual, Path tasFileDirectory, Logger logger) {
+		this.virtual = virtual;
+		this.logger = logger;
+		this.tasFileDirectory = tasFileDirectory;
 		inputs = new BigArrayList<InputContainer>(tasFileDirectory.resolve("temp").toAbsolutePath().toString());
 	}
 
@@ -230,11 +236,9 @@ public class PlaybackControllerClient implements
 			switch (stateIn) {
 				case PLAYBACK:
 					startPlayback();
-					state = TASstate.PLAYBACK;
 					return verbose ? TextFormatting.GREEN + "Starting playback" : "";
 				case RECORDING:
 					startRecording();
-					state = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Starting a recording" : "";
 				case PAUSED:
 					return verbose ? TextFormatting.RED + "Can't pause anything because nothing is running" : "";
@@ -248,13 +252,12 @@ public class PlaybackControllerClient implements
 				case RECORDING:
 					return TextFormatting.RED + "Please report this message to the mod author, because you should never be able to see this (Error: Recording)";
 				case PAUSED:
-					LOGGER.debug(LoggerMarkers.Playback, "Pausing a recording");
+					logger.debug(LoggerMarkers.Playback, "Pausing a recording");
 					state = TASstate.PAUSED;
 					stateAfterPause = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Pausing a recording" : "";
 				case NONE:
 					stopRecording();
-					state = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Stopping the recording" : "";
 			}
 		} else if (state == TASstate.PLAYBACK) { // If the container is currently playing back
@@ -264,13 +267,12 @@ public class PlaybackControllerClient implements
 				case RECORDING:
 					stopPlayback(false);
 					startRecording();
-					state = TASstate.RECORDING;
 					return verbose ? TextFormatting.GREEN + "Switching from playback to recording" : "";
 				case PAUSED:
-					LOGGER.debug(LoggerMarkers.Playback, "Pausing a playback");
+					logger.debug(LoggerMarkers.Playback, "Pausing a playback");
 					state = TASstate.PAUSED;
 					stateAfterPause = TASstate.PLAYBACK;
-					TASmodClient.virtual.clearNext();
+					virtual.clearNext();
 					return verbose ? TextFormatting.GREEN + "Pausing a playback" : "";
 				case NONE:
 					stopPlayback(true);
@@ -280,58 +282,66 @@ public class PlaybackControllerClient implements
 		} else if (state == TASstate.PAUSED) {
 			switch (stateIn) {
 				case PLAYBACK:
-					LOGGER.debug(LoggerMarkers.Playback, "Resuming a playback");
+					logger.debug(LoggerMarkers.Playback, "Resuming a playback");
 					state = TASstate.PLAYBACK;
 					stateAfterPause = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Resuming a playback" : "";
 				case RECORDING:
-					LOGGER.debug(LoggerMarkers.Playback, "Resuming a recording");
+					logger.debug(LoggerMarkers.Playback, "Resuming a recording");
 					state = TASstate.RECORDING;
 					stateAfterPause = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Resuming a recording" : "";
 				case PAUSED:
 					return TextFormatting.RED + "Please report this message to the mod author, because you should never be able to see this (Error: Paused)";
 				case NONE:
-					LOGGER.debug(LoggerMarkers.Playback, "Aborting pausing");
+					logger.debug(LoggerMarkers.Playback, "Aborting pausing");
 					state = TASstate.NONE;
-					TASstate statey = stateAfterPause;
+					TASstate stateAfterPauseTemp = stateAfterPause;
 					stateAfterPause = TASstate.NONE;
-					return TextFormatting.GREEN + "Aborting a " + statey.toString().toLowerCase() + " that was paused";
+					return TextFormatting.GREEN + "Aborting a " + stateAfterPauseTemp.toString().toLowerCase() + " that was paused";
 			}
 		}
 		return "Something went wrong ._.";
 	}
 
 	private void startRecording() {
-		LOGGER.debug(LoggerMarkers.Playback, "Starting recording");
+		logger.debug(LoggerMarkers.Playback, "Starting recording");
+		state = TASstate.RECORDING;
 		if (this.inputs.isEmpty()) {
-			VirtualCameraAngleInput CAMERA_ANGLE = TASmodClient.virtual.CAMERA_ANGLE;
-			Float pitch = CAMERA_ANGLE.getCurrentPitch();
-			Float yaw = CAMERA_ANGLE.getCurrentYaw();
-			this.currentPlaybackCameraAngle.set(pitch, yaw);
-
-			inputs.add(new InputContainer());
+			virtual.preloadInputs();
+			inputs.add(new InputContainer(this.currentPlaybackKeyboard.clone(), this.currentPlaybackMouse.clone(), this.currentPlaybackCameraAngle.clone()));
 		}
 	}
 
 	private void stopRecording() {
-		LOGGER.debug(LoggerMarkers.Playback, "Stopping a recording");
-		TASmodClient.virtual.clearNext();
+		logger.debug(LoggerMarkers.Playback, "Stopping a recording");
+		virtual.clearNext();
+		state = TASstate.NONE;
 	}
 
 	private void startPlayback() {
-		LOGGER.debug(LoggerMarkers.Playback, "Starting playback");
-		Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
+		logger.debug(LoggerMarkers.Playback, "Starting playback");
+		state = TASstate.PLAYBACK;
+
+		InputContainer initialContainer = inputs.get(0);
+		this.currentPlaybackKeyboard = initialContainer.getKeyboard().clone();
+		this.currentPlaybackMouse = initialContainer.getMouse().clone();
+		this.currentPlaybackCameraAngle = initialContainer.getCameraAngle().clone();
+		virtual.preloadInputs(initialContainer);
+
+		if (Minecraft.getMinecraft() != null)
+			Minecraft.getMinecraft().gameSettings.chatLinks = false; // #119
 		index = 0;
-//		TASmod.ktrngHandler.setInitialSeed(startSeed);
 	}
 
 	private void stopPlayback(boolean clearInputs) {
-		LOGGER.debug(LoggerMarkers.Playback, "Stopping a playback");
-		Minecraft.getMinecraft().gameSettings.chatLinks = true;
+		logger.debug(LoggerMarkers.Playback, "Stopping a playback");
+		if (Minecraft.getMinecraft() != null)
+			Minecraft.getMinecraft().gameSettings.chatLinks = true;
 		if (clearInputs) {
-			TASmodClient.virtual.clearNext();
+			virtual.clearNext();
 		}
+		state = TASstate.NONE;
 	}
 
 	/**
@@ -354,7 +364,7 @@ public class PlaybackControllerClient implements
 	 * @param pause True, if it should be paused
 	 */
 	public void pause(boolean pause) {
-		LOGGER.trace(LoggerMarkers.Playback, "Pausing {}", pause);
+		logger.trace(LoggerMarkers.Playback, "Pausing {}", pause);
 		if (pause) {
 			if (state != TASstate.NONE) {
 				setTASStateClient(TASstate.PAUSED, false);
@@ -445,51 +455,46 @@ public class PlaybackControllerClient implements
 		Mouse.setCursorPosition(duckedScreen.rescaleX(x), duckedScreen.rescaleY(y));
 	}
 
-	/**
-	 * Updates the input container.<br>
-	 * <br>
-	 * During a recording this adds the {@linkplain #currentPlaybackKeyboard}, {@linkplain #currentPlaybackMouse}
-	 * and {@linkplain #currentPlaybackCameraAngle} to {@linkplain #inputs} and increases the
-	 * {@linkplain #index}.<br>
-	 * <br>
-	 * During playback the opposite is happening, getting the inputs from
-	 * {@linkplain #inputs} and temporarily storing them in {@linkplain #currentPlaybackKeyboard},
-	 * {@linkplain #currentPlaybackMouse} and {@linkplain #currentPlaybackCameraAngle}.<br>
-	 * <br>
-	 * Then in {@linkplain VirtualInput}, {@linkplain #currentPlaybackKeyboard},
-	 * {@linkplain #currentPlaybackMouse} and {@linkplain #currentPlaybackCameraAngle} are retrieved and emulated as
-	 * the next inputs
-	 */
+	@Override
+	public void onClientTickPre(Minecraft mc) {
+		if (state == TASstate.PLAYBACK) {
+			/* Tick the next playback*/
+			playbackNextTick();
+		}
+	}
+
 	@Override
 	public void onClientTickPost(Minecraft mc) {
 		/* Stop the playback while player is still loading */
-		EntityPlayerSP player = mc.player;
-		if (player != null && player.addedToChunk) {
-			if (isPaused() && stateAfterPause != TASstate.NONE) { // TODO Find a better solution...
-				setTASState(stateAfterPause); // The recording is paused in LoadWorldEvents#startLaunchServer
-				pause(false);
-				EventListenerRegistry.fireEvent(EventPlaybackJoinedWorld.class, state);
+		if (mc != null) {	// Mc can be null during Unit Tests
+			EntityPlayerSP player = mc.player;
+			if (player != null && player.addedToChunk) {
+				if (isPaused() && stateAfterPause != TASstate.NONE) { // TODO Find a better solution...
+					setTASState(stateAfterPause); // The recording is paused in LoadWorldEvents#startLaunchServer
+					pause(false);
+					EventListenerRegistry.fireEvent(EventPlaybackJoinedWorld.class, state);
+				}
 			}
 		}
 
-		/* Tick the next playback or recording */
+		/* Tick the next recording */
 		if (state == TASstate.RECORDING) {
 			recordNextTick();
-		} else if (state == TASstate.PLAYBACK) {
-			playbackNextTick();
 		}
 
-//		if (TASmod.isDevEnvironment) {
-//			DebugWriter.writeDebugFile(this);
-//		}
+		if (mc != null)
+			DebugWriter.writeDebugFile(this);
 	}
 
+	/**
+	 * Records the inputs from {@link #currentPlaybackKeyboard} etc. into {@link #inputs}
+	 */
 	private void recordNextTick() {
 		index++;
 		InputContainer container = new InputContainer(currentPlaybackKeyboard.clone(), currentPlaybackMouse.clone(), currentPlaybackCameraAngle.clone());
 		if (inputs.size() <= index) {
 			if (inputs.size() < index) {
-				LOGGER.warn("Index is {} inputs bigger than the container!", index - inputs.size());
+				logger.warn("Index is {} inputs bigger than the container!", index - inputs.size());
 			}
 			inputs.add(container);
 		} else {
@@ -499,46 +504,50 @@ public class PlaybackControllerClient implements
 		EventListenerRegistry.fireEvent(EventRecordTick.class, index, container);
 	}
 
+	/**
+	 * Retrieves the inputs from {@link #inputs} and adds them to {@link #currentPlaybackKeyboard} etc.
+	 * Also updates {@link #nextPlaybackCameraAngle} which is only used for visualizing what the input in the next tick is
+	 */
 	private void playbackNextTick() {
 		Minecraft mc = Minecraft.getMinecraft();
-		if (!Display.isActive() && mc.gameSettings.pauseOnLostFocus) { // Stops the playback when you tab out of minecraft, for once as a failsafe,
-																		// secondly as potential exploit protection
-			LOGGER.info(LoggerMarkers.Playback, "Stopping a {} since the user tabbed out of the game", state);
+		if (mc != null && !Display.isActive() && mc.gameSettings.pauseOnLostFocus) { // Stops the playback when you tab out of minecraft, for once as a failsafe,
+																					// secondly as potential exploit protection
+			logger.info(LoggerMarkers.Playback, "Stopping a {} since the user tabbed out of the game", state);
 			setTASState(TASstate.NONE);
+			return;
+		}
+
+		/* Stop condition */
+		if (index + 1 == inputs.size() || inputs.isEmpty()) {
+			unpressContainer();
+			setTASState(TASstate.NONE);
+			return;
 		}
 
 		index++; // Increase the index and load the next inputs
 
 		EventListenerRegistry.fireEvent(EventPlaybackTickPre.class, index);
 
-		/* Stop condition */
-		if (index == inputs.size() || inputs.isEmpty()) {
-			index--;
-			unpressContainer();
-			setTASState(TASstate.NONE);
-		}
 		/* Continue condition */
-		else {
-			InputContainer container = null;
-			if (index + 1 < inputs.size()) {
-				container = inputs.get(index + 1); // Loads the new inputs from the container
 
-				this.currentPlaybackKeyboard = this.nextPlaybackKeyboard.clone();
-				this.currentPlaybackMouse = this.nextPlaybackMouse.clone();
-				this.currentPlaybackCameraAngle = this.nextPlaybackCameraAngle.clone();
+		if (index + 1 < inputs.size()) {
+			InputContainer nextContainer = inputs.get(index + 1);
 
-				this.nextPlaybackKeyboard = container.getKeyboard().clone();
-				this.nextPlaybackMouse = container.getMouse().clone();
-				this.nextPlaybackCameraAngle = container.getCameraAngle().clone();
-			} else {
-				container = inputs.get(index); // Loads the new inputs from the container
-				this.currentPlaybackKeyboard = container.getKeyboard().clone();
-				this.currentPlaybackMouse = container.getMouse().clone();
-				this.currentPlaybackCameraAngle = container.getCameraAngle().clone();
-			}
-
-			EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
+			this.nextPlaybackKeyboard = nextContainer.getKeyboard().clone();
+			this.nextPlaybackMouse = nextContainer.getMouse().clone();
+			this.nextPlaybackCameraAngle = nextContainer.getCameraAngle().clone();
+		} else {
+			nextPlaybackKeyboard.clear();
+			nextPlaybackMouse.clear();
+			nextPlaybackCameraAngle.clear();
 		}
+
+		InputContainer container = inputs.get(index); // Loads the new inputs from the container
+		this.currentPlaybackKeyboard = container.getKeyboard().clone();
+		this.currentPlaybackMouse = container.getMouse().clone();
+		this.currentPlaybackCameraAngle = container.getCameraAngle().clone();
+
+		EventListenerRegistry.fireEvent(EventPlaybackTick.class, index, container);
 	}
 	// =====================================================================================================
 	// Methods to manipulate inputs
@@ -606,7 +615,7 @@ public class PlaybackControllerClient implements
 	}
 
 	public void clear() {
-		LOGGER.info(LoggerMarkers.Playback, "Clearing playback controller");
+		logger.info(LoggerMarkers.Playback, "Clearing playback controller");
 		clearInputList();
 		EventListenerRegistry.fireEvent(EventPlaybackClient.EventRecordClear.class);
 
@@ -663,7 +672,7 @@ public class PlaybackControllerClient implements
 	 * Clears {@link #currentPlaybackKeyboard} and {@link #currentPlaybackMouse}
 	 */
 	public void unpressContainer() {
-		LOGGER.trace(LoggerMarkers.Playback, "Unpressing container");
+		logger.trace(LoggerMarkers.Playback, "Unpressing container");
 		currentPlaybackKeyboard.clear();
 		currentPlaybackMouse.clear();
 	}
@@ -942,12 +951,12 @@ public class PlaybackControllerClient implements
 				} catch (PlaybackSaveException e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
-					LOGGER.catching(e);
+					logger.catching(e);
 					return;
 				} catch (Exception e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Saving failed, something went very wrong"));
-					LOGGER.catching(e);
+					logger.catching(e);
 					return;
 				}
 
@@ -956,7 +965,7 @@ public class PlaybackControllerClient implements
 					confirm.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/folder tasfiles"));
 					mc.ingameGUI.getChatGUI().printChatMessage(confirm);
 				} else
-					LOGGER.debug(LoggerMarkers.Playback, "Saved inputs to " + name + ".mctas");
+					logger.debug(LoggerMarkers.Playback, "Saved inputs to " + name + ".mctas");
 				break;
 
 			case PLAYBACK_LOAD:
@@ -970,19 +979,19 @@ public class PlaybackControllerClient implements
 						TextComponentString textComponent = new TextComponentString(e.getMessage());
 						mc.ingameGUI.getChatGUI().printChatMessage(textComponent);
 					}
-					LOGGER.catching(e);
+					logger.catching(e);
 					return;
 				} catch (Exception e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + "Loading failed, something went very wrong"));
-					LOGGER.catching(e);
+					logger.catching(e);
 					return;
 				}
 
 				if (mc.world != null)
 					mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.GREEN + "Loaded inputs from " + name + ".mctas"));
 				else
-					LOGGER.debug(LoggerMarkers.Playback, "Loaded inputs from " + name + ".mctas");
+					logger.debug(LoggerMarkers.Playback, "Loaded inputs from " + name + ".mctas");
 				break;
 
 			case PLAYBACK_FULLPLAY:
@@ -1048,7 +1057,7 @@ public class PlaybackControllerClient implements
 							if (Minecraft.getMinecraft().world != null)
 								Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(message));
 							else
-								LOGGER.debug(LoggerMarkers.Playback, message);
+								logger.debug(LoggerMarkers.Playback, message);
 						}
 					}
 

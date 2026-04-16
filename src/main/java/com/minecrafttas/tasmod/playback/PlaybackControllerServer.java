@@ -12,6 +12,7 @@ import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_LOAD;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_RESTARTANDPLAY;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_SAVE;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE;
+import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE_TEMP_SAVESTATE;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.SAVESTATE_CLEAR_SCREEN;
 import static com.minecrafttas.tasmod.util.LoggerMarkers.Playback;
 
@@ -50,6 +51,7 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 		return new TASmodPackets[] 
 				{ 
 				PLAYBACK_STATE,
+				PLAYBACK_STATE_TEMP_SAVESTATE,
 				PLAYBACK_CLEAR_INPUTS,
 				PLAYBACK_FULLPLAY,
 				PLAYBACK_FULLRECORD,
@@ -73,21 +75,31 @@ public class PlaybackControllerServer implements ServerPacketHandler {
 				TASstate networkState = TASmodBufferBuilder.readEnum(TASstate.class, buf);
 
 				/* TODO Permissions */
-				setTASState(networkState);
+				TASmod.gameLoopSchedulerServer.add(() -> {
+					setTASState(networkState);
+				});
 				break;
 
 			case PLAYBACK_CLEAR_INPUTS:
-				clearInputs();
+				TASmod.gameLoopSchedulerServer.add(() -> {
+					clearInputs();
+				});
 				break;
 			case PLAYBACK_FULLRECORD:
-				fullRecord();
+				TASmod.gameLoopSchedulerServer.add(() -> {
+					fullRecord();
+				});
 				break;
 			case PLAYBACK_FULLPLAY:
-				fullPlay();
+				TASmod.gameLoopSchedulerServer.add(() -> {
+					fullPlay();
+				});
 				break;
 			case PLAYBACK_RESTARTANDPLAY:
 				String tasFileName = TASmodBufferBuilder.readString(buf);
-				restartAndPlay(tasFileName);
+				TASmod.gameLoopSchedulerServer.add(() -> {
+					restartAndPlay(tasFileName);
+				});
 				break;
 			case PLAYBACK_SAVE:
 			case PLAYBACK_LOAD:

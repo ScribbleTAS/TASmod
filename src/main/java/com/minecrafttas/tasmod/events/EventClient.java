@@ -46,6 +46,18 @@ public interface EventClient {
 	}
 
 	/**
+	 * Fired at the beginning of a client tick
+	 */
+	@FunctionalInterface
+	public static interface EventClientTickPre extends EventBase {
+
+		/**
+		 * Fired at the beginning of a client tick
+		 */
+		public void onClientTickPre(Minecraft mc);
+	}
+
+	/**
 	 * Fired at the end of a client tick
 	 */
 	@FunctionalInterface

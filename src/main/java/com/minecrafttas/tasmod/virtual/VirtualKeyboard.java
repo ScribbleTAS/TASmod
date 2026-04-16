@@ -336,7 +336,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 
 	@Override
 	public void moveFrom(VirtualKeyboard keyboard) {
-		if (keyboard == null)
+		if (keyboard == null || this == keyboard)
 			return;
 		super.moveFrom(keyboard);
 		charList.clear();
@@ -346,7 +346,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 
 	@Override
 	public void copyFrom(VirtualKeyboard keyboard) {
-		if (keyboard == null)
+		if (keyboard == null || this == keyboard)
 			return;
 		super.copyFrom(keyboard);
 		charList.clear();
@@ -355,7 +355,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 
 	@Override
 	public void deepCopyFrom(VirtualKeyboard keyboard) {
-		if (keyboard == null)
+		if (keyboard == null || this == keyboard)
 			return;
 		super.deepCopyFrom(keyboard);
 		charList.clear();

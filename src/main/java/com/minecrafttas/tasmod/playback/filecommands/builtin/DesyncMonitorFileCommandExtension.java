@@ -69,7 +69,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	@Override
 	public void onControllerStateChange(TASstate newstate, TASstate oldstate) {
 		if (newstate == TASstate.RECORDING && monitorContainer.isEmpty()) {
-			recordNull(0);
+			onRecord(0, null);
 		}
 		currentValues = null;
 	}
@@ -129,7 +129,7 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 
 	@Override
 	public void onPlayback(long tick, InputContainer inputContainer) {
-		currentValues = get(tick - 1);
+		currentValues = get(tick);
 	}
 
 	private MonitorContainer loadFromFile(long tick, String[] args) throws PlaybackLoadException {

@@ -30,7 +30,6 @@
 		"killtherng.mathrand.MixinEntityXPOrb",
 		"killtherng.mathrand.MixinEntityTNTPrimed",
 		"killtherng.mathrand.MixinWorldEntitySpawner"
-		
 	],
 	"client": [
 		// General
@@ -79,7 +78,7 @@
 		"fixes.MixinMouseHelper",
 		
 		// KTRNG
-		"killtherng.MixinRenderLivingBase"
+		"killtherng.MixinRenderLivingBase",
 		
 		// Tickrate Rendering
 		"tickrate.MixinAudioPitch",
