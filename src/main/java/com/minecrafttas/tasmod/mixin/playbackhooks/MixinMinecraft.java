@@ -9,9 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.TASmodClient;
-import com.minecrafttas.tasmod.events.EventClient;
 import com.minecrafttas.tasmod.virtual.SubtickGuiScreen;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualKeyboardInput;
@@ -50,7 +48,6 @@ public class MixinMinecraft {
 	 */
 	@Inject(method = "runTick", at = @At(value = "HEAD"))
 	public void playback_injectRunTick(CallbackInfo ci) {
-		EventListenerRegistry.fireEvent(EventClient.EventClientTickPre.class, (Minecraft) (Object) this); // Fire this *before* nextKeyboardTick and nextMouseTick, or playing back ticks will desync!
 		/*
 		 * Both of these were previously in injectRunTickKeyboard/Mouse
 		 * but moved to the beginning of runTick to fix #224

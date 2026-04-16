@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.events.EventClient;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 
@@ -45,6 +46,7 @@ public abstract class MixinMinecraft {
 
 	@Redirect(method = "runGameLoop", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;runTick()V"))
 	public void redirectRunTick(Minecraft mc) {
+		EventListenerRegistry.fireEvent(EventClient.EventClientTickPre.class, (Minecraft) (Object) this);
 		if (TASmodClient.tickratechanger.ticksPerSecond != 0) {
 			((SubtickDuck) this.entityRenderer).runUpdate(this.isGamePaused ? this.renderPartialTicksPaused : this.timer.renderPartialTicks);
 		}
