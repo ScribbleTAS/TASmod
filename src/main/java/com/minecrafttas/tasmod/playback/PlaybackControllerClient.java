@@ -34,6 +34,7 @@ import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
 import com.minecrafttas.mctcommon.networking.interfaces.ClientPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.config.TASmodClientConfig;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPost;
 import com.minecrafttas.tasmod.events.EventClient.EventClientTickPre;
 import com.minecrafttas.tasmod.events.EventClient.EventDrawScreen;
@@ -49,7 +50,6 @@ import com.minecrafttas.tasmod.playback.metadata.PlaybackMetadata;
 import com.minecrafttas.tasmod.playback.tasfile.PlaybackSerialiser;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackLoadException;
 import com.minecrafttas.tasmod.playback.tasfile.exception.PlaybackSaveException;
-import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.util.DebugWriter;
 import com.minecrafttas.tasmod.util.Ducks.GuiScreenDuck;
@@ -1032,7 +1032,7 @@ public class PlaybackControllerClient implements
 					e.printStackTrace();
 				}
 				Minecraft.getMinecraft().addScheduledTask(() -> {
-					TASmodClient.config.set(TASmodConfig.FileToOpen, tasFilename);
+					TASmodClient.config.set(TASmodClientConfig.FileToOpen, tasFilename);
 					System.exit(0);
 				});
 				break;
@@ -1081,11 +1081,11 @@ public class PlaybackControllerClient implements
 	@Override
 	public void onClientInit(Minecraft mc) {
 		// Execute /restartandplay. Load the file to start from the config. If it exists load the playback file on start.
-		String fileOnStart = TASmodClient.config.get(TASmodConfig.FileToOpen);
+		String fileOnStart = TASmodClient.config.get(TASmodClientConfig.FileToOpen);
 		if (fileOnStart.isEmpty()) {
 			return;
 		} else {
-			TASmodClient.config.reset(TASmodConfig.FileToOpen);
+			TASmodClient.config.reset(TASmodClientConfig.FileToOpen);
 		}
 
 		try {

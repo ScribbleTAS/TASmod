@@ -7,12 +7,12 @@ import java.util.List;
 
 import com.minecrafttas.mctcommon.Configuration;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
+import com.minecrafttas.tasmod.config.TASmodClientConfig;
 import com.minecrafttas.tasmod.events.EventPlaybackClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.SortedFileCommandContainer;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.UnsortedFileCommandContainer;
-import com.minecrafttas.tasmod.registries.TASmodConfig;
 
 public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileCommandExtension> implements EventPlaybackClient.EventRecordTick, EventPlaybackClient.EventPlaybackTick, EventPlaybackClient.EventRecordClear {
 
@@ -169,7 +169,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		if (config == null) {
 			return;
 		}
-		String enabled = config.get(TASmodConfig.EnabledFileCommands);
+		String enabled = config.get(TASmodClientConfig.EnabledFileCommands);
 		setEnabled(Arrays.asList(enabled.split(", ")));
 	}
 
@@ -182,7 +182,7 @@ public class PlaybackFileCommandsRegistry extends AbstractRegistry<PlaybackFileC
 		enabledExtensions.forEach(element -> {
 			nameList.add(element.getExtensionName());
 		});
-		config.set(TASmodConfig.EnabledFileCommands, String.join(", ", nameList));
+		config.set(TASmodClientConfig.EnabledFileCommands, String.join(", ", nameList));
 		config.save();
 	}
 }

@@ -22,6 +22,7 @@ import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.mctcommon.networking.interfaces.ServerPacketHandler;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
+import com.minecrafttas.tasmod.config.TASmodServerConfig;
 import com.minecrafttas.tasmod.events.EventSavestate;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorAnvilChunkLoader;
 import com.minecrafttas.tasmod.mixin.savestates.AccessorChunkLoader;
@@ -202,7 +203,14 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		state = SavestateState.SAVING;
 
 		SavestatePaths paths = indexer.createTempSavestate();
-		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE, SavestateFlags.BLOCK_PAUSE_TICKRATE };
+
+		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE };
+
+		if (!TASmod.config.getBoolean(TASmodServerConfig.PauseOnTempSavestate)) {
+			flags = Arrays.copyOf(flags, flags.length + 1);
+			flags[flags.length - 1] = SavestateFlags.BLOCK_PAUSE_TICKRATE;
+		}
+
 		savestateInner(paths, cb, flags);
 		paths.getSavestate().save();
 	}
@@ -357,7 +365,13 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 			return;
 
 		// Add blocking flags
-		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE, SavestateFlags.BLOCK_PAUSE_TICKRATE };
+		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE };
+
+		if (!TASmod.config.getBoolean(TASmodServerConfig.PauseOnTempSavestate)) {
+			flags = Arrays.copyOf(flags, flags.length + 1);
+			flags[flags.length - 1] = SavestateFlags.BLOCK_PAUSE_TICKRATE;
+		}
+
 		loadStateInner(paths, cb, flags);
 		/**
 		 * After copying the temporary savestate (which is missing an index in savestate.dat)
@@ -704,7 +718,10 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 						resetState();
 					}
 				};
-				TASmod.gameLoopSchedulerServer.add(loadstateTask);
+				if (TASmod.tickratechanger.ticksPerSecond != 0)
+					TASmod.tickSchedulerServer.add(loadstateTask);
+				else
+					TASmod.gameLoopSchedulerServer.add(loadstateTask);
 				break;
 
 			default:
