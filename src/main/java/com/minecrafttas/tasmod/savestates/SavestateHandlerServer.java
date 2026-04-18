@@ -718,11 +718,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 						resetState();
 					}
 				};
-				if (TASmod.tickratechanger.ticksPerSecond != 0)
-					TASmod.tickSchedulerServer.add(loadstateTask);
-				else
 					TASmod.gameLoopSchedulerServer.add(loadstateTask);
-				break;
 
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.SERVER);

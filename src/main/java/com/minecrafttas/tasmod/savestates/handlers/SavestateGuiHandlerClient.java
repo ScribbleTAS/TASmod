@@ -72,7 +72,7 @@ public class SavestateGuiHandlerClient implements ClientPacketHandler {
 				 * Apparently showing a screen has a tiny influence on the motion of the client...
 				 */
 				mc.displayGuiScreen(null);
-				TASmodClient.tickSchedulerClient.add(() -> {
+				TASmodClient.gameLoopSchedulerClient.add(() -> {
 					displayGuiRename(index);
 				});
 				break;
