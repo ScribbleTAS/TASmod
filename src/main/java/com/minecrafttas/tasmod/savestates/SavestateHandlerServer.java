@@ -207,8 +207,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE };
 
 		if (!TASmod.config.getBoolean(TASmodServerConfig.PauseOnTempSavestate)) {
-			flags = Arrays.copyOf(flags, flags.length + 1);
-			flags[flags.length - 1] = SavestateFlags.BLOCK_PAUSE_TICKRATE;
+			if (ArrayUtils.contains(flags, SavestateFlags.BLOCK_PAUSE_TICKRATE))
+				flags = ArrayUtils.add(flags, SavestateFlags.BLOCK_PAUSE_TICKRATE);
 		}
 
 		savestateInner(paths, cb, flags);
@@ -368,8 +368,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE };
 
 		if (!TASmod.config.getBoolean(TASmodServerConfig.PauseOnTempSavestate)) {
-			flags = Arrays.copyOf(flags, flags.length + 1);
-			flags[flags.length - 1] = SavestateFlags.BLOCK_PAUSE_TICKRATE;
+			if (ArrayUtils.contains(flags, SavestateFlags.BLOCK_PAUSE_TICKRATE))
+				flags = ArrayUtils.add(flags, SavestateFlags.BLOCK_PAUSE_TICKRATE);
 		}
 
 		loadStateInner(paths, cb, flags);
@@ -517,6 +517,8 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 	public void deleteSavestate(int index, SavestateCallback cb) throws SavestateDeleteException {
 		logger.warn(LoggerMarkers.Savestate, "Deleting savestate {}", index);
 		SavestatePaths paths = this.indexer.deleteSavestate(index);
+
+		SavestateIndexer.deleteFolder(paths.getTargetFolder());
 
 		if (cb != null)
 			cb.invoke(paths);
@@ -718,7 +720,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 						resetState();
 					}
 				};
-					TASmod.gameLoopSchedulerServer.add(loadstateTask);
+				TASmod.gameLoopSchedulerServer.add(loadstateTask);
 
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.SERVER);
