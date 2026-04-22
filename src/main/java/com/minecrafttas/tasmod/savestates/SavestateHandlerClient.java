@@ -240,7 +240,7 @@ public class SavestateHandlerClient implements ClientPacketHandler, EventSavesta
 			 * <====================>
 			 * */
 			if (controller.size() >= savestateContainerList.size()) {
-				long index = savestateContainerList.size();
+				long index = savestateContainerList.size() - 1;
 
 				preload(controller.getInputs(), index);
 				controller.setIndex(index);

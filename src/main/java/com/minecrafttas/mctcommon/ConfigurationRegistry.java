@@ -49,7 +49,7 @@ public class ConfigurationRegistry extends AbstractRegistry<ConfigOptions> {
 	/**
 	 * <p>Interface for registering your own options in the TASmod config
 	 * 
-	 * @see com.minecrafttas.tasmod.registries.TASmodConfig TASmodConfig 
+	 * @see com.minecrafttas.tasmod.config.TASmodClientConfig TASmodConfig 
 	 * @author Scribble
 	 */
 	public interface ConfigOptions extends Registerable {

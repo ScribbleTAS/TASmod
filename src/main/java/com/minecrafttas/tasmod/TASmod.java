@@ -1,11 +1,14 @@
 package com.minecrafttas.tasmod;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.minecrafttas.mctcommon.CommandRegistry;
+import com.minecrafttas.mctcommon.Configuration;
+import com.minecrafttas.mctcommon.ConfigurationRegistry;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerInit;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerStart;
@@ -24,6 +27,7 @@ import com.minecrafttas.tasmod.commands.CommandRestartAndPlay;
 import com.minecrafttas.tasmod.commands.CommandSaveTAS;
 import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
+import com.minecrafttas.tasmod.config.TASmodServerConfig;
 import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
 import com.minecrafttas.tasmod.ktrng.GlobalRandomnessTimer;
 import com.minecrafttas.tasmod.ktrng.builtin.MathRandomness;
@@ -101,6 +105,8 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	public static KillTheRNGMonitor debugRand = new KillTheRNGMonitor();
 
+	public static Configuration config;
+
 	@Override
 	public void onInitialize() {
 
@@ -161,6 +167,7 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 	public void onServerInit(MinecraftServer server) {
 		LOGGER.info("Initializing server");
 		serverInstance = server;
+		loadConfig(server);
 
 		// Command handling
 
@@ -224,5 +231,16 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	public static MinecraftServer getServerInstance() {
 		return serverInstance;
+	}
+
+	private void loadConfig(MinecraftServer server) {
+		Path configDir = server.getDataDirectory().toPath();
+
+		ConfigurationRegistry SERVER_CONFIG_REGISTRY = new ConfigurationRegistry();
+		SERVER_CONFIG_REGISTRY.register(TASmodServerConfig.values());
+		config = new Configuration("TASmod Server Configuration", configDir.resolve("tasmod.cfg"), SERVER_CONFIG_REGISTRY);
+
+		config.load();
+		config.save();
 	}
 }

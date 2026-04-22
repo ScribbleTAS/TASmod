@@ -1,7 +1,5 @@
 package com.minecrafttas.tasmod.registries;
 
-import static com.minecrafttas.tasmod.registries.TASmodPackets.PLAYBACK_STATE_TEMP_SAVESTATE;
-
 import org.lwjgl.input.Keyboard;
 
 import com.minecrafttas.mctcommon.KeybindManager.IsKeyDownFunc;
@@ -48,11 +46,11 @@ public enum TASmodKeybinds implements KeybindID {
 		TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle(0, 45);
 	}),
 	TEST1("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
-		try {
-			TASmodClient.client.send(new TASmodBufferBuilder(PLAYBACK_STATE_TEMP_SAVESTATE).writeEnum(TASstate.RECORDING));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		//		try {
+		//			TASmodClient.client.send(new TASmodBufferBuilder(PLAYBACK_STATE_TEMP_SAVESTATE).writeEnum(TASstate.RECORDING));
+		//		} catch (Exception e) {
+		//			e.printStackTrace();
+		//		}
 	}, VirtualKeybindings::isKeyDown),
 	TEST2("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
 	}, VirtualKeybindings::isKeyDown);

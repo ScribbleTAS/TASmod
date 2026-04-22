@@ -24,6 +24,7 @@ import com.minecrafttas.mctcommon.networking.Client;
 import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
 import com.minecrafttas.mctcommon.networking.Server;
 import com.minecrafttas.tasmod.commands.client.CommandFolder;
+import com.minecrafttas.tasmod.config.TASmodClientConfig;
 import com.minecrafttas.tasmod.gui.InfoHud;
 import com.minecrafttas.tasmod.handlers.LoadingScreenHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
@@ -36,7 +37,6 @@ import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataEx
 import com.minecrafttas.tasmod.playback.tasfile.flavor.builtin.AlphaFlavor;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.builtin.Beta1Flavor;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
-import com.minecrafttas.tasmod.registries.TASmodConfig;
 import com.minecrafttas.tasmod.registries.TASmodKeybinds;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
@@ -294,7 +294,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 			int PORT = TASmod.server.port;
 
 			// Get the connection on startup from config
-			String configAddress = config.get(TASmodConfig.ServerConnection);
+			String configAddress = config.get(TASmodClientConfig.ServerConnection);
 			if (configAddress != null && !configAddress.isEmpty()) {
 				String[] ipSplit = configAddress.split(":");
 				IP = ipSplit[0];
@@ -348,10 +348,10 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 		TASmodAPIRegistry.PLAYBACK_FILE_COMMAND.setConfig(config);
 	}
 
-	private static final ConfigurationRegistry CONFIG_REGISTRY = new ConfigurationRegistry();
+	private static final ConfigurationRegistry CLIENT_CONFIG_REGISTRY = new ConfigurationRegistry();
 
 	private void registerConfigValues() {
-		CONFIG_REGISTRY.register(TASmodConfig.values());
+		CLIENT_CONFIG_REGISTRY.register(TASmodClientConfig.values());
 	}
 
 	private void loadConfig(Minecraft mc) {
@@ -363,7 +363,7 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 				LOGGER.catching(e);
 			}
 		}
-		config = new Configuration("TASmod configuration", configDir.resolve("tasmod.cfg"), CONFIG_REGISTRY);
+		config = new Configuration("TASmod configuration", configDir.resolve("tasmod.cfg"), CLIENT_CONFIG_REGISTRY);
 
 		config.load();
 		config.save();

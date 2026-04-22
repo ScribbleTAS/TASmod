@@ -6,6 +6,7 @@ import com.minecrafttas.mctcommon.networking.CompactPacketHandler;
 import com.minecrafttas.mctcommon.networking.interfaces.PacketID;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.config.TASmodClientConfig;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.playback.filecommands.PlaybackFileCommand.PlaybackFileCommandExtension;
@@ -67,7 +68,7 @@ public enum TASmodPackets implements PacketID {
 		Keybind tickrate0Kbd = TASmodClient.keybindManager.getKeybind(TASmodKeybinds.TICKRATE_0);
 		String keyName = VirtualKey.getName(tickrate0Kbd.vanillaKeyBinding.getKeyCode());
 
-		if (TASmodClient.config.getBoolean(TASmodConfig.UnpauseWarn))
+		if (TASmodClient.config.getBoolean(TASmodClientConfig.UnpauseWarn))
 			mc.ingameGUI.addChatMessage(ChatType.CHAT, Component.translatable("msg.tasmod.tickrate.tr0warn", Component.literal(keyName).withStyle(TextFormatting.GOLD)).withStyle(TextFormatting.GREEN).build());
 	}),
 	/**

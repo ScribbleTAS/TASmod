@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.registries;
+package com.minecrafttas.tasmod.config;
 
 import com.minecrafttas.mctcommon.ConfigurationRegistry.ConfigOptions;
 
@@ -7,7 +7,7 @@ import com.minecrafttas.mctcommon.ConfigurationRegistry.ConfigOptions;
  * 
  * @author Scribble
  */
-public enum TASmodConfig implements ConfigOptions {
+public enum TASmodClientConfig implements ConfigOptions {
 	FileToOpen("fileToOpen", ""),
 	ServerConnection("serverConnection", ""),
 	EnabledFileCommands("enabledFileCommands", "tasmod_desyncMonitor@v1, tasmod_label@v1, tasmod_options@v1"),
@@ -16,7 +16,7 @@ public enum TASmodConfig implements ConfigOptions {
 	private String configKey;
 	private String defaultValue;
 
-	private TASmodConfig(String configKey, String defaultValue) {
+	private TASmodClientConfig(String configKey, String defaultValue) {
 		this.configKey = configKey;
 		this.defaultValue = defaultValue;
 	}
@@ -33,6 +33,6 @@ public enum TASmodConfig implements ConfigOptions {
 
 	@Override
 	public String getExtensionName() {
-		return "TASmodConfig";
+		return "TASmodClientConfig";
 	}
 }

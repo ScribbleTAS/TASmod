@@ -30,15 +30,17 @@ public abstract class MixinRenderLivingBase extends Render {
 	@SuppressWarnings("unchecked")
 	@Inject(method = "renderName", at = @At(value = "HEAD"))
 	public void inject_renderName(EntityLivingBase entity, double d, double e, double f, CallbackInfo ci) {
-		Entity serverEntity = TASmod.getServerInstance().getEntityFromUuid(entity.getUniqueID());
-		if (serverEntity == null)
-			return;
-		RandomBase random = (RandomBase) serverEntity.rand;
-		long seed = random.getSeed();
-		long distance = -random.distance(random.getInitialSeed());
-		GlStateManager.alphaFunc(516, 0.1F);
-		this.renderEntityName(entity, d, e + 0.69D, f, Long.toString(random.getInitialSeed()), 64);
-		this.renderEntityName(entity, d, e + 0.46D, f, Long.toString(seed), 64);
-		this.renderEntityName(entity, d, e + 0.23D, f, Long.toString(distance), 64);
+		if (System.getProperty("tasmod.killtherng.entitytrace", "false").equals("true")) {
+			Entity serverEntity = TASmod.getServerInstance().getEntityFromUuid(entity.getUniqueID());
+			if (serverEntity == null)
+				return;
+			RandomBase random = (RandomBase) serverEntity.rand;
+			long seed = random.getSeed();
+			long distance = -random.distance(random.getInitialSeed());
+			GlStateManager.alphaFunc(516, 0.1F);
+			this.renderEntityName(entity, d, e + 0.69D, f, Long.toString(random.getInitialSeed()), 64);
+			this.renderEntityName(entity, d, e + 0.46D, f, Long.toString(seed), 64);
+			this.renderEntityName(entity, d, e + 0.23D, f, Long.toString(distance), 64);
+		}
 	}
 }
