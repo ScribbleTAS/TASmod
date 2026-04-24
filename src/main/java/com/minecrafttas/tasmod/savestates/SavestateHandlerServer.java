@@ -721,7 +721,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 					}
 				};
 				TASmod.gameLoopSchedulerServer.add(loadstateTask);
-
+				break;
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.SERVER);
 		}
