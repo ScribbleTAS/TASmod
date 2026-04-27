@@ -18,7 +18,8 @@ public abstract class RandomBase extends Random implements Registerable {
 
 	public RandomBase() {
 		super(TASmod.globalRandomness.getCurrentSeed());
-		jrand = new JRand(TASmod.globalRandomness.getCurrentSeed());
+		initialSeed = TASmod.globalRandomness.getCurrentSeed();
+		jrand = new JRand(initialSeed);
 	}
 
 	public RandomBase(long seed) {

@@ -32,7 +32,7 @@ public class GlobalRandomnessTimerClient implements EventClient.EventClientTick 
 	}
 
 	public void setSeed(long newSeed) {
-		globalRandomness.setSeed(newSeed);
+		globalRandomness.setSeed(newSeed, false);
 		currentSeed = newSeed;
 	}
 

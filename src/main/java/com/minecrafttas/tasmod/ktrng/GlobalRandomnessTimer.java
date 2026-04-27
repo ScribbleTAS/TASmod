@@ -12,7 +12,7 @@ public class GlobalRandomnessTimer implements EventServer.EventServerTick {
 	private long currentSeed = 0L;
 
 	public GlobalRandomnessTimer() {
-		globalRandomness = new JRand(0L);
+		globalRandomness = new JRand(0L, false);
 	}
 
 	@Override
@@ -26,7 +26,12 @@ public class GlobalRandomnessTimer implements EventServer.EventServerTick {
 	}
 
 	public void setSeed(long newSeed) {
-		globalRandomness.setSeed(newSeed);
+		globalRandomness.setSeed(newSeed, false);
 		currentSeed = newSeed;
+	}
+
+	@Override
+	public String toString() {
+		return Long.toString(globalRandomness.getSeed());
 	}
 }
