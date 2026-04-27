@@ -79,6 +79,7 @@
 		"fixes.MixinMouseHelper",
 		
 		// KTRNG
+		"killtherng.MixinRender",
 		"killtherng.MixinRenderLivingBase",
 		
 		// Tickrate Rendering
