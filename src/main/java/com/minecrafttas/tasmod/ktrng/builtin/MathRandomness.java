@@ -19,7 +19,7 @@ public class MathRandomness extends RandomBase {
 
 	@Override
 	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
-//		super.fireEvent(eventType, seed, value, 6);
+		super.fireRNGEvent(eventType, seed, value, 6);
 	}
 
 	@Override
