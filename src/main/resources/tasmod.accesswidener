@@ -4,6 +4,7 @@ accessWidener v1 named
 accessible field net/minecraft/client/Minecraft timer Lnet/minecraft/util/Timer;
 accessible method net/minecraft/client/Minecraft runTickKeyboard ()V
 accessible method net/minecraft/client/Minecraft runTickMouse ()V
+accessible field  net/minecraft/client/multiplayer/PlayerControllerMP blockHitDelay I
 
 # Tickratechanger
 accessible field net/minecraft/util/Timer tickLength F

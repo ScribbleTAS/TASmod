@@ -329,14 +329,14 @@ public class InfoHud extends GuiScreen implements EventClientTick, EventDrawHotb
 					}));
 
 			y += 14;
-			title = "ktrng_mathseed";
+			title = "ktrng_blockHitDelay";
 			if (configuration.getProperty(title + "_x", "err").equals("err"))
 				setDefaults(title, y);
 			lists.add(new InfoLabel(title, Integer.parseInt(configuration.getProperty(title + "_x")), Integer.parseInt(configuration.getProperty(title + "_y")), Boolean.parseBoolean(configuration.getProperty(title
 					+ "_visible")), Boolean.parseBoolean(configuration.getProperty(title + "_rect")), () -> {
 						if (Minecraft.getMinecraft().currentScreen == this)
-							return "MathRNG";
-						return "MathRNG: " + TASmod.mathRandomness.getSeed();
+							return "BlockHitDelay";
+						return "BlockHitDelay: " + Minecraft.getMinecraft().playerController.blockHitDelay;
 					}));
 
 			title = "facing";
