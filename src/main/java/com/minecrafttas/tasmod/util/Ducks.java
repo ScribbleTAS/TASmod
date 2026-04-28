@@ -147,4 +147,8 @@ public class Ducks {
 
 		public void updatePitch();
 	}
+
+	public static interface MinecraftServerDuck {
+		public void runFutureTaskQueue();
+	}
 }
