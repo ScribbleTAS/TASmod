@@ -1063,7 +1063,7 @@ public class PlaybackControllerClient implements
 
 				};
 
-				if ((networkState == TASstate.RECORDING || networkState == TASstate.PLAYBACK) && TASmodClient.tickratechanger.ticksPerSecond != 0) {
+				if (networkState == TASstate.RECORDING && TASmodClient.tickratechanger.ticksPerSecond != 0) {
 					TASmodClient.tickSchedulerClient.add(task); // Starts a recording in the next tick
 				} else {
 					TASmodClient.gameLoopSchedulerClient.add(task); // Starts a recording in the next frame
