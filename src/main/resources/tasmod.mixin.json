@@ -25,6 +25,7 @@
 		
 		"killtherng.MixinEntity",
 		"killtherng.MixinWorld",
+		"killtherng.MixinWorldServer",
 		"killtherng.mathrand.MixinEntityLivingBase",
 		"killtherng.mathrand.MixinEntityItem",
 		"killtherng.mathrand.MixinEntityXPOrb",
