@@ -227,7 +227,7 @@ public class VirtualInput {
 		MOUSE.nextMouseTick();
 
 		// Preload vanilla inputs
-		if (Minecraft.getMinecraft() == null) { // If running in unit test env
+		if (Minecraft.getMinecraft() == null || Minecraft.getMinecraft().player == null) { // If running in unit test env
 			return;
 		}
 		Minecraft.getMinecraft().runTickKeyboard(); // Letting mouse and keyboard tick once to load inputs into the "currentKeyboard"

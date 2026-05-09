@@ -141,6 +141,8 @@ public class Ducks {
 		 * @see MixinPlayerChunkMap#sendChunksToClient()
 		 */
 		public void sendChunksToClient();
+
+		public void sortChunks();
 	}
 
 	public static interface SoundManagerDuck {

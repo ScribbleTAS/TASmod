@@ -8,9 +8,13 @@ import java.util.List;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
 
 import com.google.common.collect.ComparisonChain;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler;
+import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler.SortedArrayList;
 import com.minecrafttas.tasmod.util.Ducks.PlayerChunkMapDuck;
 
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -47,6 +51,11 @@ public abstract class MixinPlayerChunkMap implements PlayerChunkMapDuck {
 	@Override
 	public List<EntityPlayerMP> getPlayers() {
 		return players;
+	}
+
+	@WrapOperation(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/server/management/PlayerChunkMap;entries:Ljava/util/List;"))
+	private <E> void modify_entries(PlayerChunkMap owner, List<E> list, Operation<Void> operation) {
+		operation.call(owner, new SortedArrayList<>());
 	}
 
 	/**
@@ -91,16 +100,12 @@ public abstract class MixinPlayerChunkMap implements PlayerChunkMapDuck {
 			 * This messes with the RNG, as after a savestate, the chunks where mobs can spawn are
 			 * different, hence desyncing the TAS...
 			 */
-//			int i = 81;
 			Iterator<PlayerChunkMapEntry> iterator2 = this.pendingSendToPlayers.iterator();
 
 			while (iterator2.hasNext()) {
 				PlayerChunkMapEntry playerChunkMapEntry3 = (PlayerChunkMapEntry) iterator2.next();
 				if (playerChunkMapEntry3.sendToPlayers()) {
 					iterator2.remove();
-//					if (--i < 0) {
-//						break;
-//					}
 				}
 			}
 		}
@@ -111,6 +116,16 @@ public abstract class MixinPlayerChunkMap implements PlayerChunkMapDuck {
 				this.world.getChunkProvider().queueUnloadAll();
 			}
 		}
+	}
+
+	@Override
+	public void sortChunks() {
+		Collections.sort(this.pendingSendToPlayers, new Comparator<PlayerChunkMapEntry>() {
+
+			public int compare(PlayerChunkMapEntry playerChunkMapEntry, PlayerChunkMapEntry playerChunkMapEntry2) {
+				return ComparisonChain.start().compare(playerChunkMapEntry.getClosestPlayerDistance(), playerChunkMapEntry2.getClosestPlayerDistance()).result();
+			}
+		});
 	}
 
 	@Shadow
