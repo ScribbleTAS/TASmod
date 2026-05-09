@@ -151,7 +151,7 @@ public abstract class RandomBase extends Random implements Registerable {
 	}
 
 	public void fireGetEvent(String eventType, long seed, String value) {
-		fireRNGEvent(eventType, seed, value, 3);
+		fireRNGEvent(eventType, seed, value, 10);
 	}
 
 	public long getInitialSeed() {
@@ -159,7 +159,7 @@ public abstract class RandomBase extends Random implements Registerable {
 	}
 
 	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
-		EventListenerRegistry.fireEvent(EventKillTheRNGServer.EventRNG.class, side, eventType, seed, value, this.getClass().getSimpleName());
+		EventListenerRegistry.fireEvent(EventKillTheRNGServer.EventRNG.class, side, eventType, seed, value, this.getClass().getSimpleName(), stackTraceOffset);
 	}
 
 	public enum RNGSide {

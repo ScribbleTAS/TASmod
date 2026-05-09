@@ -85,7 +85,7 @@ public class KillTheRNGMonitor implements EventPlaybackServer.EventControllerSta
 	}
 
 	@Override
-	public void onRNGCall(RNGSide side, String eventType, long seed, String value, String rngClass) {
+	public void onRNGCall(RNGSide side, String eventType, long seed, String value, String rngClass, int offset) {
 
 		if (!isActive() || !isEnabled()) {
 			return;
@@ -96,7 +96,7 @@ public class KillTheRNGMonitor implements EventPlaybackServer.EventControllerSta
 
 		List<String> classOut = new ArrayList<>();
 		if (stackTraceElements != null && stackTraceElements.length != 0) {
-			int start = 10;
+			int start = offset;
 			for (int i = start; i < stackTraceElements.length; i++) {
 				String out = formatStackTraceElement(stackTraceElements[i]);
 				if (out != null)
