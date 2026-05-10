@@ -4,18 +4,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.ktrng.builtin.WorldRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.WorldRNG;
 
 import net.minecraft.world.WorldServer;
 
 public class KTRNGWorldHandler {
 
-	public static Map<Integer, WorldRandomness> getWorldRandomnessMap() {
-		Map<Integer, WorldRandomness> out = new HashMap<>();
+	public static Map<Integer, WorldRNG> getWorldRandomnessMap() {
+		Map<Integer, WorldRNG> out = new HashMap<>();
 		WorldServer[] worlds = TASmod.getServerInstance().worlds;
 		int id = 0;
 		for (WorldServer worldServer : worlds) {
-			WorldRandomness worldRandomness = (WorldRandomness) worldServer.rand;
+			WorldRNG worldRandomness = (WorldRNG) worldServer.rand;
 			out.put(id, worldRandomness);
 			id++;
 		}
@@ -34,11 +34,11 @@ public class KTRNGWorldHandler {
 		return out;
 	}
 
-	public static void setWorldRandomnessMap(Map<Integer, WorldRandomness> randomnessList) {
+	public static void setWorldRandomnessMap(Map<Integer, WorldRNG> randomnessList) {
 		WorldServer[] worlds = TASmod.getServerInstance().worlds;
 		int id = 0;
 		for (WorldServer worldServer : worlds) {
-			WorldRandomness worldRandomness = randomnessList.get(id);
+			WorldRNG worldRandomness = randomnessList.get(id);
 			if (worldRandomness != null)
 				worldServer.rand = worldRandomness;
 			id++;
@@ -58,7 +58,7 @@ public class KTRNGWorldHandler {
 
 	public static String getWorldRandom() {
 		if (TASmod.getServerInstance().worlds[0] != null)
-			return Long.toString(((WorldRandomness) TASmod.getServerInstance().worlds[0].rand).getSeed());
+			return Long.toString(((WorldRNG) TASmod.getServerInstance().worlds[0].rand).getSeed());
 		else
 			return "";
 	}

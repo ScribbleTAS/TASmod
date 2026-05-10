@@ -8,8 +8,8 @@ import java.util.UUID;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.ktrng.builtin.EntityRandomness;
-import com.minecrafttas.tasmod.ktrng.builtin.WorldRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.EntityRNG;
+import com.minecrafttas.tasmod.ktrng.builtin.WorldRNG;
 import com.minecrafttas.tasmod.ktrng.handlers.KTRNGEntityHandler;
 import com.minecrafttas.tasmod.ktrng.handlers.KTRNGWorldHandler;
 import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
@@ -30,8 +30,8 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 		JsonObject entityRandomDataJson = new JsonObject();
 
 		JsonObject entityRandomListJson = new JsonObject();
-		Map<UUID, EntityRandomness> randomList = KTRNGEntityHandler.getRandomnessList();
-		for (Entry<UUID, EntityRandomness> entry : randomList.entrySet()) {
+		Map<UUID, EntityRNG> randomList = KTRNGEntityHandler.getRandomnessList();
+		for (Entry<UUID, EntityRNG> entry : randomList.entrySet()) {
 			entityRandomListJson.addProperty(entry.getKey().toString(), entry.getValue().getSeed());
 		}
 
@@ -42,8 +42,8 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 		JsonObject worldRandomDataJson = new JsonObject();
 
 		JsonObject worldListJson = new JsonObject();
-		Map<Integer, WorldRandomness> worldRandom = KTRNGWorldHandler.getWorldRandomnessMap();
-		for (Entry<Integer, WorldRandomness> entry : worldRandom.entrySet()) {
+		Map<Integer, WorldRNG> worldRandom = KTRNGWorldHandler.getWorldRandomnessMap();
+		for (Entry<Integer, WorldRNG> entry : worldRandom.entrySet()) {
 			worldListJson.addProperty(entry.getKey().toString(), entry.getValue().getSeed());
 		}
 
@@ -74,10 +74,10 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 
 		JsonObject entityRandomListJson = entityRandomDataJson.get("entityList").getAsJsonObject();
 
-		Map<UUID, EntityRandomness> randomList = new HashMap<>();
+		Map<UUID, EntityRNG> randomList = new HashMap<>();
 		for (Entry<String, JsonElement> entry : entityRandomListJson.entrySet()) {
 			UUID uuid = UUID.fromString(entry.getKey().toString());
-			EntityRandomness entityRandomness = new EntityRandomness(entry.getValue().getAsLong());
+			EntityRNG entityRandomness = new EntityRNG(entry.getValue().getAsLong());
 
 			randomList.put(uuid, entityRandomness);
 		}
@@ -87,10 +87,10 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 		JsonObject worldRandomJson = loadedData.get("worldRandom").getAsJsonObject();
 		JsonObject worldListJson = worldRandomJson.get("worldList").getAsJsonObject();
 
-		Map<Integer, WorldRandomness> worldList = new HashMap<>();
+		Map<Integer, WorldRNG> worldList = new HashMap<>();
 		for (Entry<String, JsonElement> entry : worldListJson.entrySet()) {
 			int id = Integer.parseInt(entry.getKey());
-			WorldRandomness worldRandomness = new WorldRandomness(entry.getValue().getAsLong());
+			WorldRNG worldRandomness = new WorldRNG(entry.getValue().getAsLong());
 
 			worldList.put(id, worldRandomness);
 		}

@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.minecrafttas.tasmod.ktrng.GlobalRandomnessTimer;
+import com.minecrafttas.tasmod.ktrng.GlobalRNG;
 
 class GlobalRandomnessTimerTest {
 
@@ -15,7 +15,7 @@ class GlobalRandomnessTimerTest {
 
 	@Test
 	void testSetSeed() {
-		GlobalRandomnessTimer timer = new GlobalRandomnessTimer();
+		GlobalRNG timer = new GlobalRNG();
 		timer.onServerTick(null);
 		timer.onServerTick(null);
 		timer.onServerTick(null);
