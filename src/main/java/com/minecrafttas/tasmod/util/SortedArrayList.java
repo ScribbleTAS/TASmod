@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 /**
- * Sorts the ArrayList everytime an element is added/removed.
+ * Sorts the ArrayList every time an element is added/removed.
  * @param <E> Type The type of the ArrayList
  * @author Scribble
  */
@@ -17,15 +17,14 @@ public class SortedArrayList<E> extends ArrayList<E> {
 	}
 
 	@Override
-	public boolean add(E e) {
-		boolean out = super.add(e);
-		sort(comparable);
-		return out;
-	}
-
-	@Override
-	public E remove(int index) {
-		sort(comparable);
-		return super.remove(index);
+	public boolean add(E newElement) {
+		for (int i = 0; i < this.size(); i++) {
+			E element = this.get(i);
+			if (comparable.compare(element, newElement) >= 0) {
+				super.add(i, newElement);
+				return true;
+			}
+		}
+		return super.add(newElement);
 	}
 }
