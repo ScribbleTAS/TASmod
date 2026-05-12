@@ -2,12 +2,8 @@ package com.minecrafttas.tasmod.savestates.handlers;
 
 import static com.minecrafttas.tasmod.TASmod.LOGGER;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
-import com.google.common.collect.ComparisonChain;
 import com.minecrafttas.tasmod.mixin.savestates.MixinChunkProviderServer;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerClient;
 import com.minecrafttas.tasmod.util.Ducks.ChunkProviderDuck;
@@ -19,7 +15,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerChunkMap;
-import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.WorldServer;
@@ -267,36 +262,6 @@ public class SavestateWorldHandler {
 		server.getPlayerList().setPlayerManager(server.worlds);
 		if (server.worlds[0].getWorldInfo().getDifficulty() == null) {
 			server.setDifficultyForAllWorlds(Minecraft.getMinecraft().gameSettings.difficulty);
-		}
-	}
-
-	public static class SortedArrayList<E> extends ArrayList<E> {
-		@SuppressWarnings("unchecked")
-		@Override
-		public boolean add(E e) {
-			boolean out = super.add(e);
-
-			Collections.sort((List<PlayerChunkMapEntry>) this, new Comparator<PlayerChunkMapEntry>() {
-
-				public int compare(PlayerChunkMapEntry playerChunkMapEntry, PlayerChunkMapEntry playerChunkMapEntry2) {
-					if (playerChunkMapEntry == null || playerChunkMapEntry == null)
-						return 0;
-
-					Chunk chunk1 = playerChunkMapEntry.getChunk();
-					Chunk chunk2 = playerChunkMapEntry2.getChunk();
-
-					if (chunk1 == null || chunk2 == null)
-						return 0;
-
-					//@formatter:off
-					return ComparisonChain.start()
-							.compare(playerChunkMapEntry.getChunk().x, playerChunkMapEntry2.getChunk().x)
-							.compare(playerChunkMapEntry.getChunk().z, playerChunkMapEntry2.getChunk().z)
-							.result();
-					//@formatter:on
-				}
-			});
-			return out;
 		}
 	}
 }

@@ -14,8 +14,8 @@ import com.google.common.collect.ComparisonChain;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler;
-import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler.SortedArrayList;
 import com.minecrafttas.tasmod.util.Ducks.PlayerChunkMapDuck;
+import com.minecrafttas.tasmod.util.SortedArrayList;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMap;
@@ -53,9 +53,28 @@ public abstract class MixinPlayerChunkMap implements PlayerChunkMapDuck {
 		return players;
 	}
 
+	/**
+	 * Replaces the type of PlayerChunkMap.entries with a {@link SortedArrayList}
+	 */
 	@WrapOperation(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/server/management/PlayerChunkMap;entries:Ljava/util/List;"))
 	private <E> void modify_entries(PlayerChunkMap owner, List<E> list, Operation<Void> operation) {
-		operation.call(owner, new SortedArrayList<>());
+		operation.call(owner, new SortedArrayList<PlayerChunkMapEntry>((playerChunkMapEntry, playerChunkMapEntry2) -> {
+			if (playerChunkMapEntry == null || playerChunkMapEntry == null)
+				return 0;
+
+			Chunk chunk1 = playerChunkMapEntry.getChunk();
+			Chunk chunk2 = playerChunkMapEntry2.getChunk();
+
+			if (chunk1 == null || chunk2 == null)
+				return 0;
+
+			//@formatter:off
+				return ComparisonChain.start()
+						.compare(playerChunkMapEntry.getChunk().x, playerChunkMapEntry2.getChunk().x)
+						.compare(playerChunkMapEntry.getChunk().z, playerChunkMapEntry2.getChunk().z)
+						.result();
+			//@formatter:on
+		}));
 	}
 
 	/**
