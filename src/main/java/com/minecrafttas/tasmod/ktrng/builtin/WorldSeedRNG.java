@@ -13,6 +13,10 @@ public class WorldSeedRNG extends RandomBase {
 	}
 
 	@Override
+	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
+	}
+
+	@Override
 	public String getExtensionName() {
 		return "WorldSeedRNG";
 	}
