@@ -141,10 +141,16 @@ public class Ducks {
 		 * @see MixinPlayerChunkMap#sendChunksToClient()
 		 */
 		public void sendChunksToClient();
+
+		public void sortChunks();
 	}
 
 	public static interface SoundManagerDuck {
 
 		public void updatePitch();
+	}
+
+	public static interface MinecraftServerDuck {
+		public void runFutureTaskQueue();
 	}
 }

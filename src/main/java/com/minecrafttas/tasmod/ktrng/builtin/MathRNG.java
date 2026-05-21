@@ -7,19 +7,14 @@ import com.minecrafttas.tasmod.ktrng.RandomBase;
  * 
  * @author Scribble
  */
-public class MathRandomness extends RandomBase {
+public class MathRNG extends RandomBase {
 
-	public MathRandomness() {
+	public MathRNG() {
 		super();
 	}
 
-	public MathRandomness(long seed) {
+	public MathRNG(long seed) {
 		super(seed);
-	}
-
-	@Override
-	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
-//		super.fireEvent(eventType, seed, value, 6);
 	}
 
 	@Override

@@ -218,6 +218,15 @@ public class SavestateWorldHandler {
 		}
 	}
 
+	public void sortChunks() {
+		WorldServer[] worlds = server.worlds;
+
+		for (WorldServer world : worlds) {
+			PlayerChunkMapDuck chunkMap = (PlayerChunkMapDuck) world.getPlayerChunkMap();
+			chunkMap.sortChunks();
+		}
+	}
+
 	public void loadAllWorlds(String string) {
 		server.convertMapIfNeeded(string);
 		server.worlds = new WorldServer[3];

@@ -5,21 +5,21 @@ import com.minecrafttas.mctcommon.events.EventClient;
 import kaptainwutax.seedutils.rand.JRand;
 import net.minecraft.client.Minecraft;
 
-public class GlobalRandomnessTimerClient implements EventClient.EventClientTick {
+public class GlobalRNGClient implements EventClient.EventClientTick {
 
-	private final JRand globalRandomness;
+	private final JRand globalRNGClient;
 	private final JRand uuidRandomness;
 
 	private long currentSeed = 0L;
 
-	public GlobalRandomnessTimerClient() {
-		globalRandomness = new JRand(0L);
+	public GlobalRNGClient() {
+		globalRNGClient = new JRand(0L);
 		uuidRandomness = new JRand(0L);
 	}
 
 	@Override
 	public void onClientTick(Minecraft mc) {
-		currentSeed = globalRandomness.nextLong();
+		currentSeed = globalRNGClient.nextLong();
 		uuidRandomness.setSeed(currentSeed);
 	}
 
@@ -32,7 +32,7 @@ public class GlobalRandomnessTimerClient implements EventClient.EventClientTick 
 	}
 
 	public void setSeed(long newSeed) {
-		globalRandomness.setSeed(newSeed);
+		globalRNGClient.setSeed(newSeed, false);
 		currentSeed = newSeed;
 	}
 

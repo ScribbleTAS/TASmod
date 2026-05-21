@@ -2,35 +2,13 @@ package tasmod.killtherng;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.minecrafttas.tasmod.ktrng.RandomBase;
 
 import kaptainwutax.seedutils.rand.JRand;
 
-class TestRNGTest {
-
-	class TestRNG extends RandomBase {
-
-		public TestRNG() {
-			super();
-		}
-
-		public TestRNG(long seed) {
-			super(seed);
-		}
-
-		@Override
-		public String getExtensionName() {
-			return "TestRNG";
-		}
-
-	}
-
-	@BeforeEach
-	void setUp() throws Exception {
-	}
+class RandomBaseTest {
 
 	@Test
 	void testInitialSeed() {
@@ -90,5 +68,18 @@ class TestRNGTest {
 		testRandom2.nextInt(6);
 
 		assertEquals(testRandom1.getSeed(), testRandom2.getSeed());
+	}
+
+	private class TestRNG extends RandomBase {
+
+		public TestRNG(long seed) {
+			super(seed);
+		}
+
+		@Override
+		public String getExtensionName() {
+			return "TestRNG";
+		}
+
 	}
 }

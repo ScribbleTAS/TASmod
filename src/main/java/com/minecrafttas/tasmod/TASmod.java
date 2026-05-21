@@ -29,9 +29,9 @@ import com.minecrafttas.tasmod.commands.CommandSavestate;
 import com.minecrafttas.tasmod.commands.CommandTickrate;
 import com.minecrafttas.tasmod.config.TASmodServerConfig;
 import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
-import com.minecrafttas.tasmod.ktrng.GlobalRandomnessTimer;
-import com.minecrafttas.tasmod.ktrng.builtin.MathRandomness;
-import com.minecrafttas.tasmod.ktrng.builtin.WorldSeedRandomness;
+import com.minecrafttas.tasmod.ktrng.GlobalRNG;
+import com.minecrafttas.tasmod.ktrng.builtin.MathRNG;
+import com.minecrafttas.tasmod.ktrng.builtin.WorldSeedRNG;
 import com.minecrafttas.tasmod.ktrng.events.KillTheRNGMonitor;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
@@ -95,13 +95,13 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	public static ClientMotionStorage motionStorage = new ClientMotionStorage();
 
-	public static GlobalRandomnessTimer globalRandomness;
+	public static GlobalRNG globalRandomness;
 
 	public static KTRNGSeedStorage seedStorage = new KTRNGSeedStorage();
 
-	public static MathRandomness mathRandomness = new MathRandomness(0);
+	public static MathRNG mathRandomness = new MathRNG(0);
 
-	public static WorldSeedRandomness worldSeedRandomness = new WorldSeedRandomness(0);
+	public static WorldSeedRNG worldSeedRandomness = new WorldSeedRNG(0);
 
 	public static KillTheRNGMonitor debugRand = new KillTheRNGMonitor();
 
@@ -158,9 +158,9 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	@Override
 	public void onServerStart(MinecraftServer server) {
-		globalRandomness = new GlobalRandomnessTimer();
+		globalRandomness = new GlobalRNG();
 		EventListenerRegistry.register(globalRandomness);
-		mathRandomness = new MathRandomness(0);
+		mathRandomness = new MathRNG(0);
 	}
 
 	@Override

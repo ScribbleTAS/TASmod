@@ -9,7 +9,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.ktrng.builtin.WorldRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.WorldRNG;
 
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -20,7 +20,7 @@ public class MixinWorld {
 	@ModifyExpressionValue(method = "<init>", at = @At(value = "NEW", target = "Ljava/util/Random;"))
 	public Random modify_worldRandom(Random original) {
 		if (((World) (Object) this) instanceof WorldServer)
-			return new WorldRandomness();
+			return new WorldRNG();
 		else
 			return original;
 	}

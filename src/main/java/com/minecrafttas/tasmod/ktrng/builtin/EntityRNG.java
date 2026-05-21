@@ -2,19 +2,18 @@ package com.minecrafttas.tasmod.ktrng.builtin;
 
 import com.minecrafttas.tasmod.ktrng.RandomBase;
 
-public class EntityRandomness extends RandomBase {
+public class EntityRNG extends RandomBase {
 
-	public EntityRandomness() {
+	public EntityRNG() {
 		super();
 	}
 
-	public EntityRandomness(long seed) {
+	public EntityRNG(long seed) {
 		super(seed);
 	}
 
 	@Override
 	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
-//		super.fireEvent(eventType, seed, value, stackTraceOffset);
 	}
 
 	@Override

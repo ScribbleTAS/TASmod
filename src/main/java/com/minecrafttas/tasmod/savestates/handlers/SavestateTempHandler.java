@@ -11,16 +11,13 @@ import org.apache.logging.log4j.Logger;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventPlaybackClient.EventRecordClear;
 import com.minecrafttas.tasmod.events.EventPlaybackServer.EventControllerStateChange;
-import com.minecrafttas.tasmod.events.EventSavestate;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
-import com.minecrafttas.tasmod.savestates.SavestateIndexer.SavestatePaths;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.util.Component;
 
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextFormatting;
 
 /**
@@ -29,7 +26,7 @@ import net.minecraft.util.text.TextFormatting;
  * 
  * @author Scribble
  */
-public class SavestateTempHandler implements EventControllerStateChange, EventRecordClear, EventSavestate.EventServerLoadstatePre {
+public class SavestateTempHandler implements EventControllerStateChange, EventRecordClear {
 
 	private final Logger logger;
 	private final SavestateHandlerServer handler;
@@ -154,10 +151,5 @@ public class SavestateTempHandler implements EventControllerStateChange, EventRe
 
 	public void setActive(boolean active) {
 		this.active = active;
-	}
-
-	@Override
-	public void onServerLoadstatePre(MinecraftServer server, SavestatePaths paths) {
-		createState = false;
 	}
 }

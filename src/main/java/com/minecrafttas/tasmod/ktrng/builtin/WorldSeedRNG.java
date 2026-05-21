@@ -2,13 +2,13 @@ package com.minecrafttas.tasmod.ktrng.builtin;
 
 import com.minecrafttas.tasmod.ktrng.RandomBase;
 
-public class WorldSeedRandomness extends RandomBase {
+public class WorldSeedRNG extends RandomBase {
 
-	public WorldSeedRandomness() {
+	public WorldSeedRNG() {
 		super();
 	}
 
-	public WorldSeedRandomness(long seed) {
+	public WorldSeedRNG(long seed) {
 		super(seed);
 	}
 

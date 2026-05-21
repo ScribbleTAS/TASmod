@@ -5,32 +5,32 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.minecrafttas.tasmod.TASmod;
-import com.minecrafttas.tasmod.ktrng.builtin.EntityRandomness;
+import com.minecrafttas.tasmod.ktrng.builtin.EntityRNG;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.world.WorldServer;
 
 public class KTRNGEntityHandler {
 
-	public static Map<UUID, EntityRandomness> getRandomnessList() {
-		Map<UUID, EntityRandomness> out = new HashMap<>();
+	public static Map<UUID, EntityRNG> getRandomnessList() {
+		Map<UUID, EntityRNG> out = new HashMap<>();
 		WorldServer[] worlds = TASmod.getServerInstance().worlds;
 		for (WorldServer worldServer : worlds) {
 			for (Entity entity : worldServer.loadedEntityList) {
 				UUID entityUUID = entity.getUniqueID();
-				EntityRandomness entityRandomness = (EntityRandomness) entity.rand;
+				EntityRNG entityRandomness = (EntityRNG) entity.rand;
 				out.put(entityUUID, entityRandomness);
 			}
 		}
 		return out;
 	}
 
-	public static void setRandomnessList(Map<UUID, EntityRandomness> randomnessList) {
+	public static void setRandomnessList(Map<UUID, EntityRNG> randomnessList) {
 		WorldServer[] worlds = TASmod.getServerInstance().worlds;
 		for (WorldServer worldServer : worlds) {
 			for (Entity entity : worldServer.loadedEntityList) {
 				UUID uuid = entity.getUniqueID();
-				EntityRandomness rand = randomnessList.get(uuid);
+				EntityRNG rand = randomnessList.get(uuid);
 				if (rand != null)
 					entity.rand = rand;
 			}

@@ -24,7 +24,7 @@ public class FileThread extends Thread {
 
 	public FileThread(Path fileLocation, boolean append) throws IOException {
 		super("TASmod FileWriter Thread");
-		OutputStream outStream = Files.newOutputStream(fileLocation, StandardOpenOption.CREATE, append ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING);
+		OutputStream outStream = Files.newOutputStream(fileLocation, StandardOpenOption.WRITE, StandardOpenOption.CREATE, append ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING);
 		stream = new PrintWriter(new OutputStreamWriter(outStream, StandardCharsets.UTF_8), true);
 	}
 

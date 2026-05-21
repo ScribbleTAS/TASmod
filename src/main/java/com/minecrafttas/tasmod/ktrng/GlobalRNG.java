@@ -5,20 +5,20 @@ import com.minecrafttas.mctcommon.events.EventServer;
 import kaptainwutax.seedutils.rand.JRand;
 import net.minecraft.server.MinecraftServer;
 
-public class GlobalRandomnessTimer implements EventServer.EventServerTick {
+public class GlobalRNG implements EventServer.EventServerTick {
 
-	private final JRand globalRandomness;
+	private final JRand globalRNG;
 
 	private long currentSeed = 0L;
 
-	public GlobalRandomnessTimer() {
-		globalRandomness = new JRand(0L);
+	public GlobalRNG() {
+		globalRNG = new JRand(0L, false);
 	}
 
 	@Override
 	public void onServerTick(MinecraftServer server) {
-		globalRandomness.advance(1);
-		currentSeed = globalRandomness.getSeed();
+		globalRNG.advance(1);
+		currentSeed = globalRNG.getSeed();
 	}
 
 	public long getCurrentSeed() {
@@ -26,7 +26,12 @@ public class GlobalRandomnessTimer implements EventServer.EventServerTick {
 	}
 
 	public void setSeed(long newSeed) {
-		globalRandomness.setSeed(newSeed);
+		globalRNG.setSeed(newSeed, false);
 		currentSeed = newSeed;
+	}
+
+	@Override
+	public String toString() {
+		return Long.toString(globalRNG.getSeed());
 	}
 }

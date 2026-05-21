@@ -15,6 +15,7 @@ import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.events.EventServer.EventServerTickPost;
 import com.minecrafttas.tasmod.savestates.SavestateHandlerServer.SavestateState;
+import com.minecrafttas.tasmod.util.Ducks.MinecraftServerDuck;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -22,7 +23,7 @@ import net.minecraft.network.NetworkSystem;
 import net.minecraft.server.MinecraftServer;
 
 @Mixin(MinecraftServer.class)
-public abstract class MixinMinecraftServer {
+public abstract class MixinMinecraftServer implements MinecraftServerDuck {
 
 	// =====================================================================================================================================
 
@@ -115,15 +116,7 @@ public abstract class MixinMinecraftServer {
 
 		boolean stopTaskQueue = TASmod.savestateHandlerServer != null && TASmod.savestateHandlerServer.getState() == SavestateState.LOADING;
 		if (!stopTaskQueue) {
-			synchronized (this.futureTaskQueue) {
-				while (!this.futureTaskQueue.isEmpty()) {
-					try {
-						((FutureTask<?>) this.futureTaskQueue.poll()).run();
-					} catch (Throwable var9) {
-						var9.printStackTrace();
-					}
-				}
-			}
+			runFutureTaskQueue();
 		}
 	}
 
@@ -137,4 +130,16 @@ public abstract class MixinMinecraftServer {
 
 	// =====================================================================================================================================
 
+	@Override
+	public void runFutureTaskQueue() {
+		synchronized (this.futureTaskQueue) {
+			while (!this.futureTaskQueue.isEmpty()) {
+				try {
+					((FutureTask<?>) this.futureTaskQueue.poll()).run();
+				} catch (Throwable var9) {
+					var9.printStackTrace();
+				}
+			}
+		}
+	}
 }

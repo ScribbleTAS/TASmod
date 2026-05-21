@@ -25,6 +25,7 @@
 		
 		"killtherng.MixinEntity",
 		"killtherng.MixinWorld",
+		"killtherng.MixinWorldServer",
 		"killtherng.mathrand.MixinEntityLivingBase",
 		"killtherng.mathrand.MixinEntityItem",
 		"killtherng.mathrand.MixinEntityXPOrb",
@@ -38,6 +39,7 @@
 		
 		// Savestates
 		"savestates.MixinChunkProviderClient",
+		"savestates.MixinNetHandlerPlayClient",
 		"savestates.MixinWorldClient",
 		"savestates.MixinMinecraft",
 		
@@ -78,6 +80,7 @@
 		"fixes.MixinMouseHelper",
 		
 		// KTRNG
+		"killtherng.MixinRender",
 		"killtherng.MixinRenderLivingBase",
 		
 		// Tickrate Rendering

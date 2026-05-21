@@ -18,7 +18,8 @@ public abstract class RandomBase extends Random implements Registerable {
 
 	public RandomBase() {
 		super(TASmod.globalRandomness.getCurrentSeed());
-		jrand = new JRand(TASmod.globalRandomness.getCurrentSeed());
+		initialSeed = TASmod.globalRandomness.getCurrentSeed();
+		jrand = new JRand(initialSeed);
 	}
 
 	public RandomBase(long seed) {
@@ -150,7 +151,7 @@ public abstract class RandomBase extends Random implements Registerable {
 	}
 
 	public void fireGetEvent(String eventType, long seed, String value) {
-		fireRNGEvent(eventType, seed, value, 3);
+		fireRNGEvent(eventType, seed, value, 10);
 	}
 
 	public long getInitialSeed() {
@@ -158,7 +159,7 @@ public abstract class RandomBase extends Random implements Registerable {
 	}
 
 	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
-		EventListenerRegistry.fireEvent(EventKillTheRNGServer.EventRNG.class, side, eventType, seed, value, this.getClass().getSimpleName());
+		EventListenerRegistry.fireEvent(EventKillTheRNGServer.EventRNG.class, side, eventType, seed, value, this.getClass().getSimpleName(), stackTraceOffset);
 	}
 
 	public enum RNGSide {

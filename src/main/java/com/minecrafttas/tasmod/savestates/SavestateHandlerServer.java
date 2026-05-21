@@ -207,7 +207,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE };
 
 		if (!TASmod.config.getBoolean(TASmodServerConfig.PauseOnTempSavestate)) {
-			if (ArrayUtils.contains(flags, SavestateFlags.BLOCK_PAUSE_TICKRATE))
+			if (!ArrayUtils.contains(flags, SavestateFlags.BLOCK_PAUSE_TICKRATE))
 				flags = ArrayUtils.add(flags, SavestateFlags.BLOCK_PAUSE_TICKRATE);
 		}
 
@@ -368,7 +368,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 		SavestateFlags[] flags = new SavestateFlags[] { SavestateFlags.BLOCK_CLIENT_SAVESTATE };
 
 		if (!TASmod.config.getBoolean(TASmodServerConfig.PauseOnTempSavestate)) {
-			if (ArrayUtils.contains(flags, SavestateFlags.BLOCK_PAUSE_TICKRATE))
+			if (!ArrayUtils.contains(flags, SavestateFlags.BLOCK_PAUSE_TICKRATE))
 				flags = ArrayUtils.add(flags, SavestateFlags.BLOCK_PAUSE_TICKRATE);
 		}
 
@@ -721,7 +721,7 @@ public class SavestateHandlerServer implements ServerPacketHandler {
 					}
 				};
 				TASmod.gameLoopSchedulerServer.add(loadstateTask);
-
+				break;
 			default:
 				throw new PacketNotImplementedException(packet, this.getClass(), Side.SERVER);
 		}

@@ -5,7 +5,6 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.minecrafttas.tasmod.TASmod;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityTNTPrimed;
@@ -16,6 +15,6 @@ public class MixinEntityTNTPrimed {
 
 	@WrapOperation(method = "<init>(Lnet/minecraft/world/World;DDDLnet/minecraft/entity/EntityLivingBase;)V", at = @At(value = "INVOKE", target = "Ljava/lang/Math;random()D"))
 	private double wrap_entityTNTPrimedInit(Operation<Double> original, World world, double d, double e, double f, EntityLivingBase entityLivingBase) {
-		return TASmod.mathRandomness.nextDouble();
+		return ((EntityTNTPrimed) (Object) this).rand.nextDouble();
 	}
 }
