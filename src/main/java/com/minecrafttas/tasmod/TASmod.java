@@ -158,8 +158,10 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	@Override
 	public void onServerStart(MinecraftServer server) {
-		globalRandomness = new GlobalRNG();
-		EventListenerRegistry.register(globalRandomness);
+		if (globalRandomness == null) {
+			globalRandomness = new GlobalRNG();
+			EventListenerRegistry.register(globalRandomness);
+		}
 		mathRandomness = new MathRNG(0);
 	}
 
