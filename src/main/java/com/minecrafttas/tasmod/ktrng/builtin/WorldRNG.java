@@ -14,7 +14,7 @@ public class WorldRNG extends RandomBase {
 
 	@Override
 	public void fireRNGEvent(String val, long seed, String value, int offset) {
-		super.fireRNGEvent(val, seed, value, 9);
+//		super.fireRNGEvent(val, seed, value, 9);
 	}
 
 	@Override

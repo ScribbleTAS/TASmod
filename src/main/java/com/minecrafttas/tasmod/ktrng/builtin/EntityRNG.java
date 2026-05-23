@@ -14,6 +14,7 @@ public class EntityRNG extends RandomBase {
 
 	@Override
 	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
+		super.fireRNGEvent(eventType, seed, value, stackTraceOffset);
 	}
 
 	@Override
