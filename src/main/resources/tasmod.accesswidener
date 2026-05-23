@@ -28,4 +28,6 @@ accessible field net/minecraft/client/settings/KeyBinding CATEGORY_ORDER Ljava/u
 accessible field net/minecraft/entity/Entity rand Ljava/util/Random;
 accessible field net/minecraft/world/World updateLCG I
 mutable field net/minecraft/world/World rand Ljava/util/Random;
-
+accessible field net/minecraft/entity/EntityLiving tasks Lnet/minecraft/entity/ai/EntityAITasks;
+accessible field net/minecraft/entity/EntityLiving targetTasks Lnet/minecraft/entity/ai/EntityAITasks;
+accessible field net/minecraft/entity/ai/EntityAITasks tickCount I
