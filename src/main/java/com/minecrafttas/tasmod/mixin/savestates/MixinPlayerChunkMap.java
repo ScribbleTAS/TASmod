@@ -15,7 +15,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateWorldHandler;
 import com.minecrafttas.tasmod.util.Ducks.PlayerChunkMapDuck;
-import com.minecrafttas.tasmod.util.SortedArrayList;
+import com.minecrafttas.tasmod.util.SortedList;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMap;
@@ -54,11 +54,11 @@ public abstract class MixinPlayerChunkMap implements PlayerChunkMapDuck {
 	}
 
 	/**
-	 * Replaces the type of PlayerChunkMap.entries with a {@link SortedArrayList}
+	 * Replaces the type of PlayerChunkMap.entries with a {@link SortedList}
 	 */
 	@WrapOperation(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/server/management/PlayerChunkMap;entries:Ljava/util/List;"))
 	private <E> void modify_entries(PlayerChunkMap owner, List<E> list, Operation<Void> operation) {
-		operation.call(owner, new SortedArrayList<PlayerChunkMapEntry>((playerChunkMapEntry, playerChunkMapEntry2) -> {
+		operation.call(owner, new SortedList<PlayerChunkMapEntry>((playerChunkMapEntry, playerChunkMapEntry2) -> {
 			if (playerChunkMapEntry == null || playerChunkMapEntry == null)
 				return 0;
 

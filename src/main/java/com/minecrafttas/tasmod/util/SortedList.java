@@ -1,30 +1,34 @@
 package com.minecrafttas.tasmod.util;
 
-import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.ListIterator;
 
 /**
  * Sorts the ArrayList every time an element is added/removed.
  * @param <E> Type The type of the ArrayList
  * @author Scribble
  */
-public class SortedArrayList<E> extends ArrayList<E> {
+public class SortedList<E> extends LinkedList<E> {
 
 	private final Comparator<E> comparable;
 
-	public SortedArrayList(Comparator<E> comparable) {
+	public SortedList(Comparator<E> comparable) {
 		this.comparable = comparable;
 	}
 
 	@Override
 	public boolean add(E newElement) {
-		for (int i = 0; i < this.size(); i++) {
-			E element = this.get(i);
+		ListIterator<E> iterator = (ListIterator<E>) iterator();
+		while (iterator.hasNext()) {
+			E element = iterator.next();
 			if (comparable.compare(element, newElement) >= 0) {
-				super.add(i, newElement);
+				iterator.set(newElement);
+				iterator.add(element);
 				return true;
 			}
 		}
-		return super.add(newElement);
+		super.add(newElement);
+		return true;
 	}
 }
