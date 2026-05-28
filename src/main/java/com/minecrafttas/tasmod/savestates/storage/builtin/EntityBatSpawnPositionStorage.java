@@ -42,6 +42,8 @@ public class EntityBatSpawnPositionStorage extends SavestateStorageExtensionBase
 
 	@Override
 	public void onLoadstatePost(MinecraftServer server, JsonObject loadedData) {
+		if (loadedData == null)
+			return;
 		for (WorldServer worldServer : server.worlds) {
 			for (Entity entity : worldServer.loadedEntityList) {
 				if (entity instanceof EntityBat) {

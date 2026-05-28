@@ -55,9 +55,12 @@ public class EntityTickTimersStorage extends SavestateStorageExtensionBase {
 
 	@Override
 	public void onLoadstatePost(MinecraftServer server, JsonObject loadedData) {
+		if (loadedData == null)
+			return;
 		for (WorldServer worldServer : server.worlds) {
 			for (Entity entity : worldServer.loadedEntityList) {
 				UUID entityUUID = entity.getUniqueID();
+
 				JsonElement tickCountElement = loadedData.get(entityUUID.toString());
 				if (tickCountElement == null)
 					continue;
