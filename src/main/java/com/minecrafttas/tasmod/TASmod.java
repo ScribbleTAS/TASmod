@@ -33,6 +33,7 @@ import com.minecrafttas.tasmod.ktrng.GlobalRNG;
 import com.minecrafttas.tasmod.ktrng.builtin.MathRNG;
 import com.minecrafttas.tasmod.ktrng.builtin.WorldSeedRNG;
 import com.minecrafttas.tasmod.ktrng.events.KillTheRNGMonitor;
+import com.minecrafttas.tasmod.ktrng.handlers.UUIDHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
@@ -109,6 +110,8 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	public static KillTheRNGMonitor debugRand = new KillTheRNGMonitor();
 
+	public static UUIDHandler uuidHandler = new UUIDHandler();
+
 	public static Configuration config;
 
 	@Override
@@ -155,6 +158,7 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 		EventListenerRegistry.register(resourcepackHandler);
 		PacketHandlerRegistry.register(playUntil);
 		EventListenerRegistry.register(playUntil);
+		EventListenerRegistry.register(uuidHandler);
 		EventListenerRegistry.register(TASmodAPIRegistry.SAVESTATE_STORAGE);
 
 		registerSavestateStorage();

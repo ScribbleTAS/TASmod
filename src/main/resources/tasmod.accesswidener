@@ -32,3 +32,4 @@ accessible field net/minecraft/entity/EntityLiving tasks Lnet/minecraft/entity/a
 accessible field net/minecraft/entity/EntityLiving targetTasks Lnet/minecraft/entity/ai/EntityAITasks;
 accessible field net/minecraft/entity/ai/EntityAITasks tickCount I
 accessible field net/minecraft/entity/passive/EntityBat spawnPosition Lnet/minecraft/util/math/BlockPos;
+accessible field net/minecraft/entity/Entity nextEntityID I

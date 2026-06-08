@@ -14,7 +14,9 @@ import com.minecrafttas.tasmod.ktrng.handlers.KTRNGEntityHandler;
 import com.minecrafttas.tasmod.ktrng.handlers.KTRNGWorldHandler;
 import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.WorldServer;
 
 public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 
@@ -74,15 +76,18 @@ public class KTRNGSeedStorage extends SavestateStorageExtensionBase {
 
 		JsonObject entityRandomListJson = entityRandomDataJson.get("entityList").getAsJsonObject();
 
-		Map<UUID, EntityRNG> randomList = new HashMap<>();
 		for (Entry<String, JsonElement> entry : entityRandomListJson.entrySet()) {
+			WorldServer[] worlds = TASmod.getServerInstance().worlds;
 			UUID uuid = UUID.fromString(entry.getKey().toString());
-			EntityRNG entityRandomness = new EntityRNG(entry.getValue().getAsLong());
+			for (WorldServer worldServer : worlds) {
+				Entity entity = worldServer.getEntityFromUuid(uuid);
+				if (entity == null)
+					continue;
+				EntityRNG entityRandomness = new EntityRNG(entry.getValue().getAsLong(), entity);
+				entity.rand = entityRandomness;
+			}
 
-			randomList.put(uuid, entityRandomness);
 		}
-
-		KTRNGEntityHandler.setRandomnessList(randomList);
 
 		JsonObject worldRandomJson = loadedData.get("worldRandom").getAsJsonObject();
 		JsonObject worldListJson = worldRandomJson.get("worldList").getAsJsonObject();

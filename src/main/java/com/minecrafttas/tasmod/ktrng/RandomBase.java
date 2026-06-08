@@ -12,9 +12,9 @@ import kaptainwutax.seedutils.rand.JRand;
 
 public abstract class RandomBase extends Random implements Registerable {
 
-	RNGSide side;
-	private long initialSeed;
-	private JRand jrand;
+	protected RNGSide side;
+	protected long initialSeed;
+	protected JRand jrand;
 
 	public RandomBase() {
 		super(TASmod.globalRandomness.getCurrentSeed());
