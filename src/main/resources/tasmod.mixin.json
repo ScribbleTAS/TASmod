@@ -24,6 +24,7 @@
 		"fixes.MixinDragonFightManager",
 		
 		"killtherng.MixinEntity",
+		"killtherng.MixinEntitySquid",
 		"killtherng.MixinWorld",
 		"killtherng.MixinWorldServer",
 		"killtherng.mathrand.MixinEntityLivingBase",

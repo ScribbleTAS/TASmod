@@ -31,9 +31,9 @@ public abstract class RandomBase extends Random implements Registerable {
 	@Override
 	public void setSeed(long seedIn) {
 		super.setSeed(seedIn);
-		if (jrand != null)
+		if (jrand != null) {
 			jrand.setSeed(seedIn, false);
-//		super.setSeed(seedIn ^ 0x5deece66dL);
+		}
 	}
 
 	public long getSeed() {
@@ -146,8 +146,8 @@ public abstract class RandomBase extends Random implements Registerable {
 		return Long.toString(getSeed());
 	}
 
-	public void fireSetEvent(String eventType, long seed, String value, int stackTraceOffset) {
-		fireRNGEvent(eventType, seed, value, stackTraceOffset);
+	public void fireSetEvent(String eventType, long seed, String value) {
+//		fireRNGEvent(eventType, seed, value, stackTraceOffset);
 	}
 
 	public void fireGetEvent(String eventType, long seed, String value) {
