@@ -52,7 +52,7 @@ public class MixinWorld {
 
 			if (uuid == null || uuid2 == null)
 				return 0;
-			return uuid.toString().compareTo(uuid2.toString());
+			return uuid.compareTo(uuid2);
 		}));
 	}
 }

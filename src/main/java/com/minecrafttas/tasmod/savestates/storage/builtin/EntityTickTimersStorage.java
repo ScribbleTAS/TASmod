@@ -8,6 +8,7 @@ import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
@@ -37,15 +38,18 @@ public class EntityTickTimersStorage extends SavestateStorageExtensionBase {
 				if (entity instanceof EntityLiving) {
 					UUID entityUUID = entity.getUniqueID();
 					EntityLiving entityLiving = (EntityLiving) entity;
+					EntityLivingBase entityLivingBase = (EntityLivingBase) entity;
 					EntityAITasks tasks = entityLiving.tasks;
 					EntityAITasks targetTasks = entityLiving.targetTasks;
 					int tickCount = tasks.tickCount;
 					int tickCountTarget = targetTasks.tickCount;
 					int tickCountSound = entityLiving.livingSoundTime;
+					int tickIdle = entityLivingBase.idleTime;
 					JsonObject tickCountList = new JsonObject();
 					tickCountList.addProperty("aitasks", tickCount);
 					tickCountList.addProperty("aitargetTasks", tickCountTarget);
 					tickCountList.addProperty("livingSoundTime", tickCountSound);
+					tickCountList.addProperty("idleTime", tickIdle);
 					dataToSave.add(entityUUID.toString(), tickCountList);
 				}
 			}
@@ -69,14 +73,17 @@ public class EntityTickTimersStorage extends SavestateStorageExtensionBase {
 				int tickCount = tickCountList.get("aitasks").getAsInt();
 				int tickCountTarget = tickCountList.get("aitargetTasks").getAsInt();
 				int tickCountSound = tickCountList.get("livingSoundTime").getAsInt();
+				int tickCountIdle = tickCountList.get("idleTime").getAsInt();
 
 				if (entity instanceof EntityLiving) {
 					EntityLiving entityLiving = (EntityLiving) entity;
+					EntityLivingBase entityLivingBase = (EntityLivingBase) entity;
 					EntityAITasks tasks = entityLiving.tasks;
 					EntityAITasks targetTasks = entityLiving.targetTasks;
 					tasks.tickCount = tickCount;
 					targetTasks.tickCount = tickCountTarget;
 					entityLiving.livingSoundTime = tickCountSound;
+					entityLivingBase.idleTime = tickCountIdle;
 				}
 			}
 		}
