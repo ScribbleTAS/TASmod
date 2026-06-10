@@ -261,11 +261,15 @@ public class PlaybackSerialiser {
 		reader.close();
 
 		// Deserialise Header
-		List<String> headerLines = flavor.extractHeader(lines);
-		flavor.deserialiseHeader(headerLines);
+		int startPos = 0;
+		if (flavor.hasHeader()) {
+			List<String> headerLines = flavor.extractHeader(lines);
+			flavor.deserialiseHeader(headerLines);
+			startPos = headerLines.size();
+		}
 
 		// Deserialise main data
-		BigArrayList<InputContainer> deserialisedContainers = flavor.deserialise(lines, headerLines.size());
+		BigArrayList<InputContainer> deserialisedContainers = flavor.deserialise(lines, startPos);
 
 		return deserialisedContainers;
 	}

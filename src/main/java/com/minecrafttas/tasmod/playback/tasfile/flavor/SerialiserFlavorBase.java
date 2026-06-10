@@ -2073,6 +2073,11 @@ public abstract class SerialiserFlavorBase implements Registerable {
 	public String getFileExtension() {
 		return ".mctas";
 	}
+
+	public boolean hasHeader() {
+		return true;
+	}
+
 	@Override
 	public String toString() {
 		return getExtensionName();

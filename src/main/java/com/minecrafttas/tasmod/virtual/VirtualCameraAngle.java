@@ -38,7 +38,7 @@ public class VirtualCameraAngle extends Subtickable<VirtualCameraAngle> implemen
 	 * @param yaw {@link #yaw}
 	 */
 	public VirtualCameraAngle(Float pitch, Float yaw) {
-		this(pitch, yaw, null);
+		this(pitch, yaw, new ArrayList<>());
 	}
 
 	/**

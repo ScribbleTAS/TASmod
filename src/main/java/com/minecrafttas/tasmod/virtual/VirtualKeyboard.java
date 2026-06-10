@@ -96,7 +96,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 	 * @param charList A list of characters for this subtickKeyboard
 	 */
 	public VirtualKeyboard(Set<Integer> pressedKeys, List<Character> charList) {
-		this(pressedKeys, charList, null, false);
+		this(pressedKeys, charList, new ArrayList<>(), false);
 	}
 
 	/**
@@ -105,7 +105,7 @@ public class VirtualKeyboard extends VirtualPeripheral<VirtualKeyboard> implemen
 	 * @param charList The existing list of characters
 	 */
 	public VirtualKeyboard(Set<Integer> pressedKeys, List<Character> charList, boolean ignoreFirstUpdate) {
-		this(pressedKeys, charList, null, ignoreFirstUpdate);
+		this(pressedKeys, charList, new ArrayList<>(), ignoreFirstUpdate);
 	}
 
 	/**
