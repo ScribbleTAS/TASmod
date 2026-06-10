@@ -3,16 +3,17 @@ package com.minecrafttas.tasmod.util;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.COMMAND_FLAVORLIST;
 import static com.minecrafttas.tasmod.registries.TASmodPackets.COMMAND_TASFILELIST;
 
-import java.io.File;
-import java.io.FileFilter;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import com.minecrafttas.mctcommon.networking.exception.PacketNotImplementedException;
 import com.minecrafttas.mctcommon.networking.exception.WrongSideException;
@@ -24,8 +25,6 @@ import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
-
-import net.minecraft.client.Minecraft;
 
 public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHandler {
 
@@ -97,19 +96,7 @@ public class TabCompletionUtils implements ServerPacketHandler, ClientPacketHand
 		}
 	}
 
-	private List<String> getFilenames() {
-		List<String> tab = new ArrayList<String>();
-		File folder = new File(Minecraft.getMinecraft().gameDir, "saves" + File.separator + "tasfiles");
-
-		File[] listOfFiles = folder.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().endsWith(".mctas");
-			}
-		});
-		for (int i = 0; i < listOfFiles.length; i++) {
-			tab.add(listOfFiles[i].getName().replaceFirst("\\.mctas$", ""));
-		}
-		return tab;
+	private List<String> getFilenames() throws IOException {
+		return Files.list(TASmodClient.tasfiledirectory).map(Path::getFileName).map(Path::toString).collect(Collectors.toList());
 	}
 }
