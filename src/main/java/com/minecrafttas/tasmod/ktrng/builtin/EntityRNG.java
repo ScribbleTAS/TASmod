@@ -23,7 +23,7 @@ public class EntityRNG extends RandomBase {
 	@Override
 	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
 		String rngType = String.format("%s(%s)", entity.getClass().getSimpleName(), entity.getUniqueID());
-		EventListenerRegistry.fireEvent(EventKillTheRNGServer.EventRNG.class, super.side, eventType, seed, value, rngType, stackTraceOffset);
+		EventListenerRegistry.fireEvent(EventKillTheRNGServer.EventRNG.class, super.side, eventType, seed, value, rngType, 9);
 	}
 
 	@Override
