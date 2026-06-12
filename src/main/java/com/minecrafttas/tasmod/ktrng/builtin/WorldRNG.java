@@ -2,6 +2,13 @@ package com.minecrafttas.tasmod.ktrng.builtin;
 
 import com.minecrafttas.tasmod.ktrng.RandomBase;
 
+import net.minecraft.world.World;
+
+/**
+ * Custom RNG making {@link World#rand} deterministic
+ * 
+ * @author Scribble
+ */
 public class WorldRNG extends RandomBase {
 
 	public WorldRNG() {

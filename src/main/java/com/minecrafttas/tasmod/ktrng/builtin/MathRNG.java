@@ -3,7 +3,7 @@ package com.minecrafttas.tasmod.ktrng.builtin;
 import com.minecrafttas.tasmod.ktrng.RandomBase;
 
 /**
- * <p>Randomness instance for hooking into {@link Math#random()}
+ * Custom RNG making {@link Math#random()} deterministic
  * 
  * @author Scribble
  */

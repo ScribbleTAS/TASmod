@@ -10,6 +10,7 @@ import com.minecrafttas.tasmod.ktrng.builtin.EntityRNG;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.WorldServer;
 
+@Deprecated
 public class KTRNGEntityHandler {
 
 	public static Map<UUID, EntityRNG> getRandomnessList() {

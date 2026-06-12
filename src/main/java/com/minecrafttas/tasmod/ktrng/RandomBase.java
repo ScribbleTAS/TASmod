@@ -10,6 +10,11 @@ import com.minecrafttas.tasmod.events.EventKillTheRNGServer;
 import kaptainwutax.seedutils.lcg.LCG;
 import kaptainwutax.seedutils.rand.JRand;
 
+/**
+ * Base RNG class extending the {@link Random} class, but designed to be easily modifyable and monitorable.
+ * 
+ * @author Scribble
+ */
 public abstract class RandomBase extends Random implements Registerable {
 
 	protected RNGSide side;

@@ -6,6 +6,11 @@ import com.minecrafttas.tasmod.ktrng.RandomBase;
 
 import net.minecraft.entity.Entity;
 
+/**
+ * Custom RNG making {@link Entity#rand} deterministic
+ * 
+ * @author Scribble
+ */
 public class EntityRNG extends RandomBase {
 
 	private Entity entity;
