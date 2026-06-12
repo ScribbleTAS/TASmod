@@ -1,5 +1,6 @@
 package com.minecrafttas.tasmod.mixin.playbackhooks;
 
+import org.lwjgl.opengl.Display;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -65,8 +66,8 @@ public class MixinEntityRenderer implements SubtickDuck {
 		float mouseSensititvity = this.mc.gameSettings.mouseSensitivity * 0.6F + 0.2F;
 		float mouseSensitivityCubed = mouseSensititvity * mouseSensititvity * mouseSensititvity * 8.0F;
 
-		if (this.mc.currentScreen == null && !TASmodClient.controller.isPlayingback() && mc.player != null) {
-			mc.mouseHelper.mouseXYChange();
+		mc.mouseHelper.mouseXYChange();
+		if (this.mc.currentScreen == null && !TASmodClient.controller.isPlayingback() && mc.player != null && Display.isActive()) {
 			float deltaPitch = mc.mouseHelper.deltaY * mouseSensitivityCubed;
 			float deltaYaw = mc.mouseHelper.deltaX * mouseSensitivityCubed;
 
