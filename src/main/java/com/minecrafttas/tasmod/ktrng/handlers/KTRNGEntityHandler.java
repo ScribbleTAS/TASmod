@@ -10,6 +10,7 @@ import com.minecrafttas.tasmod.ktrng.builtin.EntityRNG;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.WorldServer;
 
+@Deprecated
 public class KTRNGEntityHandler {
 
 	public static Map<UUID, EntityRNG> getRandomnessList() {
@@ -23,17 +24,5 @@ public class KTRNGEntityHandler {
 			}
 		}
 		return out;
-	}
-
-	public static void setRandomnessList(Map<UUID, EntityRNG> randomnessList) {
-		WorldServer[] worlds = TASmod.getServerInstance().worlds;
-		for (WorldServer worldServer : worlds) {
-			for (Entity entity : worldServer.loadedEntityList) {
-				UUID uuid = entity.getUniqueID();
-				EntityRNG rand = randomnessList.get(uuid);
-				if (rand != null)
-					entity.rand = rand;
-			}
-		}
 	}
 }

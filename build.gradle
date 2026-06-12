@@ -2,14 +2,13 @@ plugins {
 	// loom plugin
 	id "fabric-loom" version "${loom_version}"
 	id "ploceus" version "${loom_version}"
-	id "com.palantir.git-version" version "4.2.0"
-	id "com.diffplug.spotless" version "8.1.0"
+	id "com.diffplug.spotless" version "8.6.0"
 }
 
 // set basic properties
 def hash = ""
 if(project.release=="false") {
-	hash = "-SNAPSHOT_"+versionDetails().gitHash.substring(0,7)
+	hash = "-SNAPSHOT_"+getGitCommitHash()
 }
 version = project.version+hash
 group = project.group
@@ -109,4 +108,22 @@ spotless {
 		eclipse().configFile("formatter/TASmodFormatter.xml")
 	}
 	enforceCheck false
+}
+
+def getGitCommitHash() {
+    def gitFolder = "$projectDir/.git/"
+    def takeFromHash = 7
+    /*
+     * '.git/HEAD' contains either
+     *      in case of detached head: the currently checked out commit hash
+     *      otherwise: a reference to a file containing the current commit hash
+     */
+    def head = new File(gitFolder + "HEAD").text.split(":") // .git/HEAD
+    def isCommit = head.length == 1
+    // def isRef = head.length > 1     // ref: refs/heads/master
+
+    if(isCommit) return head[0].trim().take(takeFromHash) // e5a7c79edabb
+
+    def refHead = new File(gitFolder + head[1].trim()) // .git/refs/heads/master
+    refHead.text.trim().take takeFromHash      
 }

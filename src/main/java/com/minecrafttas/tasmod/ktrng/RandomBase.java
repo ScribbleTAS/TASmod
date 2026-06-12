@@ -10,16 +10,21 @@ import com.minecrafttas.tasmod.events.EventKillTheRNGServer;
 import kaptainwutax.seedutils.lcg.LCG;
 import kaptainwutax.seedutils.rand.JRand;
 
+/**
+ * Base RNG class extending the {@link Random} class, but designed to be easily modifyable and monitorable.
+ * 
+ * @author Scribble
+ */
 public abstract class RandomBase extends Random implements Registerable {
 
-	RNGSide side;
-	private long initialSeed;
-	private JRand jrand;
+	protected RNGSide side;
+	protected long initialSeed;
+	protected JRand jrand;
 
 	public RandomBase() {
 		super(TASmod.globalRandomness.getCurrentSeed());
 		initialSeed = TASmod.globalRandomness.getCurrentSeed();
-		jrand = new JRand(initialSeed);
+		jrand = new JRand(initialSeed, false);
 	}
 
 	public RandomBase(long seed) {
@@ -31,9 +36,9 @@ public abstract class RandomBase extends Random implements Registerable {
 	@Override
 	public void setSeed(long seedIn) {
 		super.setSeed(seedIn);
-		if (jrand != null)
+		if (jrand != null) {
 			jrand.setSeed(seedIn, false);
-//		super.setSeed(seedIn ^ 0x5deece66dL);
+		}
 	}
 
 	public long getSeed() {
@@ -146,8 +151,8 @@ public abstract class RandomBase extends Random implements Registerable {
 		return Long.toString(getSeed());
 	}
 
-	public void fireSetEvent(String eventType, long seed, String value, int stackTraceOffset) {
-		fireRNGEvent(eventType, seed, value, stackTraceOffset);
+	public void fireSetEvent(String eventType, long seed, String value) {
+//		fireRNGEvent(eventType, seed, value, stackTraceOffset);
 	}
 
 	public void fireGetEvent(String eventType, long seed, String value) {

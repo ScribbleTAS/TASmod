@@ -3,7 +3,7 @@ package com.minecrafttas.tasmod.ktrng.builtin;
 import com.minecrafttas.tasmod.ktrng.RandomBase;
 
 /**
- * <p>Randomness instance for hooking into {@link Math#random()}
+ * Custom RNG making {@link Math#random()} deterministic
  * 
  * @author Scribble
  */
@@ -15,6 +15,11 @@ public class MathRNG extends RandomBase {
 
 	public MathRNG(long seed) {
 		super(seed);
+	}
+
+	@Override
+	public void fireRNGEvent(String eventType, long seed, String value, int stackTraceOffset) {
+//			super.fireRNGEvent(eventType, seed, value, stackTraceOffset);
 	}
 
 	@Override

@@ -5,6 +5,13 @@ import com.minecrafttas.mctcommon.events.EventServer;
 import kaptainwutax.seedutils.rand.JRand;
 import net.minecraft.server.MinecraftServer;
 
+/**
+ * <p>Special RNG generating seeds for each new rng instance.
+ * <p>This RNG advances to it's next seed every server tick. Any new RNG created then uses the {@link #currentSeed},<br>
+ * which makes it have a deterministic starting seed
+ * 
+ * @author Scribble
+ */
 public class GlobalRNG implements EventServer.EventServerTick {
 
 	private final JRand globalRNG;

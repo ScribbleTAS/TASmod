@@ -33,6 +33,7 @@ import com.minecrafttas.tasmod.ktrng.GlobalRNG;
 import com.minecrafttas.tasmod.ktrng.builtin.MathRNG;
 import com.minecrafttas.tasmod.ktrng.builtin.WorldSeedRNG;
 import com.minecrafttas.tasmod.ktrng.events.KillTheRNGMonitor;
+import com.minecrafttas.tasmod.ktrng.handlers.UUIDHandler;
 import com.minecrafttas.tasmod.playback.PlaybackControllerServer;
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
@@ -41,6 +42,9 @@ import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateGuiHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.EntityBatSpawnPositionStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.EntitySquidRotationStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.EntityTickTimersStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.KTRNGSeedStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
@@ -98,12 +102,17 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 	public static GlobalRNG globalRandomness;
 
 	public static KTRNGSeedStorage seedStorage = new KTRNGSeedStorage();
+	public static EntityTickTimersStorage entityTickTimers = new EntityTickTimersStorage();
+	public static EntityBatSpawnPositionStorage entityBatSpawnPositionStorage = new EntityBatSpawnPositionStorage();
+	public static EntitySquidRotationStorage entitySquidRotationStorage = new EntitySquidRotationStorage();
 
 	public static MathRNG mathRandomness = new MathRNG(0);
 
 	public static WorldSeedRNG worldSeedRandomness = new WorldSeedRNG(0);
 
 	public static KillTheRNGMonitor debugRand = new KillTheRNGMonitor();
+
+	public static UUIDHandler uuidHandler = new UUIDHandler();
 
 	public static Configuration config;
 
@@ -151,6 +160,7 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 		EventListenerRegistry.register(resourcepackHandler);
 		PacketHandlerRegistry.register(playUntil);
 		EventListenerRegistry.register(playUntil);
+		EventListenerRegistry.register(uuidHandler);
 		EventListenerRegistry.register(TASmodAPIRegistry.SAVESTATE_STORAGE);
 
 		registerSavestateStorage();
@@ -158,8 +168,10 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	@Override
 	public void onServerStart(MinecraftServer server) {
-		globalRandomness = new GlobalRNG();
-		EventListenerRegistry.register(globalRandomness);
+		if (globalRandomness == null) {
+			globalRandomness = new GlobalRNG();
+			EventListenerRegistry.register(globalRandomness);
+		}
 		mathRandomness = new MathRNG(0);
 	}
 
@@ -227,6 +239,9 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 	private void registerSavestateStorage() {
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(motionStorage);
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(seedStorage);
+		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entityTickTimers);
+		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entityBatSpawnPositionStorage);
+		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entitySquidRotationStorage);
 	}
 
 	public static MinecraftServer getServerInstance() {

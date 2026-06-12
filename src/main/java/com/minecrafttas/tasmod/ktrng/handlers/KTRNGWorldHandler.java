@@ -8,6 +8,7 @@ import com.minecrafttas.tasmod.ktrng.builtin.WorldRNG;
 
 import net.minecraft.world.WorldServer;
 
+@Deprecated
 public class KTRNGWorldHandler {
 
 	public static Map<Integer, WorldRNG> getWorldRandomnessMap() {

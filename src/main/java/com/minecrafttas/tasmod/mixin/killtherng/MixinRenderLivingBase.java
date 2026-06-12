@@ -41,6 +41,7 @@ public abstract class MixinRenderLivingBase extends Render {
 			this.renderEntityName(entity, d, e + 0.69D, f, Long.toString(random.getInitialSeed()), 64);
 			this.renderEntityName(entity, d, e + 0.46D, f, Long.toString(seed), 64);
 			this.renderEntityName(entity, d, e + 0.23D, f, Long.toString(distance), 64);
+			this.renderEntityName(entity, d, e, f, entity.getUniqueID().toString(), 64);
 		}
 	}
 }
