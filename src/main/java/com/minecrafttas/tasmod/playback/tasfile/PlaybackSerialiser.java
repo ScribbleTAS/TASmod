@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
+
 import com.dselent.bigarraylist.BigArrayList;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
@@ -95,6 +97,10 @@ public class PlaybackSerialiser {
 			flavorName = defaultFlavor;
 		}
 
+		SerialiserFlavorBase flavor = TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
+
+		path = addDefaultExtension(path, flavor);
+
 		FileThread writerThread;
 		try {
 			writerThread = new FileThread(path, false);
@@ -103,17 +109,17 @@ public class PlaybackSerialiser {
 		}
 		writerThread.start();
 
-		SerialiserFlavorBase flavor = TASmodAPIRegistry.SERIALISER_FLAVOR.getFlavor(flavorName);
-
 		if (flavor == null) {
 			throw new PlaybackSaveException("Flavor %s doesn't exist", flavorName);
 		}
 
 		defaultFlavor = flavorName;
 
-		List<String> header = flavor.serialiseHeader();
-		for (String line : header) {
-			writerThread.addLine(line);
+		if (flavor.hasHeader()) {
+			List<String> header = flavor.serialiseHeader();
+			for (String line : header) {
+				writerThread.addLine(line);
+			}
 		}
 
 		BigArrayList<String> tickLines = flavor.serialise(container, stopIndex);
@@ -122,6 +128,16 @@ public class PlaybackSerialiser {
 		}
 
 		writerThread.close();
+	}
+
+	private static Path addDefaultExtension(Path path, SerialiserFlavorBase flavor) {
+		String extension = FilenameUtils.getExtension(path.getFileName().toString());
+		if (extension.isEmpty()) {
+			extension = flavor.getFileExtension();
+			String name = FilenameUtils.getBaseName(path.getFileName().toString());
+			path = path.resolveSibling(name + extension);
+		}
+		return path;
 	}
 
 	/**
@@ -247,11 +263,15 @@ public class PlaybackSerialiser {
 		reader.close();
 
 		// Deserialise Header
-		List<String> headerLines = flavor.extractHeader(lines);
-		flavor.deserialiseHeader(headerLines);
+		int startPos = 0;
+		if (flavor.hasHeader()) {
+			List<String> headerLines = flavor.extractHeader(lines);
+			flavor.deserialiseHeader(headerLines);
+			startPos = headerLines.size();
+		}
 
 		// Deserialise main data
-		BigArrayList<InputContainer> deserialisedContainers = flavor.deserialise(lines, headerLines.size());
+		BigArrayList<InputContainer> deserialisedContainers = flavor.deserialise(lines, startPos);
 
 		return deserialisedContainers;
 	}

@@ -36,6 +36,7 @@ import com.minecrafttas.tasmod.playback.metadata.builtin.CreditsMetadataExtensio
 import com.minecrafttas.tasmod.playback.metadata.builtin.StartpositionMetadataExtension;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.builtin.AlphaFlavor;
 import com.minecrafttas.tasmod.playback.tasfile.flavor.builtin.Beta1Flavor;
+import com.minecrafttas.tasmod.playback.tasfile.flavor.builtin.ParkourCalculatorFlavor;
 import com.minecrafttas.tasmod.registries.TASmodAPIRegistry;
 import com.minecrafttas.tasmod.registries.TASmodKeybinds;
 import com.minecrafttas.tasmod.registries.TASmodPackets;
@@ -330,10 +331,12 @@ public class TASmodClient implements ClientModInitializer, EventClientInit, Even
 
 	public static Beta1Flavor betaFlavor = new Beta1Flavor();
 	public static AlphaFlavor alphaFlavor = new AlphaFlavor();
+	public static ParkourCalculatorFlavor parkourFlavor = new ParkourCalculatorFlavor();
 
 	private void registerSerialiserFlavors(Minecraft mc) {
 		TASmodAPIRegistry.SERIALISER_FLAVOR.register(betaFlavor);
 		TASmodAPIRegistry.SERIALISER_FLAVOR.register(alphaFlavor);
+		TASmodAPIRegistry.SERIALISER_FLAVOR.register(parkourFlavor);
 	}
 
 	public static DesyncMonitorFileCommandExtension desyncMonitorFileCommandExtension;

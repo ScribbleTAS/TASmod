@@ -2067,6 +2067,17 @@ public abstract class SerialiserFlavorBase implements Registerable {
 		return currentSubtick;
 	}
 
+	/**
+	 * @return The file extension this file is usually associated with. Is used if no file ending is present
+	 */
+	public String getFileExtension() {
+		return ".mctas";
+	}
+
+	public boolean hasHeader() {
+		return true;
+	}
+
 	@Override
 	public String toString() {
 		return getExtensionName();

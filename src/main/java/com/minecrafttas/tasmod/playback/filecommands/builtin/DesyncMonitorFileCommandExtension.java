@@ -99,6 +99,8 @@ public class DesyncMonitorFileCommandExtension extends PlaybackFileCommandExtens
 	@Override
 	public SortedFileCommandContainer onSerialiseEndlineComment(long currentTick, InputContainer inputContainer) {
 		SortedFileCommandContainer out = new SortedFileCommandContainer();
+		if (monitorContainer.size() <= currentTick)
+			return out;
 		MonitorContainer monitoredValues = monitorContainer.get(currentTick);
 		PlaybackFileCommand command = new PlaybackFileCommand("desyncMonitor", monitoredValues.toStringArray());
 

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
@@ -276,7 +277,6 @@ public class PlaybackControllerClient implements
 					return verbose ? TextFormatting.GREEN + "Pausing a playback" : "";
 				case NONE:
 					stopPlayback(true);
-					state = TASstate.NONE;
 					return verbose ? TextFormatting.GREEN + "Stopping the playback" : "";
 			}
 		} else if (state == TASstate.PAUSED) {
@@ -321,6 +321,9 @@ public class PlaybackControllerClient implements
 
 	private void startPlayback() {
 		logger.debug(LoggerMarkers.Playback, "Starting playback");
+		if (inputs.isEmpty())
+			return;
+
 		state = TASstate.PLAYBACK;
 
 		InputContainer initialContainer = inputs.get(0);
@@ -936,18 +939,18 @@ public class PlaybackControllerClient implements
 	@Override
 	public void onClientPacket(PacketID id, ByteBuffer buf, String username) throws PacketNotImplementedException, WrongSideException, Exception {
 		TASmodPackets packet = (TASmodPackets) id;
-		String name = null;
+		String filename = null;
 		String flavor = null;
 		Minecraft mc = Minecraft.getMinecraft();
 
 		switch (packet) {
 
 			case PLAYBACK_SAVE:
-				name = TASmodBufferBuilder.readString(buf);
+				filename = TASmodBufferBuilder.readString(buf);
 				flavor = TASmodBufferBuilder.readString(buf);
 
 				try {
-					PlaybackSerialiser.saveToFile(tasFileDirectory.resolve(name + fileEnding), this, flavor);
+					PlaybackSerialiser.saveToFile(tasFileDirectory.resolve(filename), this, flavor);
 				} catch (PlaybackSaveException e) {
 					if (mc.world != null)
 						mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.RED + e.getMessage()));
@@ -961,19 +964,23 @@ public class PlaybackControllerClient implements
 				}
 
 				if (mc.world != null) {
-					TextComponentString confirm = new TextComponentString(TextFormatting.GREEN + "Saved inputs to " + name + ".mctas" + TextFormatting.RESET + " [" + TextFormatting.YELLOW + "Open folder" + TextFormatting.RESET + "]");
+					TextComponentString confirm = new TextComponentString(TextFormatting.GREEN + "Saved inputs to " + filename + TextFormatting.RESET + " [" + TextFormatting.YELLOW + "Open folder" + TextFormatting.RESET + "]");
 					confirm.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/folder tasfiles"));
 					mc.ingameGUI.getChatGUI().printChatMessage(confirm);
 				} else
-					logger.debug(LoggerMarkers.Playback, "Saved inputs to " + name + ".mctas");
+					logger.debug(LoggerMarkers.Playback, "Saved inputs to " + filename);
 				break;
 
 			case PLAYBACK_LOAD:
-				name = TASmodBufferBuilder.readString(buf);
+				filename = TASmodBufferBuilder.readString(buf);
 				flavor = TASmodBufferBuilder.readString(buf);
+				String name = FilenameUtils.getBaseName(filename);
+				String extension = FilenameUtils.getExtension(filename);
+				if (extension.isEmpty())
+					extension += fileEnding;
 
 				try {
-					TASmodClient.controller.setInputs(PlaybackSerialiser.loadFromFile(tasFileDirectory.resolve(name + fileEnding), flavor));
+					TASmodClient.controller.setInputs(PlaybackSerialiser.loadFromFile(tasFileDirectory.resolve(String.format("%s.%s", name, extension)), flavor));
 				} catch (PlaybackLoadException e) {
 					if (mc.world != null) {
 						TextComponentString textComponent = new TextComponentString(e.getMessage());
@@ -989,9 +996,9 @@ public class PlaybackControllerClient implements
 				}
 
 				if (mc.world != null)
-					mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.GREEN + "Loaded inputs from " + name + ".mctas"));
+					mc.ingameGUI.getChatGUI().printChatMessage(new TextComponentString(TextFormatting.GREEN + "Loaded inputs from " + filename));
 				else
-					logger.debug(LoggerMarkers.Playback, "Loaded inputs from " + name + ".mctas");
+					logger.debug(LoggerMarkers.Playback, "Loaded inputs from " + filename + ".mctas");
 				break;
 
 			case PLAYBACK_FULLPLAY:
