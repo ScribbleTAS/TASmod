@@ -134,7 +134,7 @@ public class MixinEntityRenderer implements SubtickDuck {
 		 * The angle is instead initialized in LoadingScreenHandler#onDoneLoadingPlayer.
 		 */
 		if (newPitch == null || newYaw == null) {
-			TASmodClient.virtual.CAMERA_ANGLE.setCamera(prevPitch, prevYaw);
+//			TASmodClient.virtual.CAMERA_ANGLE.setCamera(prevPitch, prevYaw);
 			return;
 		}
 

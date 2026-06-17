@@ -31,6 +31,11 @@ import com.minecrafttas.tasmod.virtual.VirtualKey;
 import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 
+/**
+ * Flavor for importing/exporting files from <a href="https://github.com/Leg0shii/ParkourCalculatorMod">ParkourCalculatorMod</a>
+ * 
+ * @author Scribble
+ */
 public class ParkourCalculatorFlavor extends SerialiserFlavorBase {
 
 	private final Gson gson;
@@ -84,7 +89,7 @@ public class ParkourCalculatorFlavor extends SerialiserFlavorBase {
 		JsonObject main = gson.fromJson(fullJson, JsonObject.class);
 		deserialiseMetadata(main);
 		JsonObject start = main.get("start").getAsJsonObject();
-		previousInputContainer = new InputContainer(new VirtualKeyboard(), new VirtualMouse(), new VirtualCameraAngle(0f, start.get("yaw").getAsFloat()));
+		previousInputContainer = new InputContainer(new VirtualKeyboard(), new VirtualMouse(), new VirtualCameraAngle(0f, start.get("yaw").getAsFloat(), false));
 
 		JsonArray rows = main.get("rows").getAsJsonArray();
 		JsonArray debug = null;
@@ -149,7 +154,7 @@ public class ParkourCalculatorFlavor extends SerialiserFlavorBase {
 			String keyString = key.getAsString();
 			keySet.add(deserialiseVirtualKey(keyString, null));
 		});
-		return new VirtualKeyboard(keySet, new ArrayList<>());
+		return new VirtualKeyboard(keySet, new ArrayList<>(), new ArrayList<>(), false);
 	}
 
 	@Override
@@ -178,7 +183,7 @@ public class ParkourCalculatorFlavor extends SerialiserFlavorBase {
 		if (jsonElement == null)
 			return previousInputContainer.getCameraAngle();
 		float yaw = jsonElement.getAsFloat() + previousInputContainer.getCameraAngle().getYaw();
-		return new VirtualCameraAngle(0f, yaw);
+		return new VirtualCameraAngle(0f, yaw, false);
 	}
 
 	protected void deserialiseMetadata(JsonObject main) {
