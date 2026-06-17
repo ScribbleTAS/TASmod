@@ -964,11 +964,11 @@ public class PlaybackControllerClient implements
 				}
 
 				if (mc.world != null) {
-					TextComponentString confirm = new TextComponentString(TextFormatting.GREEN + "Saved inputs to " + filename + ".mctas" + TextFormatting.RESET + " [" + TextFormatting.YELLOW + "Open folder" + TextFormatting.RESET + "]");
+					TextComponentString confirm = new TextComponentString(TextFormatting.GREEN + "Saved inputs to " + filename + TextFormatting.RESET + " [" + TextFormatting.YELLOW + "Open folder" + TextFormatting.RESET + "]");
 					confirm.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/folder tasfiles"));
 					mc.ingameGUI.getChatGUI().printChatMessage(confirm);
 				} else
-					logger.debug(LoggerMarkers.Playback, "Saved inputs to " + filename + ".mctas");
+					logger.debug(LoggerMarkers.Playback, "Saved inputs to " + filename);
 				break;
 
 			case PLAYBACK_LOAD:

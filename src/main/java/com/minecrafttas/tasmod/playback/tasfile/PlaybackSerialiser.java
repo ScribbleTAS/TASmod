@@ -115,9 +115,11 @@ public class PlaybackSerialiser {
 
 		defaultFlavor = flavorName;
 
-		List<String> header = flavor.serialiseHeader();
-		for (String line : header) {
-			writerThread.addLine(line);
+		if (flavor.hasHeader()) {
+			List<String> header = flavor.serialiseHeader();
+			for (String line : header) {
+				writerThread.addLine(line);
+			}
 		}
 
 		BigArrayList<String> tickLines = flavor.serialise(container, stopIndex);

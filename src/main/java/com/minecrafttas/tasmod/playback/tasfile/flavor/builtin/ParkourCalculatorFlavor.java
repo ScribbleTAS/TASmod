@@ -1,10 +1,15 @@
 package com.minecrafttas.tasmod.playback.tasfile.flavor.builtin;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import com.dselent.bigarraylist.BigArrayList;
 import com.google.gson.Gson;
@@ -194,7 +199,118 @@ public class ParkourCalculatorFlavor extends SerialiserFlavorBase {
 
 	@Override
 	public BigArrayList<String> serialise(BigArrayList<InputContainer> inputs, long toTick) {
-		// TODO Auto-generated method stub
-		return super.serialise(inputs, toTick);
+		BigArrayList<String> out = new BigArrayList<>();
+		JsonObject main = new JsonObject();
+		serialiseMetadata(main);
+
+		JsonArray rows = new JsonArray();
+		for (int i = 0; i < inputs.size(); i++) {
+			if (toTick == i) {
+				break;
+			}
+			currentTick = i;
+			InputContainer container = inputs.get(i).clone();
+			serialiseContainer(rows, container);
+			previousInputContainer = container;
+		}
+
+		main.add("rows", rows);
+
+		String serialised = gson.toJson(main);
+		out.addAll(Arrays.asList(serialised.split("\n")));
+		return out;
+	}
+
+	protected void serialiseContainer(JsonArray rows, InputContainer container) {
+		JsonObject row = new JsonObject();
+		serialiseKeyboard(row, container.getKeyboard());
+		serialiseCameraAngle(row, container.getCameraAngle());
+		row.addProperty("yawLocked", false);
+		row.addProperty("speedAmplifier", 0);
+		row.addProperty("jumpBoostAmplifier", 0);
+		rows.add(row);
+	}
+
+	protected void serialiseKeyboard(JsonObject row, VirtualKeyboard keyboard) {
+		JsonArray keys = new JsonArray();
+		Set<Integer> pressedKeys = keyboard.getPressedKeys();
+		for (Integer keyCode : pressedKeys) {
+			VirtualKey key = VirtualKey.get(keyCode);
+			switch (key) {
+				case W:
+					keys.add("W");
+					break;
+				case A:
+					keys.add("A");
+					break;
+				case S:
+					keys.add("S");
+					break;
+				case D:
+					keys.add("D");
+					break;
+				case SPACE:
+					keys.add("JUMP");
+					break;
+				case LCONTROL:
+					keys.add("SPRINT");
+					break;
+				case LSHIFT:
+					keys.add("SNEAK");
+					break;
+				default:
+					break;
+			}
+		}
+		row.add("keys", keys);
+	}
+
+	protected void serialiseCameraAngle(JsonObject row, VirtualCameraAngle cameraAngle) {
+		if (previousInputContainer == null)
+			return;
+		VirtualCameraAngle previousCameraAngle = previousInputContainer.getCameraAngle();
+		if (cameraAngle.equals(previousCameraAngle))
+			return;
+
+		float yawdiff = cameraAngle.getYaw() - previousCameraAngle.getYaw();
+		row.addProperty("yaw", yawdiff);
+	}
+
+	protected void serialiseMetadata(JsonObject main) {
+		List<PlaybackMetadata> metadataList = TASmodAPIRegistry.PLAYBACK_METADATA.handleOnStore();
+		main.addProperty("version", 1);
+		main.addProperty("createdAt", nowIso8601());
+		main.addProperty("modVersion", "1.5.1");
+		main.addProperty("mcVersion", "1.12.2");
+		JsonObject start = new JsonObject();
+		for (PlaybackMetadata metadata : metadataList) {
+			switch (metadata.getExtensionName()) {
+				case "Start Position":
+					JsonArray pos = new JsonArray();
+					Map<String, String> map = metadata.getData();
+					pos.add(Double.parseDouble(map.get("x")));
+					pos.add(Double.parseDouble(map.get("y")));
+					pos.add(Double.parseDouble(map.get("z")));
+					start.add("pos", pos);
+
+					JsonArray vel = new JsonArray();
+					vel.add(0.0);
+					vel.add(0.0);
+					vel.add(0.0);
+					start.add("vel", vel);
+					start.addProperty("yaw", Float.parseFloat(map.get("yaw")));
+					break;
+
+				default:
+					break;
+			}
+		}
+		main.add("start", start);
+	}
+
+	private static String nowIso8601() {
+		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+		return fmt.format(new Date());
 	}
 }
