@@ -33,7 +33,6 @@ loom {
 repositories {
 	mavenCentral()
 	maven { url = "https://maven.minecrafttas.com/main" }
-	maven { url = "https://maven.legacyfabric.net/" }
 	//maven { url = "https://maven.minecrafttas.com/snapshots" }
 	maven { url = "https://jitpack.io" }
 	maven { url = "https://repo.spongepowered.org/maven" }
@@ -46,7 +45,7 @@ configurations {
 }
 
 ploceus {
-	setIntermediaryGeneration(2)
+	setIntermediaryGeneration(1)
 }
 
 // dependencies
