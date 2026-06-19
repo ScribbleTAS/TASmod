@@ -31,6 +31,7 @@ import com.minecrafttas.tasmod.config.TASmodServerConfig;
 import com.minecrafttas.tasmod.handlers.PlayUntilHandler;
 import com.minecrafttas.tasmod.ktrng.GlobalRNG;
 import com.minecrafttas.tasmod.ktrng.builtin.MathRNG;
+import com.minecrafttas.tasmod.ktrng.builtin.SquidRNG;
 import com.minecrafttas.tasmod.ktrng.builtin.WorldSeedRNG;
 import com.minecrafttas.tasmod.ktrng.events.KillTheRNGMonitor;
 import com.minecrafttas.tasmod.ktrng.handlers.UUIDHandler;
@@ -110,6 +111,8 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	public static WorldSeedRNG worldSeedRandomness = new WorldSeedRNG(0);
 
+	public static SquidRNG squidRNG = new SquidRNG(0L);
+
 	public static KillTheRNGMonitor debugRand = new KillTheRNGMonitor();
 
 	public static UUIDHandler uuidHandler = new UUIDHandler();
@@ -173,6 +176,7 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 			EventListenerRegistry.register(globalRandomness);
 		}
 		mathRandomness = new MathRNG(0);
+		squidRNG.setSeed(globalRandomness.getCurrentSeed() + 1000L);
 	}
 
 	@Override
