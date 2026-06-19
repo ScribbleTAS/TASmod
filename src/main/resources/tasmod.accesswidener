@@ -35,3 +35,11 @@ accessible field net/minecraft/entity/passive/EntityBat spawnPosition Lnet/minec
 accessible field net/minecraft/entity/Entity nextEntityID I
 accessible field net/minecraft/entity/EntityLivingBase idleTime I
 
+accessible class net/minecraft/entity/ai/EntityAITasks$EntityAITaskEntry
+
+accessible field net/minecraft/entity/ai/EntityAITasks taskEntries Ljava/util/Set;
+mutable field net/minecraft/entity/ai/EntityAITasks taskEntries Ljava/util/Set;
+
+accessible field net/minecraft/entity/ai/EntityAITasks executingTaskEntries Ljava/util/Set;
+mutable field net/minecraft/entity/ai/EntityAITasks executingTaskEntries Ljava/util/Set;
+

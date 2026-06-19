@@ -10,24 +10,24 @@ import com.google.gson.JsonObject;
 
 public class JsonUtils {
 
-	public static Gson getJsonInstance() {
+	public static Gson getGsonInstance() {
 		return new GsonBuilder().setPrettyPrinting().create();
 	}
 
 	public static void saveJson(Path savePath, JsonObject data) throws IOException {
-		saveJson(savePath, data, getJsonInstance());
+		saveJson(savePath, data, getGsonInstance());
 	}
 
-	public static void saveJson(Path savePath, JsonObject data, Gson jsonInstance) throws IOException {
-		String out = jsonInstance.toJson(data);
+	public static void saveJson(Path savePath, JsonObject data, Gson gsonInstance) throws IOException {
+		String out = gsonInstance.toJson(data);
 		Files.write(savePath, out.getBytes());
 	}
 
 	public static JsonObject loadJson(Path loadPath) throws IOException {
-		return loadJson(loadPath, getJsonInstance());
+		return loadJson(loadPath, getGsonInstance());
 	}
 
-	public static JsonObject loadJson(Path loadPath, Gson jsonInstance) throws IOException {
-		return jsonInstance.fromJson(new String(Files.readAllBytes(loadPath)), JsonObject.class);
+	public static JsonObject loadJson(Path loadPath, Gson gsonInstance) throws IOException {
+		return gsonInstance.fromJson(new String(Files.readAllBytes(loadPath)), JsonObject.class);
 	}
 }

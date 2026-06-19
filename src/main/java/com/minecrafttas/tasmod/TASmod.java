@@ -43,6 +43,7 @@ import com.minecrafttas.tasmod.savestates.SavestateHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateGuiHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.EntityAiTaskStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.EntityBatSpawnPositionStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.EntitySquidRotationStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.EntityTickTimersStorage;
@@ -106,6 +107,7 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 	public static EntityTickTimersStorage entityTickTimers = new EntityTickTimersStorage();
 	public static EntityBatSpawnPositionStorage entityBatSpawnPositionStorage = new EntityBatSpawnPositionStorage();
 	public static EntitySquidRotationStorage entitySquidRotationStorage = new EntitySquidRotationStorage();
+	public static EntityAiTaskStorage entityAiTaskStorage = new EntityAiTaskStorage();
 
 	public static MathRNG mathRandomness = new MathRNG(0);
 
@@ -246,6 +248,7 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entityTickTimers);
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entityBatSpawnPositionStorage);
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entitySquidRotationStorage);
+		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entityAiTaskStorage);
 	}
 
 	public static MinecraftServer getServerInstance() {
