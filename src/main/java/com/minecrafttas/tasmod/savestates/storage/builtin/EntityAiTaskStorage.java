@@ -22,6 +22,7 @@ import com.minecrafttas.tasmod.savestates.typeadapters.WorldTypeAdapterFactory;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
@@ -82,6 +83,9 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 
 				mainObject.addProperty("type", entity.getClass().getSimpleName());
 
+				mainObject.add("revengeTarget", gsonInstance.toJsonTree(entityLiving.getRevengeTarget()));
+				mainObject.add("lastAttackedEntity", gsonInstance.toJsonTree(entityLiving.getLastAttackedEntity()));
+
 				EntityAITasks tasks = entityLiving.tasks;
 				mainObject.add("tasks", serialiseAITasks(tasks));
 
@@ -123,6 +127,10 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 					continue;
 
 				JsonObject mainObject = elements.getValue().getAsJsonObject();
+
+				entityLiving.setRevengeTarget((EntityLivingBase) gsonInstance.fromJson(mainObject.get("revengeTarget"), Entity.class));
+				entityLiving.setLastAttackedEntity((EntityLivingBase) gsonInstance.fromJson(mainObject.get("lastAttackedEntity"), Entity.class));
+
 				deserialiseAITasks(entityLiving.tasks, mainObject.get("tasks").getAsJsonObject());
 				deserialiseAITasks(entityLiving.targetTasks, mainObject.get("targetTasks").getAsJsonObject());
 			}
@@ -130,10 +138,8 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 	}
 
 	private void deserialiseAITasks(EntityAITasks tasks, JsonObject jsonTasks) {
-		tasks.taskEntries.clear();
-		tasks.taskEntries.addAll(deserialiseAIEntries(tasks, jsonTasks.get("taskEntries").getAsJsonArray()));
-		tasks.executingTaskEntries.clear();
-		tasks.executingTaskEntries.addAll(deserialiseAIEntries(tasks, jsonTasks.get("executingTaskEntries").getAsJsonArray()));
+		tasks.taskEntries = deserialiseAIEntries(tasks, jsonTasks.get("taskEntries").getAsJsonArray());
+		tasks.executingTaskEntries = deserialiseAIEntries(tasks, jsonTasks.get("executingTaskEntries").getAsJsonArray());
 	}
 
 	private Set<EntityAITaskEntry> deserialiseAIEntries(EntityAITasks tasks, JsonArray jsonEntries) {
