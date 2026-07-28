@@ -43,3 +43,16 @@ mutable field net/minecraft/entity/ai/EntityAITasks taskEntries Ljava/util/Set;
 accessible field net/minecraft/entity/ai/EntityAITasks executingTaskEntries Ljava/util/Set;
 mutable field net/minecraft/entity/ai/EntityAITasks executingTaskEntries Ljava/util/Set;
 
+accessible field net/minecraft/entity/ai/EntityAIAvoidEntity canBeSeenSelector Lcom/google/common/base/Predicate;
+mutable field net/minecraft/entity/ai/EntityAIAvoidEntity canBeSeenSelector Lcom/google/common/base/Predicate;
+
+accessible field net/minecraft/entity/ai/EntityAIAvoidEntity avoidTargetSelector Lcom/google/common/base/Predicate;
+mutable field net/minecraft/entity/ai/EntityAIAvoidEntity avoidTargetSelector Lcom/google/common/base/Predicate;
+
+accessible field net/minecraft/entity/ai/EntityAINearestAttackableTarget targetEntitySelector Lcom/google/common/base/Predicate;
+mutable field net/minecraft/entity/ai/EntityAINearestAttackableTarget targetEntitySelector Lcom/google/common/base/Predicate;
+accessible field net/minecraft/entity/ai/EntityAINearestAttackableTarget targetEntity Lnet/minecraft/entity/EntityLivingBase;
+
+accessible field net/minecraft/entity/ai/EntityAIAvoidEntity entity Lnet/minecraft/entity/EntityCreature;
+
+mutable field net/minecraft/entity/ai/EntityAITasks$EntityAITaskEntry action Lnet/minecraft/entity/ai/EntityAIBase;

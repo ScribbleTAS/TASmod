@@ -7,26 +7,34 @@ import java.util.UUID;
 
 import org.spongepowered.asm.mixin.Unique;
 
+import com.google.common.base.Predicate;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
 import com.minecrafttas.tasmod.savestates.typeadapters.BlockPosTypeAdapterFactory;
+import com.minecrafttas.tasmod.savestates.typeadapters.EntityAINearestAttackableTargetTypeAdapterFactory;
 import com.minecrafttas.tasmod.savestates.typeadapters.EntityClassTypeAdapterFactory;
+import com.minecrafttas.tasmod.savestates.typeadapters.EntityLivingTypeAdapter;
 import com.minecrafttas.tasmod.savestates.typeadapters.EntityTypeAdapterFactory;
 import com.minecrafttas.tasmod.savestates.typeadapters.ItemTypeAdapter;
 import com.minecrafttas.tasmod.savestates.typeadapters.WorldTypeAdapterFactory;
+import com.minecrafttas.tasmod.savestates.typeadapters.util.ClassExclusionStrategy;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
 import net.minecraft.item.Item;
+import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
 
@@ -46,10 +54,12 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 				.registerTypeAdapterFactory(
 						new EntityClassTypeAdapterFactory()
 						)
+				.registerTypeAdapterFactory(new EntityAINearestAttackableTargetTypeAdapterFactory())
 				.registerTypeAdapterFactory(
 						new BlockPosTypeAdapterFactory()
 						)
 				.registerTypeAdapter(Item.class, new ItemTypeAdapter())
+				.registerTypeAdapter(EntityLivingTypeAdapter.class, new EntityLivingTypeAdapter())
 				.setExclusionStrategies(new ExclusionStrategy() {
 					
 					@Override
@@ -61,7 +71,11 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 					public boolean shouldSkipClass(Class<?> c) {
 						return false;
 					}
-				})
+				}, 
+				new ClassExclusionStrategy(Predicate.class),
+				new ClassExclusionStrategy(PathNavigate.class),
+				new ClassExclusionStrategy(EntityLivingBase.class, EntityAINearestAttackableTarget.class)
+				)
 				.create());
 		//@formatter:on
 	}
@@ -112,7 +126,12 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 			jsonAiTaskEntry.addProperty("priority", entry.priority);
 			jsonAiTaskEntry.addProperty("using", entry.using);
 			jsonAiTaskEntry.addProperty("class", entry.action.getClass().getName());
-			jsonAiTaskEntry.add("action", gsonInstance.toJsonTree(entry.action));
+			try {
+				System.out.println(entry.action.getClass().getName());
+				jsonAiTaskEntry.add("action", gsonInstance.toJsonTree(entry.action));
+			} catch (Exception e) {
+				throw new SavestateException(e, "Could not serialise AI Task %s", entry.action.getClass().getName());
+			}
 			serialisedEntries.add(jsonAiTaskEntry);
 		}
 		return serialisedEntries;
@@ -138,8 +157,8 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 	}
 
 	private void deserialiseAITasks(EntityAITasks tasks, JsonObject jsonTasks) {
-		tasks.taskEntries = deserialiseAIEntries(tasks, jsonTasks.get("taskEntries").getAsJsonArray());
-		tasks.executingTaskEntries = deserialiseAIEntries(tasks, jsonTasks.get("executingTaskEntries").getAsJsonArray());
+		mapDeserialisedEntries(tasks.taskEntries, deserialiseAIEntries(tasks, jsonTasks.get("taskEntries").getAsJsonArray()));
+		mapDeserialisedEntries(tasks.executingTaskEntries, deserialiseAIEntries(tasks, jsonTasks.get("executingTaskEntries").getAsJsonArray()));
 	}
 
 	private Set<EntityAITaskEntry> deserialiseAIEntries(EntityAITasks tasks, JsonArray jsonEntries) {
@@ -148,6 +167,7 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 			JsonObject jsonEntry = jsonEntryElement.getAsJsonObject();
 			int priority = jsonEntry.get("priority").getAsInt();
 			boolean using = jsonEntry.get("using").getAsBoolean();
+			System.out.println(jsonEntry.get("class").getAsString());
 			Class<? extends EntityAIBase> clazz;
 			try {
 				clazz = Class.forName(jsonEntry.get("class").getAsString(), false, getClass().getClassLoader()).asSubclass(EntityAIBase.class);
@@ -163,5 +183,50 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 			out.add(entry);
 		}
 		return out;
+	}
+
+//	private EntityAIBase deserialiseAction(JsonElement json, Class<? extends EntityAIBase> clazz) {
+//		try {
+//			EntityAIBase base = clazz.newInstance();
+//		} catch (InstantiationException | IllegalAccessException e) {
+//			e.printStackTrace();
+//		}
+//		
+//	}
+
+	private void mapDeserialisedEntries(Set<EntityAITaskEntry> tasks, Set<EntityAITaskEntry> deserialisedTasks) {
+		for (EntityAITaskEntry vanillaEntry : tasks) {
+			EntityAIBase vanillaAction = vanillaEntry.action;
+			for (EntityAITaskEntry deserialisedEntry : deserialisedTasks) {
+				if (vanillaAction.getClass().isInstance(deserialisedEntry.action)) {
+					EntityAIBase deserialisedAction = deserialisedEntry.action;
+					vanillaEntry.action = applyAction(vanillaAction, deserialisedAction);
+					break;
+				}
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private EntityAIBase applyAction(EntityAIBase vanillaAction, EntityAIBase deserialisedAction) {
+		if (vanillaAction instanceof EntityAIAvoidEntity) {
+			EntityAIAvoidEntity<Entity> vanillaAIAvoidEntityAction = (EntityAIAvoidEntity<Entity>) vanillaAction;
+			EntityAIAvoidEntity<Entity> deserialisedAIAvoidEntityAction = (EntityAIAvoidEntity<Entity>) deserialisedAction;
+
+			deserialisedAIAvoidEntityAction.avoidTargetSelector = vanillaAIAvoidEntityAction.avoidTargetSelector;
+			deserialisedAIAvoidEntityAction.canBeSeenSelector = vanillaAIAvoidEntityAction.canBeSeenSelector;
+			return deserialisedAIAvoidEntityAction;
+		}
+
+		if (vanillaAction instanceof EntityAINearestAttackableTarget) {
+			EntityAINearestAttackableTarget<EntityLiving> vanillaAINearestAttackableTarget = (EntityAINearestAttackableTarget<EntityLiving>) vanillaAction;
+			EntityAINearestAttackableTarget<EntityLiving> deserialisedAINearestAttackableTarget = (EntityAINearestAttackableTarget<EntityLiving>) deserialisedAction;
+
+			deserialisedAINearestAttackableTarget.targetEntitySelector = vanillaAINearestAttackableTarget.targetEntitySelector;
+
+			return deserialisedAINearestAttackableTarget;
+		}
+
+		return deserialisedAction;
 	}
 }

@@ -10,38 +10,39 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 
-public class EntityClassTypeAdapterFactory implements TypeAdapterFactory {
+public class EntityAINearestAttackableTargetTypeAdapterFactory implements TypeAdapterFactory {
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked" })
 	@Override
 	public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-
 		Class<T> rawType = (Class<T>) type.getRawType();
-		if (!Class.class.equals(rawType))
+		if (!EntityAINearestAttackableTarget.class.equals(rawType))
 			return null;
+
+		TypeAdapter<T> adapter = gson.getDelegateAdapter(this, type);
 
 		return new TypeAdapter<T>() {
 
 			@Override
 			public void write(JsonWriter out, T value) throws IOException {
-				Class<? extends Entity> clazz = (Class) value;
-				out.value(clazz.getTypeName());
+				adapter.write(out, value);
 			}
 
 			@Override
 			public T read(JsonReader in) throws IOException {
-				if (!in.hasNext())
-					return null;
-				String jsonString = in.nextString();
-				Class out = null;
-				try {
-					out = Class.forName(jsonString, false, getClass().getClassLoader()).asSubclass(Entity.class);
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
+				in.beginObject();
+				while (in.hasNext()) {
+					in.nextString();
 				}
-				return (T) out;
+				in.endObject();
+				T value = adapter.read(in);
+				EntityAINearestAttackableTarget<? extends Entity> ai = (EntityAINearestAttackableTarget<? extends Entity>) value;
+
+				return (T) ai;
 			}
 		};
 	}
+
 }
