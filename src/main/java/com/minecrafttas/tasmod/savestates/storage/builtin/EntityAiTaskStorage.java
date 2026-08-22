@@ -1,6 +1,9 @@
 package com.minecrafttas.tasmod.savestates.storage.builtin;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
@@ -17,7 +20,6 @@ import com.google.gson.JsonObject;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
 import com.minecrafttas.tasmod.savestates.typeadapters.BlockPosTypeAdapterFactory;
-import com.minecrafttas.tasmod.savestates.typeadapters.EntityAINearestAttackableTargetTypeAdapterFactory;
 import com.minecrafttas.tasmod.savestates.typeadapters.EntityClassTypeAdapterFactory;
 import com.minecrafttas.tasmod.savestates.typeadapters.EntityLivingTypeAdapter;
 import com.minecrafttas.tasmod.savestates.typeadapters.EntityTypeAdapterFactory;
@@ -28,9 +30,7 @@ import com.minecrafttas.tasmod.savestates.typeadapters.util.ClassExclusionStrate
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
 import net.minecraft.item.Item;
@@ -54,7 +54,7 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 				.registerTypeAdapterFactory(
 						new EntityClassTypeAdapterFactory()
 						)
-				.registerTypeAdapterFactory(new EntityAINearestAttackableTargetTypeAdapterFactory())
+//				.registerTypeAdapter(EntityAINearestAttackableTarget.class, new EntityAINearestAttackableTargetTypeAdapter())
 				.registerTypeAdapterFactory(
 						new BlockPosTypeAdapterFactory()
 						)
@@ -73,8 +73,8 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 					}
 				}, 
 				new ClassExclusionStrategy(Predicate.class),
-				new ClassExclusionStrategy(PathNavigate.class),
-				new ClassExclusionStrategy(EntityLivingBase.class, EntityAINearestAttackableTarget.class)
+				new ClassExclusionStrategy(PathNavigate.class)
+//				new ClassExclusionStrategy(EntityLivingBase.class, EntityAINearestAttackableTarget.class)
 				)
 				.create());
 		//@formatter:on
@@ -157,17 +157,18 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 	}
 
 	private void deserialiseAITasks(EntityAITasks tasks, JsonObject jsonTasks) {
-		mapDeserialisedEntries(tasks.taskEntries, deserialiseAIEntries(tasks, jsonTasks.get("taskEntries").getAsJsonArray()));
-		mapDeserialisedEntries(tasks.executingTaskEntries, deserialiseAIEntries(tasks, jsonTasks.get("executingTaskEntries").getAsJsonArray()));
+		deserialiseAIEntries(tasks.taskEntries, tasks, jsonTasks.get("taskEntries").getAsJsonArray());
+		deserialiseAIEntries(tasks.executingTaskEntries, tasks, jsonTasks.get("executingTaskEntries").getAsJsonArray());
 	}
 
-	private Set<EntityAITaskEntry> deserialiseAIEntries(EntityAITasks tasks, JsonArray jsonEntries) {
+	private Set<EntityAITaskEntry> deserialiseAIEntries(Set<EntityAITaskEntry> taskEntries, EntityAITasks parent, JsonArray jsonEntries) {
 		Set<EntityAITaskEntry> out = new LinkedHashSet<>();
+
 		for (JsonElement jsonEntryElement : jsonEntries) {
 			JsonObject jsonEntry = jsonEntryElement.getAsJsonObject();
-			int priority = jsonEntry.get("priority").getAsInt();
-			boolean using = jsonEntry.get("using").getAsBoolean();
-			System.out.println(jsonEntry.get("class").getAsString());
+
+			// Deserialise the type of the AI action
+//			System.out.println(jsonEntry.get("class").getAsString());
 			Class<? extends EntityAIBase> clazz;
 			try {
 				clazz = Class.forName(jsonEntry.get("class").getAsString(), false, getClass().getClassLoader()).asSubclass(EntityAIBase.class);
@@ -176,57 +177,61 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 				return out;
 			}
 
-			EntityAIBase action = gsonInstance.fromJson(jsonEntry.get("action"), clazz);
+			boolean createNew = true;
+			for (EntityAITaskEntry vanillaEntry : taskEntries) {
+				EntityAIBase vanillaAction = vanillaEntry.action;
+				if (vanillaAction.getClass() != clazz) {
+					continue;
+				}
 
-			EntityAITaskEntry entry = tasks.new EntityAITaskEntry(priority, action);
+				createNew = false;
+				vanillaEntry.action = deserialiseAction(vanillaAction, jsonEntry.get("action"), clazz);
+				out.add(vanillaEntry);
+				break;
+			}
+
+			if (!createNew) {
+				continue;
+			}
+
+			int priority = jsonEntry.get("priority").getAsInt();
+			boolean using = jsonEntry.get("using").getAsBoolean();
+			EntityAIBase action = null;
+			try {
+				action = gsonInstance.fromJson(jsonEntry, clazz);
+			} catch (Exception e) {
+				e.printStackTrace();
+				continue;
+			}
+			EntityAITaskEntry entry = parent.new EntityAITaskEntry(priority, action);
 			entry.using = using;
 			out.add(entry);
 		}
 		return out;
 	}
 
-//	private EntityAIBase deserialiseAction(JsonElement json, Class<? extends EntityAIBase> clazz) {
-//		try {
-//			EntityAIBase base = clazz.newInstance();
-//		} catch (InstantiationException | IllegalAccessException e) {
-//			e.printStackTrace();
-//		}
-//		
-//	}
+	private EntityAIBase deserialiseAction(EntityAIBase vanillaAction, JsonElement json, Class<? extends EntityAIBase> clazz) {
+		JsonObject jsonObject = json.getAsJsonObject();
+		List<Field> vanillaFields = Arrays.asList(vanillaAction.getClass().getDeclaredFields());
 
-	private void mapDeserialisedEntries(Set<EntityAITaskEntry> tasks, Set<EntityAITaskEntry> deserialisedTasks) {
-		for (EntityAITaskEntry vanillaEntry : tasks) {
-			EntityAIBase vanillaAction = vanillaEntry.action;
-			for (EntityAITaskEntry deserialisedEntry : deserialisedTasks) {
-				if (vanillaAction.getClass().isInstance(deserialisedEntry.action)) {
-					EntityAIBase deserialisedAction = deserialisedEntry.action;
-					vanillaEntry.action = applyAction(vanillaAction, deserialisedAction);
-					break;
-				}
+		for (Field field : vanillaFields) {
+			field.setAccessible(true);
+			String fieldname = field.getName();
+			Class<?> fieldClass = field.getType();
+
+			JsonElement value = jsonObject.get(fieldname);
+
+			if (value == null)
+				continue;
+
+			Object deserialised = gsonInstance.fromJson(value, fieldClass);
+			try {
+				field.set(vanillaAction, deserialised);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
 			}
 		}
-	}
 
-	@SuppressWarnings("unchecked")
-	private EntityAIBase applyAction(EntityAIBase vanillaAction, EntityAIBase deserialisedAction) {
-		if (vanillaAction instanceof EntityAIAvoidEntity) {
-			EntityAIAvoidEntity<Entity> vanillaAIAvoidEntityAction = (EntityAIAvoidEntity<Entity>) vanillaAction;
-			EntityAIAvoidEntity<Entity> deserialisedAIAvoidEntityAction = (EntityAIAvoidEntity<Entity>) deserialisedAction;
-
-			deserialisedAIAvoidEntityAction.avoidTargetSelector = vanillaAIAvoidEntityAction.avoidTargetSelector;
-			deserialisedAIAvoidEntityAction.canBeSeenSelector = vanillaAIAvoidEntityAction.canBeSeenSelector;
-			return deserialisedAIAvoidEntityAction;
-		}
-
-		if (vanillaAction instanceof EntityAINearestAttackableTarget) {
-			EntityAINearestAttackableTarget<EntityLiving> vanillaAINearestAttackableTarget = (EntityAINearestAttackableTarget<EntityLiving>) vanillaAction;
-			EntityAINearestAttackableTarget<EntityLiving> deserialisedAINearestAttackableTarget = (EntityAINearestAttackableTarget<EntityLiving>) deserialisedAction;
-
-			deserialisedAINearestAttackableTarget.targetEntitySelector = vanillaAINearestAttackableTarget.targetEntitySelector;
-
-			return deserialisedAINearestAttackableTarget;
-		}
-
-		return deserialisedAction;
+		return vanillaAction;
 	}
 }
