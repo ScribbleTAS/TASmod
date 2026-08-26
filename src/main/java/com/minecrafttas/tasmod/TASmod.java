@@ -44,10 +44,11 @@ import com.minecrafttas.tasmod.savestates.handlers.SavestateGuiHandlerServer;
 import com.minecrafttas.tasmod.savestates.handlers.SavestateResourcePackHandler;
 import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.EntityAiTaskStorage;
-import com.minecrafttas.tasmod.savestates.storage.builtin.EntityBatSpawnPositionStorage;
-import com.minecrafttas.tasmod.savestates.storage.builtin.EntitySquidRotationStorage;
-import com.minecrafttas.tasmod.savestates.storage.builtin.EntityTickTimersStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.EntityStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.KTRNGSeedStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.entitysubstorage.BatSpawnPositionSubStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.entitysubstorage.LivingTickTimersSubStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.entitysubstorage.SquidRotationSubStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -104,9 +105,6 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 	public static GlobalRNG globalRandomness;
 
 	public static KTRNGSeedStorage seedStorage = new KTRNGSeedStorage();
-	public static EntityTickTimersStorage entityTickTimers = new EntityTickTimersStorage();
-	public static EntityBatSpawnPositionStorage entityBatSpawnPositionStorage = new EntityBatSpawnPositionStorage();
-	public static EntitySquidRotationStorage entitySquidRotationStorage = new EntitySquidRotationStorage();
 	public static EntityAiTaskStorage entityAiTaskStorage = new EntityAiTaskStorage();
 
 	public static MathRNG mathRandomness = new MathRNG(0);
@@ -245,9 +243,15 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 	private void registerSavestateStorage() {
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(motionStorage);
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(seedStorage);
-		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entityTickTimers);
-		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entityBatSpawnPositionStorage);
-		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entitySquidRotationStorage);
+		//@formatter:off
+		TASmodAPIRegistry.SAVESTATE_STORAGE.register(
+				new EntityStorage(
+							new BatSpawnPositionSubStorage(),
+							new SquidRotationSubStorage(),
+							new LivingTickTimersSubStorage()
+						)
+				);
+		//@formatter:on
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(entityAiTaskStorage);
 	}
 
