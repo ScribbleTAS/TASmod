@@ -32,15 +32,15 @@ public class EntityStorage extends SavestateStorageExtensionBase {
 		for (WorldServer worldServer : server.worlds) {
 			for (Entity entity : worldServer.loadedEntityList) {
 				UUID uuid = entity.getUniqueID();
+				JsonObject subDataObject = new JsonObject();
 				for (EntitySubStorage subStorage : subStorages) {
-					JsonObject subDataObject = new JsonObject();
 					if (subStorage.getEntityClass().isAssignableFrom(entity.getClass())) {
 						JsonObject subDataToSave = new JsonObject();
 						subDataToSave = subStorage.onSavestate(server, entity, subDataToSave);
 						subDataObject.add(subStorage.getPropertyName(), subDataToSave);
 					}
-					dataToSave.add(uuid.toString(), subDataObject);
 				}
+				dataToSave.add(uuid.toString(), subDataObject);
 			}
 		}
 		return dataToSave;

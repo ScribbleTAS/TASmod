@@ -1,4 +1,4 @@
-package com.minecrafttas.tasmod.savestates.storage.builtin.entitysubstorage;
+package com.minecrafttas.tasmod.savestates.storage.builtin.entity;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -30,7 +30,6 @@ public class BatSpawnPositionSubStorage implements EntitySubStorage {
 
 		dataToSave.addProperty("spawnPos", Long.toString(bat.spawnPosition.toLong()));
 		return dataToSave;
-
 	}
 
 	@Override

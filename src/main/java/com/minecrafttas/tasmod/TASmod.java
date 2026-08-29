@@ -46,9 +46,10 @@ import com.minecrafttas.tasmod.savestates.storage.builtin.ClientMotionStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.EntityAiTaskStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.EntityStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.KTRNGSeedStorage;
-import com.minecrafttas.tasmod.savestates.storage.builtin.entitysubstorage.BatSpawnPositionSubStorage;
-import com.minecrafttas.tasmod.savestates.storage.builtin.entitysubstorage.LivingTickTimersSubStorage;
-import com.minecrafttas.tasmod.savestates.storage.builtin.entitysubstorage.SquidRotationSubStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.entity.BatSpawnPositionSubStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.entity.CreeperDetonateSubStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.entity.LivingTickTimersSubStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.entity.SquidRotationSubStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
@@ -247,6 +248,7 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 		TASmodAPIRegistry.SAVESTATE_STORAGE.register(
 				new EntityStorage(
 							new BatSpawnPositionSubStorage(),
+							new CreeperDetonateSubStorage(),
 							new SquidRotationSubStorage(),
 							new LivingTickTimersSubStorage()
 						)
