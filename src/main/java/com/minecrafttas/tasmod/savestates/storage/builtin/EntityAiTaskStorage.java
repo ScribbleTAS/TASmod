@@ -98,6 +98,7 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 				mainObject.addProperty("type", entity.getClass().getSimpleName());
 
 				mainObject.add("revengeTarget", gsonInstance.toJsonTree(entityLiving.getRevengeTarget()));
+				mainObject.add("revengeTimer", gsonInstance.toJsonTree(entityLiving.revengeTimer));
 				mainObject.add("lastAttackedEntity", gsonInstance.toJsonTree(entityLiving.getLastAttackedEntity()));
 
 				EntityAITasks tasks = entityLiving.tasks;
@@ -157,8 +158,8 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 	}
 
 	private void deserialiseAITasks(EntityAITasks tasks, JsonObject jsonTasks) {
-		deserialiseAIEntries(tasks.taskEntries, tasks, jsonTasks.get("taskEntries").getAsJsonArray());
-		deserialiseAIEntries(tasks.executingTaskEntries, tasks, jsonTasks.get("executingTaskEntries").getAsJsonArray());
+		tasks.taskEntries = deserialiseAIEntries(tasks.taskEntries, tasks, jsonTasks.get("taskEntries").getAsJsonArray());
+		tasks.executingTaskEntries = deserialiseAIEntries(tasks.executingTaskEntries, tasks, jsonTasks.get("executingTaskEntries").getAsJsonArray());
 	}
 
 	private Set<EntityAITaskEntry> deserialiseAIEntries(Set<EntityAITaskEntry> taskEntries, EntityAITasks parent, JsonArray jsonEntries) {
@@ -198,7 +199,7 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 			boolean using = jsonEntry.get("using").getAsBoolean();
 			EntityAIBase action = null;
 			try {
-				action = gsonInstance.fromJson(jsonEntry, clazz);
+				action = gsonInstance.fromJson(jsonEntry.get("action"), clazz);
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;

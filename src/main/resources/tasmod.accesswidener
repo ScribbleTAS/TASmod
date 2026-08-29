@@ -33,6 +33,7 @@ mutable field net/minecraft/world/World rand Ljava/util/Random;
 accessible field net/minecraft/entity/ai/EntityAITasks tickCount I
 accessible field net/minecraft/entity/passive/EntityBat spawnPosition Lnet/minecraft/util/math/BlockPos;
 accessible field net/minecraft/entity/Entity nextEntityID I
+accessible field net/minecraft/entity/EntityLivingBase revengeTimer I
 accessible field net/minecraft/entity/EntityLivingBase idleTime I
 accessible field net/minecraft/entity/monster/EntityCreeper timeSinceIgnited I
 accessible field net/minecraft/entity/monster/EntityCreeper droppedSkulls I
