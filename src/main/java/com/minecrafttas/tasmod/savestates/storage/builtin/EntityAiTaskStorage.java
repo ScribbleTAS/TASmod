@@ -169,7 +169,7 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 			JsonObject jsonEntry = jsonEntryElement.getAsJsonObject();
 
 			// Deserialise the type of the AI action
-//			System.out.println(jsonEntry.get("class").getAsString());
+			System.out.println(jsonEntry.get("class").getAsString());
 			Class<? extends EntityAIBase> clazz;
 			try {
 				clazz = Class.forName(jsonEntry.get("class").getAsString(), false, getClass().getClassLoader()).asSubclass(EntityAIBase.class);
@@ -179,6 +179,7 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 			}
 
 			boolean createNew = true;
+			boolean using = jsonEntry.get("using").getAsBoolean();
 			for (EntityAITaskEntry vanillaEntry : taskEntries) {
 				EntityAIBase vanillaAction = vanillaEntry.action;
 				if (vanillaAction.getClass() != clazz) {
@@ -187,6 +188,7 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 
 				createNew = false;
 				vanillaEntry.action = deserialiseAction(vanillaAction, jsonEntry.get("action"), clazz);
+				vanillaEntry.using = using;
 				out.add(vanillaEntry);
 				break;
 			}
@@ -196,7 +198,6 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 			}
 
 			int priority = jsonEntry.get("priority").getAsInt();
-			boolean using = jsonEntry.get("using").getAsBoolean();
 			EntityAIBase action = null;
 			try {
 				action = gsonInstance.fromJson(jsonEntry.get("action"), clazz);

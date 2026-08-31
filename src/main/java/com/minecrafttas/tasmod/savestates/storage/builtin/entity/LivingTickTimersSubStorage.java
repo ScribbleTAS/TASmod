@@ -1,5 +1,6 @@
 package com.minecrafttas.tasmod.savestates.storage.builtin.entity;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.minecrafttas.tasmod.savestates.storage.builtin.EntityStorage.EntitySubStorage;
@@ -30,7 +31,7 @@ public class LivingTickTimersSubStorage implements EntitySubStorage {
 	}
 
 	@Override
-	public JsonObject onSavestate(MinecraftServer server, Entity entity, JsonObject dataToSave) {
+	public JsonObject onSavestate(MinecraftServer server, Entity entity, JsonObject dataToSave, Gson gsonInstance) {
 		EntityLiving entityLiving = (EntityLiving) entity;
 		EntityLivingBase entityLivingBase = (EntityLivingBase) entity;
 		EntityAITasks tasks = entityLiving.tasks;
@@ -47,7 +48,7 @@ public class LivingTickTimersSubStorage implements EntitySubStorage {
 	}
 
 	@Override
-	public Entity onLoadstatePost(MinecraftServer server, Entity entity, JsonObject loadedData) {
+	public Entity onLoadstatePost(MinecraftServer server, Entity entity, JsonObject loadedData, Gson gsonInstance) {
 
 		JsonElement tickCount = loadedData.get("aitasks");
 		JsonElement tickCountTarget = loadedData.get("aitargetTasks");

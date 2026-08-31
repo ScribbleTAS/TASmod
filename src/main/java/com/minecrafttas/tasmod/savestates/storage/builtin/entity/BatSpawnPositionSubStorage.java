@@ -1,5 +1,6 @@
 package com.minecrafttas.tasmod.savestates.storage.builtin.entity;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.minecrafttas.tasmod.savestates.storage.builtin.EntityStorage.EntitySubStorage;
@@ -22,7 +23,7 @@ public class BatSpawnPositionSubStorage implements EntitySubStorage {
 	}
 
 	@Override
-	public JsonObject onSavestate(MinecraftServer server, Entity entity, JsonObject dataToSave) {
+	public JsonObject onSavestate(MinecraftServer server, Entity entity, JsonObject dataToSave, Gson gsonInstance) {
 		EntityBat bat = (EntityBat) entity;
 		BlockPos spawnPos = bat.spawnPosition;
 		if (spawnPos == null)
@@ -33,7 +34,7 @@ public class BatSpawnPositionSubStorage implements EntitySubStorage {
 	}
 
 	@Override
-	public Entity onLoadstatePost(MinecraftServer server, Entity entity, JsonObject loadedData) {
+	public Entity onLoadstatePost(MinecraftServer server, Entity entity, JsonObject loadedData, Gson gsonInstance) {
 		EntityBat bat = (EntityBat) entity;
 		JsonElement element = loadedData.get("spawnPos");
 		if (element == null)

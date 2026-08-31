@@ -1,6 +1,7 @@
 package com.minecrafttas.tasmod;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.logging.log4j.LogManager;
@@ -48,6 +49,7 @@ import com.minecrafttas.tasmod.savestates.storage.builtin.EntityStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.KTRNGSeedStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.entity.BatSpawnPositionSubStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.entity.CreeperDetonateSubStorage;
+import com.minecrafttas.tasmod.savestates.storage.builtin.entity.LivingNavigatorSubStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.entity.LivingTickTimersSubStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.entity.SquidRotationSubStorage;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
@@ -250,7 +252,8 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 							new BatSpawnPositionSubStorage(),
 							new CreeperDetonateSubStorage(),
 							new SquidRotationSubStorage(),
-							new LivingTickTimersSubStorage()
+							new LivingTickTimersSubStorage(),
+							new LivingNavigatorSubStorage()
 						)
 				);
 		//@formatter:on
@@ -262,11 +265,19 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 	}
 
 	private void loadConfig(MinecraftServer server) {
-		Path configDir = server.getDataDirectory().toPath();
+		Path configDir = server.getDataDirectory().toPath().resolve("config");
+
+		if (!Files.exists(configDir)) {
+			try {
+				Files.createDirectory(configDir);
+			} catch (IOException e) {
+				LOGGER.catching(e);
+			}
+		}
 
 		ConfigurationRegistry SERVER_CONFIG_REGISTRY = new ConfigurationRegistry();
 		SERVER_CONFIG_REGISTRY.register(TASmodServerConfig.values());
-		config = new Configuration("TASmod Server Configuration", configDir.resolve("tasmod.cfg"), SERVER_CONFIG_REGISTRY);
+		config = new Configuration("TASmod Server Configuration", configDir.resolve("tasmod_server.cfg"), SERVER_CONFIG_REGISTRY);
 
 		config.load();
 		config.save();

@@ -1,5 +1,6 @@
 package com.minecrafttas.tasmod.savestates.storage.builtin.entity;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.minecrafttas.tasmod.savestates.storage.builtin.EntityStorage.EntitySubStorage;
@@ -21,7 +22,7 @@ public class CreeperDetonateSubStorage implements EntitySubStorage {
 	}
 
 	@Override
-	public JsonObject onSavestate(MinecraftServer server, Entity entity, JsonObject dataToSave) {
+	public JsonObject onSavestate(MinecraftServer server, Entity entity, JsonObject dataToSave, Gson gsonInstance) {
 		EntityCreeper creeper = (EntityCreeper) entity;
 		dataToSave.addProperty("timeSinceIgnited", creeper.timeSinceIgnited);
 		dataToSave.addProperty("droppedSkulls", creeper.droppedSkulls);
@@ -30,7 +31,7 @@ public class CreeperDetonateSubStorage implements EntitySubStorage {
 	}
 
 	@Override
-	public Entity onLoadstatePost(MinecraftServer server, Entity entity, JsonObject loadedData) {
+	public Entity onLoadstatePost(MinecraftServer server, Entity entity, JsonObject loadedData, Gson gsonInstance) {
 		EntityCreeper creeper = (EntityCreeper) entity;
 		JsonElement boomTime = loadedData.get("timeSinceIgnited");
 		JsonElement dropped = loadedData.get("droppedSkulls");
