@@ -40,8 +40,10 @@ public class LivingNavigatorSubStorage implements EntitySubStorage {
 			navigator.entity = dummyNavigator.entity;
 			navigator.world = dummyNavigator.world;
 			navigator.pathSearchRange = dummyNavigator.pathSearchRange;
-			navigator.nodeProcessor = dummyNavigator.nodeProcessor;
 			navigator.pathFinder = dummyNavigator.pathFinder;
+			navigator.nodeProcessor = dummyNavigator.nodeProcessor;
+
+			entityLiving.navigator = navigator;
 		}
 
 		return entityLiving;

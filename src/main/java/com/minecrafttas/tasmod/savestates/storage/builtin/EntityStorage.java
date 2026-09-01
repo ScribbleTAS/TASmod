@@ -34,9 +34,9 @@ public class EntityStorage extends SavestateStorageExtensionBase {
 		super("entity.json", new GsonBuilder().setPrettyPrinting().setExclusionStrategies(
 				new ClassExclusionStrategy(EntityLiving.class),
 				new ClassExclusionStrategy(World.class),
+				new ClassExclusionStrategy(IAttributeInstance.class),
 				new ClassExclusionStrategy(NodeProcessor.class),
-				new ClassExclusionStrategy(PathFinder.class),
-				new ClassExclusionStrategy(IAttributeInstance.class)
+				new ClassExclusionStrategy(PathFinder.class)
 				).create());
 		//@formatter:on
 		this.subStorages = entitySubStorages;
