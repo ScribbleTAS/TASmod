@@ -101,6 +101,7 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 				mainObject.add("revengeTarget", gsonInstance.toJsonTree(entityLiving.revengeTarget));
 				mainObject.addProperty("revengeTimer", entityLiving.revengeTimer);
 				mainObject.add("lastAttackedEntity", gsonInstance.toJsonTree(entityLiving.lastAttackedEntity));
+				mainObject.add("attackTarget", gsonInstance.toJsonTree(entityLiving.attackTarget));
 
 				EntityAITasks tasks = entityLiving.tasks;
 				mainObject.add("tasks", serialiseAITasks(tasks));
@@ -153,6 +154,7 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 				entityLiving.revengeTarget = (EntityLivingBase) gsonInstance.fromJson(mainObject.get("revengeTarget"), Entity.class);
 				entityLiving.revengeTimer = mainObject.get("revengeTimer").getAsInt();
 				entityLiving.lastAttackedEntity = (EntityLivingBase) gsonInstance.fromJson(mainObject.get("lastAttackedEntity"), Entity.class);
+				entityLiving.attackTarget = (EntityLivingBase) gsonInstance.fromJson(mainObject.get("attackTarget"), Entity.class);
 
 				deserialiseAITasks(entityLiving.tasks, mainObject.get("tasks").getAsJsonObject());
 				deserialiseAITasks(entityLiving.targetTasks, mainObject.get("targetTasks").getAsJsonObject());

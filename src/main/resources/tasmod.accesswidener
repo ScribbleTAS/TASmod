@@ -37,6 +37,7 @@ accessible field net/minecraft/entity/EntityLivingBase revengeTarget Lnet/minecr
 accessible field net/minecraft/entity/EntityLivingBase revengeTimer I
 accessible field net/minecraft/entity/EntityLivingBase lastAttackedEntity Lnet/minecraft/entity/EntityLivingBase;
 accessible field net/minecraft/entity/EntityLivingBase idleTime I
+accessible field net/minecraft/entity/EntityLiving attackTarget Lnet/minecraft/entity/EntityLivingBase;
 accessible field net/minecraft/entity/monster/EntityCreeper timeSinceIgnited I
 accessible field net/minecraft/entity/monster/EntityCreeper droppedSkulls I
 
