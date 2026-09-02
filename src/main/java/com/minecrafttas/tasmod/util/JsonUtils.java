@@ -30,4 +30,14 @@ public class JsonUtils {
 	public static JsonObject loadJson(Path loadPath, Gson gsonInstance) throws IOException {
 		return gsonInstance.fromJson(new String(Files.readAllBytes(loadPath)), JsonObject.class);
 	}
+
+	public static JsonObject mergeJsonObjects(JsonObject json1, JsonObject json2) {
+		JsonObject merged = json1;
+		json2.keySet().forEach(key -> {
+			if (!merged.has(key)) {
+				merged.add(key, json2.get(key));
+			}
+		});
+		return merged;
+	}
 }
