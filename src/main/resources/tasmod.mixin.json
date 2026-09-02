@@ -16,7 +16,6 @@
 		"savestates.MixinChunkProviderServer",
 		"savestates.MixinNetHandlerPlayServer",
 		"savestates.MixinScoreboard",
-		"savestates.MixinEntityAITasks",
 		
 		// Events
 		"events.MixinEntityPlayerMP",
