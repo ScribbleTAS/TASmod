@@ -25,7 +25,6 @@ import com.minecrafttas.tasmod.savestates.typeadapters.EntityClassTypeAdapterFac
 import com.minecrafttas.tasmod.savestates.typeadapters.EntityLivingTypeAdapter;
 import com.minecrafttas.tasmod.savestates.typeadapters.EntityTypeAdapterFactory;
 import com.minecrafttas.tasmod.savestates.typeadapters.ItemTypeAdapter;
-import com.minecrafttas.tasmod.savestates.typeadapters.PathNavigateTypeAdapterFactory;
 import com.minecrafttas.tasmod.savestates.typeadapters.WorldTypeAdapterFactory;
 import com.minecrafttas.tasmod.savestates.typeadapters.util.ClassExclusionStrategy;
 import com.minecrafttas.tasmod.util.JsonUtils;
@@ -38,10 +37,6 @@ import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
 import net.minecraft.item.Item;
 import net.minecraft.pathfinding.PathNavigate;
-import net.minecraft.pathfinding.PathNavigateClimber;
-import net.minecraft.pathfinding.PathNavigateFlying;
-import net.minecraft.pathfinding.PathNavigateGround;
-import net.minecraft.pathfinding.PathNavigateSwimmer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
 
@@ -67,10 +62,6 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 						)
 				.registerTypeAdapter(Item.class, new ItemTypeAdapter())
 				.registerTypeAdapter(EntityLivingTypeAdapter.class, new EntityLivingTypeAdapter())
-				.registerTypeAdapter(PathNavigateGround.class, new PathNavigateTypeAdapterFactory())
-				.registerTypeAdapter(PathNavigateClimber.class, new PathNavigateTypeAdapterFactory())
-				.registerTypeAdapter(PathNavigateFlying.class, new PathNavigateTypeAdapterFactory())
-				.registerTypeAdapter(PathNavigateSwimmer.class, new PathNavigateTypeAdapterFactory())
 				.setExclusionStrategies(new ExclusionStrategy() {
 					
 					@Override
