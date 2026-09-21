@@ -2,7 +2,9 @@ package mctcommon.json;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.BeforeAll;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.GsonBuilder;
@@ -10,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.minecrafttas.mctcommon.json.FineField.FineMode;
 import com.minecrafttas.mctcommon.json.FineGson;
+import com.minecrafttas.mctcommon.json.FineMultiTarget;
+import com.minecrafttas.mctcommon.json.FineTarget;
 import com.minecrafttas.mctcommon.json.FineTypeAdapter;
 
 class FineGsonTest {
@@ -48,35 +52,41 @@ class FineGsonTest {
 		protected String evil = "Squids are evil!";
 	}
 
-	private static class TestClassTypeAdapter extends FineTypeAdapter {
+	@FineMultiTarget
+	@FineTarget(TestClass.class)
+	public static class TestClassTypeAdapter extends FineTypeAdapter {
 		public TestClassTypeAdapter() {
 			register("index", FineMode.FINE);
 			register("lol", FineMode.GSON);
 			register("subClass", FineMode.FINE);
 			register("excluded", FineMode.EXCLUDED);
-			register("bot", FineMode.FINE);
-			register("evil", obj -> new JsonPrimitive(((String) obj).toUpperCase()), element -> element.toString());
 		}
-	}
 
-	private static class TestSubClassAdapter extends FineTypeAdapter {
-		public TestSubClassAdapter() {
-			register("isWater", FineMode.FINE);
+		@FineTarget(TestSuperClass.class)
+		public static class TestSuperClassAdapter extends FineTypeAdapter {
+			public TestSuperClassAdapter() {
+				register("bot", FineMode.FINE);
+				register("evil", obj -> new JsonPrimitive(((String) obj).toUpperCase()), element -> element.toString());
+			}
 		}
-	}
 
-	static FineGson fgson;
-
-	@BeforeAll
-	static void beforeAll() {
-		fgson = new FineGson(new GsonBuilder().setPrettyPrinting().create());
-		fgson.registerTypeAdapter(TestClass.class, new TestClassTypeAdapter());
-		fgson.registerTypeAdapter(TestSubClass.class, new TestSubClassAdapter());
+		@FineTarget(TestSubClass.class)
+		public static class TestSubClassAdapter extends FineTypeAdapter {
+			public TestSubClassAdapter() {
+				register("isWater", FineMode.FINE);
+			}
+		}
 	}
 
 	@Test
 	void testSerialization() {
 		TestClass test = new TestClass();
+
+		FineGson fgson = new FineGson(new GsonBuilder().setPrettyPrinting().create());
+		fgson.registerTypeAdapter(TestClass.class, new TestClassTypeAdapter());
+		fgson.registerTypeAdapter(TestSubClass.class, new mctcommon.json.FineGsonTest.TestClassTypeAdapter.TestSubClassAdapter());
+		fgson.registerTypeAdapter(TestSuperClass.class, new mctcommon.json.FineGsonTest.TestClassTypeAdapter.TestSuperClassAdapter());
+
 		JsonObject actual = fgson.serialize(test).getAsJsonObject();
 
 		JsonObject expected = new JsonObject();
@@ -102,6 +112,10 @@ class FineGsonTest {
 		testObj.addProperty("bot", 9000);
 		testObj.addProperty("evil", "SQUIDS ARE STILL EVIL!");
 
+		FineGson fgson = new FineGson(new GsonBuilder().setPrettyPrinting().create());
+		fgson.registerTypeAdapter(TestClass.class, new TestClassTypeAdapter());
+		fgson.registerTypeAdapter(TestSubClass.class, new mctcommon.json.FineGsonTest.TestClassTypeAdapter.TestSubClassAdapter());
+		fgson.registerTypeAdapter(TestSuperClass.class, new mctcommon.json.FineGsonTest.TestClassTypeAdapter.TestSuperClassAdapter());
 		TestClass actual = (TestClass) fgson.deserialize(testObj, TestClass.class);
 
 		TestClass expected = new TestClass();
@@ -110,6 +124,20 @@ class FineGsonTest {
 		expected.subClass.isWater = false;
 		expected.bot = 9000;
 		expected.evil = "SQUIDS ARE STILL EVIL!";
+
+		assertEquals(expected, actual);
+	}
+
+	@Test
+	void testAnnotationRegistration() {
+		FineGson fgson = new FineGson(new GsonBuilder().setPrettyPrinting().create());
+		fgson.registerTypeAdapter(TestClassTypeAdapter.class);
+		Set<Class<?>> actual = fgson.getTypeAdapters().keySet();
+
+		Set<Class<?>> expected = new HashSet<>();
+		expected.add(TestClass.class);
+		expected.add(TestSubClass.class);
+		expected.add(TestSuperClass.class);
 
 		assertEquals(expected, actual);
 	}

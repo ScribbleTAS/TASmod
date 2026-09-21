@@ -34,9 +34,13 @@ public abstract class FineTypeAdapter {
 	}
 
 	public JsonElement serialize(Object obj, FineGson fineJson) throws RuntimeException {
+		Class<?> clazz = obj.getClass();
+		return serialize(obj, fineJson, clazz);
+	}
+
+	public JsonElement serialize(Object obj, FineGson fineJson, Class<?> clazz) throws RuntimeException {
 		JsonObject out = new JsonObject();
 
-		Class<?> clazz = obj.getClass();
 		List<Field> clazzFields = getFieldList(clazz);
 
 		if (clazzFields.size() != fineFields.size()) {
@@ -57,7 +61,7 @@ public abstract class FineTypeAdapter {
 			}
 
 			String fieldName = fineField.getName();
-			System.out.println(String.format("[%s] Serializing field %s (%s)", obj.getClass(), field.getName(), fieldName));
+			System.out.println(String.format("[%s|%s] Serializing field %s (%s)", obj.getClass(), clazz, field.getName(), fieldName));
 			switch (fineField.getMode()) {
 				case CUSTOM:
 					out.add(fieldName, fineField.serialize(fieldValue));
@@ -82,6 +86,11 @@ public abstract class FineTypeAdapter {
 	}
 
 	public Object deserialize(JsonElement element, Class<?> clazz, FineGson fineJson) {
+		Object obj = constructNew(clazz);
+		return deserialize(element, clazz, fineJson, obj);
+	}
+
+	public Object deserialize(JsonElement element, Class<?> clazz, FineGson fineJson, Object obj) {
 		List<Field> clazzFields = getFieldList(clazz);
 
 		if (clazzFields.size() != fineFields.size()) {
@@ -89,8 +98,6 @@ public abstract class FineTypeAdapter {
 		}
 
 		JsonObject elementObj = element.getAsJsonObject();
-
-		Object out = constructNew(clazz);
 
 		for (int i = 0; i < clazzFields.size(); i++) {
 			Field field = clazzFields.get(i);
@@ -117,17 +124,26 @@ public abstract class FineTypeAdapter {
 			}
 			if (fieldValue != null) {
 				try {
-					field.set(out, fieldValue);
+					field.set(obj, fieldValue);
 				} catch (IllegalArgumentException | IllegalAccessException e) {
 					e.printStackTrace();
 				}
 			}
 		}
-		return out;
+		return obj;
 	}
 
 	protected Object constructNew(Class<?> clazz) {
 		return JsonUtils.constructNew(clazz);
+	}
+
+	public static List<Field> getFieldListWithSuperclass(Class<?> clazz) {
+		List<Field> fields = getFieldList(clazz);
+		Class<?> superclazz = clazz.getSuperclass();
+		if (superclazz != Object.class)
+			fields.addAll(getFieldListWithSuperclass(superclazz));
+
+		return fields;
 	}
 
 	public static List<Field> getFieldList(Class<?> clazz) {
@@ -136,11 +152,6 @@ public abstract class FineTypeAdapter {
 			if (!field.getName().startsWith("this"))
 				fields.add(field);
 		}
-
-		Class<?> superclazz = clazz.getSuperclass();
-		if (superclazz != Object.class)
-			fields.addAll(getFieldList(superclazz));
-
 		return fields;
 	}
 }
