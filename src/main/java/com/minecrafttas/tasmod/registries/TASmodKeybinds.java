@@ -1,10 +1,16 @@
 package com.minecrafttas.tasmod.registries;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+
 import org.lwjgl.input.Keyboard;
 
 import com.minecrafttas.mctcommon.KeybindManager.IsKeyDownFunc;
 import com.minecrafttas.mctcommon.KeybindManager.Keybind;
 import com.minecrafttas.mctcommon.KeybindManager.KeybindID;
+import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
@@ -46,9 +52,13 @@ public enum TASmodKeybinds implements KeybindID {
 		TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle(0, 45);
 	}),
 	TEST1("Various Testing", "TASmod", Keyboard.KEY_F12, () -> {
+		/*
+		 * Yes, I am really generating TypeAdapter code here and replacing the class file.
+		 * This is how we did it before AI kids.
+		 */
 		try {
-			TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.PLAYBACK_STATE_TEMP_SAVESTATE).writeEnum(TASstate.RECORDING));
-		} catch (Exception e) {
+			Files.write(Paths.get("../src/main/java/com/minecrafttas/tasmod/savestates/typeadapters/EntityAITypeAdapters.java"), TASmod.generator.generateMulti(), StandardOpenOption.CREATE);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}, VirtualKeybindings::isKeyDown),

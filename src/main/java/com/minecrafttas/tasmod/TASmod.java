@@ -14,6 +14,7 @@ import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerInit;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerStart;
 import com.minecrafttas.mctcommon.events.EventServer.EventServerStop;
+import com.minecrafttas.mctcommon.json.FineTypeAdapterGenerator;
 import com.minecrafttas.mctcommon.networking.PacketHandlerRegistry;
 import com.minecrafttas.mctcommon.networking.Server;
 import com.minecrafttas.tasmod.commands.CommandClearInputs;
@@ -120,6 +121,8 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 	public static UUIDHandler uuidHandler = new UUIDHandler();
 
 	public static Configuration config;
+
+	public static FineTypeAdapterGenerator generator = new FineTypeAdapterGenerator("EntityAITypeAdapters", "com.minecrafttas.tasmod.savestates.typeadapters");
 
 	@Override
 	public void onInitialize() {

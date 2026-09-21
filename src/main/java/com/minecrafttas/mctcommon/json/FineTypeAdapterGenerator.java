@@ -25,6 +25,7 @@ public class FineTypeAdapterGenerator {
 
 	protected void fillDefaultImports() {
 		importLines.add("import com.minecrafttas.mctcommon.json.FineField.FineMode;");
+		importLines.add("import com.minecrafttas.mctcommon.json.FineMultiTarget;");
 		importLines.add("import com.minecrafttas.mctcommon.json.FineTarget;");
 		importLines.add("import com.minecrafttas.mctcommon.json.FineTypeAdapter;");
 		importLines.add("");
@@ -78,12 +79,12 @@ public class FineTypeAdapterGenerator {
 		String clazzName = clazz.getSimpleName();
 		List<Field> fields = FineTypeAdapter.getFieldList(clazz);
 
-		importLines.add(String.format("import %s;", clazz.getName()));
+//		importLines.add(String.format("import %s;", clazz.getName()));
 		classLines.put(clazz, splitNewLine(String.format(""
 				+ "@FineTarget(%s.class)\n"
 				+ "public class %sTypeAdapter extends FineTypeAdapter {\n"
 				+ "\n"
-				+ "\tpublic %sTypeAdapter() {", clazzName, clazzName, clazzName)));
+				+ "\tpublic %sTypeAdapter() {", clazz.getName().replace("$", "."), clazzName, clazzName)));
 
 		for (Field field : fields) {
 			classLines.get(clazz).add(String.format("\t\tregister(\"%s\", FineMode.FINE);", field.getName()));
