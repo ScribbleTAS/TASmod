@@ -3,10 +3,9 @@ package com.minecrafttas.mctcommon.json;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public class FineTypeAdapterGenerator {
 
@@ -15,7 +14,7 @@ public class FineTypeAdapterGenerator {
 	protected final String packagge;
 
 	protected final List<String> importLines = new ArrayList<>();
-	protected final Map<Class<?>, List<String>> classLines = new LinkedHashMap<>();
+	protected final Set<Class<?>> classList = new LinkedHashSet<>();
 
 	public FineTypeAdapterGenerator(String className, String packagge) {
 		this.className = className;
@@ -36,9 +35,9 @@ public class FineTypeAdapterGenerator {
 		out.add(String.format("package %s;", packagge));
 		out.add("");
 		out.addAll(importLines);
-		out.add("");
-		Collection<List<String>> classLines = this.classLines.values();
-		classLines.forEach(e -> e.forEach(e1 -> out.add(e1)));
+		for (Class<?> clazz : classList) {
+			out.addAll(buildClass(clazz, false));
+		}
 		return out;
 	}
 
@@ -47,12 +46,13 @@ public class FineTypeAdapterGenerator {
 		out.add(String.format("package %s;", packagge));
 		out.add("");
 		out.addAll(importLines);
-		out.add("");
 		out.add("@FineMultiTarget");
 		out.add(String.format("public class %s {", className));
 		out.add("");
-		Collection<List<String>> classLines = this.classLines.values();
-		classLines.forEach(e -> e.forEach(e1 -> out.add("\t" + e1)));
+		for (Class<?> clazz : classList) {
+			List<String> classLines = buildClass(clazz, true);
+			classLines.forEach(e1 -> out.add("\t" + e1));
+		}
 		out.add("}");
 		return out;
 	}
@@ -69,7 +69,7 @@ public class FineTypeAdapterGenerator {
 	}
 
 	public void addClass(Class<?> clazz) {
-		if (classLines.containsKey(clazz))
+		if (classList.contains(clazz))
 			return;
 
 //		if (clazz.getName().contains("$")) {
@@ -80,23 +80,29 @@ public class FineTypeAdapterGenerator {
 		if (superclazz != Object.class)
 			addClass(superclazz);
 
+		classList.add(clazz);
+	}
+
+	private List<String> buildClass(Class<?> clazz, boolean isStatic) {
+		List<String> out = new ArrayList<>();
+
 		String clazzName = clazz.getSimpleName();
 		List<Field> fields = FineTypeAdapter.getFieldList(clazz);
 
-//		importLines.add(String.format("import %s;", clazz.getName()));
-		classLines.put(clazz, splitNewLine(String.format(""
+		out.addAll(splitNewLine(String.format(""
 				+ "@FineTarget(%s.class)\n"
-				+ "public static class %sTypeAdapter extends FineTypeAdapter {\n"
+				+ "public %sclass %sTypeAdapter extends FineTypeAdapter {\n"
 				+ "\n"
-				+ "\tpublic %sTypeAdapter() {", clazz.getName().replace("$", "."), clazzName, clazzName)));
+				+ "\tpublic %sTypeAdapter() {", clazz.getName().replace("$", "."), isStatic ? "static " : "", clazzName, clazzName)));
 
 		for (Field field : fields) {
-			classLines.get(clazz).add(String.format("\t\tregister(\"%s\", FineMode.FINE);", field.getName()));
+			out.add(String.format("\t\tregister(\"%s\", FineMode.FINE);", field.getName()));
 		}
 
-		classLines.get(clazz).add("\t}");
-		classLines.get(clazz).add("}");
-		classLines.get(clazz).add("");
+		out.add("\t}");
+		out.add("}");
+		out.add("");
+		return out;
 	}
 
 	protected List<String> splitNewLine(String text) {
