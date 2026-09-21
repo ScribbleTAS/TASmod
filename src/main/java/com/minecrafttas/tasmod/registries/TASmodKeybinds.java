@@ -56,8 +56,9 @@ public enum TASmodKeybinds implements KeybindID {
 		 * Yes, I am really generating TypeAdapter code here and replacing the class file.
 		 * This is how we did it before AI kids.
 		 */
+
 		try {
-			Files.write(Paths.get("../src/main/java/com/minecrafttas/tasmod/savestates/typeadapters/EntityAITypeAdapters.java"), TASmod.generator.generateMulti(), StandardOpenOption.CREATE);
+			Files.write(Paths.get("../src/main/java/com/minecrafttas/tasmod/savestates/typeadapters/EntityAITypeAdapters.java"), TASmod.generator.generateMulti(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

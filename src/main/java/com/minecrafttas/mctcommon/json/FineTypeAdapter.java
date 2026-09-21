@@ -61,10 +61,10 @@ public abstract class FineTypeAdapter {
 			}
 
 			String fieldName = fineField.getName();
-			System.out.println(String.format("[%s|%s] Serializing field %s (%s)", obj.getClass(), clazz, field.getName(), fieldName));
+			System.out.println(String.format("[%s|%s] Serializing field %s (%s)", obj.getClass().getSimpleName(), clazz.getSimpleName(), field.getName(), fieldName));
 			switch (fineField.getMode()) {
 				case CUSTOM:
-					out.add(fieldName, fineField.serialize(fieldValue));
+					out.add(fieldName, fineField.serialize(fieldValue, fineJson));
 					break;
 				case FINE:
 					out.add(fieldName, fineJson.serialize(fieldValue));
@@ -80,7 +80,7 @@ public abstract class FineTypeAdapter {
 		}
 
 		for (FineField fineField : additionalFields) {
-			out.add(fineField.getName(), fineField.serialize(null));
+			out.add(fineField.getName(), fineField.serialize(null, fineJson));
 		}
 		return out;
 	}
@@ -106,10 +106,11 @@ public abstract class FineTypeAdapter {
 			String fieldName = fineField.getName();
 			JsonElement fieldElement = elementObj.get(fieldName);
 
+			System.out.println(String.format("[%s|%s] Deserializing field %s (%s)", obj.getClass().getSimpleName(), clazz.getSimpleName(), field.getName(), fieldName));
 			Object fieldValue = null;
 			switch (fineField.getMode()) {
 				case CUSTOM:
-					fieldValue = fineField.deserialize(fieldElement);
+					fieldValue = fineField.deserialize(fieldElement, fineJson);
 					break;
 				case FINE:
 					fieldValue = fineJson.deserialize(fieldElement, field.getType());

@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 /**
@@ -52,6 +53,8 @@ public class FineGson {
 	}
 
 	public JsonElement serialize(Object obj) {
+		if (obj == null)
+			return JsonNull.INSTANCE;
 		Class<?> type = obj.getClass();
 		return serialize(obj, type);
 	}
@@ -61,7 +64,7 @@ public class FineGson {
 			return gsonInstance.toJsonTree(obj);
 
 		FineTypeAdapter adapter = typeAdapters.get(type);
-		JsonElement out = adapter.serialize(obj, this, type).getAsJsonObject();
+		JsonElement out = adapter.serialize(obj, this, type);
 
 		Class<?> superclass = type.getSuperclass();
 		if (superclass != Object.class) {

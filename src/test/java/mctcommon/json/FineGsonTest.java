@@ -66,7 +66,7 @@ class FineGsonTest {
 		public static class TestSuperClassAdapter extends FineTypeAdapter {
 			public TestSuperClassAdapter() {
 				register("bot", FineMode.FINE);
-				register("evil", obj -> new JsonPrimitive(((String) obj).toUpperCase()), element -> element.toString());
+				register("evil", (obj, fgson) -> new JsonPrimitive(((String) obj).toUpperCase()), (element, fgson) -> element.toString());
 			}
 		}
 

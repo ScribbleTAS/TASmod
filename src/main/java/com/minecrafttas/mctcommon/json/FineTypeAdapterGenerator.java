@@ -72,6 +72,10 @@ public class FineTypeAdapterGenerator {
 		if (classLines.containsKey(clazz))
 			return;
 
+//		if (clazz.getName().contains("$")) {
+//			return;
+//		}
+
 		Class<?> superclazz = clazz.getSuperclass();
 		if (superclazz != Object.class)
 			addClass(superclazz);
@@ -82,7 +86,7 @@ public class FineTypeAdapterGenerator {
 //		importLines.add(String.format("import %s;", clazz.getName()));
 		classLines.put(clazz, splitNewLine(String.format(""
 				+ "@FineTarget(%s.class)\n"
-				+ "public class %sTypeAdapter extends FineTypeAdapter {\n"
+				+ "public static class %sTypeAdapter extends FineTypeAdapter {\n"
 				+ "\n"
 				+ "\tpublic %sTypeAdapter() {", clazz.getName().replace("$", "."), clazzName, clazzName)));
 

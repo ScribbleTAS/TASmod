@@ -38,21 +38,21 @@ public class FineField {
 		return mode;
 	}
 
-	public JsonElement serialize(Object obj) {
-		return serializer.serialize(obj);
+	public JsonElement serialize(Object obj, FineGson fgson) {
+		return serializer.serialize(obj, fgson);
 	}
 
-	public Object deserialize(JsonElement element) {
-		return deserializer.deserialize(element);
+	public Object deserialize(JsonElement element, FineGson fgson) {
+		return deserializer.deserialize(element, fgson);
 	}
 
 	@FunctionalInterface
 	public static interface FineSerializer {
-		public JsonElement serialize(Object obj);
+		public JsonElement serialize(Object obj, FineGson fgson);
 	}
 
 	@FunctionalInterface
 	public static interface FineDeserializer {
-		public Object deserialize(JsonElement element);
+		public Object deserialize(JsonElement element, FineGson fgson);
 	}
 }

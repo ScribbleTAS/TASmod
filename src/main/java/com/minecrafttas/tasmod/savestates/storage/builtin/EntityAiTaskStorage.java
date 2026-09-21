@@ -18,9 +18,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.minecrafttas.mctcommon.json.FineGson;
 import com.minecrafttas.tasmod.savestates.exceptions.SavestateException;
 import com.minecrafttas.tasmod.savestates.storage.SavestateStorageExtensionBase;
 import com.minecrafttas.tasmod.savestates.typeadapters.BlockPosTypeAdapterFactory;
+import com.minecrafttas.tasmod.savestates.typeadapters.EntityAITypeAdapters;
 import com.minecrafttas.tasmod.savestates.typeadapters.EntityClassTypeAdapterFactory;
 import com.minecrafttas.tasmod.savestates.typeadapters.EntityLivingTypeAdapter;
 import com.minecrafttas.tasmod.savestates.typeadapters.EntityTypeAdapterFactory;
@@ -42,6 +44,8 @@ import net.minecraft.world.WorldServer;
 
 public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 
+	private final FineGson fgson;
+
 	public EntityAiTaskStorage() {
 		//@formatter:off
 		super("entityAi.json", 
@@ -60,7 +64,6 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 				.registerTypeAdapterFactory(
 						new BlockPosTypeAdapterFactory()
 						)
-				.registerTypeAdapter(Item.class, new ItemTypeAdapter())
 				.registerTypeAdapter(EntityLivingTypeAdapter.class, new EntityLivingTypeAdapter())
 				.setExclusionStrategies(new ExclusionStrategy() {
 					
@@ -80,6 +83,10 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 				)
 				.create());
 		//@formatter:on
+
+		fgson = new FineGson(gsonInstance);
+		fgson.registerTypeAdapter(EntityAITypeAdapters.class);
+		fgson.registerTypeAdapter(Item.class, new ItemTypeAdapter());
 	}
 
 	@Override
@@ -145,16 +152,17 @@ public class EntityAiTaskStorage extends SavestateStorageExtensionBase {
 		return serialisedEntries;
 	}
 
-	private JsonObject serializeAction(EntityAIBase action, Class<? extends EntityAIBase> clazz) {
-		@SuppressWarnings("unchecked")
-		Class<? extends EntityAIBase> superclazz = (Class<? extends EntityAIBase>) clazz.getSuperclass();
-
-		JsonObject out = new JsonObject();
-
-		if (superclazz != EntityAIBase.class)
-			out = serializeAction(action, superclazz);
-
-		return JsonUtils.mergeJsonObjects(out, gsonInstance.toJsonTree(action, clazz).getAsJsonObject());
+	private JsonElement serializeAction(EntityAIBase action, Class<? extends EntityAIBase> clazz) {
+//		@SuppressWarnings("unchecked")
+//		Class<? extends EntityAIBase> superclazz = (Class<? extends EntityAIBase>) clazz.getSuperclass();
+//
+//		JsonObject out = new JsonObject();
+//
+//		if (superclazz != EntityAIBase.class)
+//			out = serializeAction(action, superclazz);
+//
+//		return JsonUtils.mergeJsonObjects(out, gsonInstance.toJsonTree(action, clazz).getAsJsonObject());
+		return fgson.serialize(action);
 	}
 
 	@Override
