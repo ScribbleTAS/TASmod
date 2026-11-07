@@ -19,7 +19,7 @@ import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 
-@Mixin(Minecraft.class)
+@Mixin(value = Minecraft.class, priority = 950)		// Let mctcommon events fire with a higher priority
 public class MixinMinecraft {
 
 	@Inject(method = "init", at = @At(value = "RETURN"))

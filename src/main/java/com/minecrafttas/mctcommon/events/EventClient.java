@@ -62,9 +62,9 @@ public interface EventClient {
 	}
 
 	/**
-	 * Fired when the server sends a packet to the client telling him to set the position
-	 * 
+	 * Fired when the server sends a packet to the client telling it to set the position
 	 * @author Scribble
+	 * 
 	 * @see NetHandlerPlayClient#handlePlayerPosLook(net.minecraft.network.play.server.SPacketPlayerPosLook)
 	 */
 	@FunctionalInterface

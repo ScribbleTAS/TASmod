@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventUpdateRawKeyboard;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinMinecraft;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
@@ -20,6 +21,7 @@ import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.PointerNormalizer;
 import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
+import com.minecrafttas.tasmod.virtual.raw.RawKeyboard;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -83,13 +85,22 @@ public class VirtualInput {
 	 *                      checking if the mouse logic should be adapted to
 	 *                      GUIScreens
 	 */
+	@SuppressWarnings("unchecked")
 	public void update(GuiScreen currentScreen) {
 		while (Keyboard.next()) {
+			RawKeyboard.addKeyEvent(Keyboard.getEventKey(), Keyboard.getEventKeyState(), Keyboard.getEventCharacter(), Keyboard.areRepeatEventsEnabled());
+		}
+
+		Object eventReturn = EventListenerRegistry.fireEvent(EventUpdateRawKeyboard.class, RawKeyboard.eventQueue);
+		if (eventReturn != null && eventReturn instanceof Queue)
+			RawKeyboard.eventQueue = (Queue<VirtualKeyboardEvent>) eventReturn;
+
+		while (RawKeyboard.next()) {
 
 			if (updateSubtickGuiScreenKeyboard(currentScreen))
 				return;
 
-			KEYBOARD.updateNextKeyboard(Keyboard.getEventKey(), Keyboard.getEventKeyState(), Keyboard.getEventCharacter(), Keyboard.areRepeatEventsEnabled());
+			KEYBOARD.updateNextKeyboard(RawKeyboard.getEventKey(), RawKeyboard.getEventKeyState(), RawKeyboard.getEventCharacter(), RawKeyboard.areRepeatEventsEnabled());
 		}
 		while (Mouse.next()) {
 			if (currentScreen == null) {
@@ -686,8 +697,10 @@ public class VirtualInput {
 	 * 	entityRenderer.updateCamera();	// Update the camera
 	 * }
 	 * </pre>
-	 * Note that the camera is updated <em>after</em> the tick function.
+	 * 
+	 * <p>Note that the camera is updated <em>after</em> the tick function.
 	 * Now in this pseudocode, the following methods from this class are injected like so:
+	 * 
 	 * <pre>
 	 * public void runGameLoop() {// The main update loop, every frame
 	 * 	for(int i;i<timer.toTickCount;i++){ // For loop to enable ticking

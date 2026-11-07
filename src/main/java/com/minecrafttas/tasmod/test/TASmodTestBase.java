@@ -1,30 +1,44 @@
 package com.minecrafttas.tasmod.test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.minecrafttas.mctcommon.events.EventClient.EventPlayerJoinedClientSide;
 import com.minecrafttas.mctcommon.test.TestBase;
+import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer;
 
 import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiIngameMenu;
 import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3d;
 
 public abstract class TASmodTestBase extends TestBase implements EventPlayerJoinedClientSide {
+	protected final Logger logger = LogManager.getLogger("TestRunner");
+
 	protected final Path defaultTestWorldFolder;
+	protected final Path defaultTestInputFolder;
+
+	protected Vec3d startPoint;
+	protected Vec2f startRot;
 
 	public TASmodTestBase() {
-		this(Paths.get("../src/test/resources/testrunner"));
+		this(Paths.get("../src/test/resources/testrunner/worlds"), Paths.get("../src/test/resources/testrunner/inputs"));
 	}
 
-	public TASmodTestBase(Path defaultTestWorldFolder) {
+	public TASmodTestBase(Path defaultTestWorldFolder, Path defaultTestInputFolder) {
 		this.defaultTestWorldFolder = defaultTestWorldFolder;
+		this.defaultTestInputFolder = defaultTestInputFolder;
 	}
 
 	protected void launchWorld(String worldname) {
@@ -36,17 +50,7 @@ public abstract class TASmodTestBase extends TestBase implements EventPlayerJoin
 
 		Path worldInSavesFolder = mc.gameDir.toPath().resolve("saves");
 
-		ZipFile zipFile = new ZipFile(pathToWorldZip.toFile());
-		try {
-			zipFile.extractAll(worldInSavesFolder.toString());
-		} catch (ZipException e) {
-			e.printStackTrace();
-		}
-		try {
-			zipFile.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		extractAllZip(pathToWorldZip, worldInSavesFolder);
 
 		mc.addScheduledTask(() -> {
 			mc.launchIntegratedServer(worldname, worldname, null);
@@ -54,7 +58,30 @@ public abstract class TASmodTestBase extends TestBase implements EventPlayerJoin
 		try {
 			this.wait(TimeUnit.MINUTES.toMillis(1));
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+		try {
+			Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		startPoint = mc.player.getPositionVector();
+		startRot = mc.player.getPitchYaw();
+	}
+
+	private void extractAllZip(Path from, Path to) {
+		try (ZipFile zipFile = new ZipFile(from.toFile())) {
+			zipFile.extractAll(to.toString());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private void extractZip(Path from, Path to) {
+		try (ZipFile zipFile = new ZipFile(from.toFile())) {
+			zipFile.extractFile(to.getFileName().toString(), to.getParent().toString());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -85,5 +112,100 @@ public abstract class TASmodTestBase extends TestBase implements EventPlayerJoin
 		}
 		Path worldInSavesFolder = mc.gameDir.toPath().resolve("saves").resolve(worldname);
 		SavestateIndexer.deleteFolder(worldInSavesFolder);
+	}
+
+	protected void recordInputs(String name) {
+		recordInputs(defaultTestInputFolder.resolve(name + ".rawmctas"));
+	}
+
+	protected synchronized void recordInputs(Path outFile) {
+		logger.debug("Starting raw recording");
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.addScheduledTask(() -> {
+			TASmod.rawController.startRecording(outFile, this);
+		});
+		try {
+			this.wait();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		logger.debug("Starting storing inputs to {}", outFile);
+		createZipFromFile(outFile);
+	}
+
+	private void createZipFromFile(Path outFile) {
+		logger.debug("Creating zip file {}", outFile);
+		String fileName = FilenameUtils.getBaseName(outFile.toString());
+		Path zipFilePath = outFile.getParent().resolve(fileName + ".zip");
+		try {
+			Files.deleteIfExists(zipFilePath);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		try (ZipFile zipFile = new ZipFile(zipFilePath.toFile())) {
+			zipFile.addFile(outFile.toFile());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		try {
+			Files.deleteIfExists(outFile);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected void runInputs(String inputFile) {
+		runInputs(defaultTestInputFolder.resolve(inputFile + ".zip"));
+	}
+
+	protected synchronized void runInputs(Path pathToZip) {
+		String fileName = FilenameUtils.getBaseName(pathToZip.toString());
+		logger.debug("Starting playing back raw inputs from {}", fileName);
+		Path toPath = pathToZip.getParent().resolve(fileName + ".rawmctas");
+
+		extractZip(pathToZip, toPath);
+
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.addScheduledTask(() -> {
+			TASmod.rawController.runRaw(toPath, this);
+		});
+		try {
+			this.wait(TimeUnit.MINUTES.toMillis(1));
+			Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		try {
+			Files.deleteIfExists(toPath);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected void teleport(double x, double y, double z) {
+		teleport(x, y, z, 0, 0);
+	}
+
+	protected synchronized void teleport(double x, double y, double z, float yaw, float pitch) {
+		logger.info("Teleporting player to {} {} {} {} {}", x, y, z, yaw, pitch);
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.addScheduledTask(() -> {
+			mc.getIntegratedServer().getPlayerList().getPlayers().get(0).connection.setPlayerLocation(x, y, z, yaw, pitch);
+			synchronized (this) {
+				this.notify();
+			}
+		});
+		try {
+			this.wait(TimeUnit.MINUTES.toMillis(1));
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected void teleportToStart() {
+		teleport(startPoint.x, startPoint.y, startPoint.z, startRot.y, startRot.x);
 	}
 }

@@ -5,6 +5,7 @@ import org.lwjgl.input.Keyboard;
 import com.minecrafttas.mctcommon.KeybindManager.IsKeyDownFunc;
 import com.minecrafttas.mctcommon.KeybindManager.Keybind;
 import com.minecrafttas.mctcommon.KeybindManager.KeybindID;
+import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.networking.TASmodBufferBuilder;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.TASstate;
@@ -56,8 +57,10 @@ public enum TASmodKeybinds implements KeybindID {
 		//		} catch (IOException e) {
 		//			e.printStackTrace();
 		//		}
+		TASmod.rawController.copyCoordinates();
 	}, VirtualKeybindings::isKeyDown),
 	TEST2("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
+		TASmod.rawController.stopRecording();
 	}, VirtualKeybindings::isKeyDown);
 
 	private Keybind keybind;

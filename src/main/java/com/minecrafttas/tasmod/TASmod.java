@@ -53,12 +53,12 @@ import com.minecrafttas.tasmod.savestates.storage.builtin.entity.BatSpawnPositio
 import com.minecrafttas.tasmod.savestates.storage.builtin.entity.CreeperDetonateSubStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.entity.LivingTickTimersSubStorage;
 import com.minecrafttas.tasmod.savestates.storage.builtin.entity.SquidRotationSubStorage;
-import com.minecrafttas.tasmod.test.TestMotion;
 import com.minecrafttas.tasmod.tickratechanger.TickrateChangerServer;
 import com.minecrafttas.tasmod.ticksync.TickSyncServer;
 import com.minecrafttas.tasmod.util.LoggerMarkers;
 import com.minecrafttas.tasmod.util.Scheduler;
 import com.minecrafttas.tasmod.util.TabCompletionUtils;
+import com.minecrafttas.tasmod.virtual.raw.RawController;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
@@ -127,6 +127,7 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 	public static FineTypeAdapterGenerator generator = new FineTypeAdapterGenerator("EntityAITypeAdapters2", "com.minecrafttas.tasmod.savestates.typeadapters");
 
 	public static TestRunner testRegistry = new TestRunner();
+	public static RawController rawController = new RawController(LOGGER);
 
 	@Override
 	public void onInitialize() {
@@ -177,14 +178,17 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 		registerSavestateStorage();
 
-		registerTests();
+		if (isDevEnvironment) {
+			EventListenerRegistry.register(rawController);
+		}
+		if (TestRunner.isTestingEnabled()) {
+			registerTests();
+		}
 	}
 
 	private void registerTests() {
 		EventListenerRegistry.register(testRegistry);
-		if (isDevEnvironment) {
-			testRegistry.register(new TestMotion());
-		}
+		testRegistry.register("TestMotion");
 	}
 
 	@Override

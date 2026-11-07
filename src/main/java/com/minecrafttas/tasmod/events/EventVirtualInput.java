@@ -1,5 +1,7 @@
 package com.minecrafttas.tasmod.events;
 
+import java.util.Queue;
+
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput;
@@ -106,4 +108,14 @@ public interface EventVirtualInput {
 //	interface EventVirtualCameraAngleSubtick extends EventBase {
 //		public void onVirtualCameraSubtick(boolean isPolled);
 //	}
+
+	/**
+	 * 
+	 * 
+	 * @author Scribble
+	 */
+	@FunctionalInterface
+	interface EventUpdateRawKeyboard extends EventBase {
+		public Queue<VirtualKeyboardEvent> onUpdateRawKeyboard(Queue<VirtualKeyboardEvent> input);
+	}
 }

@@ -48,5 +48,9 @@
 			<AppenderRef ref="SysOut2" level="${sys:common.log.level:-info}"/>
 			<AppenderRef ref="ServerGuiConsole" level="${sys:tasmod.log.level:-info}"/>
 		</Logger>
+		<Logger level="${sys:server.log.level:-info}" name="TestRunner" additivity="false">
+			<AppenderRef ref="SysOut2" level="${sys:common.log.level:-info}"/>
+			<AppenderRef ref="ServerGuiConsole" level="${sys:testrunner.log.level:-info}"/>
+		</Logger>
 	</Loggers>
 </Configuration>

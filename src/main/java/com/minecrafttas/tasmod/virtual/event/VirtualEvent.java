@@ -1,6 +1,8 @@
 package com.minecrafttas.tasmod.virtual.event;
 
-public class VirtualEvent {
+import java.io.Serializable;
+
+public class VirtualEvent implements Serializable {
 	protected final int keycode;
 	protected final boolean keystate;
 

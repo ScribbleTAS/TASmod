@@ -53,8 +53,13 @@ dependencies {
 	// tasmod dependencies
 	embed "com.dselent:bigarraylist:1.6"
 	embed "com.github.KaptainWutax:SeedUtils:b6a383113c"
-	embed "net.lingala.zip4j:zip4j:2.11.6"
+	implementation "net.lingala.zip4j:zip4j:2.11.6"
 //	implementation "com.google.code.gson:gson:2.10.0"
+	implementation("org.junit.jupiter:junit-jupiter:5.14.1") {
+		exclude module: 'junit-jupiter-engine'
+		exclude module: 'junit-jupiter-params'
+		exclude module: 'junit-bom'
+	}
 	
 	// loom dependencies
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -90,6 +95,8 @@ jar {
 	} {
 		exclude "LICENSE.txt", "META-INF/MANIFSET.MF", "META-INF/maven/**", "META-INF/*.RSA", "META-INF/*.SF"
     }
+	
+	exclude('com/minecrafttas/tasmod/test/**')
 }
 
 // configure testing

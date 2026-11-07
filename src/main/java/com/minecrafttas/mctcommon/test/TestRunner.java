@@ -1,14 +1,16 @@
 package com.minecrafttas.mctcommon.test;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import com.minecrafttas.mctcommon.MCTCommon;
 import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
+import com.minecrafttas.tasmod.TASmod;
 
 import net.minecraft.client.Minecraft;
 
@@ -20,6 +22,15 @@ public class TestRunner extends AbstractRegistry<TestBase> implements EventClien
 		super("TEST_RUNNER", new LinkedHashMap<>());
 	}
 
+	public void register(String testName) {
+		try {
+			Class<?> testMotion = Class.forName("com.minecrafttas.tasmod.test." + testName);
+			register((TestBase) testMotion.newInstance());
+		} catch (Exception e) {
+			MCTCommon.LOGGER.catching(e);
+		}
+	}
+
 	@Override
 	public void register(TestBase registryObject) {
 		EventListenerRegistry.register(registryObject);
@@ -28,7 +39,7 @@ public class TestRunner extends AbstractRegistry<TestBase> implements EventClien
 
 	@Override
 	public void onClientInit(Minecraft mc) {
-		if (System.getProperty("mctcommon.testrunner", "false").equals("true")) {
+		if (isTestingEnabled()) {
 			testRunnerThread = new Thread(() -> {
 				runTests();
 			}, "TestRunner");
@@ -40,23 +51,44 @@ public class TestRunner extends AbstractRegistry<TestBase> implements EventClien
 		MCTCommon.LOGGER.info(MCTCommon.Test, "Running Tests");
 		Collection<TestBase> testClasses = this.REGISTRY.values();
 		for (TestBase testClass : testClasses) {
-			testClass.beforeAll();
 
 			Method[] methods = testClass.getClass().getMethods();
+
+			List<Method> methodCollection = new ArrayList<>();
+			List<Method> favouredMethodCollection = new ArrayList<>();
 			for (Method testMethod : methods) {
 				if (testMethod.isAnnotationPresent(Test.class)) {
-					testClass.beforeEach();
-					try {
-						testMethod.invoke(testClass);
-					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-						e.printStackTrace();
-					}
-					testClass.afterEach();
+					methodCollection.add(testMethod);
+
+					if (testMethod.isAnnotationPresent(Favored.class))
+						favouredMethodCollection.add(testMethod);
 				}
 			}
 
+			List<Method> methodsToRun = favouredMethodCollection.isEmpty() ? methodCollection : favouredMethodCollection;
+
+			testClass.beforeAll();
+			for (Method testMethod : methodsToRun) {
+				String testName = testMethod.getName();
+				String testDescription = testMethod.getAnnotation(Test.class).value();
+				try {
+					testClass.beforeEach();
+					testMethod.invoke(testClass);
+					testClass.afterEach();
+					TASmod.LOGGER.info("Test {} PASSED", testName);
+				} catch (Exception e) {
+					TASmod.LOGGER.error("Test {} FAILED", testName);
+					if (testDescription != null)
+						TASmod.LOGGER.error(testDescription);
+					TASmod.LOGGER.catching(e.getCause());
+				}
+			}
 			testClass.afterAll();
+			System.exit(0);
 		}
-		System.exit(0);
+	}
+
+	public static boolean isTestingEnabled() {
+		return System.getProperty("mctcommon.testrunner", "false").equals("true");
 	}
 }
