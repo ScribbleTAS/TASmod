@@ -19,7 +19,10 @@ public enum TASmodKeybinds implements KeybindID {
 	TICKRATE_ADVANCE("Advance Tick", "TASmod", Keyboard.KEY_F9, () -> TASmodClient.tickratechanger.advanceTick(), VirtualKeybindings::isKeyDown),
 	TICKRATE_INCREASE("Increase Tickrate", "TASmod", Keyboard.KEY_PERIOD, () -> TASmodClient.tickratechanger.increaseTickrate(), VirtualKeybindings::isKeyDownExceptTextfield),
 	TICKRATE_DECREASE("Decrease Tickrate", "TASmod", Keyboard.KEY_COMMA, () -> TASmodClient.tickratechanger.decreaseTickrate(), VirtualKeybindings::isKeyDownExceptTextfield),
-	PLAYBACK_STOP("Recording/Playback Stop", "TASmod", Keyboard.KEY_F10, () -> TASmodClient.controller.setTASState(TASstate.NONE), VirtualKeybindings::isKeyDown),
+	PLAYBACK_STOP("Recording/Playback Stop", "TASmod", Keyboard.KEY_F10, () -> {
+		TASmodClient.controller.setTASState(TASstate.NONE);
+		TASmod.rawController.stopRecording();
+	}, VirtualKeybindings::isKeyDown),
 	SAVESTATE_SAVE("Create Savestate", "TASmod", Keyboard.KEY_J, () -> {
 		try {
 			TASmodClient.client.send(new TASmodBufferBuilder(TASmodPackets.SAVESTATE_SAVE).writeInt(-1));
@@ -57,10 +60,8 @@ public enum TASmodKeybinds implements KeybindID {
 		//		} catch (IOException e) {
 		//			e.printStackTrace();
 		//		}
-		TASmod.rawController.copyCoordinates();
 	}, VirtualKeybindings::isKeyDown),
 	TEST2("Various Testing2", "TASmod", Keyboard.KEY_F7, () -> {
-		TASmod.rawController.stopRecording();
 	}, VirtualKeybindings::isKeyDown);
 
 	private Keybind keybind;

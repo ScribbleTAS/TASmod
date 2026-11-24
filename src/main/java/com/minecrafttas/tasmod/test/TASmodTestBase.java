@@ -14,12 +14,15 @@ import com.minecrafttas.mctcommon.events.EventClient.EventPlayerJoinedClientSide
 import com.minecrafttas.mctcommon.test.TestBase;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer;
+import com.minecrafttas.tasmod.util.ClipboardUtil;
 
 import net.lingala.zip4j.ZipFile;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiIngameMenu;
 import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 
@@ -173,7 +176,7 @@ public abstract class TASmodTestBase extends TestBase implements EventPlayerJoin
 		});
 		try {
 			this.wait(TimeUnit.MINUTES.toMillis(1));
-			Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+			Thread.sleep(TimeUnit.MILLISECONDS.toMillis(100));
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
@@ -207,5 +210,35 @@ public abstract class TASmodTestBase extends TestBase implements EventPlayerJoin
 
 	protected void teleportToStart() {
 		teleport(startPoint.x, startPoint.y, startPoint.z, startRot.y, startRot.x);
+	}
+
+	protected void copyPlayerPosToClipboard() {
+		Vec3d pos = getPlayerPosition();
+		ClipboardUtil.copyToClipboard(String.format("%s, %s, %s", pos.x, pos.y, pos.z));
+	}
+
+	protected void copyPlayerPosAndAngleToClipBoard() {
+		Vec3d pos = getPlayerPosition();
+		Vec2f angle = getPlayerAngle();
+		ClipboardUtil.copyToClipboard(String.format("%s, %s, %s, %s, %s", pos.x, pos.y, pos.z, angle.x, angle.y));
+	}
+
+	protected Vec3d getPlayerPosition() {
+		Minecraft mc = Minecraft.getMinecraft();
+		return mc.player.getPositionVector();
+	}
+
+	protected Vec2f getPlayerAngle() {
+		Minecraft mc = Minecraft.getMinecraft();
+		return mc.player.getPitchYaw();
+	}
+
+	protected IBlockState getBlockAt(int x, int y, int z) {
+		return getBlockAt(new BlockPos(x, y, z));
+	}
+
+	protected IBlockState getBlockAt(BlockPos blockPos) {
+		Minecraft mc = Minecraft.getMinecraft();
+		return mc.world.getBlockState(blockPos);
 	}
 }

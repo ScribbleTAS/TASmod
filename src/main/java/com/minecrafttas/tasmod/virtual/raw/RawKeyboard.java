@@ -3,10 +3,15 @@ package com.minecrafttas.tasmod.virtual.raw;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.lwjgl.input.Keyboard;
+
+import com.minecrafttas.mctcommon.test.TestRunner;
 import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 
 /**
- * Debug class for capturing and playing back the raw keyboard
+ * Class mimicking {@link Keyboard}, with {@link #eventQueue} being mutable.
+ * 
+ * Mainly used by the {@link TestRunner} for testing the mod
  * 
  * @author Scribble
  */

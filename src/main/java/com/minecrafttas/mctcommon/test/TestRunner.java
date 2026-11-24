@@ -11,8 +11,11 @@ import com.minecrafttas.mctcommon.events.EventClient.EventClientInit;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.mctcommon.registry.AbstractRegistry;
 import com.minecrafttas.tasmod.TASmod;
+import com.minecrafttas.tasmod.util.Component;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.TextFormatting;
 
 public class TestRunner extends AbstractRegistry<TestBase> implements EventClientInit {
 
@@ -72,15 +75,34 @@ public class TestRunner extends AbstractRegistry<TestBase> implements EventClien
 				String testName = testMethod.getName();
 				String testDescription = testMethod.getAnnotation(Test.class).value();
 				try {
+					Minecraft mc = Minecraft.getMinecraft();
+					mc.addScheduledTask(() -> {
+						mc.ingameGUI.getChatGUI().clearChatMessages(true);
+						mc.ingameGUI.addChatMessage(ChatType.CHAT, Component.translatable("Running test %s", Component.literal(testName).withStyle(TextFormatting.AQUA)).build());
+						mc.ingameGUI.addChatMessage(ChatType.CHAT, Component.literal(testDescription).withStyle(TextFormatting.GOLD).build());
+						mc.ingameGUI.addChatMessage(ChatType.CHAT, Component.literal("").build());
+					});
 					testClass.beforeEach();
 					testMethod.invoke(testClass);
 					testClass.afterEach();
 					TASmod.LOGGER.info("Test {} PASSED", testName);
+					mc.addScheduledTask(() -> {
+						mc.ingameGUI.addChatMessage(ChatType.CHAT, Component.translatable("Test %s", Component.literal("PASSED").withStyle(TextFormatting.GREEN)).build());
+					});
 				} catch (Exception e) {
 					TASmod.LOGGER.error("Test {} FAILED", testName);
 					if (testDescription != null)
 						TASmod.LOGGER.error(testDescription);
 					TASmod.LOGGER.catching(e.getCause());
+					Minecraft mc = Minecraft.getMinecraft();
+					mc.addScheduledTask(() -> {
+						mc.ingameGUI.addChatMessage(ChatType.CHAT, Component.translatable("Test %s", Component.literal("FAILED").withStyle(TextFormatting.RED)).build());
+					});
+				}
+				try {
+					Thread.sleep(750);
+				} catch (InterruptedException e) {
+					TASmod.LOGGER.catching(e);
 				}
 			}
 			testClass.afterAll();

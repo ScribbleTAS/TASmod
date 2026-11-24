@@ -4,6 +4,7 @@ import java.util.Queue;
 
 import com.minecrafttas.mctcommon.events.EventListenerRegistry.EventBase;
 import com.minecrafttas.tasmod.virtual.VirtualCameraAngle;
+import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualCameraAngleInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualKeyboardInput;
 import com.minecrafttas.tasmod.virtual.VirtualInput.VirtualMouseInput;
@@ -20,7 +21,7 @@ public interface EventVirtualInput {
 	 * @see VirtualKeyboardInput#nextKeyboardTick()
 	 */
 	@FunctionalInterface
-	interface EventVirtualKeyboardTick extends EventBase {
+	public interface EventVirtualKeyboardTick extends EventBase {
 
 		/**
 		 * Fired when the {@link VirtualKeyboard} ticks
@@ -39,7 +40,7 @@ public interface EventVirtualInput {
 	 * @see VirtualMouseInput#nextMouseTick()
 	 */
 	@FunctionalInterface
-	interface EventVirtualMouseTick extends EventBase {
+	public interface EventVirtualMouseTick extends EventBase {
 
 		/**
 		 * Fired when the {@link VirtualMouseInput#currentMouse} is updated
@@ -58,7 +59,7 @@ public interface EventVirtualInput {
 	 * @see VirtualCameraAngleInput#nextCameraTick()
 	 */
 	@FunctionalInterface
-	interface EventVirtualCameraAngleTick extends EventBase {
+	public interface EventVirtualCameraAngleTick extends EventBase {
 
 		/**
 		 * Fired when the {@link VirtualCameraAngleInput#currentCameraAngle} is updated
@@ -76,7 +77,7 @@ public interface EventVirtualInput {
 	 * @see VirtualKeyboardInput#nextKeyboardSubtick()
 	 */
 	@FunctionalInterface
-	interface EventVirtualKeyboardSubtick extends EventBase {
+	public interface EventVirtualKeyboardSubtick extends EventBase {
 
 		/**
 		 * Fired when the {@link VirtualKeyboardInput#currentKeyboardEvent} is updated
@@ -93,7 +94,7 @@ public interface EventVirtualInput {
 	 * @see VirtualMouseInput#nextMouseSubtick()
 	 */
 	@FunctionalInterface
-	interface EventVirtualMouseSubtick extends EventBase {
+	public interface EventVirtualMouseSubtick extends EventBase {
 		/**
 		 * Fired when the {@link VirtualMouseInput#currentMouseEvent} is updated
 		 *
@@ -110,12 +111,36 @@ public interface EventVirtualInput {
 //	}
 
 	/**
+	 * Fired when the {@link VirtualKeyboardInput#nextKeyboardEvent} is updated
 	 * 
-	 * 
+	 * @author Scribble
+	 * @see VirtualInput#update(net.minecraft.client.gui.GuiScreen)
+	 */
+	@FunctionalInterface
+	public interface EventUpdateRawKeyboard extends EventBase {
+		/**
+		 * Fired when the {@link VirtualKeyboardInput#nextKeyboardEvent} is updated
+		 * 
+		 * @param input The raw inputs that happened in this game loop
+		 * @return The inputs that will be processed by the VirtualInput
+		 * @see VirtualInput#update(net.minecraft.client.gui.GuiScreen)
+		 */
+		public Queue<VirtualKeyboardEvent> onUpdateRawKeyboard(Queue<VirtualKeyboardEvent> input);
+	}
+
+	/**
+	 * Fired when the {@link VirtualMouseInput#nextMouseEvent} is updated
 	 * @author Scribble
 	 */
 	@FunctionalInterface
-	interface EventUpdateRawKeyboard extends EventBase {
-		public Queue<VirtualKeyboardEvent> onUpdateRawKeyboard(Queue<VirtualKeyboardEvent> input);
+	public interface EventUpdateRawMouse extends EventBase {
+		/**
+		 * Fired when the {@link VirtualMouseInput#nextMouseEvent} is updated
+		 * 
+		 * @param input The raw inputs that happened in this game loop
+		 * @return The inputs that will be processed by the VirtualInput
+		 * @see VirtualInput#update(net.minecraft.client.gui.GuiScreen)
+		 */
+		public Queue<VirtualMouseEvent> onUpdateRawMouse(Queue<VirtualMouseEvent> input);
 	}
 }

@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.events.EventVirtualInput.EventUpdateRawKeyboard;
+import com.minecrafttas.tasmod.events.EventVirtualInput.EventUpdateRawMouse;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinEntityRenderer;
 import com.minecrafttas.tasmod.mixin.playbackhooks.MixinMinecraft;
 import com.minecrafttas.tasmod.playback.PlaybackControllerClient.InputContainer;
@@ -22,6 +23,7 @@ import com.minecrafttas.tasmod.util.PointerNormalizer;
 import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
 import com.minecrafttas.tasmod.virtual.raw.RawKeyboard;
+import com.minecrafttas.tasmod.virtual.raw.RawMouse;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -87,14 +89,30 @@ public class VirtualInput {
 	 */
 	@SuppressWarnings("unchecked")
 	public void update(GuiScreen currentScreen) {
+
+		/*
+		 * ===================
+		 * 		Keyboard
+		 * ===================
+		 */
+
+		/*
+		 * Extract keyboard events from LWJGL into the RawKeyboard, which can be manipulated via an event
+		 */
 		while (Keyboard.next()) {
 			RawKeyboard.addKeyEvent(Keyboard.getEventKey(), Keyboard.getEventKeyState(), Keyboard.getEventCharacter(), Keyboard.areRepeatEventsEnabled());
 		}
 
-		Object eventReturn = EventListenerRegistry.fireEvent(EventUpdateRawKeyboard.class, RawKeyboard.eventQueue);
-		if (eventReturn != null && eventReturn instanceof Queue)
-			RawKeyboard.eventQueue = (Queue<VirtualKeyboardEvent>) eventReturn;
+		/*
+		 * Fire the RawKeyboardEvent.
+		 */
+		Object keyboardReturn = EventListenerRegistry.fireEvent(EventUpdateRawKeyboard.class, RawKeyboard.eventQueue);
+		if (keyboardReturn != null && keyboardReturn instanceof Queue)
+			RawKeyboard.eventQueue = (Queue<VirtualKeyboardEvent>) keyboardReturn;
 
+		/*
+		 * Update the VirtualKeyboardInput
+		 */
 		while (RawKeyboard.next()) {
 
 			if (updateSubtickGuiScreenKeyboard(currentScreen))
@@ -102,19 +120,34 @@ public class VirtualInput {
 
 			KEYBOARD.updateNextKeyboard(RawKeyboard.getEventKey(), RawKeyboard.getEventKeyState(), RawKeyboard.getEventCharacter(), RawKeyboard.areRepeatEventsEnabled());
 		}
+
+		/*
+		 * ================
+		 * 		Mouse
+		 * ================
+		 */
+
 		while (Mouse.next()) {
+			RawMouse.addKeyEvent(Mouse.getEventButton(), Mouse.getEventButtonState(), Mouse.getEventDWheel(), Mouse.getEventX(), Mouse.getEventY());
+		}
+
+		Object mouseReturn = EventListenerRegistry.fireEvent(EventUpdateRawMouse.class, RawKeyboard.eventQueue);
+		if (mouseReturn != null && mouseReturn instanceof Queue)
+			RawMouse.eventQueue = (Queue<VirtualMouseEvent>) mouseReturn;
+
+		while (RawMouse.next()) {
 			if (currentScreen == null) {
-				MOUSE.updateNextMouse(Mouse.getEventButton() - 100, Mouse.getEventButtonState(), Mouse.getEventDWheel(), 0, 0);
+				MOUSE.updateNextMouse(RawMouse.getEventButton() - 100, RawMouse.getEventButtonState(), RawMouse.getEventDWheel(), 0, 0);
 			} else {
 				if (updateSubtickGuiScreenMouse(currentScreen))
 					return;
 
 				Ducks.GuiScreenDuck screen = (Ducks.GuiScreenDuck) currentScreen;
-				int eventX = screen.unscaleX(Mouse.getEventX());
-				int eventY = screen.unscaleY(Mouse.getEventY());
+				int eventX = screen.unscaleX(RawMouse.getEventX());
+				int eventY = screen.unscaleY(RawMouse.getEventY());
 				eventX = PointerNormalizer.getNormalizedX(eventX);
 				eventY = PointerNormalizer.getNormalizedY(eventY);
-				MOUSE.updateNextMouse(Mouse.getEventButton() - 100, Mouse.getEventButtonState(), Mouse.getEventDWheel(), eventX, eventY);
+				MOUSE.updateNextMouse(RawMouse.getEventButton() - 100, RawMouse.getEventButtonState(), RawMouse.getEventDWheel(), eventX, eventY);
 			}
 		}
 	}
@@ -128,8 +161,8 @@ public class VirtualInput {
 		if (currentScreen instanceof SubtickGuiScreen) {
 			SubtickGuiScreen screenSubtickable = (SubtickGuiScreen) currentScreen;
 
-			if (Keyboard.getEventKeyState())
-				screenSubtickable.keyTyped(Keyboard.getEventCharacter(), Keyboard.getEventKey());
+			if (RawKeyboard.getEventKeyState())
+				screenSubtickable.keyTyped(RawKeyboard.getEventCharacter(), RawKeyboard.getEventKey());
 			return true;
 		}
 		return false;
