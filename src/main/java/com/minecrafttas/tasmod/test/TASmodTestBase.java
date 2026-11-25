@@ -15,6 +15,7 @@ import com.minecrafttas.mctcommon.test.TestBase;
 import com.minecrafttas.tasmod.TASmod;
 import com.minecrafttas.tasmod.savestates.SavestateIndexer;
 import com.minecrafttas.tasmod.util.ClipboardUtil;
+import com.minecrafttas.tasmod.util.Component;
 
 import net.lingala.zip4j.ZipFile;
 import net.minecraft.block.state.IBlockState;
@@ -25,6 +26,8 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.TextFormatting;
 
 public abstract class TASmodTestBase extends TestBase implements EventPlayerJoinedClientSide {
 	protected final Logger logger = LogManager.getLogger("TestRunner");
@@ -111,10 +114,13 @@ public abstract class TASmodTestBase extends TestBase implements EventPlayerJoin
 			this.wait(TimeUnit.SECONDS.toMillis(10));
 			Thread.sleep(TimeUnit.SECONDS.toMillis(1));
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 		Path worldInSavesFolder = mc.gameDir.toPath().resolve("saves").resolve(worldname);
 		SavestateIndexer.deleteFolder(worldInSavesFolder);
+
+		Path savestatesDir = mc.gameDir.toPath().resolve("saves").resolve("savestates");
+		SavestateIndexer.deleteFolder(savestatesDir);
 	}
 
 	protected void recordInputs(String name) {
@@ -125,10 +131,12 @@ public abstract class TASmodTestBase extends TestBase implements EventPlayerJoin
 		logger.debug("Starting raw recording");
 		Minecraft mc = Minecraft.getMinecraft();
 		mc.addScheduledTask(() -> {
+			mc.ingameGUI.addChatMessage(ChatType.CHAT, Component.literal("Starting recording").withStyle(TextFormatting.RED).build());
 			TASmod.rawController.startRecording(outFile, this);
 		});
 		try {
 			this.wait();
+			Thread.sleep(TimeUnit.MILLISECONDS.toMillis(100));
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -220,7 +228,7 @@ public abstract class TASmodTestBase extends TestBase implements EventPlayerJoin
 	protected void copyPlayerPosAndAngleToClipBoard() {
 		Vec3d pos = getPlayerPosition();
 		Vec2f angle = getPlayerAngle();
-		ClipboardUtil.copyToClipboard(String.format("%s, %s, %s, %s, %s", pos.x, pos.y, pos.z, angle.x, angle.y));
+		ClipboardUtil.copyToClipboard(String.format("%s, %s, %s, %sf, %sf", pos.x, pos.y, pos.z, angle.x, angle.y));
 	}
 
 	protected Vec3d getPlayerPosition() {

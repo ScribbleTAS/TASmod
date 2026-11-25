@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
-
 import com.minecrafttas.tasmod.TASmodClient;
+import com.minecrafttas.tasmod.virtual.raw.RawKeyboard;
+import com.minecrafttas.tasmod.virtual.raw.RawMouse;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
@@ -69,7 +68,7 @@ public class VirtualKeybindings {
 		}
 
 		if (isKeyCodeAlwaysBlocked(keycode)) {
-			down = keycode >= 0 ? Keyboard.isKeyDown(keycode) : Mouse.isButtonDown(keycode + 100);
+			down = keycode >= 0 ? RawKeyboard.isKeyDown(keycode) : RawMouse.isButtonDown(keycode + 100);
 		} else {
 			down = TASmodClient.virtual.willKeyBeDown(keycode);
 		}

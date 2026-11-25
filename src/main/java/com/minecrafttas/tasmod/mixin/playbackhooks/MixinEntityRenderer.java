@@ -16,10 +16,12 @@ import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import com.minecrafttas.mctcommon.events.EventListenerRegistry;
 import com.minecrafttas.tasmod.TASmodClient;
 import com.minecrafttas.tasmod.events.EventClient.EventDrawHotbarAlways;
+import com.minecrafttas.tasmod.events.EventVirtualInput;
 import com.minecrafttas.tasmod.util.Ducks.SubtickDuck;
 import com.minecrafttas.tasmod.virtual.VirtualInput;
 import com.minecrafttas.tasmod.virtual.VirtualInterpolationHandler.CameraInterpolation;
 import com.minecrafttas.tasmod.virtual.VirtualInterpolationHandler.MouseInterpolation;
+import com.minecrafttas.tasmod.virtual.raw.RawDeltaCameraAngle;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -67,6 +69,15 @@ public class MixinEntityRenderer implements SubtickDuck {
 		float mouseSensitivityCubed = mouseSensititvity * mouseSensititvity * mouseSensititvity * 8.0F;
 
 		mc.mouseHelper.mouseXYChange();
+
+		RawDeltaCameraAngle angle = new RawDeltaCameraAngle(mc.mouseHelper.deltaX, mc.mouseHelper.deltaY);
+		Object cameraReturn = EventListenerRegistry.fireEvent(EventVirtualInput.EventUpdateRawCamera.class, angle);
+		if (cameraReturn != null && cameraReturn instanceof RawDeltaCameraAngle)
+			angle = (RawDeltaCameraAngle) cameraReturn;
+
+		mc.mouseHelper.deltaX = angle.getDeltaX();
+		mc.mouseHelper.deltaY = angle.getDeltaY();
+
 		if (this.mc.currentScreen == null && !TASmodClient.controller.isPlayingback() && mc.player != null && Display.isActive()) {
 			float deltaPitch = mc.mouseHelper.deltaY * mouseSensitivityCubed;
 			float deltaYaw = mc.mouseHelper.deltaX * mouseSensitivityCubed;
@@ -89,7 +100,9 @@ public class MixinEntityRenderer implements SubtickDuck {
 			}
 
 			mc.getTutorial().handleMouse(mc.mouseHelper);
-			TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle((float) -((double) deltaPitch * 0.15D * invertMouse), (float) ((double) deltaYaw * 0.15D), TASmodClient.tickratechanger.ticksPerSecond != 0);
+			deltaPitch = (float) -((double) deltaPitch * 0.15D * invertMouse);
+			deltaYaw = (float) ((double) deltaYaw * 0.15D);
+			TASmodClient.virtual.CAMERA_ANGLE.updateNextCameraAngle(deltaPitch, deltaYaw, TASmodClient.tickratechanger.ticksPerSecond != 0);
 		}
 	}
 

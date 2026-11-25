@@ -53,6 +53,22 @@ public class TestRunner extends AbstractRegistry<TestBase> implements EventClien
 	private void runTests() {
 		MCTCommon.LOGGER.info(MCTCommon.Test, "Running Tests");
 		Collection<TestBase> testClasses = this.REGISTRY.values();
+
+		/*
+		 * Check if a Favored Annotation is present and only run these classes.
+		 * If not, then run all classes
+		 */
+		List<TestBase> favouredClassCollection = new ArrayList<>();
+		for (TestBase testClass : testClasses) {
+			if (testClass.getClass().isAnnotationPresent(Favoured.class))
+				favouredClassCollection.add(testClass);
+		}
+
+		testClasses = favouredClassCollection.isEmpty() ? testClasses : favouredClassCollection;
+
+		/*
+		 * Check if a Favored Annotation is present on the methods
+		 */
 		for (TestBase testClass : testClasses) {
 
 			Method[] methods = testClass.getClass().getMethods();
@@ -63,13 +79,16 @@ public class TestRunner extends AbstractRegistry<TestBase> implements EventClien
 				if (testMethod.isAnnotationPresent(Test.class)) {
 					methodCollection.add(testMethod);
 
-					if (testMethod.isAnnotationPresent(Favored.class))
+					if (testMethod.isAnnotationPresent(Favoured.class))
 						favouredMethodCollection.add(testMethod);
 				}
 			}
 
 			List<Method> methodsToRun = favouredMethodCollection.isEmpty() ? methodCollection : favouredMethodCollection;
 
+			/*
+			 * Run the tests
+			 */
 			testClass.beforeAll();
 			for (Method testMethod : methodsToRun) {
 				String testName = testMethod.getName();
@@ -106,8 +125,8 @@ public class TestRunner extends AbstractRegistry<TestBase> implements EventClien
 				}
 			}
 			testClass.afterAll();
-			System.exit(0);
 		}
+		System.exit(0);
 	}
 
 	public static boolean isTestingEnabled() {

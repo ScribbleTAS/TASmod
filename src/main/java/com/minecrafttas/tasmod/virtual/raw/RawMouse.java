@@ -1,6 +1,8 @@
 package com.minecrafttas.tasmod.virtual.raw;
 
+import java.util.HashSet;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
@@ -15,6 +17,8 @@ public class RawMouse {
 
 	private static VirtualMouseEvent currentEvent;
 
+	private static Set<Integer> pressedKeys = new HashSet<>();
+
 	public static void addKeyEvent(int keycode, boolean state, int scrollwheel, int cursorX, int cursorY) {
 		eventQueue.add(new VirtualMouseEvent(keycode, state, scrollwheel, cursorX, cursorY));
 	}
@@ -25,6 +29,13 @@ public class RawMouse {
 			return false;
 
 		currentEvent = nextEvent;
+
+		if (currentEvent.isState()) {
+			pressedKeys.add(currentEvent.getKeyCode());
+		} else {
+			pressedKeys.remove(currentEvent.getKeyCode());
+		}
+
 		return true;
 	}
 
@@ -46,5 +57,9 @@ public class RawMouse {
 
 	public static int getEventY() {
 		return currentEvent.getCursorY();
+	}
+
+	public static boolean isButtonDown(int keycode) {
+		return pressedKeys.contains(keycode);
 	}
 }

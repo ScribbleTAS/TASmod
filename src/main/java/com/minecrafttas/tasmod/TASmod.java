@@ -188,7 +188,12 @@ public class TASmod implements ModInitializer, EventServerStart, EventServerInit
 
 	private void registerTests() {
 		EventListenerRegistry.register(testRegistry);
+		/*
+		 * These testclasses are excluded from the build,
+		 * hence why I have to make this hacky way to register them
+		 */
 		testRegistry.register("TestMotion");
+		testRegistry.register("TestSavestates");
 	}
 
 	@Override

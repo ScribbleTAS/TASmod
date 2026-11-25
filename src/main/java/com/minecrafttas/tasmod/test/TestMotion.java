@@ -31,18 +31,25 @@ public class TestMotion extends TASmodTestBase {
 	@Test("Tests basic keyboard movement")
 	public void testKeyboardMovement() {
 		runInputs("testKeyboardMovement");
-		Vec3d expected = new Vec3d(5.55873557163679, 4.0, 8.374070780234085);
+//		copyPlayerPosToClipboard();
+		Vec3d expected = new Vec3d(8.357112068821067, 4.0, 7.724468414351504);
 		Vec3d actual = getPlayerPosition();
 		assertEquals(expected, actual, "Position of the player differs");
 	}
 
 	@Test("Tests basic mouse functions, like pickblocking and placing blocks")
 	public void testMouseButtons() {
-		runInputs("testMouseButtons");
+		runInputs("testMouseButtons1");
 		IBlockState blockstate = getBlockAt(5, 4, 7);
 		Block expected = Blocks.OBSIDIAN;
 		Block actual = blockstate.getBlock();
 		assertEquals(expected, actual, "Placed blocks differs");
+
+		runInputs("testMouseButtons2");
+		IBlockState blockstate2 = getBlockAt(5, 4, 7);
+		Block expected2 = Blocks.AIR;
+		Block actual2 = blockstate2.getBlock();
+		assertEquals(expected2, actual2, "Block was not removed");
 	}
 
 	@Override

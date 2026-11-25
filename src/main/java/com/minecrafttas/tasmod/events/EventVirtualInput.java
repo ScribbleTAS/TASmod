@@ -12,6 +12,7 @@ import com.minecrafttas.tasmod.virtual.VirtualKeyboard;
 import com.minecrafttas.tasmod.virtual.VirtualMouse;
 import com.minecrafttas.tasmod.virtual.event.VirtualKeyboardEvent;
 import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
+import com.minecrafttas.tasmod.virtual.raw.RawDeltaCameraAngle;
 
 public interface EventVirtualInput {
 
@@ -142,5 +143,21 @@ public interface EventVirtualInput {
 		 * @see VirtualInput#update(net.minecraft.client.gui.GuiScreen)
 		 */
 		public Queue<VirtualMouseEvent> onUpdateRawMouse(Queue<VirtualMouseEvent> input);
+	}
+
+	/**
+	 * Fired when the {@link VirtualMouseInput#nextMouseEvent} is updated
+	 * @author Scribble
+	 */
+	@FunctionalInterface
+	public interface EventUpdateRawCamera extends EventBase {
+		/**
+		 * Fired when the {@link VirtualCameraAngleInput#nextCamera} is updated
+		 * 
+		 * @param input The raw inputs that happened in this game loop
+		 * @return The inputs that will be processed by the VirtualInput
+		 * @see VirtualInput#update(net.minecraft.client.gui.GuiScreen)
+		 */
+		public RawDeltaCameraAngle onUpdateRawCamera(RawDeltaCameraAngle input);
 	}
 }

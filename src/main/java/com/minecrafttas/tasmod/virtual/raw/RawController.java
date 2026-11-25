@@ -21,7 +21,7 @@ import com.minecrafttas.tasmod.virtual.event.VirtualMouseEvent;
 
 import net.minecraft.client.Minecraft;
 
-public class RawController implements EventVirtualInput.EventUpdateRawKeyboard, EventVirtualInput.EventUpdateRawMouse, EventClient.EventClientTick {
+public class RawController implements EventVirtualInput.EventUpdateRawKeyboard, EventVirtualInput.EventUpdateRawMouse, EventVirtualInput.EventUpdateRawCamera, EventClient.EventClientTick {
 
 	private final Logger logger;
 	private TASstate state = TASstate.NONE;
@@ -29,6 +29,8 @@ public class RawController implements EventVirtualInput.EventUpdateRawKeyboard, 
 	private Queue<VirtualKeyboardEvent> currentKeyboardQueue = new ConcurrentLinkedQueue<>();
 	private final Queue<Queue<VirtualMouseEvent>> inputMouseQueueList = new ConcurrentLinkedQueue<>();
 	private Queue<VirtualMouseEvent> currentMouseQueue = new ConcurrentLinkedQueue<>();
+	private final Queue<Queue<RawDeltaCameraAngle>> inputCameraQueueList = new ConcurrentLinkedQueue<>();
+	private Queue<RawDeltaCameraAngle> currentCameraQueue = new ConcurrentLinkedQueue<>();
 	private Object monitoringObject;
 	private Path recordingPath = null;
 
@@ -57,19 +59,32 @@ public class RawController implements EventVirtualInput.EventUpdateRawKeyboard, 
 	}
 
 	@Override
+	public RawDeltaCameraAngle onUpdateRawCamera(RawDeltaCameraAngle input) {
+		if (state == TASstate.RECORDING) {
+			currentCameraQueue.add(input);
+		} else if (state == TASstate.PLAYBACK) {
+			if (currentCameraQueue != null)
+				return currentCameraQueue.poll();
+		}
+		return input;
+	}
+
+	@Override
 	public void onClientTick(Minecraft mc) {
 		if (state == TASstate.RECORDING) {
 			inputKeyboardQueueList.add(new ConcurrentLinkedQueue<>(currentKeyboardQueue));
 			inputMouseQueueList.add(new ConcurrentLinkedQueue<>(currentMouseQueue));
-			currentKeyboardQueue.clear();
-			currentMouseQueue.clear();
+			inputCameraQueueList.add(new ConcurrentLinkedQueue<>(currentCameraQueue));
+			clearCurrent();
 		} else if (state == TASstate.PLAYBACK) {
 			Queue<VirtualKeyboardEvent> polledKeyQueue = inputKeyboardQueueList.poll();
 			Queue<VirtualMouseEvent> polledMouseQueue = inputMouseQueueList.poll();
+			Queue<RawDeltaCameraAngle> polledCameraQueue = inputCameraQueueList.poll();
 			if (polledKeyQueue == null)
 				stopPlayback();
 			currentKeyboardQueue = polledKeyQueue;
 			currentMouseQueue = polledMouseQueue;
+			currentCameraQueue = polledCameraQueue;
 		}
 	}
 
@@ -91,6 +106,7 @@ public class RawController implements EventVirtualInput.EventUpdateRawKeyboard, 
 			logger.info("Stopping raw recording");
 			saveRecording(recordingPath);
 			state = TASstate.NONE;
+			clearQueues();
 			if (monitoringObject != null) {
 				synchronized (monitoringObject) {
 					monitoringObject.notify();
@@ -125,8 +141,7 @@ public class RawController implements EventVirtualInput.EventUpdateRawKeyboard, 
 
 	public void stopPlayback() {
 		state = TASstate.NONE;
-		inputKeyboardQueueList.clear();
-		inputMouseQueueList.clear();
+		clearQueues();
 		if (monitoringObject != null) {
 			synchronized (monitoringObject) {
 				monitoringObject.notify();
@@ -144,6 +159,7 @@ public class RawController implements EventVirtualInput.EventUpdateRawKeyboard, 
 
 			objectOut.writeObject(inputKeyboardQueueList);
 			objectOut.writeObject(inputMouseQueueList);
+			objectOut.writeObject(inputCameraQueueList);
 			objectOut.flush();
 		} catch (IOException e) {
 			logger.catching(e);
@@ -156,6 +172,7 @@ public class RawController implements EventVirtualInput.EventUpdateRawKeyboard, 
 
 			readQueue(objectIn.readObject(), inputKeyboardQueueList);
 			readQueue(objectIn.readObject(), inputMouseQueueList);
+			readQueue(objectIn.readObject(), inputCameraQueueList);
 		} catch (IOException | ClassNotFoundException e) {
 			logger.catching(e);
 		}
@@ -167,5 +184,17 @@ public class RawController implements EventVirtualInput.EventUpdateRawKeyboard, 
 			queue.clear();
 			queue.addAll((Collection<? extends Queue<T>>) keyObj);
 		}
+	}
+
+	private void clearCurrent() {
+		currentKeyboardQueue.clear();
+		currentMouseQueue.clear();
+		currentCameraQueue.clear();
+	}
+
+	private void clearQueues() {
+		inputKeyboardQueueList.clear();
+		inputMouseQueueList.clear();
+		inputCameraQueueList.clear();
 	}
 }

@@ -191,7 +191,7 @@ public class VirtualInput {
 
 	/**
 	 * If the keyboard or mouse key is currently down.
-	 * If keycode >= 0 then {@link VirtualKeyboardInput#isKeyDown(int)} will be called,<br>
+	 * If keycode &gt;= 0 then {@link VirtualKeyboardInput#isKeyDown(int)} will be called,<br>
 	 * otherwise {@link VirtualMouseInput#isKeyDown(int)}
 	 * 
 	 * @param keycode The keycode in question
@@ -213,7 +213,7 @@ public class VirtualInput {
 
 	/**
 	 * If the keyboard or mouse key is will be down in the next tick.
-	 * If keycode >= 0 then {@link VirtualKeyboardInput#willKeyBeDown(int)} will be called,<br>
+	 * If keycode &gt;= 0 then {@link VirtualKeyboardInput#willKeyBeDown(int)} will be called,<br>
 	 * otherwise {@link VirtualMouseInput#willKeyBeDown(int)}
 	 * 
 	 * @param keycode The keycode in question
@@ -722,7 +722,7 @@ public class VirtualInput {
 	 * In pseudocode, the tick conformed camera looks like this:
 	 * <pre>
 	 * public void runGameLoop() {// The main update loop, every frame
-	 * 	for(int i;i<timer.toTickCount;i++){ // For loop to enable ticking
+	 * 	for(int i; i &lt; timer.toTickCount; i++){ // For loop to enable ticking
 	 * 		entityRenderer.updatePlayerRotation();
 	 * 		runTick()
 	 * 	}
@@ -736,7 +736,7 @@ public class VirtualInput {
 	 * 
 	 * <pre>
 	 * public void runGameLoop() {// The main update loop, every frame
-	 * 	for(int i;i<timer.toTickCount;i++){ // For loop to enable ticking
+	 * 	for(int i;i &lt; timer.toTickCount; i++){ // For loop to enable ticking
 	 * 		{@linkplain VirtualCameraAngleInput#nextCameraTick()};
 	 * 		entityRenderer.updatePlayerRotation({@linkplain VirtualCameraAngleInput#getCurrentPitch()}, {@linkplain VirtualCameraAngleInput#getCurrentYaw()});
 	 * 		runTick()
