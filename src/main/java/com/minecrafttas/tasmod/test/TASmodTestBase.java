@@ -23,6 +23,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiIngameMenu;
 import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
@@ -248,5 +249,20 @@ public abstract class TASmodTestBase extends TestBase implements EventPlayerJoin
 	protected IBlockState getBlockAt(BlockPos blockPos) {
 		Minecraft mc = Minecraft.getMinecraft();
 		return mc.world.getBlockState(blockPos);
+	}
+
+	public ItemStack getItemStackInSlot(int i) {
+		Minecraft mc = Minecraft.getMinecraft();
+		return mc.player.inventory.getStackInSlot(i);
+	}
+
+	public void clearInventory() {
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.player.inventory.clear();
+	}
+
+	public void setSlot(int i) {
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.player.inventory.currentItem = i;
 	}
 }

@@ -7,6 +7,7 @@ import com.minecrafttas.mctcommon.test.Test;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
 
 public class TestMotion extends TASmodTestBase {
@@ -50,6 +51,20 @@ public class TestMotion extends TASmodTestBase {
 		Block expected2 = Blocks.AIR;
 		Block actual2 = blockstate2.getBlock();
 		assertEquals(expected2, actual2, "Block was not removed");
+	}
+
+	@Test("Tests cursor in inventory")
+	public void testCursorMovement() {
+		runInputs("testCursorMovement");
+		ItemStack actual = getItemStackInSlot(0);
+		assertEquals(Blocks.STONE, Block.getBlockFromItem(actual.getItem()), "Block is different, should be stone");
+		assertEquals(1, actual.getCount(), "The item count is different, should be 1");
+	}
+
+	@Override
+	public void afterEach() {
+		clearInventory();
+		super.setSlot(0);
 	}
 
 	@Override
